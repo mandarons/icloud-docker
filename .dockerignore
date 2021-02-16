@@ -1,0 +1,15 @@
+src/drive/*
+venv
+htmlcov
+.pytest_cache
+allure-results
+tests
+pylintrc
+.gitignore
+.git
+Coveragerc
+Dockerfile
+allure-report
+pytest.ini
+run-tests.sh
+requirements-test.txt

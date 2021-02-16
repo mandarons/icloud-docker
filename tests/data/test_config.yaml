@@ -1,0 +1,26 @@
+credentials:
+  # iCloud drive username
+  username: user@test.com
+  # iCloud drive password
+  password:
+settings:
+  # Sync interval in seconds, < 0 runs once
+  sync_interval: -1
+  # Drive destination
+  destination: './drive'
+  # Remove obsolete files and folders on every sync
+  remove_obsolete: true
+  # Disable verbosity
+  verbose: false
+filters:
+  # File filters to be included in syncing iCloud drive content
+  folders:
+    - dir1/dir2/dir3
+    - Keynote
+    - pyiCloud
+  file_extensions:
+    # File extensions to be included
+    - pdf
+    - png
+    - jpg
+    - jpeg

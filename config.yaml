@@ -1,0 +1,22 @@
+credentials:
+  # iCloud drive username
+  username: user@test.com
+  # iCloud drive password
+  password:
+settings:
+  # Sync interval in seconds
+  sync_interval: 300
+  # Drive destination
+  destination: './drive'
+  # verbose
+  verbose: false
+filters:
+  # File filters to be included in syncing iCloud drive content
+  folders:
+    - Documents
+  file_extensions:
+    # File extensions to be included
+    - pdf
+    - png
+    - jpg
+    - jpeg
