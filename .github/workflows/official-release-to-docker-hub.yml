@@ -1,14 +1,13 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI to Docker Hub
+name: Official Release to Docker Hub
 
 # Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    tags:
+      - "v*.*.*"
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -31,6 +30,8 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
+      - name: Set env
+          run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -48,7 +49,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: mandarons/icloud-drive:latest
+          tags: mandarons/icloud-drive:${RELEASE_VERSION}
 
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
