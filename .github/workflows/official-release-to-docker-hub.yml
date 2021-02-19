@@ -24,6 +24,7 @@ jobs:
       - name: Check Out Repo 
         uses: actions/checkout@v2
       - name: Prepare
+        id: prep
         run: |
           DOCKER_IMAGE=mandarons/icloud-drive
           if [[ $GITHUB_REF == refs/tags/* ]]; then
@@ -56,7 +57,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64,linux/ppc64le,linux/s390x
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           tags: ${{ steps.prep.outputs.tags }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
