@@ -1,14 +1,13 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CI to Docker Hub
+name: Dev Release to Docker Hub
 
 # Controls when the action will run. 
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+    branches:
+      - main
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -36,11 +35,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
-
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
-
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v2
@@ -48,7 +45,6 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: mandarons/icloud-drive:latest
-
+          tags: mandarons/icloud-drive:main
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
