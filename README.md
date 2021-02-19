@@ -10,12 +10,56 @@ iCloud username and password.
 
 ### Installation using Docker Hub
 ```
-TBD
+docker run --name icloud-drive -v ${PWD}/drive:/app/drive mandarons/icloud-drive 
 ```
 
-### Authentication
+### Installation using docker-compose
+```yaml
+version: "3.4"
+services:
+  icloud-drive:
+    image: mandarons/icloud-drive
+    container_name: icloud-drive
+    restart: unless-stopped
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ${PWD}/icloud-drive/config.yaml:/app/config.yaml
+      - ${PWD}/icloud-drive/drive:/app/drive
 ```
-TBD
+
+### Authentication (required after container creation)
 ```
-## Configuration
-### Configuration using config.yaml file
+docker exec -it icloud-drive /bin/sh -c "icloud --username=<icloud-username>"
+```
+Follow the steps to authenticate.
+
+## Sample Configuration File
+```yaml
+credentials:
+  # iCloud drive username: required
+  username: username@domain.com
+  # iCloud drive password: optional
+  password:
+settings:
+  # Auto-sync interval in seconds: optional, default: 1800
+  sync_interval: 1800
+  # Destination to sync: required
+  destination: './drive'
+  # Flag if remove files/folders that are present locally but not on iCloud server: optional, default: false
+  remove_obsolete: false
+  # Verbosity of messages: optional, default: false
+  verbose: false
+filters:
+  # Paths to be 'included' in syncing iCloud drive content
+  folders:
+    - Documents
+  file_extensions:
+    # File extensions to be included in syncing iCloud drive content
+    - pdf
+    - png
+    - jpg
+    - jpeg
+```
+***Note: On every sync, this client iterates all the files and folders. Depending on number of files in your iCloud drive,
+syncing can take longer.***
