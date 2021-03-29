@@ -19,6 +19,9 @@ version: "3.4"
 services:
   icloud-drive:
     image: mandarons/icloud-drive
+    environment:
+      - PUID=<insert the output of `id -u $user`>
+      - GUID=<insert the output of `id -g $user`>
     container_name: icloud-drive
     restart: unless-stopped
     volumes:
