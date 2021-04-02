@@ -30,122 +30,119 @@ class TestSync(unittest.TestCase):
 
     def test_wanted_folder_single(self):
         self.filters['folders'] = ['dir1']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
         self.filters['folders'] = ['/dir1']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
         self.filters['folders'] = ['dir1/']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
         self.filters['folders'] = ['/dir1/']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
 
     def test_wanted_folder_single_path(self):
         self.filters['folders'] = ['dir1/dir2/dir3/', 'dir1//dir2/dir3//']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1', 'dir2')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1', 'dir2', 'dir3')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir1', 'dir3')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir2')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir3')))
         self.filters['folders'] = ['dir1//dir2/dir3//']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1', 'dir2')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1', 'dir2', 'dir3')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir1', 'dir3')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir2')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir3')))
 
     def test_wanted_folder_multiple(self):
         self.filters['folders'] = ['dir1', 'dir2']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir2')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir3')))
 
     def test_wanted_folder_multiple_paths(self):
         self.filters['folders'] = ['dir1/dir2/dir3/', 'dirA/dirB/dirC']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1', 'dir2')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1', 'dir2', 'dir3')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir1', 'dir3')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir2')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dir3')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dirA')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dirA', 'dirB')))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dirA', 'dirB', 'dirC')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dirA', 'dirC')))
-        self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertFalse(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                             folder_path=os.path.join(self.root, 'dirB')))
         self.assertFalse(sync.wanted_folder(filters=self.filters, root=self.root,
                                             folder_path=os.path.join(self.root, 'dirC')))
 
-    def test_wanted_folder_invalids(self):
+    def test_wanted_folder_empty(self):
         original_filters = dict(self.filters)
         self.filters['folders'] = []
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
-                                           folder_path=os.path.join(self.root, 'dir1')))
-        del self.filters['folders']
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=os.path.join(self.root, 'dir1')))
         self.filters = dict(original_filters)
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=self.root,
+
+    def test_wanted_folder_invalids(self):
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=self.root,
                                            folder_path=None))
         self.assertTrue(sync.wanted_folder(filters=None, root=self.root,
                                            folder_path='dir1'))
-        self.assertTrue(sync.wanted_folder(filters=self.filters, root=None,
+        self.assertTrue(sync.wanted_folder(filters=self.filters['folders'], root=None,
                                            folder_path='dir1'))
 
     def test_wanted_file_valids(self):
         self.filters['file_extensions'] = ['py']
-        self.assertTrue(sync.wanted_file(filters=self.filters, file_path=__file__))
-        self.assertFalse(sync.wanted_file(filters=self.filters, file_path=tests.CONFIG_PATH))
+        self.assertTrue(sync.wanted_file(filters=self.filters['file_extensions'], file_path=__file__))
+        self.assertFalse(sync.wanted_file(filters=self.filters['file_extensions'], file_path=tests.CONFIG_PATH))
 
     def test_wanted_file_invalids(self):
         original_filters = dict(self.filters)
         self.assertTrue(sync.wanted_file(filters=None, file_path=__file__))
-        self.assertFalse(sync.wanted_file(filters=self.filters, file_path=None))
+        self.assertFalse(sync.wanted_file(filters=self.filters['file_extensions'], file_path=None))
         self.filters['file_extensions'] = []
-        self.assertFalse(sync.wanted_file(filters=self.filters, file_path=__file__))
-        del self.filters['file_extensions']
-        self.assertFalse(sync.wanted_file(filters=self.filters, file_path=__file__))
+        self.assertTrue(sync.wanted_file(filters=self.filters['file_extensions'], file_path=__file__))
         self.filters = dict(original_filters)
         self.filters['file_extensions'] = ['pY']
-        self.assertTrue(sync.wanted_file(filters=self.filters, file_path=__file__))
+        self.assertTrue(sync.wanted_file(filters=self.filters['file_extensions'], file_path=__file__))
         self.filters['file_extensions'] = ['pY']
         self.assertTrue(
-            sync.wanted_file(filters=self.filters, file_path=os.path.join(os.path.dirname(__file__), 'file.Py')))
+            sync.wanted_file(filters=self.filters['file_extensions'], file_path=os.path.join(os.path.dirname(__file__), 'file.Py')))
 
     def test_process_folder_valids(self):
         # Wanted folder
         actual = sync.process_folder(item=self.drive[self.items[0]], destination_path=self.destination_path,
-                                     filters=self.filters, root=self.root)
+                                     filters=self.filters['folders'], root=self.root)
         self.assertIsNotNone(actual)
         self.assertTrue(os.path.exists(actual))
         self.assertTrue(os.path.isdir(actual))
@@ -157,13 +154,13 @@ class TestSync(unittest.TestCase):
 
     def test_process_folder_invalids(self):
         self.assertIsNone(sync.process_folder(item=None, destination_path=self.destination_path,
-                                              filters=self.filters, root=self.root))
+                                              filters=self.filters['folders'], root=self.root))
         self.assertIsNone(sync.process_folder(item=self.drive[self.items[1]], destination_path=None,
-                                              filters=self.filters, root=self.root))
+                                              filters=self.filters['folders'], root=self.root))
         self.assertIsNone(sync.process_folder(item=self.drive[self.items[1]], destination_path=self.destination_path,
                                               filters=None, root=self.root))
         self.assertIsNone(sync.process_folder(item=self.drive[self.items[1]], destination_path=self.destination_path,
-                                              filters=self.filters, root=None))
+                                              filters=self.filters['folders'], root=None))
 
     def test_file_exists_valid(self):
         # File does not exist
@@ -190,19 +187,19 @@ class TestSync(unittest.TestCase):
     def test_process_file_valids(self):
         files = set()
         self.assertTrue(sync.process_file(item=self.file_item, destination_path=self.destination_path,
-                                          filters=self.filters, files=files))
+                                          filters=self.filters['file_extensions'], files=files))
         self.assertTrue(len(files) == 1)
 
     def test_process_file_invalids(self):
         files = set()
         self.assertFalse(sync.process_file(item=None, destination_path=self.destination_path,
-                                           filters=self.filters, files=files))
+                                           filters=self.filters['file_extensions'], files=files))
         self.assertFalse(sync.process_file(item=self.file_item, destination_path=None,
-                                           filters=self.filters, files=files))
+                                           filters=self.filters['file_extensions'], files=files))
         self.assertFalse(sync.process_file(item=self.file_item, destination_path=self.destination_path,
                                            filters=None, files=files))
         self.assertFalse(sync.process_file(item=self.file_item, destination_path=self.destination_path,
-                                           filters=self.filters, files=None))
+                                           filters=self.filters['file_extensions'], files=None))
         # Unwanted file
         original_filters = dict(self.filters)
         del self.filters['file_extensions']

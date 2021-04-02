@@ -14,11 +14,10 @@ verbose = True
 
 
 def wanted_file(filters, file_path):
-    if not filters:
+    if not filters or len(filters) == 0:
         return True
-    if file_path and 'file_extensions' in filters:
-        file_extensions = filters['file_extensions']
-        file_extensions = [f.lower() for f in file_extensions]
+    if file_path:
+        file_extensions = [f.lower() for f in filters]
         file_extension = os.path.splitext(file_path)[1][1:]
         if file_extension.lower() in file_extensions:
             return True
@@ -28,21 +27,16 @@ def wanted_file(filters, file_path):
 
 
 def wanted_folder(filters, root, folder_path):
-    if not filters or not folder_path or not root:
+    if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
         return True
-    if 'folders' in filters:
         # Something to filter
-        folders = filters['folders']
-        if len(folders) == 0:
+    folder_path = Path(folder_path)
+    for folder in filters:
+        child_path = Path(os.path.join(os.path.abspath(root), folder.removeprefix('/').removesuffix('/')))
+        if folder_path in child_path.parents or child_path in folder_path.parents or folder_path == child_path:
             return True
-        folder_path = Path(folder_path)
-        for folder in folders:
-            child_path = Path(os.path.join(os.path.abspath(root), folder.removeprefix('/').removesuffix('/')))
-            if folder_path in child_path.parents or child_path in folder_path.parents or folder_path == child_path:
-                return True
-        return False
-    return True
+    return False
 
 
 def process_folder(item, destination_path, filters, root):
@@ -124,14 +118,16 @@ def sync_directory(drive, destination_path, items, root, top=True, filters=None,
         for i in items:
             item = drive[i]
             if item.type == 'folder':
-                new_folder = process_folder(item=item, destination_path=destination_path, filters=filters, root=root)
+                new_folder = process_folder(item=item, destination_path=destination_path,
+                                            filters=filters['folders'] if 'folders' in filters else None, root=root)
                 if not new_folder:
                     continue
                 files.add(new_folder)
                 files.update(sync_directory(drive=item, destination_path=new_folder, items=item.dir(), root=root,
                                             top=False, filters=filters))
             elif item.type == 'file':
-                process_file(item=item, destination_path=destination_path, filters=filters, files=files)
+                process_file(item=item, destination_path=destination_path,
+                             filters=filters['file_extensions'] if 'file_extensions' in filters else None, files=files)
         if top and remove:
             remove_obsolete(destination_path=destination_path, files=files)
     return files
