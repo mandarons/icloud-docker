@@ -1,6 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 
-name: Official Release to Docker Hub
+name: Release to Docker Hub
 
 # Controls when the action will run. 
 on:
@@ -23,6 +23,16 @@ jobs:
     steps:
       - name: Check Out Repo 
         uses: actions/checkout@v2
+      - name: Prepare
+        id: prep
+        run: |
+          DOCKER_IMAGE=mandarons/icloud-drive
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          fi
+          TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:latest"
+          echo "${TAGS}"
+          echo ::set-output name=tags::${TAGS}
       - name: Cache Docker layers
         uses: actions/cache@v2
         with:
@@ -30,8 +40,6 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-buildx-
-      - name: Set env
-        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
       - name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
@@ -49,7 +57,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: mandarons/icloud-drive:${RELEASE_VERSION}
-
+          platforms: linux/386,linux/amd64
+          tags: ${{ steps.prep.outputs.tags }}
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
