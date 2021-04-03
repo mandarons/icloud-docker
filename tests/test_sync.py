@@ -2,6 +2,7 @@ __author__ = 'Mandar Patil (mandarons@pm.me)'
 
 import unittest
 import os
+from io import StringIO
 import shutil
 from unittest.mock import patch
 
@@ -27,6 +28,18 @@ class TestSync(unittest.TestCase):
 
     def tearDown(self) -> None:
         shutil.rmtree(tests.TEMP_DIR)
+
+    def test_wanted_parent_folder_valids(self):
+        self.filters['folders'] = ['dir1/dir11']
+        self.assertTrue(sync.wanted_parent_folder(filters=None, root=self.root,
+                                           folder_path=os.path.join(self.root, 'dir1/dir11')))
+        self.assertTrue(sync.wanted_parent_folder(filters=self.filters['folders'], root=self.root,
+                                                  folder_path=os.path.join(self.root, 'dir1/dir11/some/dirs/file.ext')))
+
+    def test_wanted_parent_folder_invalids(self):
+        self.filters['folders'] = ['dir1/dir11']
+        self.assertFalse(sync.wanted_parent_folder(filters=self.filters['folders'], root=self.root,
+                                           folder_path=os.path.join(self.root, 'dir1')))
 
     def test_wanted_folder_single(self):
         self.filters['folders'] = ['dir1']
@@ -125,6 +138,10 @@ class TestSync(unittest.TestCase):
         self.filters['file_extensions'] = ['py']
         self.assertTrue(sync.wanted_file(filters=self.filters['file_extensions'], file_path=__file__))
         self.assertFalse(sync.wanted_file(filters=self.filters['file_extensions'], file_path=tests.CONFIG_PATH))
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            sync.wanted_file(filters=self.filters['file_extensions'], file_path=tests.CONFIG_PATH, verbose=True)
+            output = mock_stdout.getvalue()
+            self.assertIn('Skipping the unwanted file', output)
 
     def test_wanted_file_invalids(self):
         original_filters = dict(self.filters)
@@ -137,7 +154,8 @@ class TestSync(unittest.TestCase):
         self.assertTrue(sync.wanted_file(filters=self.filters['file_extensions'], file_path=__file__))
         self.filters['file_extensions'] = ['pY']
         self.assertTrue(
-            sync.wanted_file(filters=self.filters['file_extensions'], file_path=os.path.join(os.path.dirname(__file__), 'file.Py')))
+            sync.wanted_file(filters=self.filters['file_extensions'], file_path=os.path.join(os.path.dirname(__file__),
+                                                                                             'file.Py')))
 
     def test_process_folder_valids(self):
         # Wanted folder
@@ -151,6 +169,14 @@ class TestSync(unittest.TestCase):
         actual = sync.process_folder(item=self.drive[self.items[1]], destination_path=self.destination_path,
                                      filters=self.filters, root=self.root)
         self.assertIsNone(actual)
+
+        # Verbose
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            actual = sync.process_folder(item=self.drive[self.items[1]], destination_path=self.destination_path,
+                                         filters=self.filters, root=self.root, verbose=True)
+            self.assertIsNone(actual)
+            output = mock_stdout.getvalue()
+            self.assertIn('Skipping the unwanted folder', output)
 
     def test_process_folder_invalids(self):
         self.assertIsNone(sync.process_folder(item=None, destination_path=self.destination_path,
@@ -169,6 +195,14 @@ class TestSync(unittest.TestCase):
         sync.download_file(item=self.file_item, local_file=self.local_file_path)
         actual = sync.file_exists(item=self.file_item, local_file=self.local_file_path)
         self.assertTrue(actual)
+        # Verbose
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            sync.download_file(item=self.file_item, local_file=self.local_file_path)
+            actual = sync.file_exists(item=self.file_item, local_file=self.local_file_path, verbose=True)
+            self.assertTrue(actual)
+            output = mock_stdout.getvalue()
+            self.assertIn('No changes detected.', output)
+
 
     def test_file_exists_invalid(self):
         self.assertFalse(sync.file_exists(item=None, local_file=self.local_file_path))
@@ -176,6 +210,12 @@ class TestSync(unittest.TestCase):
 
     def test_download_file_valids(self):
         self.assertTrue(sync.download_file(item=self.file_item, local_file=self.local_file_path))
+
+        # Verbose
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            self.assertTrue(sync.download_file(item=self.file_item, local_file=self.local_file_path, verbose=True))
+            output = mock_stdout.getvalue()
+            self.assertIn('Downloading ', output)
 
     def test_download_file_invalids(self):
         self.assertFalse(sync.download_file(item=None, local_file=self.local_file_path))
@@ -229,6 +269,16 @@ class TestSync(unittest.TestCase):
         self.assertTrue(len(actual) > 0)
         self.assertFalse(os.path.isdir(obsolete_path))
         self.assertFalse(os.path.isfile(obsolete_file_path))
+        # Verbose
+        with patch('sys.stdout', new_callable=StringIO) as mock_stdout:
+            os.mkdir(obsolete_path)
+            shutil.copyfile(__file__, obsolete_file_path)
+            actual = sync.remove_obsolete(destination_path=self.destination_path, files=files, verbose=True)
+            self.assertTrue(len(actual) > 0)
+            self.assertFalse(os.path.isdir(obsolete_path))
+            self.assertFalse(os.path.isfile(obsolete_file_path))
+            output = mock_stdout.getvalue()
+            self.assertIn('Removing ', output)
 
     def test_remove_obsolete_invalids(self):
         obsolete_path = os.path.join(self.destination_path, 'obsolete')

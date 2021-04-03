@@ -164,7 +164,9 @@ def sync_drive():
             except exceptions.PyiCloudNoStoredPasswordAvailableException:
                 print('password is not stored in keyring. Please save the password in keyring.')
         sleep_for = config_parser.get_sync_interval(config=config)
-        print(f'Resyncing at {(datetime.datetime.now() + datetime.timedelta(minutes=sleep_for)).strftime("%l:%M%p %Z on %b %d, %Y")} ...')
+        next_sync = (datetime.datetime.now() +
+                     datetime.timedelta(minutes=sleep_for)).strftime('%l:%M%p %Z on %b %d, %Y')
+        print(f'Resyncing at {next_sync} ...')
         if sleep_for < 0:
             break
         time.sleep(sleep_for)
