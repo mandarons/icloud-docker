@@ -87,7 +87,7 @@ class TestConfigParser(unittest.TestCase):
 
     def test_get_verbose_valids(self):
         config = config_parser.read_config()
-        self.assertFalse(config_parser.get_verbose(config=config))
+        self.assertEqual(config['settings']['verbose'],config_parser.get_verbose(config=config))
         config['settings']['verbose'] = True
         self.assertTrue(config_parser.get_verbose(config=config))
 

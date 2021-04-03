@@ -196,17 +196,11 @@ class TestSync(unittest.TestCase):
                                            filters=self.filters['file_extensions'], files=files))
         self.assertFalse(sync.process_file(item=self.file_item, destination_path=None,
                                            filters=self.filters['file_extensions'], files=files))
-        self.assertFalse(sync.process_file(item=self.file_item, destination_path=self.destination_path,
+        self.assertTrue(sync.process_file(item=self.file_item, destination_path=self.destination_path,
                                            filters=None, files=files))
         self.assertFalse(sync.process_file(item=self.file_item, destination_path=self.destination_path,
                                            filters=self.filters['file_extensions'], files=None))
-        # Unwanted file
-        original_filters = dict(self.filters)
-        del self.filters['file_extensions']
-        self.assertFalse(sync.process_file(item=self.file_item, destination_path=self.destination_path,
-                                           filters=self.filters, files=files))
-        self.assertTrue(len(files) == 0)
-        self.filters = original_filters
+
         # Existing file
         sync.download_file(item=self.file_item, local_file=self.local_file_path)
         self.assertFalse(sync.process_file(item=self.file_item, destination_path=self.destination_path,
