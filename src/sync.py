@@ -84,7 +84,7 @@ def download_file(item, local_file, verbose=False):
                 copyfileobj(response.raw, file_out)
         item_modified_time = time.mktime(item.date_modified.timetuple())
         os.utime(local_file, (item_modified_time, item_modified_time))
-    except (exceptions.PyiCloudAPIResponseException, FileNotFoundError) as e:
+    except (exceptions.PyiCloudAPIResponseException, FileNotFoundError, Exception) as e:
         print(f'Failed to download {local_file}: {str(e)}')
         return False
     return True
