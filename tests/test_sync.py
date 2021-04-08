@@ -223,6 +223,9 @@ class TestSync(unittest.TestCase):
         self.assertFalse(sync.download_file(item=self.file_item,
                                             local_file=os.path.join(self.destination_path, 'non-existent-folder',
                                                                     self.file_name)))
+        with patch.object(self.file_item, 'open') as mock_item:
+            mock_item.side_effect = KeyError('data_token')
+            self.assertFalse(sync.download_file(item=self.file_item, local_file=self.local_file_path))
 
     def test_process_file_valids(self):
         files = set()
