@@ -57,7 +57,7 @@ filters:
   # Paths to be 'included' in syncing iCloud drive content
   folders:
     - Documents
-  file_extensions:
+  file_extensions: #Optional, leave empty for syncing all the content recursively
     # File extensions to be included in syncing iCloud drive content
     - pdf
     - png
