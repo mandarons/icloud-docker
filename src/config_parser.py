@@ -71,3 +71,42 @@ def get_verbose(config):
         verbose = config['settings']['verbose']
         print('Enabled verbose ...')
     return verbose
+
+def get_smtp_email(config):
+    email = None
+    if (config and 'smtp' in config and 'email' in config['smtp']):
+        email = config['smtp']['email']
+    return email
+
+def get_smtp_host(config):
+    host = None
+    if not (config and 'smtp' in config and 'host' in config['smtp']):
+        print('Warning: host is not found in config > smtp')
+    else:
+        host = config['smtp']['host']
+    return host
+
+def get_smtp_port(config):
+    port = None
+    if not (config and 'smtp' in config and 'port' in config['smtp']):
+        print('Warning: port is not found in config > smtp')
+    else:
+        port = config['smtp']['port']
+    return port
+
+def get_smtp_password(config):
+    password = None
+    if not (config and 'smtp' in config and 'password' in config['smtp']):
+        print('Warning: password is not found in config > smtp')
+    else:
+        password = config['smtp']['password']
+    return password
+
+
+def get_smtp_no_tls(config):
+    no_tls = False
+    if not (config and 'smtp' in config and 'no_tls' in config['smtp']):
+        print('Warning: no_tls is not found in config > smtp')
+    else:
+        no_tls = config['smtp']['no_tls']
+    return no_tls

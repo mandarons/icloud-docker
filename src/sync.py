@@ -10,6 +10,7 @@ from shutil import copyfileobj, rmtree
 from pyicloud import PyiCloudService, utils, exceptions
 
 from src import config_parser
+from src import notify
 
 
 def wanted_file(filters, file_path, verbose=False):
@@ -147,6 +148,7 @@ def sync_directory(drive, destination_path, items, root, top=True, filters=None,
 
 
 def sync_drive():
+    last_send = None
     while True:
         config = config_parser.read_config()
         verbose = config_parser.get_verbose(config=config)
@@ -161,7 +163,9 @@ def sync_drive():
                                    remove=config_parser.get_remove_obsolete(config=config), verbose=verbose)
                 else:
                     print('Error: 2FA is required. Please log in.')
+                    last_send = notify.send(config, last_send)
             except exceptions.PyiCloudNoStoredPasswordAvailableException:
+
                 print('password is not stored in keyring. Please save the password in keyring.')
         sleep_for = config_parser.get_sync_interval(config=config)
         next_sync = (datetime.datetime.now() +

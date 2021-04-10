@@ -53,6 +53,14 @@ settings:
   remove_obsolete: false
   # Verbosity of messages: optional, default: false
   verbose: false
+smtp:
+  # If you want to recieve email notifications about expired/missing 2FA credentials then uncommend
+  # email: user@test.com
+  # password:
+  # host: smtp.test.com
+  # port: 587
+  # If your email provider doesn't handle TLS
+  # no_tls: true
 filters:
   # Paths to be 'included' in syncing iCloud drive content
   folders:
