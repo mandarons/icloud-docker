@@ -3,10 +3,11 @@
 import smtplib
 import datetime
 import logging
+from mailer import Message
 from src import config_parser
 
 def send(config, last_send=None, dry_run=False):
-    sent_on = None
+    sent_on  = None
     email    = config_parser.get_smtp_email(config=config)
     host     = config_parser.get_smtp_host(config=config)
     port     = config_parser.get_smtp_port(config=config)
@@ -16,7 +17,7 @@ def send(config, last_send=None, dry_run=False):
     if (last_send and last_send > datetime.datetime.now()-datetime.timedelta(hours=24)):
         print("Throttling email to once a day")
         sent_on = last_send
-    elif email and host and port and password:
+    elif email and host and port:
         try:
             sent_on = datetime.datetime.now()
             if not dry_run:
@@ -29,22 +30,9 @@ def send(config, last_send=None, dry_run=False):
                 if password:
                     smtp.login(email, password)
 
-                subject = "icloud-drive-docker: Two step authentication required"
-                date = sent_on.strftime("%d/%m/%Y %H:%M")
+                msg = build_message(email)
 
-                message_body ="""Two-step authentication for iCloud Drive (Docker) is required.
-        Please login to your server and authenticate.  Eg:
-        `docker exec -it icloud-drive /bin/sh -c "icloud --username=<icloud-username>"`."""
-
-                msg = "From: %s\nTo: %s\nSubject: %s\nDate: %s\n\n%s" % (
-                    "icloud-drive-docker <" + email + ">",
-                    email,
-                    subject,
-                    date,
-                    message_body
-                )
-
-                smtp.sendmail(email, email, msg)
+                smtp.sendmail(email, email, msg.as_string())
                 smtp.quit()
         except (Exception) as e:
             sent_on = None
@@ -54,3 +42,15 @@ def send(config, last_send=None, dry_run=False):
         print("Not sending 2FA notification because SMTP is not configured")
 
     return sent_on
+
+def build_message(email):
+    message         = Message()
+    message.To      = email
+    message.From    = "icloud-drive-docker <" + email + ">"
+    message.Date    = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    message.Subject = "icloud-drive-docker: Two step authentication required"
+    message.Body    = """Two-step authentication for iCloud Drive (Docker) is required.
+Please login to your server and authenticate.  Eg:
+`docker exec -it icloud-drive /bin/sh -c "icloud --username=<icloud-username>"`."""
+
+    return message
