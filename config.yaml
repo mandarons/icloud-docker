@@ -10,6 +10,14 @@ settings:
   destination: './drive'
   # verbose
   verbose: false
+smtp:
+  # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
+  # email: user@test.com
+  # password:
+  # host: smtp.test.com
+  # port: 587
+  # If your email provider doesn't handle TLS
+  # no_tls: true
 filters:
   # File filters to be included in syncing iCloud drive content
   folders:

@@ -1,2 +1,3 @@
 git+https://github.com/picklepete/pyicloud#68566dc3a51211ef379422c549119b2bf8903b63
 ruamel.yaml==0.16.12
+mailer==0.8.1

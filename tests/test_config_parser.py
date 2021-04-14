@@ -99,3 +99,47 @@ class TestConfigParser(unittest.TestCase):
         self.assertFalse(config_parser.get_verbose(config=config))
         del config['settings']
         self.assertFalse(config_parser.get_verbose(config=config))
+
+    def test_get_smtp_no_tls(self):
+        config = {'smtp':{'no_tls':True}}
+        self.assertTrue(config_parser.get_smtp_no_tls(config=config))
+        config = {'smtp':{'no_tls':False}}
+        self.assertFalse(config_parser.get_smtp_no_tls(config=config))
+        del config['smtp']['no_tls']
+        self.assertFalse(config_parser.get_smtp_no_tls(config=config))
+
+    def test_get_smtp_email_valids(self):
+        # Given email
+        config = {'smtp':{'email':'user@test.com'}}
+        self.assertEqual(config['smtp']['email'], config_parser.get_smtp_email(config=config))
+
+    def test_smtp_email_invalids(self):
+        config = config_parser.read_config()
+        self.assertIsNone(config_parser.get_smtp_email(config=None))
+
+    def test_get_smtp_host_valids(self):
+        # Given host
+        config = {'smtp':{'host':'smtp.test.com'}}
+        self.assertEqual(config['smtp']['host'], config_parser.get_smtp_host(config=config))
+
+    def test_smtp_host_invalids(self):
+        config = config_parser.read_config()
+        self.assertIsNone(config_parser.get_smtp_host(config=None))
+
+    def test_get_smtp_port_valids(self):
+        # Given port
+        config = {'smtp':{'port':'587'}}
+        self.assertEqual(config['smtp']['port'], config_parser.get_smtp_port(config=config))
+
+    def test_smtp_port_invalids(self):
+        config = config_parser.read_config()
+        self.assertIsNone(config_parser.get_smtp_port(config=None))
+
+    def test_get_smtp_password_valids(self):
+        # Given password
+        config = {'smtp':{'password':'password'}}
+        self.assertEqual(config['smtp']['password'], config_parser.get_smtp_password(config=config))
+
+    def test_smtp_password_invalids(self):
+        config = config_parser.read_config()
+        self.assertIsNone(config_parser.get_smtp_password(config=None))
