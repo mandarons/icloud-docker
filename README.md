@@ -54,7 +54,7 @@ settings:
   # Verbosity of messages: optional, default: false
   verbose: false
 smtp:
-  # If you want to recieve email notifications about expired/missing 2FA credentials then uncommend
+  # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
   # email: user@test.com
   # password:
   # host: smtp.test.com
