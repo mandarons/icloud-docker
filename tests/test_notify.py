@@ -1,8 +1,7 @@
-import os
 import unittest
 import datetime
 
-from unittest.mock import patch, call
+from unittest.mock import patch
 from mailer import Message
 from src import config_parser
 from src import notify
@@ -42,7 +41,7 @@ class TestNotify(unittest.TestCase):
         self.assertIsInstance(msg, Message)
 
     def test_send(self):
-        with patch("smtplib.SMTP") as smtp:
+        with patch('smtplib.SMTP') as smtp:
             notify.send(self.config)
 
             instance = smtp.return_value
@@ -52,15 +51,22 @@ class TestNotify(unittest.TestCase):
             self.assertEqual(instance.sendmail.call_count, 1)
 
             # verify that the correct email is being sent to sendmail()
-            self.assertEqual(config_parser.get_smtp_email(config=self.config), instance.sendmail.mock_calls[0][1][1])
+            self.assertEqual(
+                config_parser.get_smtp_email(config=self.config),
+                instance.sendmail.mock_calls[0][1][1]
+            )
+
             # verify that the message was passed to sendmail()
-            self.assertIn('Subject: icloud-drive-docker: Two step authentication required', instance.sendmail.mock_calls[0][1][2])
+            self.assertIn(
+                'Subject: icloud-drive-docker: Two step authentication required',
+                instance.sendmail.mock_calls[0][1][2]
+            )
 
     def test_send_fail(self):
-        with patch("smtplib.SMTP") as smtp:
+        with patch('smtplib.SMTP') as smtp:
             smtp.side_effect = Exception
 
             # Verify that a failure doesn't return a send_on timestamp
             sent_on = notify.send(self.config)
-            self.assertEquals(None, sent_on)
+            self.assertEqual(None, sent_on)
 
