@@ -189,7 +189,7 @@ def sync_drive():
                 print('password is not stored in keyring. Please save the password in keyring.')
         sleep_for = config_parser.get_sync_interval(config=config)
         next_sync = (datetime.datetime.now() +
-                     datetime.timedelta(seconds=sleep_for)).strftime('%I:%M%p %Z on %b %d, %Y')
+                     datetime.timedelta(seconds=sleep_for)).strftime('%c')
         print(f'Resyncing at {next_sync} ...')
         if sleep_for < 0:
             break
