@@ -2252,6 +2252,25 @@ DRIVE_SUBFOLDER_WORKING = [
     }
 ]
 
+DRIVE_SUBFOLDER_UNWANTED_WORKING = [
+    {
+        'drivewsid': 'FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05C',
+        'docwsid': '1C7F1760-D940-480F-8C4F-005824A4E05C',
+        'zone': 'com.apple.CloudDocs',
+        'name': 'unwanted',
+        'parentId': 'FOLDER::com.apple.CloudDocs::root',
+        'etag': '30',
+        'type': 'FOLDER',
+        'assetQuota': 42199575,
+        'fileCount': 0,
+        'shareCount': 0,
+        'shareAliasCount': 0,
+        'directChildrenCount': 0,
+        'items': [],
+        'numberOfItems': 0,
+    }
+]
+
 DRIVE_FILE_DOWNLOAD_WORKING = {
     'document_id': '516C896C-6AA5-4A30-B30E-5502C2333DAE',
     'data_token': {
@@ -2576,6 +2595,11 @@ class PyiCloudSessionMock(base.PyiCloudSession):
                     == 'FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF'
             ):
                 return ResponseMock(DRIVE_SUBFOLDER_WORKING)
+            if (
+                data[0].get('drivewsid')
+                == 'FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05C'
+            ):
+                return ResponseMock(DRIVE_SUBFOLDER_UNWANTED_WORKING)
         # Drive download
         if 'com.apple.CloudDocs/download/by_id' in url and method == 'GET':
             if params.get('document_id') in ['516C896C-6AA5-4A30-B30E-5502C2333DAE',

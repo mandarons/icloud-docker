@@ -50,7 +50,7 @@ def wanted_parent_folder(filters, root, folder_path, verbose=False):
 
 
 def process_folder(item, destination_path, filters, root, verbose=False):
-    if not (item and destination_path and filters and root):
+    if not (item and destination_path and root):
         return None
     new_directory = os.path.join(destination_path, item.name)
     if not wanted_folder(filters=filters, folder_path=new_directory, root=root, verbose=verbose):

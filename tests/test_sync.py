@@ -10,7 +10,6 @@ import tests
 from tests import data
 from src import sync, config_parser
 
-
 class TestSync(unittest.TestCase):
 
     def setUp(self) -> None:
@@ -184,8 +183,6 @@ class TestSync(unittest.TestCase):
         self.assertIsNone(sync.process_folder(item=self.drive[self.items[1]], destination_path=None,
                                               filters=self.filters['folders'], root=self.root))
         self.assertIsNone(sync.process_folder(item=self.drive[self.items[1]], destination_path=self.destination_path,
-                                              filters=None, root=self.root))
-        self.assertIsNone(sync.process_folder(item=self.drive[self.items[1]], destination_path=self.destination_path,
                                               filters=self.filters['folders'], root=None))
 
     def test_file_exists_valid(self):
@@ -202,7 +199,6 @@ class TestSync(unittest.TestCase):
             self.assertTrue(actual)
             output = mock_stdout.getvalue()
             self.assertIn('No changes detected.', output)
-
 
     def test_file_exists_invalid(self):
         self.assertFalse(sync.file_exists(item=None, local_file=self.local_file_path))
@@ -229,9 +225,14 @@ class TestSync(unittest.TestCase):
 
     def test_process_file_valids(self):
         files = set()
+        # file does not exist
         self.assertTrue(sync.process_file(item=self.file_item, destination_path=self.destination_path,
                                           filters=self.filters['file_extensions'], files=files))
         self.assertTrue(len(files) == 1)
+        # file already exists
+        self.assertFalse(sync.process_file(item=self.file_item, destination_path=self.destination_path,
+                                          filters=self.filters['file_extensions'], files=files))
+
 
     def test_process_file_invalids(self):
         files = set()
@@ -288,8 +289,7 @@ class TestSync(unittest.TestCase):
         self.assertTrue(len(sync.remove_obsolete(destination_path=None, files=set())) == 0)
         self.assertTrue(len(sync.remove_obsolete(destination_path=obsolete_path, files=None)) == 0)
 
-    def test_sync_directory_valids(self):
-        # Without remove
+    def test_sync_directory_without_remove_valid(self):
         actual = sync.sync_directory(drive=self.drive, destination_path=self.destination_path, root=self.root,
                                      items=self.drive.dir(), top=True, filters=self.filters, remove=False)
         self.assertTrue(len(actual) == 4)
@@ -299,7 +299,8 @@ class TestSync(unittest.TestCase):
             os.path.isfile(os.path.join(self.destination_path, 'pyiCloud', 'Test', 'Document scanne 2.pdf')))
         self.assertTrue(
             os.path.isfile(os.path.join(self.destination_path, 'pyiCloud', 'Test', 'Scanned document 1.pdf')))
-        # With remove
+
+    def test_sync_directory_with_remove_valid(self):
         os.mkdir(os.path.join(self.destination_path, 'obsolete'))
         shutil.copyfile(__file__, os.path.join(self.destination_path, 'obsolete', 'obsolete.py'))
         actual = sync.sync_directory(drive=self.drive, destination_path=self.destination_path, root=self.root,
@@ -311,6 +312,22 @@ class TestSync(unittest.TestCase):
             os.path.isfile(os.path.join(self.destination_path, 'pyiCloud', 'Test', 'Document scanne 2.pdf')))
         self.assertTrue(
             os.path.isfile(os.path.join(self.destination_path, 'pyiCloud', 'Test', 'Scanned document 1.pdf')))
+
+    def test_sync_directory_without_folder_filter_valid(self):
+        original_filters = dict(self.filters)
+        del self.filters['folders']
+        actual = sync.sync_directory(drive=self.drive, destination_path=self.destination_path, root=self.root,
+        items=self.drive.dir(), top=True, filters=self.filters, remove=False)
+        self.assertTrue(len(actual) == 5)
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud')))
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud', 'Test')))
+        self.assertTrue(
+            os.path.isfile(os.path.join(self.destination_path, 'pyiCloud', 'Test', 'Document scanne 2.pdf')))
+        self.assertTrue(
+            os.path.isfile(os.path.join(self.destination_path, 'pyiCloud', 'Test', 'Scanned document 1.pdf')))
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'unwanted')))
+
+        self.filters = dict(original_filters)
 
     def test_sync_directory_invalids(self):
         self.assertTrue(0 == len(sync.sync_directory(drive=None, destination_path=self.destination_path, root=self.root,
