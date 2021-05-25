@@ -50,7 +50,7 @@ def wanted_parent_folder(filters, root, folder_path, verbose=False):
 
 
 def process_folder(item, destination_path, filters, root, verbose=False):
-    if not (item and destination_path and filters and root):
+    if not (item and destination_path and root):
         return None
     new_directory = os.path.join(destination_path, item.name)
     if not wanted_folder(filters=filters, folder_path=new_directory, root=root, verbose=verbose):
@@ -128,20 +128,39 @@ def sync_directory(drive, destination_path, items, root, top=True, filters=None,
         for i in items:
             item = drive[i]
             if item.type == 'folder':
-                new_folder = process_folder(item=item, destination_path=destination_path,
-                                            filters=filters['folders'] if 'folders' in filters else None, root=root,
-                                            verbose=verbose)
+                new_folder = process_folder(
+                    item=item,
+                    destination_path=destination_path,
+                    filters=filters['folders'] if filters and 'folders' in filters else None,
+                    root=root,
+                    verbose=verbose
+                )
                 if not new_folder:
                     continue
                 files.add(new_folder)
-                files.update(sync_directory(drive=item, destination_path=new_folder, items=item.dir(), root=root,
-                                            top=False, filters=filters, verbose=verbose))
+                files.update(sync_directory(
+                    drive=item,
+                    destination_path=new_folder,
+                    items=item.dir(),
+                    root=root,
+                    top=False,
+                    filters=filters,
+                    verbose=verbose
+                ))
             elif item.type == 'file':
-                if wanted_parent_folder(filters=filters['folders'], root=root, folder_path=destination_path,
-                                        verbose=verbose):
-                    process_file(item=item, destination_path=destination_path,
-                                 filters=filters['file_extensions'] if 'file_extensions' in filters else None,
-                                 files=files, verbose=verbose)
+                if wanted_parent_folder(
+                    filters=filters['folders'] if filters and 'folders' in filters else None,
+                    root=root,
+                    folder_path=destination_path,
+                    verbose=verbose
+                ):
+                    process_file(
+                        item=item,
+                        destination_path=destination_path,
+                        filters=filters['file_extensions'] if filters and 'file_extensions' in filters else None,
+                        files=files,
+                        verbose=verbose
+                    )
         if top and remove:
             remove_obsolete(destination_path=destination_path, files=files, verbose=verbose)
     return files
@@ -159,7 +178,8 @@ def sync_drive():
                 api = PyiCloudService(apple_id=username, password=utils.get_password_from_keyring(username=username))
                 if not api.requires_2sa:
                     sync_directory(drive=api.drive, destination_path=destination_path, root=destination_path,
-                                   items=api.drive.dir(), top=True, filters=config['filters'],
+                                   items=api.drive.dir(), top=True,
+                                   filters=config['filters'] if 'filters' in config else None,
                                    remove=config_parser.get_remove_obsolete(config=config), verbose=verbose)
                 else:
                     print('Error: 2FA is required. Please log in.')
@@ -169,7 +189,7 @@ def sync_drive():
                 print('password is not stored in keyring. Please save the password in keyring.')
         sleep_for = config_parser.get_sync_interval(config=config)
         next_sync = (datetime.datetime.now() +
-                     datetime.timedelta(minutes=sleep_for)).strftime('%l:%M%p %Z on %b %d, %Y')
+                     datetime.timedelta(seconds=sleep_for)).strftime('%c')
         print(f'Resyncing at {next_sync} ...')
         if sleep_for < 0:
             break
