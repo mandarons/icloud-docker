@@ -1,0 +1,158 @@
+{
+  "uid" : "95ecc1d824ae2b69",
+  "name" : "test_throttling",
+  "fullName" : "tests.test_notify.TestNotify#test_throttling",
+  "historyId" : "8be204d4375ae70568b81a9aa2ff412f",
+  "time" : {
+    "start" : 1626537043431,
+    "stop" : 1626537043431,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestNotify",
+    "time" : {
+      "start" : 1626537043407,
+      "stop" : 1626537043407,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "48be73287f8bcec0",
+      "name" : "stdout",
+      "source" : "48be73287f8bcec0.txt",
+      "type" : "text/plain",
+      "size" : 77
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 1,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestNotify::0",
+    "time" : {
+      "start" : 1626537043432,
+      "stop" : 1626537043432,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_notify"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestNotify"
+  }, {
+    "name" : "host",
+    "value" : "fv-az212-956"
+  }, {
+    "name" : "thread",
+    "value" : "3801-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_notify"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 6,
+        "unknown" : 0,
+        "total" : 6
+      },
+      "items" : [ {
+        "uid" : "68a8405644ee9ed2",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/17//#testresult/68a8405644ee9ed2",
+        "status" : "passed",
+        "time" : {
+          "start" : 1626532822904,
+          "stop" : 1626532822904,
+          "duration" : 0
+        }
+      }, {
+        "uid" : "1c80d9bfaa1a0f86",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/16//#testresult/1c80d9bfaa1a0f86",
+        "status" : "passed",
+        "time" : {
+          "start" : 1626532612399,
+          "stop" : 1626532612400,
+          "duration" : 1
+        }
+      }, {
+        "uid" : "a4d56f3c2543baf9",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/15//#testresult/a4d56f3c2543baf9",
+        "status" : "passed",
+        "time" : {
+          "start" : 1626532466997,
+          "stop" : 1626532466998,
+          "duration" : 1
+        }
+      }, {
+        "uid" : "6675f8d86e305317",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/14//#testresult/6675f8d86e305317",
+        "status" : "passed",
+        "time" : {
+          "start" : 1626532181823,
+          "stop" : 1626532181824,
+          "duration" : 1
+        }
+      }, {
+        "uid" : "d7333edf37408b4e",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/14//#testresult/d7333edf37408b4e",
+        "status" : "passed",
+        "time" : {
+          "start" : 1626531962839,
+          "stop" : 1626531962839,
+          "duration" : 0
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "95ecc1d824ae2b69.json",
+  "parameterValues" : [ ]
+}
