@@ -37,7 +37,7 @@ jobs:
 #        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        ./run-ci.sh
+        bash ./run-ci.sh
     - name: Publish code coverage
       if: ${{ success() }}
       run: |
