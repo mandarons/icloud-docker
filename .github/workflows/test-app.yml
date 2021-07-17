@@ -1,45 +1,35 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python application
+name: Test, Coverage and Results
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build:
-
     runs-on: ubuntu-18.04
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.9
-    - name: Install dependencies
-      run: |
-        sudo apt-add-repository ppa:qameta/allure -y
-        sudo apt-get update
-        sudo apt-get install pylint allure -y
-        python -m pip install --upgrade pip
-        pip install flake8 pytest
-        pip install -r requirements-test.txt
-#        if [ -f requirements-test.txt ]; then pip install -r requirements-test.txt; fi
-#    - name: Lint with flake8
-#      run: |
-#        # stop the build if there are Python syntax errors or undefined names
-#        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-#        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-#        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
-      run: |
-        bash ./run-ci.sh
-    - name: Publish code coverage
-      if: ${{ success() }}
-      run: |
-        bash <(curl -s https://codecov.io/bash)
-      
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          sudo apt-add-repository ppa:qameta/allure -y
+          sudo apt-get update
+          sudo apt-get install allure -y
+          python -m pip install --upgrade pip
+          pip install -r requirements-test.txt
+      - name: Test with pytest
+        run: |
+          ./run-ci.sh
+      - name: Publish code coverage
+        if: ${{ success() }}
+        run: |
+          bash <(curl -s https://codecov.io/bash)
