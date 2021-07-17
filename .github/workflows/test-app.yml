@@ -21,9 +21,9 @@ jobs:
           python-version: 3.9
       - name: Install dependencies
         run: |
-          sudo apt-add-repository ppa:qameta/allure -y
-          sudo apt-get update
-          sudo apt-get install allure -y
+          curl -o allure-install.zip https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/2.14.0/allure-commandline-2.14.0.zip
+          unzip allure-install.zip
+          export PATH=$PATH:./allure-2.14.0/bin/
           python -m pip install --upgrade pip
           pip install -r requirements-test.txt
       - name: Test with pytest
