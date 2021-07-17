@@ -26,6 +26,8 @@ jobs:
           sudo apt-get install allure -y
           python -m pip install --upgrade pip
           pip install -r requirements-test.txt
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Test with pytest
         run: |
           ./run-ci.sh
