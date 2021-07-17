@@ -56,7 +56,7 @@ jobs:
           context: "Test report"
           state: "success"
           sha: ${{ github.event.pull_request.head.sha }}
-          target_url: simple-elf.github.io/github-allure-history/${{ github.run_number }}
+          target_url: mandarons.github.io/icloud-drive-docker/${{ github.run_number }}
       - name: Publish code coverage
         if: ${{ success() }}
         run: |
