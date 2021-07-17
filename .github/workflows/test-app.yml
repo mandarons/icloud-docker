@@ -12,7 +12,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-18.04
-
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python 3.9
@@ -21,16 +20,43 @@ jobs:
           python-version: 3.9
       - name: Install dependencies
         run: |
-          curl -o allure-install.zip https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline/2.14.0/allure-commandline-2.14.0.zip
-          unzip allure-install.zip
-          export PATH=$PATH:./allure-2.14.0/bin/
           python -m pip install --upgrade pip
           pip install -r requirements-test.txt
       #      - name: Setup tmate session
       #       uses: mxschmitt/action-tmate@v3
       - name: Test with pytest
         run: |
-          ./run-ci.sh
+          pylint src/ tests/ && pytest
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: allure-results
+          allure_history: allure-history
+          keep_reports: 100
+      - name: Publish test report to gh-pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v2
+        env:
+          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_BRANCH: gh-pages
+          PUBLISH_DIR: allure-history
+      - name: Post the link to the report
+        if: always()
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: "Test report"
+          state: "success"
+          sha: ${{ github.event.pull_request.head.sha }}
+          target_url: simple-elf.github.io/github-allure-history/${{ github.run_number }}
       - name: Publish code coverage
         if: ${{ success() }}
         run: |
