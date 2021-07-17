@@ -10,4 +10,16 @@
     "unknown" : 0,
     "total" : 52
   }
+}, {
+  "buildOrder" : 14,
+  "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/14/",
+  "reportName" : "Allure Report with history",
+  "data" : {
+    "failed" : 0,
+    "broken" : 0,
+    "skipped" : 0,
+    "passed" : 52,
+    "unknown" : 0,
+    "total" : 52
+  }
 } ]
