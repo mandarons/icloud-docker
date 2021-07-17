@@ -1,0 +1,86 @@
+{
+  "uid" : "8c8a7c57351cc0f0",
+  "name" : "test_wanted_parent_folder_invalids",
+  "fullName" : "tests.test_sync.TestSync#test_wanted_parent_folder_invalids",
+  "historyId" : "3ae0fd65ddcb94eda85d33f196bd35db",
+  "time" : {
+    "start" : 1626531963254,
+    "stop" : 1626531963267,
+    "duration" : 13
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSync",
+    "time" : {
+      "start" : 1626531962843,
+      "stop" : 1626531962843,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSync::0",
+    "time" : {
+      "start" : 1626531963282,
+      "stop" : 1626531963282,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_sync"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestSync"
+  }, {
+    "name" : "host",
+    "value" : "fv-az212-956"
+  }, {
+    "name" : "thread",
+    "value" : "3849-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_sync"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "8c8a7c57351cc0f0.json",
+  "parameterValues" : [ ]
+}
