@@ -127,7 +127,7 @@ def sync_directory(drive, destination_path, items, root, top=True, filters=None,
     if drive and destination_path and items and root:
         for i in items:
             item = drive[i]
-            if item.type == 'folder':
+            if item.type in ('folder', 'app_library'):
                 new_folder = process_folder(
                     item=item,
                     destination_path=destination_path,

@@ -1591,6 +1591,7 @@ DRIVE_ROOT_WORKING = [
                 'etag': '2m',
                 'type': 'APP_LIBRARY',
                 'maxDepth': 'ANY',
+                'items': [],
                 'icons': [
                     {
                         'url': 'https://p31-drivews.icloud.com/getIcons?id=com.apple.Keynote&field=icon120x120_iOS',
@@ -1649,6 +1650,7 @@ DRIVE_ROOT_WORKING = [
                 'etag': '3k',
                 'type': 'APP_LIBRARY',
                 'maxDepth': 'ANY',
+                'items': [],
                 'icons': [
                     {
                         'url': 'https://p31-drivews.icloud.com/getIcons?id=com.apple.Numbers&field=icon120x120_iOS',
@@ -1793,6 +1795,7 @@ DRIVE_ROOT_WORKING = [
                 'etag': 'km',
                 'type': 'APP_LIBRARY',
                 'maxDepth': 'ANY',
+                'items': [],
                 'icons': [
                     {
                         'url': 'https://p31-drivews.icloud.com/getIcons?id=com.apple.Pages&field=icon120x120_iOS',
@@ -1929,6 +1932,7 @@ DRIVE_ROOT_WORKING = [
                 'etag': 'bv',
                 'type': 'APP_LIBRARY',
                 'maxDepth': 'ANY',
+                'items': [],
                 'icons': [
                     {
                         'url': 'https://p31-drivews.icloud.com/getIcons?id=com.apple.Preview&field=icon32x32_OSX',
