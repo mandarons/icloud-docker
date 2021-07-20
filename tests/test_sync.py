@@ -292,7 +292,7 @@ class TestSync(unittest.TestCase):
     def test_sync_directory_without_remove_valid(self):
         actual = sync.sync_directory(drive=self.drive, destination_path=self.destination_path, root=self.root,
                                      items=self.drive.dir(), top=True, filters=self.filters, remove=False)
-        self.assertTrue(len(actual) == 4)
+        self.assertTrue(len(actual) == 5)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud')))
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud', 'Test')))
         self.assertTrue(
@@ -305,7 +305,7 @@ class TestSync(unittest.TestCase):
         shutil.copyfile(__file__, os.path.join(self.destination_path, 'obsolete', 'obsolete.py'))
         actual = sync.sync_directory(drive=self.drive, destination_path=self.destination_path, root=self.root,
                                      items=self.drive.dir(), top=True, filters=self.filters, remove=True)
-        self.assertTrue(len(actual) == 4)
+        self.assertTrue(len(actual) == 5)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud')))
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud', 'Test')))
         self.assertTrue(
@@ -318,7 +318,7 @@ class TestSync(unittest.TestCase):
         del self.filters['folders']
         actual = sync.sync_directory(drive=self.drive, destination_path=self.destination_path, root=self.root,
         items=self.drive.dir(), top=True, filters=self.filters, remove=False)
-        self.assertTrue(len(actual) == 5)
+        self.assertTrue(len(actual) == 9)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud')))
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud', 'Test')))
         self.assertTrue(
