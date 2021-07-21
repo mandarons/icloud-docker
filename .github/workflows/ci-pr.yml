@@ -1,0 +1,63 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Test and Coverage
+
+on:
+#   push:
+#     branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-test.txt
+      #      - name: Setup tmate session
+      #       uses: mxschmitt/action-tmate@v3
+      - name: Test with pytest
+        run: |
+          pylint src/ tests/ && pytest
+#       - name: Checkout gh-pages
+#         uses: actions/checkout@v2
+#         if: always()
+#         continue-on-error: true
+#         with:
+#           ref: gh-pages
+#           path: gh-pages
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: allure-results
+          allure_history: allure-history
+          keep_reports: 100
+#       - name: Publish test report to gh-pages
+#         if: always()
+#         uses: peaceiris/actions-gh-pages@v2
+#         env:
+#           ACTIONS_DEPLOY_KEY: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+#           PUBLISH_BRANCH: gh-pages
+#           PUBLISH_DIR: allure-history
+#       - name: Post the link to the report
+#         if: always()
+#         uses: Sibz/github-status-action@v1
+#         with:
+#           authToken: ${{secrets.GITHUB_TOKEN}}
+#           context: "Test report"
+#           state: "success"
+#           sha: ${{ github.event.pull_request.head.sha }}
+#           target_url: https://mandarons.github.io/icloud-drive-docker/${{ github.run_number }}
+      - name: Publish code coverage
+        if: ${{ success() }}
+        run: |
+          bash <(curl -s https://codecov.io/bash)
