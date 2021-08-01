@@ -78,3 +78,6 @@ filters:
 ```
 ***Note: On every sync, this client iterates all the files and folders. Depending on number of files in your iCloud drive,
 syncing can take longer.***
+
+## Use Cases
+[Make scanned documents from iCloud Drive, searchable](https://mandarons.com/posts/make-scanned-documents-from-icloud-drive-searchable)
