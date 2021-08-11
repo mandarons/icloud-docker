@@ -81,5 +81,5 @@ jobs:
         if: ${{ success() }}
         with:
           name: coverage-output
-          path: coverage
+          path: htmlcov
           retention-days: 1
