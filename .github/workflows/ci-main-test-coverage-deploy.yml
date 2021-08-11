@@ -1,0 +1,212 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: CI - Main
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/**
+      - tests/**
+      - Dockerfile
+      - pylintrc
+      - pytest.ini
+      - requirements-test.txt
+      - /*requirements.txt
+      - run-ci.sh
+  workflow_dispatch:
+jobs:
+  cache-requirements-install:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Cache pip dependencies
+        uses: actions/cache@v2
+        id: cache-dependencies
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        if: steps.cache-dependencies.outputs.cache-hit != 'true'
+        run: |
+          pip install -r requirements-test.txt
+  test:
+    needs: cache-requirements-install
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Restore pip cache dependencies
+        uses: actions/cache@v2
+        with: 
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install dependencies
+        run: |
+          pip install -r requirements-test.txt
+      - name: Test with pytest
+        run: |
+          pylint src/ tests/ && pytest
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ success() }}
+        with:
+          name: coverage-output
+          path: htmlcov
+          retention-days: 1
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Generate Allure Report
+        uses: simple-elf/allure-report-action@master
+        if: always()
+        with:
+          allure_results: allure-results
+          subfolder: test-results
+          allure-report: allure-report
+          allure_history: allure-history
+          keep_reports: 100
+      - name: Generate badges
+        run: |
+          python generate_badges.py
+      - name: Upload tests artifacts
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v2
+        with: 
+          name: tests-output
+          path: allure-history
+          retention-days: 1
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v2
+        if: ${{ success() }}
+        with:
+          name: coverage-output
+          path: htmlcov
+          retention-days: 1
+      - name: Upload badges artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: badges-output
+          path: badges
+          retention-days: 1
+  publish-test-report:
+    needs: test
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download test artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: test-output
+          path: allure-history
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Publish test report to gh-pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          publish_branch: gh-pages
+          publish_dir: allure-history
+          destination_dir: test-results
+  publish-coverage-report:
+    needs: publish-test-report
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download coverage artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: coverage-output
+          path: coverage
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Publish test coverage to gh-pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          publish_branch: gh-pages
+          publish_dir: coverage
+          destination_dir: test-coverage
+  publish-badges:
+    needs: publish-coverage-report
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Download badges artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: badges-output
+          path: badges
+      - name: Checkout gh-pages
+        uses: actions/checkout@v2
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
+      - name: Publish badges to gh-pages
+        if: always()
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          deploy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
+          publish_branch: gh-pages
+          publish_dir: badges
+          destination_dir: badges
+#   deploy:
+#     needs: test
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Check Out Repo 
+#         uses: actions/checkout@v2
+#       - name: Cache Docker layers
+#         uses: actions/cache@v2
+#         with:
+#           path: /tmp/.buildx-cache
+#           key: ${{ runner.os }}-buildx-${{ github.sha }}
+#           restore-keys: |
+#             ${{ runner.os }}-buildx-
+#       - name: Login to Docker Hub
+#         uses: docker/login-action@v1
+#         with:
+#           username: ${{ secrets.DOCKER_HUB_USERNAME }}
+#           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+#       - name: Set up Docker Buildx
+#         id: buildx
+#         uses: docker/setup-buildx-action@v1
+#       - name: Build and push
+#         id: docker_build
+#         uses: docker/build-push-action@v2
+#         with:
+#           context: ./
+#           file: ./Dockerfile
+#           push: true
+#           tags: mandarons/icloud-drive:main
+#       - name: Image digest
+#         run: echo ${{ steps.docker_build.outputs.digest }}
