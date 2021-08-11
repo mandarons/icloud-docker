@@ -195,6 +195,8 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      - name: Set up Docker QEMU
+        uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
@@ -205,6 +207,7 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
+          platforms: linux/arm64, linux/amd64, linux/arm/v7, linux/386
           tags: mandarons/icloud-drive:main
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
