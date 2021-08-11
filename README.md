@@ -1,6 +1,11 @@
-# iCloud-drive-docker [![codecov](https://codecov.io/gh/mandarons/icloud-drive-docker/branch/main/graph/badge.svg)](https://codecov.io/gh/mandarons/icloud-drive-docker) [![Docker](https://badgen.net/docker/pulls/mandarons/icloud-drive)](https://hub.docker.com/r/mandarons/icloud-drive) [![Join the chat at https://gitter.im/mandarons/iCloud-drive-docker](https://badges.gitter.im/mandarons/iCloud-drive-docker.svg)](https://gitter.im/mandarons/iCloud-drive-docker?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) <a href="https://www.buymeacoffee.com/mandarons" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 20px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+# iCloud-drive-docker 
 
-[Latest Test Results](https://mandarons.github.io/icloud-drive-docker)
+[![Main - Test, Coverage and Deploy](https://github.com/mandarons/icloud-drive/actions/workflows/ci-main-test-coverege-deploy.yml/badge.svg?branch=main)](https://github.com/mandarons/icloud-drive/actions/workflows/ci-main-test-coverege-deploy.yml)
+[![Tests](https://mandarons.github.io/icloud-drive/badges/tests.svg)](https://mandarons.github.io/icloud-drive/test-results/)
+[![Coverage](https://mandarons.github.io/icloud-drive/badges/coverage.svg)](https://mandarons.github.io/icloud-drive/test-coverage/index.html)
+[![Docker](https://badgen.net/docker/pulls/mandarons/icloud-drive)](https://hub.docker.com/r/mandarons/icloud-drive)
+[![Discord](https://img.shields.io/discord/871555550444408883?style=for-the-badge)](https://discord.gg/HfAXY2ykhp)
+<a href="https://www.buymeacoffee.com/mandarons" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 20px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
 :love_you_gesture: ***Please star this repository if you end up using the container. It will help me continue supporting this product.*** :pray:
 
