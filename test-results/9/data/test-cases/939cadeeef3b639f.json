@@ -1,0 +1,133 @@
+{
+  "uid" : "939cadeeef3b639f",
+  "name" : "test_wanted_folder_invalids",
+  "fullName" : "tests.test_sync.TestSync#test_wanted_folder_invalids",
+  "historyId" : "cd9f7c0edd11dc0f6a30600d39600fe6",
+  "time" : {
+    "start" : 1628710566168,
+    "stop" : 1628710566178,
+    "duration" : 10
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSync",
+    "time" : {
+      "start" : 1628710565915,
+      "stop" : 1628710565915,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSync::0",
+    "time" : {
+      "start" : 1628710566253,
+      "stop" : 1628710566253,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_sync"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestSync"
+  }, {
+    "name" : "host",
+    "value" : "fv-az139-747"
+  }, {
+    "name" : "thread",
+    "value" : "3840-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_sync"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 5,
+        "unknown" : 0,
+        "total" : 5
+      },
+      "items" : [ {
+        "uid" : "9c9e3f5652185a0e",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/8//#testresult/9c9e3f5652185a0e",
+        "status" : "passed",
+        "time" : {
+          "start" : 1628703910068,
+          "stop" : 1628703910078,
+          "duration" : 10
+        }
+      }, {
+        "uid" : "488d3e06ccf20d8f",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/7//#testresult/488d3e06ccf20d8f",
+        "status" : "passed",
+        "time" : {
+          "start" : 1628696067631,
+          "stop" : 1628696067642,
+          "duration" : 11
+        }
+      }, {
+        "uid" : "ef5cf98514ddeb2a",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/6//#testresult/ef5cf98514ddeb2a",
+        "status" : "passed",
+        "time" : {
+          "start" : 1628695664802,
+          "stop" : 1628695664813,
+          "duration" : 11
+        }
+      }, {
+        "uid" : "c52acc160a5e5167",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/5//#testresult/c52acc160a5e5167",
+        "status" : "passed",
+        "time" : {
+          "start" : 1628695403720,
+          "stop" : 1628695403730,
+          "duration" : 10
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "939cadeeef3b639f.json",
+  "parameterValues" : [ ]
+}
