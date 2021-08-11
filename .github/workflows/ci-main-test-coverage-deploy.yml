@@ -91,7 +91,7 @@ jobs:
         if: ${{ failure() }}
         uses: actions/upload-artifact@v2
         with: 
-          name: tests-output
+          name: test-output
           path: allure-history
           retention-days: 1
       - name: Upload coverage artifacts
