@@ -6,9 +6,15 @@ name: Test, Coverage and Results
 on:
   push:
     branches: [main]
-#   pull_request:
-#     branches: [main]
-
+    paths:
+      - src/**
+      - tests/**
+      - Dockerfile
+      - pylintrc
+      - pytest.ini
+      - requirements-test.txt
+      - /*requirements.txt
+      - run-ci.sh
 jobs:
   build:
     runs-on: ubuntu-18.04
