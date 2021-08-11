@@ -88,15 +88,13 @@ jobs:
         run: |
           python generate_badges.py
       - name: Upload tests artifacts
-        if: ${{ failure() }}
         uses: actions/upload-artifact@v2
         with: 
           name: test-output
-          path: allure-history
+          path: allure-history/test-results/
           retention-days: 1
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v2
-        if: ${{ success() }}
         with:
           name: coverage-output
           path: htmlcov
