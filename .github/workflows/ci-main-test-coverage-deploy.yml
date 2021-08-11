@@ -81,7 +81,7 @@ jobs:
         with:
           allure_results: allure-results
           subfolder: test-results
-          allure-report: allure-report
+          allure_report: allure-report
           allure_history: allure-history
           keep_reports: 100
       - name: Generate badges
