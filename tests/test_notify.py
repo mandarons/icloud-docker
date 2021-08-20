@@ -8,12 +8,12 @@ from src import notify
 
 class TestNotify(unittest.TestCase):
     def setUp(self) -> None:
-        self.config={'smtp':{
+        self.config={'app': {'smtp':{
             'email':    'user@test.com',
             'host':     'smtp.test.com',
             'port':     '587',
             'password': 'password',
-        }}
+        }}}
 
     def tearDown(self) -> None:
         pass
@@ -33,9 +33,9 @@ class TestNotify(unittest.TestCase):
         self.assertIsInstance(notify.send(self.config, None, dry_run=True), datetime.datetime)
 
     def test_build_message(self):
-        msg = notify.build_message(self.config['smtp']['email'])
-        self.assertEqual(msg.To, self.config['smtp']['email'])
-        self.assertIn(self.config['smtp']['email'], msg.From)
+        msg = notify.build_message(self.config['app']['smtp']['email'])
+        self.assertEqual(msg.To, self.config['app']['smtp']['email'])
+        self.assertIn(self.config['app']['smtp']['email'], msg.From)
         self.assertIn('icloud-drive-docker: Two step authentication required', msg.Subject)
         self.assertIn('Two-step authentication for iCloud Drive (Docker) is required.', msg.Body)
         self.assertIsInstance(msg, Message)

@@ -14,7 +14,7 @@ class TestSync(unittest.TestCase):
 
     def setUp(self) -> None:
         self.config = config_parser.read_config(config_path=tests.CONFIG_PATH)
-        self.filters = self.config['filters']
+        self.filters = self.config['drive']['filters']
         self.root = tests.DRIVE_DIR
         self.destination_path = self.root
         os.makedirs(self.destination_path, exist_ok=True)
@@ -352,7 +352,7 @@ class TestSync(unittest.TestCase):
     def test_sync_drive_valids(self, mock_read_config, mock_service, mock_get_username, mock_get_password, mock_sleep):
         mock_service = self.service
         config = self.config.copy()
-        config['settings']['destination'] = self.destination_path
+        config['drive']['destination'] = self.destination_path
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync_drive())
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, 'pyiCloud')))
@@ -369,6 +369,6 @@ class TestSync(unittest.TestCase):
         self.assertIsNone(sync.sync_drive())
 
         mock_sleep.side_effect = Exception()
-        config['settings']['sync_interval'] = 1
+        config['app']['sync_interval'] = 1
         with self.assertRaises(Exception):
             sync.sync_drive()

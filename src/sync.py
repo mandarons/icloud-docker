@@ -25,7 +25,6 @@ def wanted_file(filters, file_path, verbose=False):
         print(f'Skipping the unwanted file {file_path}')
     return False
 
-
 def wanted_folder(filters, root, folder_path, verbose=False):
     if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
@@ -48,7 +47,6 @@ def wanted_parent_folder(filters, root, folder_path, verbose=False):
             return True
     return False
 
-
 def process_folder(item, destination_path, filters, root, verbose=False):
     if not (item and destination_path and root):
         return None
@@ -59,7 +57,6 @@ def process_folder(item, destination_path, filters, root, verbose=False):
         return None
     os.makedirs(new_directory, exist_ok=True)
     return new_directory
-
 
 def file_exists(item, local_file, verbose=False):
     if item and local_file and os.path.isfile(local_file):
@@ -72,7 +69,6 @@ def file_exists(item, local_file, verbose=False):
                 print(f'No changes detected. Skipping the file {local_file}')
             return True
     return False
-
 
 def download_file(item, local_file, verbose=False):
     if not (item and local_file):
@@ -90,7 +86,6 @@ def download_file(item, local_file, verbose=False):
         return False
     return True
 
-
 def process_file(item, destination_path, filters, files, verbose=False):
     if not (item and destination_path and files is not None):
         return False
@@ -102,7 +97,6 @@ def process_file(item, destination_path, filters, files, verbose=False):
         return False
     download_file(item=item, local_file=local_file, verbose=verbose)
     return True
-
 
 def remove_obsolete(destination_path, files, verbose=False):
     removed_paths = set()
@@ -120,7 +114,6 @@ def remove_obsolete(destination_path, files, verbose=False):
                 rmtree(local_file)
                 removed_paths.add(local_file)
     return removed_paths
-
 
 def sync_directory(drive, destination_path, items, root, top=True, filters=None, remove=False, verbose=False):
     files = set()
@@ -165,14 +158,13 @@ def sync_directory(drive, destination_path, items, root, top=True, filters=None,
             remove_obsolete(destination_path=destination_path, files=files, verbose=verbose)
     return files
 
-
 def sync_drive():
     last_send = None
     while True:
         config = config_parser.read_config()
         verbose = config_parser.get_verbose(config=config)
         username = config_parser.get_username(config=config)
-        destination_path = config_parser.prepare_destination(config=config)
+        destination_path = config_parser.prepare_drive_destination(config=config)
         if username and destination_path:
             try:
                 api = PyiCloudService(apple_id=username, password=utils.get_password_from_keyring(username=username))
@@ -194,3 +186,4 @@ def sync_drive():
         if sleep_for < 0:
             break
         time.sleep(sleep_for)
+

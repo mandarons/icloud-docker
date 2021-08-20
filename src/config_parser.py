@@ -11,102 +11,141 @@ def read_config(config_path=constants.DEFAULT_CONFIG_FILE_PATH):
         return None
     with open(file=config_path, mode='r') as config_file:
         config = YAML().load(config_file)
-    config['credentials']['username'] = config['credentials']['username'].strip() \
-        if config['credentials']['username'] is not None else ''
+    config['app']['credentials']['username'] = config['app']['credentials']['username'].strip() \
+        if config['app']['credentials']['username'] is not None else ''
     return config
 
+def config_path_to_string(config_path):
+    return ' > '.join(config_path)
+
+def traverse_config_path(config, config_path: list[str]) -> bool:
+    if len(config_path) == 0:
+        return True
+    if not (config and config_path[0] in config):
+        return False
+    return traverse_config_path(config[config_path[0]], config_path=config_path[1:])
+
+def get_config_value(config, config_path: list[str]):
+    if len(config_path) == 1:
+        return config[config_path[0]]
+    return get_config_value(config=config[config_path[0]], config_path=config_path[1:])
 
 def get_sync_interval(config):
     sync_interval = constants.DEFAULT_SYNC_INTERVAL_SEC
-    if not (config and 'settings' in config and 'sync_interval' in config['settings']):
-        print(f'Warning: sync_interval is not found in config > settings. Using default sync_interval: '
-              f'{sync_interval} seconds ...')
+    config_path = ['app', 'sync_interval']
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: sync_interval is not found in {config_path_to_string(config_path)}. '
+            f'Using default sync_interval: {sync_interval} seconds ...')
     else:
-        sync_interval = config['settings']['sync_interval']
+        sync_interval = get_config_value(config=config, config_path=config_path)
         print(f'Syncing every {sync_interval} seconds.')
     return sync_interval
 
 
-def prepare_destination(config):
-    print('Checking drive location ...')
-    destination = constants.DEFAULT_DRIVE_DESTINATION
-    if not (config and 'settings' in config and 'destination' in config['settings']):
-        print(f'Warning: destination is missing in config > settings. Using default destination: {destination}.')
+def prepare_root_destination(config):
+    print('Checking root destination ...')
+    root_destination = constants.DEFAULT_ROOT_DESTINATION
+    config_path = ['app', 'root']
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: root destination is missing in {config_path_to_string(config_path)}. '
+        f'Using default root destination: ${root_destination}.')
     else:
-        destination = config['settings']['destination']
-    destination_path = os.path.abspath(destination)
-    os.makedirs(destination_path, exist_ok=True)
-    return destination_path
+        root_destination = get_config_value(config=config, config_path=config_path)
+    root_destination_path = os.path.abspath(root_destination)
+    os.makedirs(root_destination_path, exist_ok=True)
+    return root_destination_path
 
+def prepare_drive_destination(config):
+    print('Checking drive destination ...')
+    config_path = ['drive', 'destination']
+    drive_destination = constants.DEFAULT_DRIVE_DESTINATION
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: destination is missing in {config_path_to_string(config_path)}. \
+        Using default drive destination: {drive_destination}.')
+    else:
+        drive_destination = get_config_value(config=config, config_path=config_path)
+    drive_destination_path = os.path.abspath(os.path.join(prepare_root_destination(config=config), drive_destination))
+    os.makedirs(drive_destination_path, exist_ok=True)
+    return drive_destination_path
 
 def get_username(config):
     username = None
-    if not (config and 'credentials' in config and 'username' in config['credentials']):
-        print('Error: username is missing in config > credentials. Please set the username.')
+    config_path = ['app', 'credentials', 'username']
+
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Error: username is missing in {config_path_to_string(config_path)}. Please set the username.')
     else:
-        username = config['credentials']['username']
+        username = get_config_value(config=config, config_path=config_path)
         username = username.strip()
         if len(username) == 0:
             username = None
-            print('Error: username is empty in config > credentials.')
+            print(f'Error: username is empty in {config_path_to_string(config_path)}.')
     return username
 
 
 def get_remove_obsolete(config):
     remove_obsolete = False
-    if not (config and 'settings' in config and 'remove_obsolete' in config['settings']):
-        print(
-            'Warning: remove_obsolete is not found in config > settings. Not removing the obsolete files and folders.')
+    config_path = ['drive', 'remove_obsolete']
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: remove_obsolete is not found in {config_path_to_string(config_path)}. \
+         Not removing the obsolete files and folders.')
     else:
-        remove_obsolete = config['settings']['remove_obsolete']
-        print('Removing obsolete files and folders ...')
+        remove_obsolete = get_config_value(config=config, config_path=config_path)
+        print(f'{"R" if remove_obsolete else "Not R"}emoving obsolete files and folders ...')
     return remove_obsolete
 
 
 def get_verbose(config):
     verbose = False
-    if not (config and 'settings' in config and 'verbose' in config['settings']):
-        print('Warning: verbose is not found in config > settings. Disabling verbose mode.')
+    config_path = ['app', 'verbose']
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: verbose is not found in {config_path_to_string(config_path)}. Disabling verbose mode.')
     else:
-        verbose = config['settings']['verbose']
-        print('Enabled verbose ...')
+        verbose = get_config_value(config=config, config_path=config_path)
+        print(f'{"Enabled" if verbose else "Disabled"} verbose ...')
     return verbose
 
 def get_smtp_email(config):
     email = None
-    if (config and 'smtp' in config and 'email' in config['smtp']):
-        email = config['smtp']['email']
+    config_path = ['app', 'smtp', 'email']
+    if traverse_config_path(config=config, config_path=config_path):
+        email = get_config_value(config=config, config_path=config_path)
     return email
 
 def get_smtp_host(config):
     host = None
-    if not (config and 'smtp' in config and 'host' in config['smtp']):
-        print('Warning: host is not found in config > smtp')
+    config_path = ['app', 'smtp', 'host']
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: host is not found in {config_path_to_string(config_path)}')
     else:
-        host = config['smtp']['host']
+        host = get_config_value(config=config, config_path=config_path)
     return host
 
 def get_smtp_port(config):
     port = None
-    if not (config and 'smtp' in config and 'port' in config['smtp']):
-        print('Warning: port is not found in config > smtp')
+    config_path = ['app', 'smtp', 'port']
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: port is not found in {config_path_to_string(config_path)}')
     else:
-        port = config['smtp']['port']
+        port = get_config_value(config=config, config_path=config_path)
     return port
 
 def get_smtp_password(config):
     password = None
-    if not (config and 'smtp' in config and 'password' in config['smtp']):
-        print('Warning: password is not found in config > smtp')
+    config_path = ['app', 'smtp', 'password']
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: password is not found in {config_path_to_string(config_path)}')
     else:
-        password = config['smtp']['password']
+        password = get_config_value(config=config, config_path=config_path)
     return password
 
 
 def get_smtp_no_tls(config):
     no_tls = False
-    if not (config and 'smtp' in config and 'no_tls' in config['smtp']):
-        print('Warning: no_tls is not found in config > smtp')
+    config_path = ['app', 'smtp', 'no_tls']
+    if not traverse_config_path(config=config, config_path=config_path):
+        print(f'Warning: no_tls is not found in {config_path_to_string(config_path)}')
     else:
-        no_tls = config['smtp']['no_tls']
+        no_tls = get_config_value(config=config, config_path=config_path)
     return no_tls
+

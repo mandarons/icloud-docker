@@ -6,7 +6,7 @@ from ruamel.yaml import YAML
 DATA_DIR = os.path.join(os.path.dirname(__file__), 'data')
 CONFIG_PATH = os.path.join(DATA_DIR, 'test_config.yaml')
 TEMP_DIR = os.path.join(os.path.dirname(__file__), 'temp')
-DRIVE_DIR = os.path.join(TEMP_DIR, 'drive')
+DRIVE_DIR = os.path.join(TEMP_DIR, 'icloud', 'drive')
 
 
 def update_config(data):
