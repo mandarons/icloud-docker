@@ -2,8 +2,6 @@ app:
   credentials:
     # iCloud drive username
     username: user@test.com
-    # iCloud drive password
-    password:
   # Sync interval in seconds, < 0 runs once
   sync_interval: -1
   # Drive destination
@@ -33,3 +31,14 @@ drive:
       - png
       - jpg
       - jpeg
+photos:
+  destination: photos
+  remove_obsolete: false
+  filters:
+    albums:
+      - "album 2"
+      - album-1
+    file_size: # Valid values are [original, medium or thumb]
+      - original
+      - medium
+      - thumb
