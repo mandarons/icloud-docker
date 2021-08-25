@@ -1,9 +1,8 @@
-import datetime
 import time
 import os
 import shutil
-from src import config_parser, notify
-from pyicloud import PyiCloudService, utils, exceptions
+from src import config_parser
+from pyicloud import exceptions
 
 
 def generate_file_name(photo, file_size, destination_path, verbose=False):
@@ -61,43 +60,16 @@ def sync_album(album, destination_path, file_sizes, verbose=False):
             process_photo(photo, file_size, destination_path, verbose)
 
 
-def sync_photos():
-    last_send = None
-    while True:
-        config = config_parser.read_config()
-        verbose = config_parser.get_verbose(config=config)
-        username = config_parser.get_username(config=config)
-        destination_path = config_parser.prepare_photos_destination(config=config)
-        if username and destination_path:
-            try:
-                api = PyiCloudService(
-                    apple_id=username,
-                    password=utils.get_password_from_keyring(username=username),
-                )
-                if not api.requires_2fa:
-                    filters = config_parser.get_photos_filters(config=config)
-                    for album in iter(filters["albums"]):
-                        sync_album(
-                            album=api.photos.albums[album],
-                            destination_path=os.path.join(destination_path, album),
-                            file_sizes=filters["file_sizes"],
-                            verbose=verbose,
-                        )
-                else:
-                    print("Error: 2FA is required. Please log in.")
-                    last_send = notify.send(config, last_send)
-            except exceptions.PyiCloudNoStoredPasswordAvailableException:
-                print(
-                    "password is not stored in keyring. Please save the password in keyring."
-                )
-        sleep_for = config_parser.get_sync_interval(config=config)
-        next_sync = (
-            datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
-        ).strftime("%c")
-        print(f"Resyncing at {next_sync} ...")
-        if sleep_for < 0:
-            break
-        time.sleep(sleep_for)
+def sync_photos(config, photos, verbose):
+    destination_path = config_parser.prepare_photos_destination(config=config)
+    filters = config_parser.get_photos_filters(config=config)
+    for album in iter(filters["albums"]):
+        sync_album(
+            album=photos.albums[album],
+            destination_path=os.path.join(destination_path, album),
+            file_sizes=filters["file_sizes"],
+            verbose=verbose,
+        )
 
 
 # def enable_debug():

@@ -1,16 +1,13 @@
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
-import datetime
 import os
 import re
 import time
 from pathlib import Path
 from shutil import copyfileobj, rmtree
-
-from pyicloud import PyiCloudService, utils, exceptions
+from pyicloud import exceptions
 
 from src import config_parser
-from src import notify
 
 
 def wanted_file(filters, file_path, verbose=False):
@@ -203,43 +200,15 @@ def sync_directory(
     return files
 
 
-def sync_drive():
-    last_send = None
-    while True:
-        config = config_parser.read_config()
-        verbose = config_parser.get_verbose(config=config)
-        username = config_parser.get_username(config=config)
-        destination_path = config_parser.prepare_drive_destination(config=config)
-        if username and destination_path:
-            try:
-                api = PyiCloudService(
-                    apple_id=username,
-                    password=utils.get_password_from_keyring(username=username),
-                )
-                if not api.requires_2sa:
-                    sync_directory(
-                        drive=api.drive,
-                        destination_path=destination_path,
-                        root=destination_path,
-                        items=api.drive.dir(),
-                        top=True,
-                        filters=config["filters"] if "filters" in config else None,
-                        remove=config_parser.get_drive_remove_obsolete(config=config),
-                        verbose=verbose,
-                    )
-                else:
-                    print("Error: 2FA is required. Please log in.")
-                    last_send = notify.send(config, last_send)
-            except exceptions.PyiCloudNoStoredPasswordAvailableException:
-
-                print(
-                    "password is not stored in keyring. Please save the password in keyring."
-                )
-        sleep_for = config_parser.get_sync_interval(config=config)
-        next_sync = (
-            datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
-        ).strftime("%c")
-        print(f"Resyncing at {next_sync} ...")
-        if sleep_for < 0:
-            break
-        time.sleep(sleep_for)
+def sync_drive(config, drive, verbose):
+    destination_path = config_parser.prepare_drive_destination(config=config)
+    return sync_directory(
+        drive=drive,
+        destination_path=destination_path,
+        root=destination_path,
+        items=drive.dir(),
+        top=True,
+        filters=config["filters"] if "filters" in config else None,
+        remove=config_parser.get_drive_remove_obsolete(config=config),
+        verbose=verbose,
+    )
