@@ -1,13 +1,11 @@
 app:
   credentials:
     # iCloud drive username
-    username: user@test.com
-    # iCloud drive password
-    password:
+    username: please@replace.me
   # Sync interval in seconds
   sync_interval: 300
   # Drive destination
-  root: "./icloud"
+  root: icloud
   # verbose
   verbose: true
   smtp:
@@ -19,15 +17,26 @@ app:
     # If your email provider doesn't handle TLS
     # no_tls: true
 drive:
-  destination: "./drive"
+  destination: drive
   remove_obsolete: false
   filters:
     # File filters to be included in syncing iCloud drive content
     folders:
-      - Documents
+      - folder1
     file_extensions:
       # File extensions to be included
       - pdf
       - png
       - jpg
       - jpeg
+photos:
+  destination: photos
+  remove_obsolete: false
+  filters:
+    albums:
+      - album1
+      - album2
+    file_size:
+      - original
+      # - medium
+      # - thumb
