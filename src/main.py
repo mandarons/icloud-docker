@@ -1,6 +1,6 @@
-__author__ = 'Mandar Patil (mandarons@pm.me)'
+__author__ = "Mandar Patil (mandarons@pm.me)"
 
 from src import sync
 
-if __name__ == '__main__':
-    sync.sync_drive()
+if __name__ == "__main__":
+    sync.sync()
