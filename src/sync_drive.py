@@ -208,7 +208,9 @@ def sync_drive(config, drive, verbose):
         root=destination_path,
         items=drive.dir(),
         top=True,
-        filters=config["filters"] if "filters" in config else None,
+        filters=config["drive"]["filters"]
+        if "drive" in config and "filters" in config["drive"]
+        else None,
         remove=config_parser.get_drive_remove_obsolete(config=config),
         verbose=verbose,
     )
