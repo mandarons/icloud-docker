@@ -48,38 +48,48 @@ Follow the steps to authenticate.
 
 ## Sample Configuration File
 ```yaml
-credentials:
-  # iCloud drive username: required
-  username: username@domain.com
-  # iCloud drive password: optional
-  password:
-settings:
-  # Auto-sync interval in seconds: optional, default: 1800
-  sync_interval: 1800
-  # Destination to sync: required
-  destination: './drive'
-  # Flag if remove files/folders that are present locally but not on iCloud server: optional, default: false
+app:
+  credentials:
+    # iCloud drive username
+    username: please@replace.me
+  # Sync interval in seconds
+  sync_interval: 300
+  # Drive destination
+  root: icloud
+  # verbose
+  verbose: true
+  smtp:
+    # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
+    # email: user@test.com
+    # password:
+    # host: smtp.test.com
+    # port: 587
+    # If your email provider doesn't handle TLS
+    # no_tls: true
+drive:
+  destination: drive
   remove_obsolete: false
-  # Verbosity of messages: optional, default: false
-  verbose: false
-smtp:
-  # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
-  # email: user@test.com
-  # password:
-  # host: smtp.test.com
-  # port: 587
-  # If your email provider doesn't handle TLS
-  # no_tls: true
-filters:
-  # Paths to be 'included' in syncing iCloud drive content
-  folders:
-    - Documents
-  file_extensions: #Optional, leave empty for syncing all the content recursively
-    # File extensions to be included in syncing iCloud drive content
-    - pdf
-    - png
-    - jpg
-    - jpeg
+  filters:
+    # File filters to be included in syncing iCloud drive content
+    folders:
+      - folder1
+    file_extensions:
+      # File extensions to be included
+      - pdf
+      - png
+      - jpg
+      - jpeg
+photos:
+  destination: photos
+  remove_obsolete: false
+  filters:
+    albums:
+      - album1
+      - album2
+    file_sizes:
+      - original
+      # - medium
+      # - thumb
 ```
 ***Note: On every sync, this client iterates all the files and folders. Depending on number of files in your iCloud drive,
 syncing can take longer.***
