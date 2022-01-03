@@ -51,7 +51,7 @@ def process_photo(photo, file_size, destination_path, verbose=False):
     return True
 
 
-def sync_album(album, destination_path, file_sizes, verbose=False):
+def sync_album(album, destination_path, file_size, verbose=False):
     if not (album and destination_path and file_sizes):
         return None
     os.makedirs(destination_path, exist_ok=True)
