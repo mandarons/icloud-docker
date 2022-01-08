@@ -228,6 +228,7 @@ def get_photos_filters(config):
         config_path.append("albums")
         if (
             not traverse_config_path(config=config, config_path=config_path)
+            or not get_config_value(config=config, config_path=config_path)
             or len(get_config_value(config=config, config_path=config_path)) == 0
         ):
             print(

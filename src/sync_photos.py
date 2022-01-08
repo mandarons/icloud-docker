@@ -63,10 +63,18 @@ def sync_album(album, destination_path, file_sizes, verbose=False):
 def sync_photos(config, photos, verbose):
     destination_path = config_parser.prepare_photos_destination(config=config)
     filters = config_parser.get_photos_filters(config=config)
-    for album in iter(filters["albums"]):
+    if filters["albums"]:
+        for album in iter(filters["albums"]):
+            sync_album(
+                album=photos.albums[album],
+                destination_path=os.path.join(destination_path, album),
+                file_sizes=filters["file_sizes"],
+                verbose=verbose,
+            )
+    else:
         sync_album(
-            album=photos.albums[album],
-            destination_path=os.path.join(destination_path, album),
+            album=photos.all,
+            destination_path=os.path.join(destination_path, "all"),
             file_sizes=filters["file_sizes"],
             verbose=verbose,
         )

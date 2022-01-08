@@ -111,6 +111,43 @@ DATA = {
                         },
                     },
                     {
+                        "recordName": "E803E065-D8A4-4398-DE23-23F8FD0886EC",
+                        "recordType": "CPLAlbum",
+                        "fields": {
+                            "recordModificationDate": {
+                                "value": 1608493440571,
+                                "type": "TIMESTAMP",
+                            },
+                            "sortAscending": {"value": 1, "type": "INT64"},
+                            "sortType": {"value": 0, "type": "INT64"},
+                            "albumType": {"value": 0, "type": "INT64"},
+                            "albumNameEnc": {
+                                "value": "QWxsIFBob3Rvcw==",  # All Photos
+                                "type": "ENCRYPTED_BYTES",
+                            },
+                            "position": {"value": 1063936, "type": "INT64"},
+                            "sortTypeExt": {"value": 0, "type": "INT64"},
+                        },
+                        "pluginFields": {},
+                        "recordChangeTag": "3km2",
+                        "created": {
+                            "timestamp": 1608493450571,
+                            "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                        },
+                        "modified": {
+                            "timestamp": 1608493460571,
+                            "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "deviceID": "D41A228F-D89E-494A-8EEF-853D461B68CF",
+                        },
+                        "deleted": False,
+                        "zoneID": {
+                            "zoneName": "PrimarySync",
+                            "ownerRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "zoneType": "REGULAR_CUSTOM_ZONE",
+                        },
+                    },
+                    {
                         "recordName": "E803E065-D8A4-4398-DE23-23F8FD0886EB",
                         "recordType": "CPLAlbum",
                         "fields": {
