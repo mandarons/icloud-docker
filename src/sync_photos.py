@@ -75,10 +75,10 @@ def sync_photos(config, photos, verbose):
         sync_album(
             album=photos.all,
             destination_path=os.path.join(destination_path, "all"),
+
             file_sizes=filters["file_sizes"],
             verbose=verbose,
         )
-
 
 # def enable_debug():
 #     import contextlib

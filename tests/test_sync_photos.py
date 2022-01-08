@@ -17,7 +17,9 @@ from src import sync_photos, config_parser
 class TestSyncPhotos(unittest.TestCase):
     def setUp(self) -> None:
         self.config = config_parser.read_config(config_path=tests.CONFIG_PATH)
+
         self.root = tests.PHOTOS_DIR
+
         self.destination_path = self.root
         os.makedirs(self.destination_path, exist_ok=True)
         self.service = data.PyiCloudServiceMock(
@@ -34,6 +36,7 @@ class TestSyncPhotos(unittest.TestCase):
     )
     @patch("pyicloud.PyiCloudService")
     @patch("src.config_parser.read_config")
+
     def test_sync_photos_valids(
         self,
         mock_read_config,
@@ -130,20 +133,7 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["destination"] = self.destination_path
         config["photos"]["filters"]["albums"] = []
         mock_read_config.return_value = config
-        # self.assertIsNone(
-        #     sync_photos.sync_photos(
-        #         config=config, photos=mock_service.photos, verbose=True
-        #     )
-        # )
-
-        # shutil.copyfile(
-        #     os.path.join(os.path.dirname(__file__), "data", "thumb.jpeg"),
-        #     os.path.join(
-        #         self.destination_path,
-        #         "All Photos",
-        #         "IMG_3148__original.JPG",
-        #     ),
-        # )
+        
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             self.assertIsNone(
                 sync_photos.sync_photos(
@@ -154,6 +144,7 @@ class TestSyncPhotos(unittest.TestCase):
             self.assertIn("Downloading", output)
 
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "all")))
+
 
     def test_download_photo_invalids(self):
         class MockPhoto:

@@ -13,7 +13,7 @@ iCloud-drive-docker is a simple iCloud drive client in Docker environment. It us
 with iCloud drive server.
 
 Primary use case of iCloud-drive-docker is to periodically sync wanted or all of your iCloud drive contents, using your
-iCloud username and password.
+iCloud username and password. ***Please note that this application only downloads the files from server. It does not upload the local files to the server (yet).***
 
 ## Installation
 
