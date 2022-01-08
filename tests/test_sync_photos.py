@@ -36,7 +36,6 @@ class TestSyncPhotos(unittest.TestCase):
     )
     @patch("pyicloud.PyiCloudService")
     @patch("src.config_parser.read_config")
-
     def test_sync_photos_valids(
         self,
         mock_read_config,
@@ -133,7 +132,6 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["destination"] = self.destination_path
         config["photos"]["filters"]["albums"] = []
         mock_read_config.return_value = config
-        
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             self.assertIsNone(
                 sync_photos.sync_photos(
@@ -144,7 +142,6 @@ class TestSyncPhotos(unittest.TestCase):
             self.assertIn("Downloading", output)
 
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "all")))
-
 
     def test_download_photo_invalids(self):
         class MockPhoto:
