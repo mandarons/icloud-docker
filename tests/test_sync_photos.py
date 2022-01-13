@@ -17,7 +17,9 @@ from src import sync_photos, config_parser
 class TestSyncPhotos(unittest.TestCase):
     def setUp(self) -> None:
         self.config = config_parser.read_config(config_path=tests.CONFIG_PATH)
-        self.root = tests.DRIVE_DIR
+
+        self.root = tests.PHOTOS_DIR
+
         self.destination_path = self.root
         os.makedirs(self.destination_path, exist_ok=True)
         self.service = data.PyiCloudServiceMock(
@@ -34,7 +36,7 @@ class TestSyncPhotos(unittest.TestCase):
     )
     @patch("pyicloud.PyiCloudService")
     @patch("src.config_parser.read_config")
-    def test_sync_drive_valids(
+    def test_sync_photos_valids(
         self,
         mock_read_config,
         mock_service,
@@ -109,6 +111,37 @@ class TestSyncPhotos(unittest.TestCase):
                 config=config, photos=mock_service.photos, verbose=True
             )
         )
+
+    @patch("time.sleep")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("pyicloud.PyiCloudService")
+    @patch("src.config_parser.read_config")
+    def test_sync_photos_valid_empty_albums_list(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["filters"]["albums"] = []
+        mock_read_config.return_value = config
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            self.assertIsNone(
+                sync_photos.sync_photos(
+                    config=config, photos=mock_service.photos, verbose=True
+                )
+            )
+            output = mock_stdout.getvalue()
+            self.assertIn("Downloading", output)
+
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "all")))
 
     def test_download_photo_invalids(self):
         class MockPhoto:
