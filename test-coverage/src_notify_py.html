@@ -22,8 +22,8 @@
         </h1>
         <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
         <h2 class="stats">
-            43 statements &nbsp;
-            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">43 run</button>
+            42 statements &nbsp;
+            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">42 run</button>
             <button type="button" class="mis show_mis shortkey_m button_toggle_mis" title="Toggle lines missing">0 missing</button>
             <button type="button" class="exc show_exc shortkey_x button_toggle_exc" title="Toggle lines excluded">0 excluded</button>
         </h2>
@@ -57,7 +57,7 @@
     <p id="t3" class="run"><span class="n"><a href="#t3">3</a></span><span class="t"><span class="key">import</span> <span class="nam">smtplib</span>&nbsp;</span><span class="r"></span></p>
     <p id="t4" class="run"><span class="n"><a href="#t4">4</a></span><span class="t"><span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"></span></p>
     <p id="t5" class="run"><span class="n"><a href="#t5">5</a></span><span class="t"><span class="key">import</span> <span class="nam">logging</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t6" class="run"><span class="n"><a href="#t6">6</a></span><span class="t"><span class="key">from</span> <span class="nam">mailer</span> <span class="key">import</span> <span class="nam">Message</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t6" class="run"><span class="n"><a href="#t6">6</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span><span class="op">.</span><span class="nam">email_message</span> <span class="key">import</span> <span class="nam">EmailMessage</span> <span class="key">as</span> <span class="nam">Message</span>&nbsp;</span><span class="r"></span></p>
     <p id="t7" class="run"><span class="n"><a href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span> <span class="key">import</span> <span class="nam">config_parser</span>&nbsp;</span><span class="r"></span></p>
     <p id="t8" class="pln"><span class="n"><a href="#t8">8</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t9" class="pln"><span class="n"><a href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -100,22 +100,21 @@
     <p id="t46" class="pln"><span class="n"><a href="#t46">46</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t47" class="pln"><span class="n"><a href="#t47">47</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t48" class="run"><span class="n"><a href="#t48">48</a></span><span class="t"><span class="key">def</span> <span class="nam">build_message</span><span class="op">(</span><span class="nam">email</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t49" class="run"><span class="n"><a href="#t49">49</a></span><span class="t">    <span class="nam">message</span> <span class="op">=</span> <span class="nam">Message</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t50" class="run"><span class="n"><a href="#t50">50</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">To</span> <span class="op">=</span> <span class="nam">email</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t51" class="run"><span class="n"><a href="#t51">51</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">From</span> <span class="op">=</span> <span class="str">"icloud-drive-docker &lt;"</span> <span class="op">+</span> <span class="nam">email</span> <span class="op">+</span> <span class="str">">"</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t52" class="run"><span class="n"><a href="#t52">52</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">Date</span> <span class="op">=</span> <span class="nam">datetime</span><span class="op">.</span><span class="nam">datetime</span><span class="op">.</span><span class="nam">now</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">strftime</span><span class="op">(</span><span class="str">"%d/%m/%Y %H:%M"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t53" class="run"><span class="n"><a href="#t53">53</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">Subject</span> <span class="op">=</span> <span class="str">"icloud-drive-docker: Two step authentication required"</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t54" class="run"><span class="n"><a href="#t54">54</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">Body</span> <span class="op">=</span> <span class="str">"""Two-step authentication for iCloud Drive (Docker) is required.</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t55" class="pln"><span class="n"><a href="#t55">55</a></span><span class="t"><span class="str">Please login to your server and authenticate.  Eg:</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t56" class="pln"><span class="n"><a href="#t56">56</a></span><span class="t"><span class="str">`docker exec -it icloud-drive /bin/sh -c "icloud --username=&lt;icloud-username>"`."""</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t57" class="pln"><span class="n"><a href="#t57">57</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t58" class="run"><span class="n"><a href="#t58">58</a></span><span class="t">    <span class="key">return</span> <span class="nam">message</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t49" class="run"><span class="n"><a href="#t49">49</a></span><span class="t">    <span class="nam">message</span> <span class="op">=</span> <span class="nam">Message</span><span class="op">(</span><span class="nam">to</span><span class="op">=</span><span class="nam">email</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t50" class="run"><span class="n"><a href="#t50">50</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">sender</span> <span class="op">=</span> <span class="str">"icloud-drive-docker &lt;"</span> <span class="op">+</span> <span class="nam">email</span> <span class="op">+</span> <span class="str">">"</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t51" class="run"><span class="n"><a href="#t51">51</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">date</span> <span class="op">=</span> <span class="nam">datetime</span><span class="op">.</span><span class="nam">datetime</span><span class="op">.</span><span class="nam">now</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">strftime</span><span class="op">(</span><span class="str">"%d/%m/%Y %H:%M"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t52" class="run"><span class="n"><a href="#t52">52</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">subject</span> <span class="op">=</span> <span class="str">"icloud-drive-docker: Two step authentication required"</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t53" class="run"><span class="n"><a href="#t53">53</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">body</span> <span class="op">=</span> <span class="str">"""Two-step authentication for iCloud Drive (Docker) is required.</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t54" class="pln"><span class="n"><a href="#t54">54</a></span><span class="t"><span class="str">Please login to your server and authenticate.  Eg:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t55" class="pln"><span class="n"><a href="#t55">55</a></span><span class="t"><span class="str">`docker exec -it icloud-drive /bin/sh -c "icloud --username=&lt;icloud-username>"`."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t56" class="pln"><span class="n"><a href="#t56">56</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t57" class="run"><span class="n"><a href="#t57">57</a></span><span class="t">    <span class="key">return</span> <span class="nam">message</span>&nbsp;</span><span class="r"></span></p>
 </div>
 <div id="footer">
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2021-08-26 17:43 +0000
+            created at 2022-01-13 05:26 +0000
         </p>
     </div>
 </div>
