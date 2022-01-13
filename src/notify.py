@@ -3,7 +3,7 @@
 import smtplib
 import datetime
 import logging
-from mailer import Message
+from src.email_message import EmailMessage as Message
 from src import config_parser
 
 
@@ -46,12 +46,11 @@ def send(config, last_send=None, dry_run=False):
 
 
 def build_message(email):
-    message = Message()
-    message.To = email
-    message.From = "icloud-drive-docker <" + email + ">"
-    message.Date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-    message.Subject = "icloud-drive-docker: Two step authentication required"
-    message.Body = """Two-step authentication for iCloud Drive (Docker) is required.
+    message = Message(to=email)
+    message.sender = "icloud-drive-docker <" + email + ">"
+    message.date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    message.subject = "icloud-drive-docker: Two step authentication required"
+    message.body = """Two-step authentication for iCloud Drive (Docker) is required.
 Please login to your server and authenticate.  Eg:
 `docker exec -it icloud-drive /bin/sh -c "icloud --username=<icloud-username>"`."""
 
