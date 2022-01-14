@@ -148,7 +148,6 @@ DATA = {
                         },
                     },
                     {
-
                         "recordName": "E803E065-D8A4-4398-DE23-23F8FD0886EB",
                         "recordType": "CPLAlbum",
                         "fields": {
@@ -371,7 +370,7 @@ DATA = {
                             "resJPEGMedRes": {
                                 "value": {
                                     "fileChecksum": "EeGlt2PppPTgd0Q7mp8GenIugSh7",
-                                    "size": 2194253,
+                                    "size": 1074354,
                                     "wrappingKey": "amaCdL9Z+QxfzgD4+aYATg==",
                                     "referenceChecksum": "AQYmx+DRYXnMs0tkDZ3rorp4IB99",
                                     # pylint: disable=C0321
@@ -412,7 +411,7 @@ DATA = {
                             "resJPEGThumbRes": {
                                 "value": {
                                     "fileChecksum": "DmK0xzSiAUSFrAsYYAvby7QHrMDe",
-                                    "size": 2194253,
+                                    "size": 340532,
                                     "wrappingKey": "r7EeA3tyPsWdcECp6X9dHA==",
                                     "referenceChecksum": "AR5TiM9Qko4rHwmoDH1BgNRVZpF4",
                                     # pylint: disable=C0321
@@ -465,7 +464,7 @@ DATA = {
                             "resJPEGMedRes": {
                                 "value": {
                                     "fileChecksum": "NOHzBUr+DdmTaP/SAVglTurWtsen",
-                                    "size": 2194253,
+                                    "size": 1074354,
                                     "wrappingKey": "eqUQfTajfGXgQHbBJh8Qwg==",
                                     "referenceChecksum": "Ab5Vyk36t2jwuON7WSxvon/DvGtK",
                                     # pylint: disable=C0321
@@ -506,7 +505,7 @@ DATA = {
                             "resJPEGThumbRes": {
                                 "value": {
                                     "fileChecksum": "ASy6f/leU1+xkR1aPmQyvYmwHUpE",
-                                    "size": 2194253,
+                                    "size": 340532,
                                     "wrappingKey": "E1zCp4gxgoHQNQHWjS3Wag==",
                                     "referenceChecksum": "ARHOzkI3sbX3SZDmNQgttNJ9DqQa",
                                     # pylint: disable=C0321
@@ -559,7 +558,7 @@ DATA = {
                             "resJPEGMedRes": {
                                 "value": {
                                     "fileChecksum": "ASTSuc7S58IPmVCJIUslbeCRjsno",
-                                    "size": 2194253,
+                                    "size": 1074354,
                                     "wrappingKey": "ysHoAuqERA8H3MadxO6+PA==",
                                     "referenceChecksum": "ASIoOBi88potAS0gE8tfnojuSlrb",
                                     # pylint: disable=C0321
@@ -600,7 +599,7 @@ DATA = {
                             "resJPEGThumbRes": {
                                 "value": {
                                     "fileChecksum": "ASPVZ/Pft6gIN2VEA/oUbqQzh6Wy",
-                                    "size": 2194253,
+                                    "size": 340532,
                                     "wrappingKey": "3EAjgkS2+Mr38eqQFk7C0A==",
                                     "referenceChecksum": "AXd258pYF6LLhmADLoZAumNqI+8M",
                                     # pylint: disable=C0321
@@ -653,7 +652,7 @@ DATA = {
                             "resJPEGMedRes": {
                                 "value": {
                                     "fileChecksum": "ATTRy6p+Q3U1HqcF6BUKrrOMnjvn",
-                                    "size": 2194253,
+                                    "size": 1074354,
                                     "wrappingKey": "pYDpdhqdaL9SAxHilZEj3Q==",
                                     "referenceChecksum": "ATqG89bMsXhtmMRMw009uhyJc/Kh",
                                     # pylint: disable=C0321
@@ -694,7 +693,7 @@ DATA = {
                             "resJPEGThumbRes": {
                                 "value": {
                                     "fileChecksum": "AQNND5zpteAXnnBP2BmDd0ropjY9",
-                                    "size": 2194253,
+                                    "size": 340532,
                                     "wrappingKey": "lxLQBw46n1nvea4s30UY+A==",
                                     "referenceChecksum": "AV2Zh7WygJu74eNWVuuMT4lM8qme",
                                     # pylint: disable=C0321
@@ -747,7 +746,7 @@ DATA = {
                             "resJPEGMedRes": {
                                 "value": {
                                     "fileChecksum": "ARZd/GzpY62XRtXt+jP6UsV4fBZH",
-                                    "size": 2194253,
+                                    "size": 1074354,
                                     "wrappingKey": "dmZqsyvxEA4s3CvifNMApA==",
                                     "referenceChecksum": "ATi6BbOzDuHl6RONNFCub9eqZqSm",
                                     # pylint: disable=C0321
@@ -788,7 +787,7 @@ DATA = {
                             "resJPEGThumbRes": {
                                 "value": {
                                     "fileChecksum": "ARpHiouI3Ib/ziuZYTCiSikohvMY",
-                                    "size": 2194253,
+                                    "size": 340532,
                                     "wrappingKey": "UiIQr3rRvyIcoAz/sxDugQ==",
                                     "referenceChecksum": "ARtMrcvA8cbMefPDnmwSWQwe+mBd",
                                     # pylint: disable=C0321
