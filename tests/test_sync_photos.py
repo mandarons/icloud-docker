@@ -2,15 +2,12 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import unittest
 import os
-
 from io import StringIO
 import shutil
 from unittest.mock import patch
-
 import pyicloud
-
 import tests
-from tests import data
+from tests import DATA_DIR, data
 from src import sync_photos, config_parser
 
 
@@ -48,32 +45,43 @@ class TestSyncPhotos(unittest.TestCase):
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
         mock_read_config.return_value = config
+        # Sync original photos
         self.assertIsNone(
             sync_photos.sync_photos(
                 config=config, photos=mock_service.photos, verbose=True
             )
         )
-        self.assertTrue(
-            os.path.isdir(
-                os.path.join(
-                    self.destination_path, config["photos"]["filters"]["albums"][0]
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        self.assertTrue(os.path.isdir(album_0_path))
+        self.assertTrue(os.path.isdir(album_1_path))
+        self.assertTrue(len(os.listdir(album_0_path)) > 0)
+        self.assertTrue(len(os.listdir(album_1_path)) > 0)
+
+        # Download missing file
+        os.remove(os.path.join(album_1_path, "IMG_3148.JPG"))
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            self.assertIsNone(
+                sync_photos.sync_photos(
+                    config=config, photos=mock_service.photos, verbose=True
                 )
             )
-        )
-        self.assertTrue(
-            os.path.isdir(
-                os.path.join(
-                    self.destination_path, config["photos"]["filters"]["albums"][1]
-                )
-            )
-        )
+            output = mock_stdout.getvalue()
+            self.assertIn("album-1/IMG_3148.JPG ...", output)
+        self.assertTrue(os.path.isdir(album_0_path))
+        self.assertTrue(os.path.isdir(album_1_path))
+        self.assertTrue(len(os.listdir(album_0_path)) > 0)
+        self.assertTrue(len(os.listdir(album_1_path)) > 0)
+
+        # Download changed file
+        os.remove(os.path.join(album_1_path, "IMG_3148.JPG"))
         shutil.copyfile(
-            os.path.join(os.path.dirname(__file__), "data", "thumb.jpeg"),
-            os.path.join(
-                self.destination_path,
-                config["photos"]["filters"]["albums"][1],
-                "IMG_3148__original.JPG",
-            ),
+            os.path.join(DATA_DIR, "thumb.jpeg"),
+            os.path.join(album_1_path, "IMG_3148.JPG"),
         )
         with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
             self.assertIsNone(
@@ -82,35 +90,23 @@ class TestSyncPhotos(unittest.TestCase):
                 )
             )
             output = mock_stdout.getvalue()
-            self.assertIn("Downloading", output)
-        self.assertTrue(
-            os.path.isdir(
-                os.path.join(
-                    self.destination_path, config["photos"]["filters"]["albums"][0]
+            self.assertIn("album-1/IMG_3148.JPG ...", output)
+        self.assertTrue(os.path.isdir(album_0_path))
+        self.assertTrue(os.path.isdir(album_1_path))
+        self.assertTrue(len(os.listdir(album_0_path)) > 0)
+        self.assertTrue(len(os.listdir(album_1_path)) > 0)
+
+        # No files to download
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            self.assertIsNone(
+                sync_photos.sync_photos(
+                    config=config, photos=mock_service.photos, verbose=True
                 )
             )
-        )
-        self.assertTrue(
-            os.path.isdir(
-                os.path.join(
-                    self.destination_path, config["photos"]["filters"]["albums"][1]
-                )
-            )
-        )
+            output = mock_stdout.getvalue()
+            self.assertNotIn("Downloading /", output)
 
-        mock_get_username.return_value = data.REQUIRES_2FA_USER
-        self.assertIsNone(
-            sync_photos.sync_photos(
-                config=config, photos=mock_service.photos, verbose=True
-            )
-        )
-
-        mock_get_password.return_value = None
-        self.assertIsNone(
-            sync_photos.sync_photos(
-                config=config, photos=mock_service.photos, verbose=True
-            )
-        )
+        # Download thumbs
 
     @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
@@ -139,7 +135,7 @@ class TestSyncPhotos(unittest.TestCase):
                 )
             )
             output = mock_stdout.getvalue()
-            self.assertIn("Downloading", output)
+            self.assertIn("all/IMG_3148.JPG ...", output)
 
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "all")))
 

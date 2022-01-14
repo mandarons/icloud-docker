@@ -38,7 +38,7 @@ photos:
     albums:
       - "album 2"
       - album-1
-    file_size: # Valid values are [original, medium or thumb]
+    file_sizes: # Valid values are [original, medium or thumb]
       - original
       - medium
       - thumb

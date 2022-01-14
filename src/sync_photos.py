@@ -6,11 +6,12 @@ from pyicloud import exceptions
 
 
 def generate_file_name(photo, file_size, destination_path, verbose=False):
-    tokens = photo.filename.rsplit(".", 1)
-    tokens.insert(len(tokens) - 1, file_size)
-    return os.path.abspath(
-        os.path.join(destination_path, "__".join(tokens[:-1]) + "." + tokens[-1])
-    )
+    filename = photo.filename
+    if file_size != "original":
+        tokens = photo.filename.rsplit(".", 1)
+        tokens.insert(len(tokens) - 1, file_size)
+        filename = "__".join(tokens[:-1]) + "." + tokens[-1]
+    return os.path.abspath(os.path.join(destination_path, filename))
 
 
 def photo_exists(photo, file_size, local_path, verbose=False):
@@ -75,10 +76,10 @@ def sync_photos(config, photos, verbose):
         sync_album(
             album=photos.all,
             destination_path=os.path.join(destination_path, "all"),
-
             file_sizes=filters["file_sizes"],
             verbose=verbose,
         )
+
 
 # def enable_debug():
 #     import contextlib

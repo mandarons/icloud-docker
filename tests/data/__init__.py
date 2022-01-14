@@ -2703,6 +2703,9 @@ class PyiCloudSessionMock(base.PyiCloudSession):
             or "https://cvws.icloud-content.com/B/ASTSuc7S58IPmVCJIUslbeCRjsno" in url
             or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvn" in url
             or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt-jP6UsV4fBZH" in url
+            # IMG_3328.JPG
+            or "https://cvws.icloud-content.com/B/EeGlt2PppPTgd0Q7mp8GenIugSh7AQYmx-DRYXnMs0tkDZ3rorp4IB99"
+            in url
         ):
             return ResponseMock(
                 {},
@@ -2714,6 +2717,9 @@ class PyiCloudSessionMock(base.PyiCloudSession):
             or "https://cvws.icloud-content.com/B/AUxVFT2yVsQ5739tmU5c1497duFD" in url
             or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvV" in url
             or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXg" in url
+            # IMG_3328.JPG
+            or "https://cvws.icloud-content.com/B/YN1v8eGiHYYZ_aKUkMuGtSf0P1BNAXKVYPcDa-9Mjvnap0ZS-p2Z24V3"
+            in url
         ):
             return ResponseMock(
                 {},
@@ -2727,6 +2733,8 @@ class PyiCloudSessionMock(base.PyiCloudSession):
             or "https://cvws.icloud-content.com/B/ASPVZ_Pft6gIN2VEA_oUbqQzh6Wy" in url
             or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY9" in url
             or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMY" in url
+            # IMG_3328.JPG
+            or "https://cvws.icloud-content.com/B/DmK0xzSiAUSFrAsYYAvby7QHrMDeAR5TiM9Qko4rHwmoDH1BgNRVZpF4" in url
         ):
             return ResponseMock(
                 {},
