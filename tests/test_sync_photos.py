@@ -106,7 +106,20 @@ class TestSyncPhotos(unittest.TestCase):
             output = mock_stdout.getvalue()
             self.assertNotIn("Downloading /", output)
 
-        # Download thumbs
+        # Rename previous original files - upgrade to newer version
+        os.rename(
+            os.path.join(album_1_path, "IMG_3148.JPG"),
+            os.path.join(album_1_path, "IMG_3148__original.JPG"),
+        )
+
+        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+            self.assertIsNone(
+                sync_photos.sync_photos(
+                    config=config, photos=mock_service.photos, verbose=True
+                )
+            )
+            output = mock_stdout.getvalue()
+            self.assertNotIn("Downloading /", output)
 
     @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
