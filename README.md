@@ -1,4 +1,4 @@
-# iCloud-drive-docker 
+# iCloud-docker (Previously known as iCloud-drive-docker) 
 
 [![CI - Main](https://github.com/mandarons/icloud-drive-docker/actions/workflows/ci-main-test-coverage-deploy.yml/badge.svg)](https://github.com/mandarons/icloud-drive-docker/actions/workflows/ci-main-test-coverage-deploy.yml)
 [![Tests](https://mandarons.github.io/icloud-drive-docker/badges/tests.svg)](https://mandarons.github.io/icloud-drive-docker/test-results/)
@@ -9,80 +9,96 @@
 
 :love_you_gesture: ***Please star this repository if you end up using the container. It will help me continue supporting this product.*** :pray:
 
-iCloud-drive-docker is a simple iCloud drive client in Docker environment. It uses [pyiCloud](https://github.com/picklepete/pyicloud) python library to interact
-with iCloud drive server.
+iCloud-docker (previously known as iCloud-drive-docker) is a simple iCloud client in Docker environment. It uses [pyiCloud](https://github.com/picklepete/pyicloud) python library to interact with iCloud server.
 
-Primary use case of iCloud-drive-docker is to periodically sync wanted or all of your iCloud drive contents, using your
-iCloud username and password. ***Please note that this application only downloads the files from server. It does not upload the local files to the server (yet).***
+Primary use case of iCloud-docker is to periodically sync wanted or all of your iCloud drive, photos using your iCloud username and password. 
+
+***Please note that this application only downloads the files from server. It does not upload the local files to the server (yet).***
 
 ## Installation
 
 ### Installation using Docker Hub
 ```
-docker run --name icloud-drive -v ${PWD}/drive:/app/drive mandarons/icloud-drive 
+docker run --name icloud -v ${PWD}/icloud:/app/icloud mandarons/icloud-drive 
 ```
 
 ### Installation using docker-compose
 ```yaml
 version: "3.4"
 services:
-  icloud-drive:
+  icloud:
     image: mandarons/icloud-drive
     environment:
       - PUID=<insert the output of `id -u $user`>
       - GUID=<insert the output of `id -g $user`>
-    container_name: icloud-drive
+    container_name: icloud
     restart: unless-stopped
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ${PWD}/icloud-drive/config.yaml:/app/config.yaml
-      - ${PWD}/icloud-drive/drive:/app/drive
+      - ${PWD}/icloud/config.yaml:/app/config.yaml
+      - ${PWD}/icloud/data:/app/icloud
 ```
 
-### Authentication (required after container creation)
+### Authentication (required after container creation or authentication expiration)
 ```
-docker exec -it icloud-drive /bin/sh -c "icloud --username=<icloud-username>"
+docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username>"
 ```
 Follow the steps to authenticate.
 
 ## Sample Configuration File
 ```yaml
-credentials:
-  # iCloud drive username: required
-  username: username@domain.com
-  # iCloud drive password: optional
-  password:
-settings:
-  # Auto-sync interval in seconds: optional, default: 1800
-  sync_interval: 1800
-  # Destination to sync: required
-  destination: './drive'
-  # Flag if remove files/folders that are present locally but not on iCloud server: optional, default: false
+app:
+  credentials:
+    # iCloud drive username
+    username: please@replace.me
+  # Sync interval in seconds
+  sync_interval: 300
+  # Drive destination
+  root: icloud
+  # verbose
+  verbose: true
+  smtp:
+    # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
+    # email: user@test.com
+    # password:
+    # host: smtp.test.com
+    # port: 587
+    # If your email provider doesn't handle TLS
+    # no_tls: true
+drive:
+  # Destination to store iCloud drive data locally
+  destination: drive
+  # Whether to remove local files that are not present on server
   remove_obsolete: false
-  # Verbosity of messages: optional, default: false
-  verbose: false
-smtp:
-  # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
-  # email: user@test.com
-  # password:
-  # host: smtp.test.com
-  # port: 587
-  # If your email provider doesn't handle TLS
-  # no_tls: true
-filters:
-  # Paths to be 'included' in syncing iCloud drive content
-  folders:
-    - Documents
-  file_extensions: #Optional, leave empty for syncing all the content recursively
-    # File extensions to be included in syncing iCloud drive content
-    - pdf
-    - png
-    - jpg
-    - jpeg
+  filters:
+    # Folder filters to be included in syncing iCloud drive content
+    folders:
+      - folder1/subfolder2
+      - folder2
+      - folder3
+    file_extensions:
+      # File extensions to be included
+      - pdf
+      - png
+      - jpg
+      - jpeg
+photos:
+  # Destination to store iCloud photos data locally
+  destination: photos
+  # Whether to remove local files that are not present on server
+  remove_obsolete: false
+  filters:
+    # List of albums to download - leave the list empty to download all photos to folder 'all'
+    albums:
+      - "album 1"
+      - album2
+    file_sizes: # valid values are original, medium and/or thumb - if empty, only original quality photos will be downloaded
+      - original
+      # - medium
+      # - thumb
 ```
-***Note: On every sync, this client iterates all the files and folders. Depending on number of files in your iCloud drive,
-syncing can take longer.***
+***Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer.***
 
 ## Use Cases
 [Make scanned documents from iCloud Drive, searchable](https://mandarons.com/posts/make-scanned-documents-from-icloud-drive-searchable)

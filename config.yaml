@@ -23,6 +23,8 @@ drive:
     # File filters to be included in syncing iCloud drive content
     folders:
       - folder1
+      - folder2
+      - folder3
     file_extensions:
       # File extensions to be included
       - pdf
@@ -34,9 +36,9 @@ photos:
   remove_obsolete: false
   filters:
     albums:
-      - album1
+      - "album 1"
       - album2
-    file_size:
+    file_sizes: # valid values are original, medium and/or thumb
       - original
       # - medium
       # - thumb
