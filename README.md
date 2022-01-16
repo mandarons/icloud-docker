@@ -19,7 +19,7 @@ Primary use case of iCloud-docker is to periodically sync wanted or all of your 
 
 ### Installation using Docker Hub
 ```
-docker run --name icloud -v ${PWD}/icloud:/app/icloud mandarons/icloud-drive 
+docker run --name icloud -v ${PWD}/icloud:/app/icloud -v ${PWD}/config.yaml:/app/config.yaml mandarons/icloud-drive 
 ```
 
 ### Installation using docker-compose
