@@ -59,7 +59,7 @@
     <p id="t5" class="run"><span class="n"><a href="#t5">5</a></span><span class="t"><span class="key">import</span> <span class="nam">time</span>&nbsp;</span><span class="r"></span></p>
     <p id="t6" class="run"><span class="n"><a href="#t6">6</a></span><span class="t"><span class="key">from</span> <span class="nam">pathlib</span> <span class="key">import</span> <span class="nam">Path</span>&nbsp;</span><span class="r"></span></p>
     <p id="t7" class="run"><span class="n"><a href="#t7">7</a></span><span class="t"><span class="key">from</span> <span class="nam">shutil</span> <span class="key">import</span> <span class="nam">copyfileobj</span><span class="op">,</span> <span class="nam">rmtree</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t8" class="run"><span class="n"><a href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">pyicloud</span> <span class="key">import</span> <span class="nam">exceptions</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t8" class="run"><span class="n"><a href="#t8">8</a></span><span class="t"><span class="key">from</span> <span class="nam">icloudpy</span> <span class="key">import</span> <span class="nam">exceptions</span>&nbsp;</span><span class="r"></span></p>
     <p id="t9" class="pln"><span class="n"><a href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t10" class="run"><span class="n"><a href="#t10">10</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span> <span class="key">import</span> <span class="nam">config_parser</span>&nbsp;</span><span class="r"></span></p>
     <p id="t11" class="pln"><span class="n"><a href="#t11">11</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -154,7 +154,7 @@
     <p id="t100" class="run"><span class="n"><a href="#t100">100</a></span><span class="t">                <span class="nam">copyfileobj</span><span class="op">(</span><span class="nam">response</span><span class="op">.</span><span class="nam">raw</span><span class="op">,</span> <span class="nam">file_out</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t101" class="run"><span class="n"><a href="#t101">101</a></span><span class="t">        <span class="nam">item_modified_time</span> <span class="op">=</span> <span class="nam">time</span><span class="op">.</span><span class="nam">mktime</span><span class="op">(</span><span class="nam">item</span><span class="op">.</span><span class="nam">date_modified</span><span class="op">.</span><span class="nam">timetuple</span><span class="op">(</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t102" class="run"><span class="n"><a href="#t102">102</a></span><span class="t">        <span class="nam">os</span><span class="op">.</span><span class="nam">utime</span><span class="op">(</span><span class="nam">local_file</span><span class="op">,</span> <span class="op">(</span><span class="nam">item_modified_time</span><span class="op">,</span> <span class="nam">item_modified_time</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t103" class="run"><span class="n"><a href="#t103">103</a></span><span class="t">    <span class="key">except</span> <span class="op">(</span><span class="nam">exceptions</span><span class="op">.</span><span class="nam">PyiCloudAPIResponseException</span><span class="op">,</span> <span class="nam">FileNotFoundError</span><span class="op">,</span> <span class="nam">Exception</span><span class="op">)</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t103" class="run"><span class="n"><a href="#t103">103</a></span><span class="t">    <span class="key">except</span> <span class="op">(</span><span class="nam">exceptions</span><span class="op">.</span><span class="nam">ICloudPyAPIResponseException</span><span class="op">,</span> <span class="nam">FileNotFoundError</span><span class="op">,</span> <span class="nam">Exception</span><span class="op">)</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t104" class="run"><span class="n"><a href="#t104">104</a></span><span class="t">        <span class="nam">print</span><span class="op">(</span><span class="str">f"Failed to download {local_file}: {str(e)}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t105" class="run"><span class="n"><a href="#t105">105</a></span><span class="t">        <span class="key">return</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
     <p id="t106" class="run"><span class="n"><a href="#t106">106</a></span><span class="t">    <span class="key">return</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
@@ -273,7 +273,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2022-01-15 03:01 +0000
+            created at 2022-01-23 03:10 +0000
         </p>
     </div>
 </div>

@@ -54,7 +54,7 @@
 <div id="source">
     <p id="t1" class="run"><span class="n"><a href="#t1">1</a></span><span class="t"><span class="key">import</span> <span class="nam">datetime</span>&nbsp;</span><span class="r"></span></p>
     <p id="t2" class="run"><span class="n"><a href="#t2">2</a></span><span class="t"><span class="key">import</span> <span class="nam">time</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t3" class="run"><span class="n"><a href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="nam">pyicloud</span> <span class="key">import</span> <span class="nam">PyiCloudService</span><span class="op">,</span> <span class="nam">utils</span><span class="op">,</span> <span class="nam">exceptions</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t3" class="run"><span class="n"><a href="#t3">3</a></span><span class="t"><span class="key">from</span> <span class="nam">icloudpy</span> <span class="key">import</span> <span class="nam">ICloudPyService</span><span class="op">,</span> <span class="nam">utils</span><span class="op">,</span> <span class="nam">exceptions</span>&nbsp;</span><span class="r"></span></p>
     <p id="t4" class="run"><span class="n"><a href="#t4">4</a></span><span class="t"><span class="key">from</span> <span class="nam">src</span> <span class="key">import</span> <span class="nam">sync_drive</span><span class="op">,</span> <span class="nam">sync_photos</span><span class="op">,</span> <span class="nam">config_parser</span><span class="op">,</span> <span class="nam">notify</span>&nbsp;</span><span class="r"></span></p>
     <p id="t5" class="pln"><span class="n"><a href="#t5">5</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t6" class="pln"><span class="n"><a href="#t6">6</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -66,7 +66,7 @@
     <p id="t12" class="run"><span class="n"><a href="#t12">12</a></span><span class="t">        <span class="nam">username</span> <span class="op">=</span> <span class="nam">config_parser</span><span class="op">.</span><span class="nam">get_username</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t13" class="run"><span class="n"><a href="#t13">13</a></span><span class="t">        <span class="key">if</span> <span class="nam">username</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t14" class="run"><span class="n"><a href="#t14">14</a></span><span class="t">            <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t15" class="run"><span class="n"><a href="#t15">15</a></span><span class="t">                <span class="nam">api</span> <span class="op">=</span> <span class="nam">PyiCloudService</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t15" class="run"><span class="n"><a href="#t15">15</a></span><span class="t">                <span class="nam">api</span> <span class="op">=</span> <span class="nam">ICloudPyService</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p id="t16" class="pln"><span class="n"><a href="#t16">16</a></span><span class="t">                    <span class="nam">apple_id</span><span class="op">=</span><span class="nam">username</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p id="t17" class="pln"><span class="n"><a href="#t17">17</a></span><span class="t">                    <span class="nam">password</span><span class="op">=</span><span class="nam">utils</span><span class="op">.</span><span class="nam">get_password_from_keyring</span><span class="op">(</span><span class="nam">username</span><span class="op">=</span><span class="nam">username</span><span class="op">)</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p id="t18" class="pln"><span class="n"><a href="#t18">18</a></span><span class="t">                <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -82,7 +82,7 @@
     <p id="t28" class="pln"><span class="n"><a href="#t28">28</a></span><span class="t">                <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t29" class="run"><span class="n"><a href="#t29">29</a></span><span class="t">                    <span class="nam">print</span><span class="op">(</span><span class="str">"Error: 2FA is required. Please log in."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t30" class="run"><span class="n"><a href="#t30">30</a></span><span class="t">                    <span class="nam">last_send</span> <span class="op">=</span> <span class="nam">notify</span><span class="op">.</span><span class="nam">send</span><span class="op">(</span><span class="nam">config</span><span class="op">,</span> <span class="nam">last_send</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t31" class="run"><span class="n"><a href="#t31">31</a></span><span class="t">            <span class="key">except</span> <span class="nam">exceptions</span><span class="op">.</span><span class="nam">PyiCloudNoStoredPasswordAvailableException</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t31" class="run"><span class="n"><a href="#t31">31</a></span><span class="t">            <span class="key">except</span> <span class="nam">exceptions</span><span class="op">.</span><span class="nam">ICloudPyNoStoredPasswordAvailableException</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t32" class="pln"><span class="n"><a href="#t32">32</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t33" class="run"><span class="n"><a href="#t33">33</a></span><span class="t">                <span class="nam">print</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p id="t34" class="pln"><span class="n"><a href="#t34">34</a></span><span class="t">                    <span class="str">"password is not stored in keyring. Please save the password in keyring."</span>&nbsp;</span><span class="r"></span></p>
@@ -100,7 +100,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2022-01-15 03:01 +0000
+            created at 2022-01-23 03:10 +0000
         </p>
     </div>
 </div>
