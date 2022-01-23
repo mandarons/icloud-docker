@@ -16,7 +16,7 @@ class TestSyncDrive(unittest.TestCase):
     def setUp(self) -> None:
         self.config = config_parser.read_config(config_path=tests.CONFIG_PATH)
         os.makedirs(tests.TEMP_DIR, exist_ok=True)
-        self.service = data.PyiCloudServiceMock(
+        self.service = data.ICloudPyServiceMock(
             data.AUTHENTICATED_USER, data.VALID_PASSWORD
         )
 
@@ -28,7 +28,7 @@ class TestSyncDrive(unittest.TestCase):
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
-    @patch("pyicloud.PyiCloudService")
+    @patch("icloudpy.ICloudPyService")
     @patch("src.config_parser.read_config")
     @patch(target="src.sync_photos.sync_photos", return_value=[])
     @patch(target="src.sync_drive.sync_drive", return_value=[])

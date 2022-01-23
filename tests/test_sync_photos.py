@@ -5,7 +5,7 @@ import os
 from io import StringIO
 import shutil
 from unittest.mock import patch
-import pyicloud
+import icloudpy
 import tests
 from tests import DATA_DIR, data
 from src import sync_photos, config_parser
@@ -19,7 +19,7 @@ class TestSyncPhotos(unittest.TestCase):
 
         self.destination_path = self.root
         os.makedirs(self.destination_path, exist_ok=True)
-        self.service = data.PyiCloudServiceMock(
+        self.service = data.ICloudPyServiceMock(
             data.AUTHENTICATED_USER, data.VALID_PASSWORD
         )
 
@@ -31,7 +31,7 @@ class TestSyncPhotos(unittest.TestCase):
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
-    @patch("pyicloud.PyiCloudService")
+    @patch("icloudpy.ICloudPyService")
     @patch("src.config_parser.read_config")
     def test_sync_photos_valids(
         self,
@@ -126,7 +126,7 @@ class TestSyncPhotos(unittest.TestCase):
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
-    @patch("pyicloud.PyiCloudService")
+    @patch("icloudpy.ICloudPyService")
     @patch("src.config_parser.read_config")
     def test_sync_photos_valid_empty_albums_list(
         self,
@@ -155,7 +155,7 @@ class TestSyncPhotos(unittest.TestCase):
     def test_download_photo_invalids(self):
         class MockPhoto:
             def download(self, quality):
-                raise pyicloud.exceptions.PyiCloudAPIResponseException
+                raise icloudpy.exceptions.ICloudPyAPIResponseException
 
         self.assertFalse(
             sync_photos.download_photo(None, ["original"], self.destination_path)

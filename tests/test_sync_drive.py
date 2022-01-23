@@ -18,7 +18,7 @@ class TestSyncDrive(unittest.TestCase):
         self.root = tests.DRIVE_DIR
         self.destination_path = self.root
         os.makedirs(self.destination_path, exist_ok=True)
-        self.service = data.PyiCloudServiceMock(
+        self.service = data.ICloudPyServiceMock(
             data.AUTHENTICATED_USER, data.VALID_PASSWORD
         )
         self.drive = self.service.drive
@@ -624,22 +624,22 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 5)
-        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "pyiCloud")))
+        self.assertTrue(len(actual) == 8)
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "pyiCloud", "Test"))
+            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "pyiCloud", "Test", "Document scanne 2.pdf"
+                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf"
                 )
             )
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "pyiCloud", "Test", "Scanned document 1.pdf"
+                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf"
                 )
             )
         )
@@ -658,22 +658,22 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=True,
         )
-        self.assertTrue(len(actual) == 5)
-        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "pyiCloud")))
+        self.assertTrue(len(actual) == 8)
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "pyiCloud", "Test"))
+            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "pyiCloud", "Test", "Document scanne 2.pdf"
+                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf"
                 )
             )
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "pyiCloud", "Test", "Scanned document 1.pdf"
+                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf"
                 )
             )
         )
@@ -690,22 +690,22 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 9)
-        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "pyiCloud")))
+        self.assertTrue(len(actual) == 12)
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "pyiCloud", "Test"))
+            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "pyiCloud", "Test", "Document scanne 2.pdf"
+                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf"
                 )
             )
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "pyiCloud", "Test", "Scanned document 1.pdf"
+                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf"
                 )
             )
         )
@@ -776,7 +776,7 @@ class TestSyncDrive(unittest.TestCase):
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
-    @patch("pyicloud.PyiCloudService")
+    @patch("icloudpy.ICloudPyService")
     @patch("src.config_parser.read_config")
     def test_sync_drive_valids(
         self,
@@ -795,21 +795,32 @@ class TestSyncDrive(unittest.TestCase):
                 config=config, drive=mock_service.drive, verbose=False
             )
         )
-        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "pyiCloud")))
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "pyiCloud", "Test"))
+            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "pyiCloud", "Test", "Document scanne 2.pdf"
+                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf"
                 )
             )
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "pyiCloud", "Test", "Scanned document 1.pdf"
+                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf"
+                )
+            )
+        )
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "Obsidian")))
+        self.assertTrue(
+            os.path.isdir(os.path.join(self.destination_path, "Obsidian", "Sample"))
+        )
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(
+                    self.destination_path, "Obsidian", "Sample", "This is a title.md"
                 )
             )
         )

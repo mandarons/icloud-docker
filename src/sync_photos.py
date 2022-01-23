@@ -2,7 +2,7 @@ import time
 import os
 import shutil
 from src import config_parser
-from pyicloud import exceptions
+from icloudpy import exceptions
 
 
 def generate_file_name(photo, file_size, destination_path, verbose=False):
@@ -43,7 +43,7 @@ def download_photo(photo, file_size, destination_path, verbose=False):
             shutil.copyfileobj(download.raw, file_out)
         local_modified_time = time.mktime(photo.added_date.timetuple())
         os.utime(destination_path, (local_modified_time, local_modified_time))
-    except (exceptions.PyiCloudAPIResponseException, FileNotFoundError, Exception) as e:
+    except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
         print(f"Failed to download {destination_path}: {str(e)}")
         return False
     return True
@@ -96,7 +96,7 @@ def sync_photos(config, photos, verbose):
 #     import warnings
 
 #     # from pprint import pprint
-#     # from pyicloud import PyiCloudService
+#     # from icloudpy import ICloudPyService
 #     from urllib3.exceptions import InsecureRequestWarning
 
 #     # Handle certificate warnings by ignoring them

@@ -24,13 +24,15 @@ drive:
     folders:
       - dir1/dir2/dir3
       - Keynote
-      - pyiCloud
+      - icloudpy
+      - Obsidian
     file_extensions:
       # File extensions to be included
       - pdf
       - png
       - jpg
       - jpeg
+      - md
 photos:
   destination: photos
   remove_obsolete: false
