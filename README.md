@@ -9,7 +9,7 @@
 
 :love_you_gesture: ***Please star this repository if you end up using the container. It will help me continue supporting this product.*** :pray:
 
-iCloud-docker (previously known as iCloud-drive-docker) is a simple iCloud client in Docker environment. It uses [pyiCloud](https://github.com/picklepete/pyicloud) python library to interact with iCloud server.
+iCloud-docker (previously known as iCloud-drive-docker) is a simple iCloud client in Docker environment. It uses [iCloudPy](https://github.com/mandarons/icloudpy) python library to interact with iCloud server.
 
 Primary use case of iCloud-docker is to periodically sync wanted or all of your iCloud drive, photos using your iCloud username and password. 
 
