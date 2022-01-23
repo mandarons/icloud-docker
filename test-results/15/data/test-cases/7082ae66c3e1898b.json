@@ -1,0 +1,158 @@
+{
+  "uid" : "7082ae66c3e1898b",
+  "name" : "test_download_photo_invalids",
+  "fullName" : "tests.test_sync_photos.TestSyncPhotos#test_download_photo_invalids",
+  "historyId" : "0724b050d2993d86489b3c1ffd343a55",
+  "time" : {
+    "start" : 1642907418636,
+    "stop" : 1642907418654,
+    "duration" : 18
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncPhotos",
+    "time" : {
+      "start" : 1642907418635,
+      "stop" : 1642907418635,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "479a9a06d18d3dc7",
+      "name" : "stdout",
+      "source" : "479a9a06d18d3dc7.txt",
+      "type" : "text/plain",
+      "size" : 273
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 1,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncPhotos::0",
+    "time" : {
+      "start" : 1642907418821,
+      "stop" : 1642907418821,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_sync_photos"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestSyncPhotos"
+  }, {
+    "name" : "host",
+    "value" : "fv-az121-364"
+  }, {
+    "name" : "thread",
+    "value" : "3794-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_sync_photos"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 6,
+        "unknown" : 0,
+        "total" : 6
+      },
+      "items" : [ {
+        "uid" : "b0a4d7d44b86cb2f",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/14//#testresult/b0a4d7d44b86cb2f",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642215702919,
+          "stop" : 1642215702935,
+          "duration" : 16
+        }
+      }, {
+        "uid" : "a6314750d2c0ada5",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/13//#testresult/a6314750d2c0ada5",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642190156377,
+          "stop" : 1642190156393,
+          "duration" : 16
+        }
+      }, {
+        "uid" : "57752e44f4e4ed36",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/12//#testresult/57752e44f4e4ed36",
+        "status" : "passed",
+        "time" : {
+          "start" : 1642051614926,
+          "stop" : 1642051614943,
+          "duration" : 17
+        }
+      }, {
+        "uid" : "62321fcc635a34dd",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/11//#testresult/62321fcc635a34dd",
+        "status" : "passed",
+        "time" : {
+          "start" : 1629999803498,
+          "stop" : 1629999803513,
+          "duration" : 15
+        }
+      }, {
+        "uid" : "a5c2b46c46719caf",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/10//#testresult/a5c2b46c46719caf",
+        "status" : "passed",
+        "time" : {
+          "start" : 1629998662697,
+          "stop" : 1629998662712,
+          "duration" : 15
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "7082ae66c3e1898b.json",
+  "parameterValues" : [ ]
+}
