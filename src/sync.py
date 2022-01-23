@@ -1,6 +1,6 @@
 import datetime
 import time
-from pyicloud import PyiCloudService, utils, exceptions
+from icloudpy import ICloudPyService, utils, exceptions
 from src import sync_drive, sync_photos, config_parser, notify
 
 
@@ -12,7 +12,7 @@ def sync():
         username = config_parser.get_username(config=config)
         if username:
             try:
-                api = PyiCloudService(
+                api = ICloudPyService(
                     apple_id=username,
                     password=utils.get_password_from_keyring(username=username),
                 )
@@ -28,7 +28,7 @@ def sync():
                 else:
                     print("Error: 2FA is required. Please log in.")
                     last_send = notify.send(config, last_send)
-            except exceptions.PyiCloudNoStoredPasswordAvailableException:
+            except exceptions.ICloudPyNoStoredPasswordAvailableException:
 
                 print(
                     "password is not stored in keyring. Please save the password in keyring."
