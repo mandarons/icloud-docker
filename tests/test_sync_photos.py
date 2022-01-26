@@ -174,3 +174,28 @@ class TestSyncPhotos(unittest.TestCase):
         )
         self.assertIsNone(sync_photos.sync_album({}, None, ["original"]))
         self.assertIsNone(sync_photos.sync_album({}, self.destination_path, None))
+
+    def test_missing_medium_thumb_photo_sizes(self):
+        class MockPhoto:
+            @property
+            def filename(self):
+                return "filename"
+
+            @property
+            def versions(self):
+                return {"original": "exists"}
+
+        self.assertFalse(
+            sync_photos.process_photo(
+                photo=MockPhoto(),
+                file_size="medium",
+                destination_path=self.destination_path,
+            )
+        )
+        self.assertFalse(
+            sync_photos.process_photo(
+                photo=MockPhoto(),
+                file_size="thumb",
+                destination_path=self.destination_path,
+            )
+        )

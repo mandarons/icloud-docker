@@ -53,6 +53,11 @@ def process_photo(photo, file_size, destination_path, verbose=False):
     photo_path = generate_file_name(
         photo=photo, file_size=file_size, destination_path=destination_path
     )
+    if file_size not in photo.versions:
+        print(
+            f"File size {file_size} not found on server. Skipping the photo {photo_path} ..."
+        )
+        return False
     if photo_exists(photo, file_size, photo_path, verbose=verbose):
         return False
     download_photo(photo, file_size, photo_path, verbose=verbose)
