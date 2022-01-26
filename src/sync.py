@@ -17,14 +17,20 @@ def sync():
                     password=utils.get_password_from_keyring(username=username),
                 )
                 if not api.requires_2sa:
-                    sync_drive.sync_drive(
-                        config=config,
-                        drive=api.drive,
-                        verbose=verbose,
-                    )
-                    sync_photos.sync_photos(
-                        config=config, photos=api.photos, verbose=verbose
-                    )
+                    if "drive" in config:
+                        sync_drive.sync_drive(
+                            config=config,
+                            drive=api.drive,
+                            verbose=verbose,
+                        )
+                    if "photos" in config:
+                        sync_photos.sync_photos(
+                            config=config, photos=api.photos, verbose=verbose
+                        )
+                    if "drive" not in config and "photos" not in config:
+                        print(
+                            "Nothing to sync. Please add drive: and/or photos: section in config.yaml file."
+                        )
                 else:
                     print("Error: 2FA is required. Please log in.")
                     last_send = notify.send(config, last_send)
