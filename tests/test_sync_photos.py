@@ -32,7 +32,7 @@ class TestSyncPhotos(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
-    def test_sync_photos_valids(
+    def test_sync_photos_original(
         self,
         mock_read_config,
         mock_service,
@@ -61,8 +61,35 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(len(os.listdir(album_0_path)) > 0)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
 
-        # Download missing file
+    @patch("time.sleep")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_missing_photo_download(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        mock_read_config.return_value = config
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        sync_photos.sync_photos(config=config, photos=mock_service.photos, verbose=True)
+
         os.remove(os.path.join(album_1_path, "IMG_3148.JPG"))
+        # Download missing file
         with self.assertLogs() as captured:
             self.assertIsNone(
                 sync_photos.sync_photos(
@@ -78,6 +105,32 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(len(os.listdir(album_0_path)) > 0)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
 
+    @patch("time.sleep")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_download_changed_photo(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        mock_read_config.return_value = config
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        sync_photos.sync_photos(config=config, photos=mock_service.photos, verbose=True)
         # Download changed file
         os.remove(os.path.join(album_1_path, "IMG_3148.JPG"))
         shutil.copyfile(
@@ -99,6 +152,28 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(len(os.listdir(album_0_path)) > 0)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
 
+    @patch("time.sleep")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_nothing_to_download(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        mock_read_config.return_value = config
+
+        sync_photos.sync_photos(config=config, photos=mock_service.photos, verbose=True)
+
         # No files to download
         with self.assertLogs() as captured:
             self.assertIsNone(
@@ -110,6 +185,30 @@ class TestSyncPhotos(unittest.TestCase):
             self.assertIsNone(
                 next((s for s in captured[1] if "Downloading /" in s), None)
             )
+
+    @patch("time.sleep")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_rename_previous_original_photos(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        mock_read_config.return_value = config
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        sync_photos.sync_photos(config=config, photos=mock_service.photos, verbose=True)
 
         # Rename previous original files - upgrade to newer version
         os.rename(
@@ -135,7 +234,7 @@ class TestSyncPhotos(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
-    def test_sync_photos_valid_empty_albums_list(
+    def test_sync_photos_empty_albums_list(
         self,
         mock_read_config,
         mock_service,
@@ -161,30 +260,49 @@ class TestSyncPhotos(unittest.TestCase):
 
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "all")))
 
-    def test_download_photo_invalids(self):
+    def test_download_photo_none_photo(self):
+
+        self.assertFalse(
+            sync_photos.download_photo(None, ["original"], self.destination_path)
+        )
+
+    def test_download_photo_none_file_size(self):
         class MockPhoto:
             def download(self, quality):
                 raise icloudpy.exceptions.ICloudPyAPIResponseException
 
         self.assertFalse(
-            sync_photos.download_photo(None, ["original"], self.destination_path)
-        )
-        self.assertFalse(
             sync_photos.download_photo(MockPhoto(), None, self.destination_path)
         )
+
+    def test_download_photo_none_destination_path(self):
+        class MockPhoto:
+            def download(self, quality):
+                raise icloudpy.exceptions.ICloudPyAPIResponseException
+
         self.assertFalse(sync_photos.download_photo(MockPhoto(), ["original"], None))
+
+    def test_download_photo_handle_exception(self):
+        class MockPhoto:
+            def download(self, quality):
+                raise icloudpy.exceptions.ICloudPyAPIResponseException
+
         self.assertFalse(
             sync_photos.download_photo(MockPhoto(), ["original"], self.destination_path)
         )
 
-    def test_sync_album_invalids(self):
+    def test_sync_album_none_album(self):
         self.assertIsNone(
             sync_photos.sync_album(None, self.destination_path, ["original"])
         )
+
+    def test_sync_album_none_destination_path(self):
         self.assertIsNone(sync_photos.sync_album({}, None, ["original"]))
+
+    def test_sync_album_none_file_sizes(self):
         self.assertIsNone(sync_photos.sync_album({}, self.destination_path, None))
 
-    def test_missing_medium_thumb_photo_sizes(self):
+    def test_missing_medium_photo_size(self):
         class MockPhoto:
             @property
             def filename(self):
@@ -201,6 +319,17 @@ class TestSyncPhotos(unittest.TestCase):
                 destination_path=self.destination_path,
             )
         )
+
+    def test_missing_thumb_photo_sizes(self):
+        class MockPhoto:
+            @property
+            def filename(self):
+                return "filename"
+
+            @property
+            def versions(self):
+                return {"original": "exists"}
+
         self.assertFalse(
             sync_photos.process_photo(
                 photo=MockPhoto(),

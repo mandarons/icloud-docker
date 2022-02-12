@@ -29,7 +29,7 @@ class TestSyncDrive(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(tests.TEMP_DIR)
 
-    def test_wanted_parent_folder_valids(self):
+    def test_wanted_parent_folder_none_filters(self):
         self.filters["folders"] = ["dir1/dir11"]
         self.assertTrue(
             sync_drive.wanted_parent_folder(
@@ -38,6 +38,9 @@ class TestSyncDrive(unittest.TestCase):
                 folder_path=os.path.join(self.root, "dir1/dir11"),
             )
         )
+
+    def test_wanted_parent_folder(self):
+        self.filters["folders"] = ["dir1/dir11"]
         self.assertTrue(
             sync_drive.wanted_parent_folder(
                 filters=self.filters["folders"],
@@ -46,7 +49,7 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_wanted_parent_folder_invalids(self):
+    def test_wanted_parent_folder_missing_parent_folder(self):
         self.filters["folders"] = ["dir1/dir11"]
         self.assertFalse(
             sync_drive.wanted_parent_folder(
@@ -56,7 +59,7 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_wanted_folder_single(self):
+    def test_wanted_folder_single_variations(self):
         self.filters["folders"] = ["dir1"]
         self.assertTrue(
             sync_drive.wanted_folder(
@@ -301,32 +304,41 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.filters = dict(original_filters)
 
-    def test_wanted_folder_invalids(self):
+    def test_wanted_folder_none_folder_path(self):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"], root=self.root, folder_path=None
             )
         )
+
+    def test_wanted_folder_none_filters(self):
         self.assertTrue(
             sync_drive.wanted_folder(filters=None, root=self.root, folder_path="dir1")
         )
+
+    def test_wanted_folder_none_root(self):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"], root=None, folder_path="dir1"
             )
         )
 
+    def test_wanted_file(self):
         self.filters["file_extensions"] = ["py"]
         self.assertTrue(
             sync_drive.wanted_file(
                 filters=self.filters["file_extensions"], file_path=__file__
             )
         )
+
+    def test_wanted_file_missing(self):
         self.assertFalse(
             sync_drive.wanted_file(
                 filters=self.filters["file_extensions"], file_path=tests.CONFIG_PATH
             )
         )
+
+    def test_wanted_file_check_log(self):
         with self.assertLogs() as captured:
             sync_drive.wanted_file(
                 filters=self.filters["file_extensions"],
@@ -338,14 +350,16 @@ class TestSyncDrive(unittest.TestCase):
                 "Skipping the unwanted file", captured.records[0].getMessage()
             )
 
-    def test_wanted_file_invalids(self):
-        original_filters = dict(self.filters)
+    def test_wanted_file_none_file_path(self):
         self.assertTrue(sync_drive.wanted_file(filters=None, file_path=__file__))
         self.assertFalse(
             sync_drive.wanted_file(
                 filters=self.filters["file_extensions"], file_path=None
             )
         )
+
+    def test_wanted_file_empty_file_extensions(self):
+        original_filters = dict(self.filters)
         self.filters["file_extensions"] = []
         self.assertTrue(
             sync_drive.wanted_file(
@@ -353,6 +367,8 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
         self.filters = dict(original_filters)
+
+    def test_wanted_file_case_variations_extensions(self):
         self.filters["file_extensions"] = ["pY"]
         self.assertTrue(
             sync_drive.wanted_file(
@@ -367,7 +383,7 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_process_folder_valids(self):
+    def test_process_folder_wanted(self):
         # Wanted folder
         actual = sync_drive.process_folder(
             item=self.drive[self.items[0]],
@@ -379,6 +395,8 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(os.path.exists(actual))
         self.assertTrue(os.path.isdir(actual))
 
+    def test_process_folder_unwanted(self):
+
         # Unwanted folder
         actual = sync_drive.process_folder(
             item=self.drive[self.items[1]],
@@ -388,22 +406,22 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.assertIsNone(actual)
 
-        # Verbose
-        with self.assertLogs() as captured:
-            actual = sync_drive.process_folder(
-                item=self.drive[self.items[1]],
-                destination_path=self.destination_path,
-                filters=self.filters,
-                root=self.root,
-                verbose=True,
-            )
-            self.assertIsNone(actual)
-            self.assertTrue(len(captured.records) > 0)
-            self.assertIn(
-                "Skipping the unwanted folder", captured.records[0].getMessage()
-            )
+        # # Verbose
+        # with self.assertLogs() as captured:
+        #     actual = sync_drive.process_folder(
+        #         item=self.drive[self.items[1]],
+        #         destination_path=self.destination_path,
+        #         filters=self.filters,
+        #         root=self.root,
+        #         verbose=True,
+        #     )
+        #     self.assertIsNone(actual)
+        #     self.assertTrue(len(captured.records) > 0)
+        #     self.assertIn(
+        #         "Skipping the unwanted folder", captured.records[0].getMessage()
+        #     )
 
-    def test_process_folder_invalids(self):
+    def test_process_folder_none_item(self):
         self.assertIsNone(
             sync_drive.process_folder(
                 item=None,
@@ -412,6 +430,8 @@ class TestSyncDrive(unittest.TestCase):
                 root=self.root,
             )
         )
+
+    def test_process_folder_none_destination_path(self):
         self.assertIsNone(
             sync_drive.process_folder(
                 item=self.drive[self.items[1]],
@@ -420,6 +440,8 @@ class TestSyncDrive(unittest.TestCase):
                 root=self.root,
             )
         )
+
+    def test_process_folder_none_root(self):
         self.assertIsNone(
             sync_drive.process_folder(
                 item=self.drive[self.items[1]],
@@ -429,11 +451,13 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_file_exists_valid(self):
+    def test_file_non_existing_file(self):
         # File does not exist
         self.assertFalse(
             sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path)
         )
+
+    def test_file_existing_file(self):
         # File exists
         sync_drive.download_file(item=self.file_item, local_file=self.local_file_path)
         actual = sync_drive.file_exists(
@@ -452,13 +476,15 @@ class TestSyncDrive(unittest.TestCase):
             self.assertTrue(len(captured.records) > 0)
             self.assertIn("No changes detected.", captured.records[0].getMessage())
 
-    def test_file_exists_invalid(self):
+    def test_file_exists_none_item(self):
         self.assertFalse(
             sync_drive.file_exists(item=None, local_file=self.local_file_path)
         )
+
+    def test_file_exists_none_local_file(self):
         self.assertFalse(sync_drive.file_exists(item=self.file_item, local_file=None))
 
-    def test_download_file_valids(self):
+    def test_download_file(self):
         self.assertTrue(
             sync_drive.download_file(
                 item=self.file_item, local_file=self.local_file_path
@@ -475,11 +501,15 @@ class TestSyncDrive(unittest.TestCase):
             self.assertTrue(len(captured.records) > 0)
             self.assertIn("Downloading ", captured.records[0].getMessage())
 
-    def test_download_file_invalids(self):
+    def test_download_file_none_item(self):
         self.assertFalse(
             sync_drive.download_file(item=None, local_file=self.local_file_path)
         )
+
+    def test_download_file_none_local_file(self):
         self.assertFalse(sync_drive.download_file(item=self.file_item, local_file=None))
+
+    def test_download_file_non_existing(self):
         self.assertFalse(
             sync_drive.download_file(
                 item=self.file_item,
@@ -488,6 +518,8 @@ class TestSyncDrive(unittest.TestCase):
                 ),
             )
         )
+
+    def test_download_file_key_error_data_token(self):
         with patch.object(self.file_item, "open") as mock_item:
             mock_item.side_effect = KeyError("data_token")
             self.assertFalse(
@@ -496,7 +528,7 @@ class TestSyncDrive(unittest.TestCase):
                 )
             )
 
-    def test_process_file_valids(self):
+    def test_process_file_non_existing(self):
         files = set()
         # file does not exist
         self.assertTrue(
@@ -508,6 +540,15 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
         self.assertTrue(len(files) == 1)
+
+    def test_process_file_existing(self):
+        files = set()
+        sync_drive.process_file(
+            item=self.file_item,
+            destination_path=self.destination_path,
+            filters=self.filters["file_extensions"],
+            files=files,
+        )
         # file already exists
         self.assertFalse(
             sync_drive.process_file(
@@ -518,7 +559,7 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_process_file_invalids(self):
+    def test_process_file_none_item(self):
         files = set()
         self.assertFalse(
             sync_drive.process_file(
@@ -528,6 +569,9 @@ class TestSyncDrive(unittest.TestCase):
                 files=files,
             )
         )
+
+    def test_process_file_none_destination_path(self):
+        files = set()
         self.assertFalse(
             sync_drive.process_file(
                 item=self.file_item,
@@ -536,6 +580,9 @@ class TestSyncDrive(unittest.TestCase):
                 files=files,
             )
         )
+
+    def test_process_file_none_filters(self):
+        files = set()
         self.assertTrue(
             sync_drive.process_file(
                 item=self.file_item,
@@ -544,6 +591,8 @@ class TestSyncDrive(unittest.TestCase):
                 files=files,
             )
         )
+
+    def test_process_file_none_files(self):
         self.assertFalse(
             sync_drive.process_file(
                 item=self.file_item,
@@ -553,6 +602,8 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
+    def test_process_file_existing_file(self):
+        files = set()
         # Existing file
         sync_drive.download_file(item=self.file_item, local_file=self.local_file_path)
         self.assertFalse(
@@ -564,7 +615,7 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_remove_obsolete_valids(self):
+    def test_remove_obsolete_file(self):
         obsolete_path = os.path.join(self.destination_path, "obsolete")
         os.mkdir(obsolete_path)
         obsolete_file_path = os.path.join(obsolete_path, os.path.basename(__file__))
@@ -577,6 +628,15 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.assertTrue(len(actual) == 1)
         self.assertFalse(os.path.isfile(obsolete_file_path))
+
+    def test_remove_obsolete_directory(self):
+        files = set()
+        obsolete_path = os.path.join(self.destination_path, "obsolete")
+        os.mkdir(obsolete_path)
+        obsolete_file_path = os.path.join(obsolete_path, os.path.basename(__file__))
+        shutil.copyfile(__file__, obsolete_file_path)
+        files.add(obsolete_path)
+        shutil.copyfile(__file__, obsolete_file_path)
         # Remove the directory
         files.remove(obsolete_path)
         actual = sync_drive.remove_obsolete(
@@ -606,17 +666,19 @@ class TestSyncDrive(unittest.TestCase):
             self.assertTrue(len(captured.records) > 0)
             self.assertIn("Removing ", captured.records[0].getMessage())
 
-    def test_remove_obsolete_invalids(self):
-        obsolete_path = os.path.join(self.destination_path, "obsolete")
+    def test_remove_obsolete_none_destination_path(self):
         self.assertTrue(
             len(sync_drive.remove_obsolete(destination_path=None, files=set())) == 0
         )
+
+    def test_remove_obsolete_none_files(self):
+        obsolete_path = os.path.join(self.destination_path, "obsolete")
         self.assertTrue(
             len(sync_drive.remove_obsolete(destination_path=obsolete_path, files=None))
             == 0
         )
 
-    def test_sync_directory_without_remove_valid(self):
+    def test_sync_directory_without_remove(self):
         actual = sync_drive.sync_directory(
             drive=self.drive,
             destination_path=self.destination_path,
@@ -646,7 +708,7 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_sync_directory_with_remove_valid(self):
+    def test_sync_directory_with_remove(self):
         os.mkdir(os.path.join(self.destination_path, "obsolete"))
         shutil.copyfile(
             __file__, os.path.join(self.destination_path, "obsolete", "obsolete.py")
@@ -680,7 +742,7 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_sync_directory_without_folder_filter_valid(self):
+    def test_sync_directory_without_folder_filter(self):
         original_filters = dict(self.filters)
         del self.filters["folders"]
         actual = sync_drive.sync_directory(
@@ -715,7 +777,7 @@ class TestSyncDrive(unittest.TestCase):
 
         self.filters = dict(original_filters)
 
-    def test_sync_directory_invalids(self):
+    def test_sync_directory_none_drive(self):
         self.assertTrue(
             0
             == len(
@@ -730,6 +792,8 @@ class TestSyncDrive(unittest.TestCase):
                 )
             )
         )
+
+    def test_sync_directory_none_destination(self):
         self.assertTrue(
             0
             == len(
@@ -744,6 +808,8 @@ class TestSyncDrive(unittest.TestCase):
                 )
             )
         )
+
+    def test_sync_directory_none_root(self):
         self.assertTrue(
             0
             == len(
@@ -758,6 +824,8 @@ class TestSyncDrive(unittest.TestCase):
                 )
             )
         )
+
+    def test_sync_directory_none_items(self):
         self.assertTrue(
             0
             == len(
@@ -827,16 +895,16 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-        mock_get_username.return_value = data.REQUIRES_2FA_USER
-        self.assertIsNotNone(
-            sync_drive.sync_drive(
-                config=config, drive=mock_service.drive, verbose=False
-            )
-        )
+        # mock_get_username.return_value = data.REQUIRES_2FA_USER
+        # self.assertIsNotNone(
+        #     sync_drive.sync_drive(
+        #         config=config, drive=mock_service.drive, verbose=False
+        #     )
+        # )
 
-        mock_get_password.return_value = None
-        self.assertIsNotNone(
-            sync_drive.sync_drive(
-                config=config, drive=mock_service.drive, verbose=False
-            )
-        )
+        # mock_get_password.return_value = None
+        # self.assertIsNotNone(
+        #     sync_drive.sync_drive(
+        #         config=config, drive=mock_service.drive, verbose=False
+        #     )
+        # )

@@ -37,7 +37,7 @@ def sync():
                     last_send = notify.send(config, last_send)
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
                 LOGGER.error(
-                    "password is not stored in keyring. Please save the password in keyring."
+                    "Password is not stored in keyring. Please save the password in keyring."
                 )
         sleep_for = config_parser.get_sync_interval(config=config)
         next_sync = (
