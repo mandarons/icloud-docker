@@ -5,7 +5,7 @@ from src import config_parser, LOGGER
 from icloudpy import exceptions
 
 
-def generate_file_name(photo, file_size, destination_path, verbose=False):
+def generate_file_name(photo, file_size, destination_path):
     filename = photo.filename
     if file_size != "original":
         tokens = photo.filename.rsplit(".", 1)
@@ -21,22 +21,20 @@ def generate_file_name(photo, file_size, destination_path, verbose=False):
     return os.path.abspath(os.path.join(destination_path, filename))
 
 
-def photo_exists(photo, file_size, local_path, verbose=False):
+def photo_exists(photo, file_size, local_path):
     if photo and local_path and os.path.isfile(local_path):
         local_size = os.path.getsize(local_path)
         remote_size = int(photo.versions[file_size]["size"])
         if local_size == remote_size:
-            if verbose:
-                LOGGER.info("No changes detected. Skipping the file %s", local_path)
+            LOGGER.info("No changes detected. Skipping the file %s", local_path)
             return True
         return False
 
 
-def download_photo(photo, file_size, destination_path, verbose=False):
+def download_photo(photo, file_size, destination_path):
     if not (photo and file_size and destination_path):
         return False
-    if verbose:
-        LOGGER.info("Downloading %s ...", destination_path)
+    LOGGER.info("Downloading %s ...", destination_path)
     try:
         download = photo.download(file_size)
         with open(destination_path, "wb") as file_out:
@@ -49,7 +47,7 @@ def download_photo(photo, file_size, destination_path, verbose=False):
     return True
 
 
-def process_photo(photo, file_size, destination_path, verbose=False):
+def process_photo(photo, file_size, destination_path):
     photo_path = generate_file_name(
         photo=photo, file_size=file_size, destination_path=destination_path
     )
@@ -60,22 +58,22 @@ def process_photo(photo, file_size, destination_path, verbose=False):
             photo_path,
         )
         return False
-    if photo_exists(photo, file_size, photo_path, verbose=verbose):
+    if photo_exists(photo, file_size, photo_path):
         return False
-    download_photo(photo, file_size, photo_path, verbose=verbose)
+    download_photo(photo, file_size, photo_path)
     return True
 
 
-def sync_album(album, destination_path, file_sizes, verbose=False):
+def sync_album(album, destination_path, file_sizes):
     if not (album and destination_path and file_sizes):
         return None
     os.makedirs(destination_path, exist_ok=True)
     for photo in album:
         for file_size in file_sizes:
-            process_photo(photo, file_size, destination_path, verbose)
+            process_photo(photo, file_size, destination_path)
 
 
-def sync_photos(config, photos, verbose):
+def sync_photos(config, photos):
     destination_path = config_parser.prepare_photos_destination(config=config)
     filters = config_parser.get_photos_filters(config=config)
     if filters["albums"]:
@@ -84,14 +82,12 @@ def sync_photos(config, photos, verbose):
                 album=photos.albums[album],
                 destination_path=os.path.join(destination_path, album),
                 file_sizes=filters["file_sizes"],
-                verbose=verbose,
             )
     else:
         sync_album(
             album=photos.all,
             destination_path=os.path.join(destination_path, "all"),
             file_sizes=filters["file_sizes"],
-            verbose=verbose,
         )
 
 

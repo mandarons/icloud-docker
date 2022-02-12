@@ -126,6 +126,52 @@ class TestSyncDrive(unittest.TestCase):
         self.assertIsNone(sync.sync())
         self.assertFalse(os.path.exists(self.root_dir))
 
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    def test_sync_2fa_required(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        mock_read_config.return_value = config
+
+        with self.assertLogs() as captured:
+            mock_get_username.return_value = data.REQUIRES_2FA_USER
+            self.assertIsNone(sync.sync())
+            self.assertTrue(len(captured.records) > 1)
+            self.assertTrue(len([e for e in captured[1] if "2FA is required" in e]) > 0)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    def test_sync_password_missing_in_keyring(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        mock_read_config.return_value = config
+        with self.assertLogs() as captured:
+            mock_get_password.return_value = None
+            self.assertIsNone(sync.sync())
+            self.assertTrue(
+                len(
+                    [
+                        e
+                        for e in captured[1]
+                        if "Password is not stored in keyring. Please save the password in keyring."
+                        in e
+                    ]
+                )
+                > 0
+            )
+
     @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
@@ -133,7 +179,7 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
-    def test_sync_invalids(
+    def test_sync_exception_thrown(
         self,
         mock_read_config,
         mock_service,
@@ -144,13 +190,6 @@ class TestSyncDrive(unittest.TestCase):
         mock_service = self.service
         config = self.config.copy()
         mock_read_config.return_value = config
-
-        mock_get_username.return_value = data.REQUIRES_2FA_USER
-        self.assertIsNone(sync.sync())
-
-        mock_get_password.return_value = None
-        self.assertIsNone(sync.sync())
-
         mock_sleep.side_effect = Exception()
         config = self.config.copy()
         config["app"]["sync_interval"] = 1

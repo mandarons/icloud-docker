@@ -22,40 +22,47 @@ class TestConfigParser(unittest.TestCase):
     def tearDown(self) -> None:
         pass
 
-    def test_read_config_valids(self):
+    def test_read_config_default_config_path(self):
         # Default config path
         self.assertIsNotNone(read_config())
+
+    def test_read_config_overridden_config_path(self):
         # Overridden config path
         self.assertIsNotNone(read_config(config_path=DEFAULT_CONFIG_FILE_PATH))
 
-    def test_read_config_invalids(self):
+    def test_read_config_invalid_config_path(self):
         # Invalid config path
         self.assertIsNone(read_config(config_path="invalid/path"))
+
+    def test_read_config_none_config_path(self):
         # None config path
         self.assertIsNone(read_config(config_path=None))
 
-    def test_get_sync_interval_valids(self):
+    def test_get_sync_interval(self):
         # Given sync interval
         config = read_config()
         self.assertEqual(
             config["app"]["sync_interval"],
             config_parser.get_sync_interval(config=config),
         )
+
+    def test_get_sync_interval_default(self):
         # Default sync interval
+        config = read_config()
         del config["app"]["sync_interval"]
         self.assertEqual(
             DEFAULT_SYNC_INTERVAL_SEC,
             config_parser.get_sync_interval(config=config),
         )
 
-    def test_get_sync_interval_invalids(self):
+    def test_get_sync_interval_none_config(self):
         # None config
         self.assertEqual(
             DEFAULT_SYNC_INTERVAL_SEC,
             config_parser.get_sync_interval(config=None),
         )
 
-    def test_prepare_drive_destination_valids(self):
+    def test_prepare_drive_destination_given(self):
         config = read_config()
         # Given destination
         actual = config_parser.prepare_drive_destination(config=config)
@@ -68,6 +75,9 @@ class TestConfigParser(unittest.TestCase):
         self.assertTrue(os.path.exists(actual))
         self.assertTrue(os.path.isdir(actual))
         os.rmdir(actual)
+
+    def test_prepare_drive_destination_default(self):
+        config = read_config()
         # Default destination
         del config["drive"]["destination"]
         actual = config_parser.prepare_drive_destination(config=config)
@@ -84,7 +94,7 @@ class TestConfigParser(unittest.TestCase):
         self.assertTrue(os.path.isdir(actual))
         os.rmdir(actual)
 
-    def test_prepare_drive_destination_invalids(self):
+    def test_prepare_drive_destination_none_config(self):
         # None config
         actual = config_parser.prepare_drive_destination(config=None)
         self.assertEqual(
@@ -100,7 +110,7 @@ class TestConfigParser(unittest.TestCase):
         self.assertTrue(os.path.isdir(actual))
         os.rmdir(actual)
 
-    def test_get_username_valids(self):
+    def test_get_username_given(self):
         config = read_config()
         # Given username
         self.assertEqual(
@@ -108,80 +118,69 @@ class TestConfigParser(unittest.TestCase):
             config_parser.get_username(config=config),
         )
 
-    def test_get_username_invalids(self):
-        config = read_config()
+    def test_get_username_none_config(self):
         # None config
         self.assertIsNone(config_parser.get_username(config=None))
+
+    def test_get_username_empty(self):
         # Empty username
+        config = read_config()
         config["app"]["credentials"]["username"] = ""
         self.assertIsNone(config_parser.get_username(config=config))
 
-    def test_get_remove_obsolete_valids(self):
+    def test_get_remove_obsolete(self):
         config = read_config()
         config["drive"]["remove_obsolete"] = True
         self.assertTrue(config_parser.get_drive_remove_obsolete(config=config))
         del config["drive"]["remove_obsolete"]
         self.assertFalse(config_parser.get_drive_remove_obsolete(config=config))
 
-    def test_get_remove_obsolete_invalids(self):
+    def test_get_remove_obsolete_none_config(self):
         self.assertFalse(config_parser.get_drive_remove_obsolete(config=None))
-
-    def test_get_verbose_valids(self):
-        config = read_config()
-        self.assertEqual(
-            config["app"]["verbose"], config_parser.get_verbose(config=config)
-        )
-        config["app"]["verbose"] = True
-        self.assertTrue(config_parser.get_verbose(config=config))
-
-    def test_get_verbose_invalids(self):
-        config = read_config()
-        config["app"]["verbose"] = None
-        self.assertFalse(config_parser.get_verbose(config=config))
-        del config["app"]["verbose"]
-        self.assertFalse(config_parser.get_verbose(config=config))
-        del config["app"]
-        self.assertFalse(config_parser.get_verbose(config=config))
 
     def test_get_smtp_no_tls(self):
         config = {"app": {"smtp": {"no_tls": True}}}
         self.assertTrue(config_parser.get_smtp_no_tls(config=config))
+
+    def test_get_smtp_tls(self):
         config = {"app": {"smtp": {"no_tls": False}}}
         self.assertFalse(config_parser.get_smtp_no_tls(config=config))
+
+    def test_get_smtp_empty(self):
         config = {"app": {"smtp": {}}}
         self.assertFalse(config_parser.get_smtp_no_tls(config=config))
 
-    def test_get_smtp_email_valids(self):
+    def test_get_smtp_email(self):
         # Given email
         config = {"app": {"smtp": {"email": "user@test.com"}}}
         self.assertEqual(
             config["app"]["smtp"]["email"], config_parser.get_smtp_email(config=config)
         )
 
-    def test_smtp_email_invalids(self):
+    def test_smtp_email_none_config(self):
         self.assertIsNone(config_parser.get_smtp_email(config=None))
 
-    def test_get_smtp_host_valids(self):
+    def test_get_smtp_host(self):
         # Given host
         config = {"app": {"smtp": {"host": "smtp.test.com"}}}
         self.assertEqual(
             config["app"]["smtp"]["host"], config_parser.get_smtp_host(config=config)
         )
 
-    def test_smtp_host_invalids(self):
+    def test_smtp_host_none_config(self):
         self.assertIsNone(config_parser.get_smtp_host(config=None))
 
-    def test_get_smtp_port_valids(self):
+    def test_get_smtp_port(self):
         # Given port
         config = {"app": {"smtp": {"port": 587}}}
         self.assertEqual(
             config["app"]["smtp"]["port"], config_parser.get_smtp_port(config=config)
         )
 
-    def test_smtp_port_invalids(self):
+    def test_smtp_port_none_config(self):
         self.assertIsNone(config_parser.get_smtp_port(config=None))
 
-    def test_get_smtp_password_valids(self):
+    def test_get_smtp_password(self):
         # Given password
         config = {"app": {"smtp": {"password": "password"}}}
         self.assertEqual(
@@ -189,10 +188,10 @@ class TestConfigParser(unittest.TestCase):
             config_parser.get_smtp_password(config=config),
         )
 
-    def test_smtp_password_invalids(self):
+    def test_smtp_password_none_config(self):
         self.assertIsNone(config_parser.get_smtp_password(config=None))
 
-    def test_prepare_photos_destination_valids(self):
+    def test_prepare_photos_destination(self):
         config = read_config()
         # Given destination
         actual = config_parser.prepare_photos_destination(config=config)
@@ -205,6 +204,9 @@ class TestConfigParser(unittest.TestCase):
         self.assertTrue(os.path.exists(actual))
         self.assertTrue(os.path.isdir(actual))
         os.rmdir(actual)
+
+    def test_prepare_photos_destination_default(self):
+        config = read_config()
         # Default destination
         del config["photos"]["destination"]
         actual = config_parser.prepare_photos_destination(config=config)
@@ -221,7 +223,7 @@ class TestConfigParser(unittest.TestCase):
         self.assertTrue(os.path.isdir(actual))
         shutil.rmtree(actual)
 
-    def test_prepare_photos_destination_invalids(self):
+    def test_prepare_photos_destination_none_config(self):
         # None config
         actual = config_parser.prepare_photos_destination(config=None)
         self.assertEqual(
@@ -237,17 +239,20 @@ class TestConfigParser(unittest.TestCase):
         self.assertTrue(os.path.isdir(actual))
         shutil.rmtree(actual)
 
-    def test_get_photos_remove_obsolete_valids(self):
+    def test_get_photos_remove_obsolete(self):
         config = read_config()
         config["photos"]["remove_obsolete"] = True
         self.assertTrue(config_parser.get_photos_remove_obsolete(config=config))
+
+    def test_get_photos_remove_obsolete_missing(self):
+        config = read_config()
         del config["photos"]["remove_obsolete"]
         self.assertFalse(config_parser.get_photos_remove_obsolete(config=config))
 
-    def test_get_photos_remove_obsolete_invalids(self):
+    def test_get_photos_remove_obsolete_none_config(self):
         self.assertFalse(config_parser.get_photos_remove_obsolete(config=None))
 
-    def test_get_photos_filters_valids(self):
+    def test_get_photos_filters(self):
         config = read_config()
         expected_albums = ["Screenshots", "Selfies"]
         expected_file_sizes = ["original", "medium", "thumb"]
@@ -258,15 +263,21 @@ class TestConfigParser(unittest.TestCase):
         self.assertListEqual(actual["albums"], expected_albums)
         self.assertListEqual(actual["file_sizes"], expected_file_sizes)
 
-    def test_get_photos_filters_invalids(self):
+    def test_get_photos_filters_no_filters(self):
         config = read_config()
         del config["photos"]["filters"]
         actual = config_parser.get_photos_filters(config=config)
         self.assertIsNone(actual["albums"])
         self.assertEqual(actual["file_sizes"][0], "original")
+
+    def test_get_photos_filters_invalid_file_size(self):
+        config = read_config()
         config["photos"] = {"filters": {"file_sizes": ["invalid"]}}
         actual = config_parser.get_photos_filters(config=config)
         self.assertEqual(actual["file_sizes"][0], "original")
+
+    def test_get_photos_filters_no_file_sizes(self):
+        config = read_config()
         del config["photos"]["filters"]["file_sizes"]
         actual = config_parser.get_photos_filters(config=config)
         self.assertEqual(actual["file_sizes"][0], "original")
