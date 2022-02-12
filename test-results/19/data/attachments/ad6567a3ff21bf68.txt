@@ -1,0 +1,2 @@
+ERROR    root:config_parser.py:35 username is missing in app > credentials > username. Please set the username.
+ERROR    root:config_parser.py:44 username is empty in app > credentials > username
