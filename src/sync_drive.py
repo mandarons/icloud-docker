@@ -7,7 +7,7 @@ from pathlib import Path
 from shutil import copyfileobj, rmtree
 from icloudpy import exceptions
 
-from src import config_parser
+from src import config_parser, LOGGER
 
 
 def wanted_file(filters, file_path, verbose=False):
@@ -19,7 +19,7 @@ def wanted_file(filters, file_path, verbose=False):
         if re.search(f"{file_extension}$", file_path, re.IGNORECASE):
             return True
     if verbose:
-        print(f"Skipping the unwanted file {file_path}")
+        LOGGER.info("Skipping the unwanted file %s", file_path)
     return False
 
 
@@ -67,7 +67,7 @@ def process_folder(item, destination_path, filters, root, verbose=False):
         filters=filters, folder_path=new_directory, root=root, verbose=verbose
     ):
         if verbose:
-            print(f"Skipping the unwanted folder {new_directory}...")
+            LOGGER.info("Skipping the unwanted folder %s ...", new_directory)
         return None
     os.makedirs(new_directory, exist_ok=True)
     return new_directory
@@ -84,7 +84,7 @@ def file_exists(item, local_file, verbose=False):
             and local_file_size == remote_file_size
         ):
             if verbose:
-                print(f"No changes detected. Skipping the file {local_file}")
+                LOGGER.info("No changes detected. Skipping the file %s", local_file)
             return True
     return False
 
@@ -93,7 +93,7 @@ def download_file(item, local_file, verbose=False):
     if not (item and local_file):
         return False
     if verbose:
-        print(f"Downloading {local_file} ...")
+        LOGGER.info("Downloading %s ...", local_file)
     try:
         with item.open(stream=True) as response:
             with open(local_file, "wb") as file_out:
@@ -101,7 +101,7 @@ def download_file(item, local_file, verbose=False):
         item_modified_time = time.mktime(item.date_modified.timetuple())
         os.utime(local_file, (item_modified_time, item_modified_time))
     except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
-        print(f"Failed to download {local_file}: {str(e)}")
+        LOGGER.error("Failed to download %s: %s", local_file, str(e))
         return False
     return True
 
@@ -127,7 +127,7 @@ def remove_obsolete(destination_path, files, verbose=False):
         local_file = str(path.absolute())
         if local_file not in files:
             if verbose:
-                print(f"Removing {local_file}")
+                LOGGER.info("Removing %s", local_file)
             if path.is_file():
                 path.unlink(missing_ok=True)
                 removed_paths.add(local_file)

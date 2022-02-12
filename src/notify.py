@@ -2,9 +2,8 @@
 
 import smtplib
 import datetime
-import logging
 from src.email_message import EmailMessage as Message
-from src import config_parser
+from src import config_parser, LOGGER
 
 
 def send(config, last_send=None, dry_run=False):
@@ -16,7 +15,7 @@ def send(config, last_send=None, dry_run=False):
     password = config_parser.get_smtp_password(config=config)
 
     if last_send and last_send > datetime.datetime.now() - datetime.timedelta(hours=24):
-        print("Throttling email to once a day")
+        LOGGER.info("Throttling email to once a day")
         sent_on = last_send
     elif email and host and port:
         try:
@@ -37,21 +36,20 @@ def send(config, last_send=None, dry_run=False):
                 smtp.quit()
         except (Exception) as e:
             sent_on = None
-            print("Error: failed to send email:" + str(e))
-            logging.exception(e)
+            LOGGER.error("Failed to send email: %s", str(e))
     else:
-        print("Not sending 2FA notification because SMTP is not configured")
+        LOGGER.warning("Not sending 2FA notification because SMTP is not configured")
 
     return sent_on
 
 
 def build_message(email):
     message = Message(to=email)
-    message.sender = "icloud-drive-docker <" + email + ">"
+    message.sender = "icloud-docker <" + email + ">"
     message.date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-    message.subject = "icloud-drive-docker: Two step authentication required"
-    message.body = """Two-step authentication for iCloud Drive (Docker) is required.
+    message.subject = "icloud-docker: Two step authentication required"
+    message.body = """Two-step authentication for iCloud Drive, Photos (Docker) is required.
 Please login to your server and authenticate.  Eg:
-`docker exec -it icloud-drive /bin/sh -c "icloud --username=<icloud-username>"`."""
+`docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username>"`."""
 
     return message

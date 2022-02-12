@@ -1,7 +1,7 @@
 import time
 import os
 import shutil
-from src import config_parser
+from src import config_parser, LOGGER
 from icloudpy import exceptions
 
 
@@ -27,7 +27,7 @@ def photo_exists(photo, file_size, local_path, verbose=False):
         remote_size = int(photo.versions[file_size]["size"])
         if local_size == remote_size:
             if verbose:
-                print(f"No changes detected. Skipping the file {local_path}")
+                LOGGER.info("No changes detected. Skipping the file %s", local_path)
             return True
         return False
 
@@ -36,7 +36,7 @@ def download_photo(photo, file_size, destination_path, verbose=False):
     if not (photo and file_size and destination_path):
         return False
     if verbose:
-        print(f"Downloading {destination_path} ...")
+        LOGGER.info("Downloading %s ...", destination_path)
     try:
         download = photo.download(file_size)
         with open(destination_path, "wb") as file_out:
@@ -44,7 +44,7 @@ def download_photo(photo, file_size, destination_path, verbose=False):
         local_modified_time = time.mktime(photo.added_date.timetuple())
         os.utime(destination_path, (local_modified_time, local_modified_time))
     except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
-        print(f"Failed to download {destination_path}: {str(e)}")
+        LOGGER.error("Failed to download %s: %s", destination_path, str(e))
         return False
     return True
 
@@ -54,8 +54,10 @@ def process_photo(photo, file_size, destination_path, verbose=False):
         photo=photo, file_size=file_size, destination_path=destination_path
     )
     if file_size not in photo.versions:
-        print(
-            f"File size {file_size} not found on server. Skipping the photo {photo_path} ..."
+        LOGGER.warning(
+            "File size %s not found on server. Skipping the photo %s ...",
+            file_size,
+            photo_path,
         )
         return False
     if photo_exists(photo, file_size, photo_path, verbose=verbose):

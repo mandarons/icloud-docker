@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import tests
 from tests import data
-from src import config_parser, sync
+from src import sync, read_config
 
 
 class TestSyncDrive(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestSyncDrive(unittest.TestCase):
             shutil.rmtree(tests.TEMP_DIR)
 
     def setUp(self) -> None:
-        self.config = config_parser.read_config(config_path=tests.CONFIG_PATH)
+        self.config = read_config(config_path=tests.CONFIG_PATH)
         self.root_dir = tests.TEMP_DIR
         self.config["app"]["root"] = self.root_dir
         os.makedirs(tests.TEMP_DIR, exist_ok=True)
@@ -33,7 +33,7 @@ class TestSyncDrive(unittest.TestCase):
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
     @patch("icloudpy.ICloudPyService")
-    @patch("src.config_parser.read_config")
+    @patch("src.sync.read_config")
     def test_sync_valids(
         self,
         mock_read_config,
@@ -52,7 +52,7 @@ class TestSyncDrive(unittest.TestCase):
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
     @patch("icloudpy.ICloudPyService")
-    @patch("src.config_parser.read_config")
+    @patch("src.sync.read_config")
     def test_sync_photos_only(
         self,
         mock_read_config,
@@ -79,7 +79,7 @@ class TestSyncDrive(unittest.TestCase):
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
     @patch("icloudpy.ICloudPyService")
-    @patch("src.config_parser.read_config")
+    @patch("src.sync.read_config")
     def test_sync_drive_only(
         self,
         mock_read_config,
@@ -106,7 +106,7 @@ class TestSyncDrive(unittest.TestCase):
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
     @patch("icloudpy.ICloudPyService")
-    @patch("src.config_parser.read_config")
+    @patch("src.sync.read_config")
     def test_sync_empty(
         self,
         mock_read_config,
@@ -132,7 +132,7 @@ class TestSyncDrive(unittest.TestCase):
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
     @patch("icloudpy.ICloudPyService")
-    @patch("src.config_parser.read_config")
+    @patch("src.sync.read_config")
     def test_sync_invalids(
         self,
         mock_read_config,

@@ -2,18 +2,17 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import unittest
 import os
-from io import StringIO
 import shutil
 from unittest.mock import patch
 
 import tests
 from tests import data
-from src import sync_drive, config_parser
+from src import sync_drive, read_config
 
 
 class TestSyncDrive(unittest.TestCase):
     def setUp(self) -> None:
-        self.config = config_parser.read_config(config_path=tests.CONFIG_PATH)
+        self.config = read_config(config_path=tests.CONFIG_PATH)
         self.filters = self.config["drive"]["filters"]
         self.root = tests.DRIVE_DIR
         self.destination_path = self.root
@@ -317,7 +316,6 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_wanted_file_valids(self):
         self.filters["file_extensions"] = ["py"]
         self.assertTrue(
             sync_drive.wanted_file(
@@ -329,14 +327,16 @@ class TestSyncDrive(unittest.TestCase):
                 filters=self.filters["file_extensions"], file_path=tests.CONFIG_PATH
             )
         )
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        with self.assertLogs() as captured:
             sync_drive.wanted_file(
                 filters=self.filters["file_extensions"],
                 file_path=tests.CONFIG_PATH,
                 verbose=True,
             )
-            output = mock_stdout.getvalue()
-            self.assertIn("Skipping the unwanted file", output)
+            self.assertTrue(len(captured.records) > 0)
+            self.assertIn(
+                "Skipping the unwanted file", captured.records[0].getMessage()
+            )
 
     def test_wanted_file_invalids(self):
         original_filters = dict(self.filters)
@@ -389,7 +389,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertIsNone(actual)
 
         # Verbose
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        with self.assertLogs() as captured:
             actual = sync_drive.process_folder(
                 item=self.drive[self.items[1]],
                 destination_path=self.destination_path,
@@ -398,8 +398,10 @@ class TestSyncDrive(unittest.TestCase):
                 verbose=True,
             )
             self.assertIsNone(actual)
-            output = mock_stdout.getvalue()
-            self.assertIn("Skipping the unwanted folder", output)
+            self.assertTrue(len(captured.records) > 0)
+            self.assertIn(
+                "Skipping the unwanted folder", captured.records[0].getMessage()
+            )
 
     def test_process_folder_invalids(self):
         self.assertIsNone(
@@ -439,7 +441,7 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.assertTrue(actual)
         # Verbose
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        with self.assertLogs() as captured:
             sync_drive.download_file(
                 item=self.file_item, local_file=self.local_file_path
             )
@@ -447,8 +449,8 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item, local_file=self.local_file_path, verbose=True
             )
             self.assertTrue(actual)
-            output = mock_stdout.getvalue()
-            self.assertIn("No changes detected.", output)
+            self.assertTrue(len(captured.records) > 0)
+            self.assertIn("No changes detected.", captured.records[0].getMessage())
 
     def test_file_exists_invalid(self):
         self.assertFalse(
@@ -464,14 +466,14 @@ class TestSyncDrive(unittest.TestCase):
         )
 
         # Verbose
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        with self.assertLogs() as captured:
             self.assertTrue(
                 sync_drive.download_file(
                     item=self.file_item, local_file=self.local_file_path, verbose=True
                 )
             )
-            output = mock_stdout.getvalue()
-            self.assertIn("Downloading ", output)
+            self.assertTrue(len(captured.records) > 0)
+            self.assertIn("Downloading ", captured.records[0].getMessage())
 
     def test_download_file_invalids(self):
         self.assertFalse(
@@ -592,7 +594,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(os.path.isdir(obsolete_path))
         self.assertFalse(os.path.isfile(obsolete_file_path))
         # Verbose
-        with patch("sys.stdout", new_callable=StringIO) as mock_stdout:
+        with self.assertLogs() as captured:
             os.mkdir(obsolete_path)
             shutil.copyfile(__file__, obsolete_file_path)
             actual = sync_drive.remove_obsolete(
@@ -601,8 +603,8 @@ class TestSyncDrive(unittest.TestCase):
             self.assertTrue(len(actual) > 0)
             self.assertFalse(os.path.isdir(obsolete_path))
             self.assertFalse(os.path.isfile(obsolete_file_path))
-            output = mock_stdout.getvalue()
-            self.assertIn("Removing ", output)
+            self.assertTrue(len(captured.records) > 0)
+            self.assertIn("Removing ", captured.records[0].getMessage())
 
     def test_remove_obsolete_invalids(self):
         obsolete_path = os.path.join(self.destination_path, "obsolete")
@@ -777,7 +779,7 @@ class TestSyncDrive(unittest.TestCase):
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
     )
     @patch("icloudpy.ICloudPyService")
-    @patch("src.config_parser.read_config")
+    @patch("src.read_config")
     def test_sync_drive_valids(
         self,
         mock_read_config,

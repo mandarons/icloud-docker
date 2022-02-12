@@ -45,11 +45,10 @@ class TestNotify(unittest.TestCase):
         msg = notify.build_message(self.config["app"]["smtp"]["email"])
         self.assertEqual(msg.to, self.config["app"]["smtp"]["email"])
         self.assertIn(self.config["app"]["smtp"]["email"], msg.sender)
+        self.assertIn("icloud-docker: Two step authentication required", msg.subject)
         self.assertIn(
-            "icloud-drive-docker: Two step authentication required", msg.subject
-        )
-        self.assertIn(
-            "Two-step authentication for iCloud Drive (Docker) is required.", msg.body
+            "Two-step authentication for iCloud Drive, Photos (Docker) is required.",
+            msg.body,
         )
         self.assertIsInstance(msg, Message)
 
@@ -71,7 +70,7 @@ class TestNotify(unittest.TestCase):
 
             # verify that the message was passed to sendmail()
             self.assertIn(
-                "Subject: icloud-drive-docker: Two step authentication required",
+                "Subject: icloud-docker: Two step authentication required",
                 instance.sendmail.mock_calls[0][1][2],
             )
 
