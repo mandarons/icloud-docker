@@ -1,23 +1,13 @@
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
-from ruamel.yaml import YAML
-from src import constants
-
-
-def read_config(config_path=constants.DEFAULT_CONFIG_FILE_PATH):
-    if not (config_path and os.path.exists(config_path)):
-        print(f"Error: Config file not found at {config_path}.")
-        return None
-    print(f"Loading config from {config_path} ...")
-    with open(file=config_path, mode="r") as config_file:
-        config = YAML().load(config_file)
-    config["app"]["credentials"]["username"] = (
-        config["app"]["credentials"]["username"].strip()
-        if config["app"]["credentials"]["username"] is not None
-        else ""
-    )
-    return config
+from src import (
+    LOGGER,
+    DEFAULT_ROOT_DESTINATION,
+    DEFAULT_DRIVE_DESTINATION,
+    DEFAULT_SYNC_INTERVAL_SEC,
+    DEFAULT_PHOTOS_DESTINATION,
+)
 
 
 def config_path_to_string(config_path):
@@ -42,15 +32,16 @@ def get_username(config):
     username = None
     config_path = ["app", "credentials", "username"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"Error: username is missing in {config_path_to_string(config_path)}. Please set the username."
+        LOGGER.error(
+            "username is missing in %s. Please set the username.",
+            config_path_to_string(config_path),
         )
     else:
         username = get_config_value(config=config, config_path=config_path)
         username = username.strip()
         if len(username) == 0:
             username = None
-            print(f"Error: username is empty in {config_path_to_string(config_path)}.")
+            LOGGER.error("username is empty in %s", config_path_to_string(config_path))
     return username
 
 
@@ -58,37 +49,40 @@ def get_verbose(config):
     verbose = False
     config_path = ["app", "verbose"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"Warning: verbose is not found in {config_path_to_string(config_path)}. Disabling verbose mode."
+        LOGGER.warning(
+            "Warning: verbose is not found in %s. Disabling verbose mode.",
+            config_path_to_string(config_path),
         )
     else:
         verbose = get_config_value(config=config, config_path=config_path)
-        print(f'{"Enabled" if verbose else "Disabled"} verbose ...')
+        LOGGER.info("%s verbose ...", "Enabled" if verbose else "Disabled")
     return verbose
 
 
 def get_sync_interval(config):
-    sync_interval = constants.DEFAULT_SYNC_INTERVAL_SEC
+    sync_interval = DEFAULT_SYNC_INTERVAL_SEC
     config_path = ["app", "sync_interval"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"Warning: sync_interval is not found in {config_path_to_string(config_path)}. "
-            f"Using default sync_interval: {sync_interval} seconds ..."
+        LOGGER.warning(
+            "Warning: sync_interval is not found in %s. Using default sync_interval: %s seconds ...",
+            config_path_to_string(config_path),
+            sync_interval,
         )
     else:
         sync_interval = get_config_value(config=config, config_path=config_path)
-        print(f"Syncing every {sync_interval} seconds.")
+        LOGGER.info("Syncing every %s seconds.", sync_interval)
     return sync_interval
 
 
 def prepare_root_destination(config):
-    print("Checking root destination ...")
-    root_destination = constants.DEFAULT_ROOT_DESTINATION
+    LOGGER.debug("Checking root destination ...")
+    root_destination = DEFAULT_ROOT_DESTINATION
     config_path = ["app", "root"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"Warning: root destination is missing in {config_path_to_string(config_path)}. "
-            f"Using default root destination: ${root_destination}."
+        LOGGER.warning(
+            "Warning: root destination is missing in %s. Using default root destination: %s",
+            config_path_to_string(config_path),
+            root_destination,
         )
     else:
         root_destination = get_config_value(config=config, config_path=config_path)
@@ -109,7 +103,9 @@ def get_smtp_password(config):
     password = None
     config_path = ["app", "smtp", "password"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(f"Warning: password is not found in {config_path_to_string(config_path)}")
+        LOGGER.warning(
+            "Warning: password is not found in %s", config_path_to_string(config_path)
+        )
     else:
         password = get_config_value(config=config, config_path=config_path)
     return password
@@ -119,7 +115,9 @@ def get_smtp_host(config):
     host = None
     config_path = ["app", "smtp", "host"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(f"Warning: host is not found in {config_path_to_string(config_path)}")
+        LOGGER.warning(
+            "Warning: host is not found in %s", config_path_to_string(config_path)
+        )
     else:
         host = get_config_value(config=config, config_path=config_path)
     return host
@@ -129,7 +127,9 @@ def get_smtp_port(config):
     port = None
     config_path = ["app", "smtp", "port"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(f"Warning: port is not found in {config_path_to_string(config_path)}")
+        LOGGER.warning(
+            "Warning: port is not found in %s", config_path_to_string(config_path)
+        )
     else:
         port = get_config_value(config=config, config_path=config_path)
     return port
@@ -139,20 +139,23 @@ def get_smtp_no_tls(config):
     no_tls = False
     config_path = ["app", "smtp", "no_tls"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(f"Warning: no_tls is not found in {config_path_to_string(config_path)}")
+        LOGGER.warning(
+            "Warning: no_tls is not found in %s", config_path_to_string(config_path)
+        )
     else:
         no_tls = get_config_value(config=config, config_path=config_path)
     return no_tls
 
 
 def prepare_drive_destination(config):
-    print("Checking drive destination ...")
+    LOGGER.debug("Checking drive destination ...")
     config_path = ["drive", "destination"]
-    drive_destination = constants.DEFAULT_DRIVE_DESTINATION
+    drive_destination = DEFAULT_DRIVE_DESTINATION
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"Warning: destination is missing in {config_path_to_string(config_path)}. \
-        Using default drive destination: {drive_destination}."
+        LOGGER.warning(
+            "Warning: destination is missing in %s. Using default drive destination: %s.",
+            config_path_to_string(config_path),
+            drive_destination,
         )
     else:
         drive_destination = get_config_value(config=config, config_path=config_path)
@@ -167,26 +170,28 @@ def get_drive_remove_obsolete(config):
     drive_remove_obsolete = False
     config_path = ["drive", "remove_obsolete"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"Warning: remove_obsolete is not found in {config_path_to_string(config_path)}. \
-         Not removing the obsolete files and folders."
+        LOGGER.warning(
+            "Warning: remove_obsolete is not found in %s. Not removing the obsolete files and folders.",
+            config_path_to_string(config_path),
         )
     else:
         drive_remove_obsolete = get_config_value(config=config, config_path=config_path)
-        print(
-            f'{"R" if drive_remove_obsolete else "Not R"}emoving obsolete files and folders ...'
+        LOGGER.info(
+            "%semoving obsolete files and folders ...",
+            "R" if drive_remove_obsolete else "Not R",
         )
     return drive_remove_obsolete
 
 
 def prepare_photos_destination(config):
-    print("Checking photos destination ...")
+    LOGGER.info("Checking photos destination ...")
     config_path = ["photos", "destination"]
-    photos_destination = constants.DEFAULT_PHOTOS_DESTINATION
+    photos_destination = DEFAULT_PHOTOS_DESTINATION
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"Warning: destination is missing in {config_path_to_string(config_path)}. \
-        Using default photos destination: {photos_destination}."
+        LOGGER.warning(
+            "Warning: destination is missing in %s. Using default photos destination: %s",
+            photos_destination,
+            config_path_to_string(config_path),
         )
     else:
         photos_destination = get_config_value(config=config, config_path=config_path)
@@ -201,16 +206,16 @@ def get_photos_remove_obsolete(config):
     photos_remove_obsolete = False
     config_path = ["photos", "remove_obsolete"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"Warning: remove_obsolete is not found in {config_path_to_string(config_path)}. \
-         Not removing the obsolete photos."
+        LOGGER.warning(
+            "Warning: remove_obsolete is not found in %s. Not removing the obsolete photos.",
+            config_path_to_string(config_path),
         )
     else:
         photos_remove_obsolete = get_config_value(
             config=config, config_path=config_path
         )
-        print(
-            f'{"R" if photos_remove_obsolete else "Not R"}emoving obsolete photos ...'
+        LOGGER.info(
+            "%semoving obsolete photos ...", "R" if photos_remove_obsolete else "Not R"
         )
     return photos_remove_obsolete
 
@@ -220,9 +225,9 @@ def get_photos_filters(config):
     valid_file_sizes = ["original", "medium", "thumb"]
     config_path = ["photos", "filters"]
     if not traverse_config_path(config=config, config_path=config_path):
-        print(
-            f"{config_path_to_string(config_path=config_path)} not found. \
-        Downloading all albums with original size ..."
+        LOGGER.warning(
+            "%s not found. Downloading all albums with original size ...",
+            config_path_to_string(config_path=config_path),
         )
     else:
         config_path.append("albums")
@@ -231,8 +236,9 @@ def get_photos_filters(config):
             or not get_config_value(config=config, config_path=config_path)
             or len(get_config_value(config=config, config_path=config_path)) == 0
         ):
-            print(
-                f"{config_path_to_string(config_path=config_path)} not found. Downloading all albums ..."
+            LOGGER.warning(
+                "%s not found. Downloading all albums ...",
+                config_path_to_string(config_path=config_path),
             )
         else:
             photos_filters["albums"] = get_config_value(
@@ -240,16 +246,18 @@ def get_photos_filters(config):
             )
         config_path[2] = "file_sizes"
         if not traverse_config_path(config=config, config_path=config_path):
-            print(
-                f"{config_path_to_string(config_path=config_path)} not found. Downloading original size photos ..."
+            LOGGER.warning(
+                "%s not found. Downloading original size photos ...",
+                config_path_to_string(config_path=config_path),
             )
         else:
             file_sizes = get_config_value(config=config, config_path=config_path)
             for file_size in file_sizes:
                 if not file_size in valid_file_sizes:
-                    print(
-                        f"Skipping the invalid file size {file_size}."
-                        f'Valid file sizes are {",".join(valid_file_sizes)}.'
+                    LOGGER.warning(
+                        "Skipping the invalid file size %s, valid file sizes are %s ",
+                        file_size,
+                        ",".join(valid_file_sizes),
                     )
                     file_sizes.remove(file_size)
                     if len(file_sizes) == 0:

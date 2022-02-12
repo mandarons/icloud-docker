@@ -1,13 +1,14 @@
 import datetime
 import time
+
 from icloudpy import ICloudPyService, utils, exceptions
-from src import sync_drive, sync_photos, config_parser, notify
+from src import sync_drive, sync_photos, config_parser, notify, LOGGER, read_config
 
 
 def sync():
     last_send = None
     while True:
-        config = config_parser.read_config()
+        config = read_config()
         verbose = config_parser.get_verbose(config=config)
         username = config_parser.get_username(config=config)
         if username:
@@ -28,22 +29,21 @@ def sync():
                             config=config, photos=api.photos, verbose=verbose
                         )
                     if "drive" not in config and "photos" not in config:
-                        print(
+                        LOGGER.warning(
                             "Nothing to sync. Please add drive: and/or photos: section in config.yaml file."
                         )
                 else:
-                    print("Error: 2FA is required. Please log in.")
+                    LOGGER.error("Error: 2FA is required. Please log in.")
                     last_send = notify.send(config, last_send)
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
-
-                print(
+                LOGGER.error(
                     "password is not stored in keyring. Please save the password in keyring."
                 )
         sleep_for = config_parser.get_sync_interval(config=config)
         next_sync = (
             datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
         ).strftime("%c")
-        print(f"Resyncing at {next_sync} ...")
+        LOGGER.info("Resyncing at %s ...", next_sync)
         if sleep_for < 0:
             break
         time.sleep(sleep_for)
