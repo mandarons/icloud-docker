@@ -9,7 +9,6 @@ def sync():
     last_send = None
     while True:
         config = read_config()
-        verbose = config_parser.get_verbose(config=config)
         username = config_parser.get_username(config=config)
         if username:
             try:
@@ -19,15 +18,9 @@ def sync():
                 )
                 if not api.requires_2sa:
                     if "drive" in config:
-                        sync_drive.sync_drive(
-                            config=config,
-                            drive=api.drive,
-                            verbose=verbose,
-                        )
+                        sync_drive.sync_drive(config=config, drive=api.drive)
                     if "photos" in config:
-                        sync_photos.sync_photos(
-                            config=config, photos=api.photos, verbose=verbose
-                        )
+                        sync_photos.sync_photos(config=config, photos=api.photos)
                     if "drive" not in config and "photos" not in config:
                         LOGGER.warning(
                             "Nothing to sync. Please add drive: and/or photos: section in config.yaml file."

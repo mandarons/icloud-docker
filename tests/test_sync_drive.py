@@ -341,9 +341,7 @@ class TestSyncDrive(unittest.TestCase):
     def test_wanted_file_check_log(self):
         with self.assertLogs() as captured:
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"],
-                file_path=tests.CONFIG_PATH,
-                verbose=True,
+                filters=self.filters["file_extensions"], file_path=tests.CONFIG_PATH
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIn(
@@ -406,21 +404,6 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.assertIsNone(actual)
 
-        # # Verbose
-        # with self.assertLogs() as captured:
-        #     actual = sync_drive.process_folder(
-        #         item=self.drive[self.items[1]],
-        #         destination_path=self.destination_path,
-        #         filters=self.filters,
-        #         root=self.root,
-        #         verbose=True,
-        #     )
-        #     self.assertIsNone(actual)
-        #     self.assertTrue(len(captured.records) > 0)
-        #     self.assertIn(
-        #         "Skipping the unwanted folder", captured.records[0].getMessage()
-        #     )
-
     def test_process_folder_none_item(self):
         self.assertIsNone(
             sync_drive.process_folder(
@@ -465,12 +448,10 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.assertTrue(actual)
         # Verbose
+        sync_drive.download_file(item=self.file_item, local_file=self.local_file_path)
         with self.assertLogs() as captured:
-            sync_drive.download_file(
-                item=self.file_item, local_file=self.local_file_path
-            )
             actual = sync_drive.file_exists(
-                item=self.file_item, local_file=self.local_file_path, verbose=True
+                item=self.file_item, local_file=self.local_file_path
             )
             self.assertTrue(actual)
             self.assertTrue(len(captured.records) > 0)
@@ -495,7 +476,7 @@ class TestSyncDrive(unittest.TestCase):
         with self.assertLogs() as captured:
             self.assertTrue(
                 sync_drive.download_file(
-                    item=self.file_item, local_file=self.local_file_path, verbose=True
+                    item=self.file_item, local_file=self.local_file_path
                 )
             )
             self.assertTrue(len(captured.records) > 0)
@@ -658,7 +639,7 @@ class TestSyncDrive(unittest.TestCase):
             os.mkdir(obsolete_path)
             shutil.copyfile(__file__, obsolete_file_path)
             actual = sync_drive.remove_obsolete(
-                destination_path=self.destination_path, files=files, verbose=True
+                destination_path=self.destination_path, files=files
             )
             self.assertTrue(len(actual) > 0)
             self.assertFalse(os.path.isdir(obsolete_path))
@@ -861,9 +842,7 @@ class TestSyncDrive(unittest.TestCase):
         config["drive"]["destination"] = self.destination_path
         mock_read_config.return_value = config
         self.assertIsNotNone(
-            sync_drive.sync_drive(
-                config=config, drive=mock_service.drive, verbose=False
-            )
+            sync_drive.sync_drive(config=config, drive=mock_service.drive)
         )
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
@@ -894,17 +873,3 @@ class TestSyncDrive(unittest.TestCase):
                 )
             )
         )
-
-        # mock_get_username.return_value = data.REQUIRES_2FA_USER
-        # self.assertIsNotNone(
-        #     sync_drive.sync_drive(
-        #         config=config, drive=mock_service.drive, verbose=False
-        #     )
-        # )
-
-        # mock_get_password.return_value = None
-        # self.assertIsNotNone(
-        #     sync_drive.sync_drive(
-        #         config=config, drive=mock_service.drive, verbose=False
-        #     )
-        # )

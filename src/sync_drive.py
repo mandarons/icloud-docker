@@ -10,7 +10,7 @@ from icloudpy import exceptions
 from src import config_parser, LOGGER
 
 
-def wanted_file(filters, file_path, verbose=False):
+def wanted_file(filters, file_path):
     if not file_path:
         return False
     if not filters or len(filters) == 0:
@@ -18,12 +18,11 @@ def wanted_file(filters, file_path, verbose=False):
     for file_extension in filters:
         if re.search(f"{file_extension}$", file_path, re.IGNORECASE):
             return True
-    if verbose:
-        LOGGER.info("Skipping the unwanted file %s", file_path)
+    LOGGER.info("Skipping the unwanted file %s", file_path)
     return False
 
 
-def wanted_folder(filters, root, folder_path, verbose=False):
+def wanted_folder(filters, root, folder_path):
     if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
         return True
@@ -44,7 +43,7 @@ def wanted_folder(filters, root, folder_path, verbose=False):
     return False
 
 
-def wanted_parent_folder(filters, root, folder_path, verbose=False):
+def wanted_parent_folder(filters, root, folder_path):
     if not filters or not folder_path or not root or len(filters) == 0:
         return True
     folder_path = Path(folder_path)
@@ -59,21 +58,18 @@ def wanted_parent_folder(filters, root, folder_path, verbose=False):
     return False
 
 
-def process_folder(item, destination_path, filters, root, verbose=False):
+def process_folder(item, destination_path, filters, root):
     if not (item and destination_path and root):
         return None
     new_directory = os.path.join(destination_path, item.name)
-    if not wanted_folder(
-        filters=filters, folder_path=new_directory, root=root, verbose=verbose
-    ):
-        if verbose:
-            LOGGER.info("Skipping the unwanted folder %s ...", new_directory)
+    if not wanted_folder(filters=filters, folder_path=new_directory, root=root):
+        LOGGER.info("Skipping the unwanted folder %s ...", new_directory)
         return None
     os.makedirs(new_directory, exist_ok=True)
     return new_directory
 
 
-def file_exists(item, local_file, verbose=False):
+def file_exists(item, local_file):
     if item and local_file and os.path.isfile(local_file):
         local_file_modified_time = int(os.path.getmtime(local_file))
         remote_file_modified_time = int(item.date_modified.timestamp())
@@ -83,17 +79,15 @@ def file_exists(item, local_file, verbose=False):
             local_file_modified_time == remote_file_modified_time
             and local_file_size == remote_file_size
         ):
-            if verbose:
-                LOGGER.info("No changes detected. Skipping the file %s", local_file)
+            LOGGER.info("No changes detected. Skipping the file %s", local_file)
             return True
     return False
 
 
-def download_file(item, local_file, verbose=False):
+def download_file(item, local_file):
     if not (item and local_file):
         return False
-    if verbose:
-        LOGGER.info("Downloading %s ...", local_file)
+    LOGGER.info("Downloading %s ...", local_file)
     try:
         with item.open(stream=True) as response:
             with open(local_file, "wb") as file_out:
@@ -106,28 +100,27 @@ def download_file(item, local_file, verbose=False):
     return True
 
 
-def process_file(item, destination_path, filters, files, verbose=False):
+def process_file(item, destination_path, filters, files):
     if not (item and destination_path and files is not None):
         return False
     local_file = os.path.join(destination_path, item.name)
-    if not wanted_file(filters=filters, file_path=local_file, verbose=verbose):
+    if not wanted_file(filters=filters, file_path=local_file):
         return False
     files.add(local_file)
-    if file_exists(item=item, local_file=local_file, verbose=verbose):
+    if file_exists(item=item, local_file=local_file):
         return False
-    download_file(item=item, local_file=local_file, verbose=verbose)
+    download_file(item=item, local_file=local_file)
     return True
 
 
-def remove_obsolete(destination_path, files, verbose=False):
+def remove_obsolete(destination_path, files):
     removed_paths = set()
     if not (destination_path and files is not None):
         return removed_paths
     for path in Path(destination_path).rglob("*"):
         local_file = str(path.absolute())
         if local_file not in files:
-            if verbose:
-                LOGGER.info("Removing %s", local_file)
+            LOGGER.info("Removing %s", local_file)
             if path.is_file():
                 path.unlink(missing_ok=True)
                 removed_paths.add(local_file)
@@ -145,7 +138,6 @@ def sync_directory(
     top=True,
     filters=None,
     remove=False,
-    verbose=False,
 ):
     files = set()
     if drive and destination_path and items and root:
@@ -159,7 +151,6 @@ def sync_directory(
                     if filters and "folders" in filters
                     else None,
                     root=root,
-                    verbose=verbose,
                 )
                 if not new_folder:
                     continue
@@ -172,7 +163,6 @@ def sync_directory(
                         root=root,
                         top=False,
                         filters=filters,
-                        verbose=verbose,
                     )
                 )
             elif item.type == "file":
@@ -182,7 +172,6 @@ def sync_directory(
                     else None,
                     root=root,
                     folder_path=destination_path,
-                    verbose=verbose,
                 ):
                     process_file(
                         item=item,
@@ -191,16 +180,13 @@ def sync_directory(
                         if filters and "file_extensions" in filters
                         else None,
                         files=files,
-                        verbose=verbose,
                     )
         if top and remove:
-            remove_obsolete(
-                destination_path=destination_path, files=files, verbose=verbose
-            )
+            remove_obsolete(destination_path=destination_path, files=files)
     return files
 
 
-def sync_drive(config, drive, verbose):
+def sync_drive(config, drive):
     destination_path = config_parser.prepare_drive_destination(config=config)
     return sync_directory(
         drive=drive,
@@ -212,5 +198,4 @@ def sync_drive(config, drive, verbose):
         if "drive" in config and "filters" in config["drive"]
         else None,
         remove=config_parser.get_drive_remove_obsolete(config=config),
-        verbose=verbose,
     )

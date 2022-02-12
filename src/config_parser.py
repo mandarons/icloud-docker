@@ -45,20 +45,6 @@ def get_username(config):
     return username
 
 
-def get_verbose(config):
-    verbose = False
-    config_path = ["app", "verbose"]
-    if not traverse_config_path(config=config, config_path=config_path):
-        LOGGER.warning(
-            "Warning: verbose is not found in %s. Disabling verbose mode.",
-            config_path_to_string(config_path),
-        )
-    else:
-        verbose = get_config_value(config=config, config_path=config_path)
-        LOGGER.info("%s verbose ...", "Enabled" if verbose else "Disabled")
-    return verbose
-
-
 def get_sync_interval(config):
     sync_interval = DEFAULT_SYNC_INTERVAL_SEC
     config_path = ["app", "sync_interval"]

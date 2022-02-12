@@ -46,9 +46,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_read_config.return_value = config
         # Sync original photos
         self.assertIsNone(
-            sync_photos.sync_photos(
-                config=config, photos=mock_service.photos, verbose=True
-            )
+            sync_photos.sync_photos(config=config, photos=mock_service.photos)
         )
         album_0_path = os.path.join(
             self.destination_path, config["photos"]["filters"]["albums"][0]
@@ -86,15 +84,13 @@ class TestSyncPhotos(unittest.TestCase):
         album_1_path = os.path.join(
             self.destination_path, config["photos"]["filters"]["albums"][1]
         )
-        sync_photos.sync_photos(config=config, photos=mock_service.photos, verbose=True)
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
 
         os.remove(os.path.join(album_1_path, "IMG_3148.JPG"))
         # Download missing file
         with self.assertLogs() as captured:
             self.assertIsNone(
-                sync_photos.sync_photos(
-                    config=config, photos=mock_service.photos, verbose=True
-                )
+                sync_photos.sync_photos(config=config, photos=mock_service.photos)
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(
@@ -130,7 +126,7 @@ class TestSyncPhotos(unittest.TestCase):
         album_1_path = os.path.join(
             self.destination_path, config["photos"]["filters"]["albums"][1]
         )
-        sync_photos.sync_photos(config=config, photos=mock_service.photos, verbose=True)
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
         # Download changed file
         os.remove(os.path.join(album_1_path, "IMG_3148.JPG"))
         shutil.copyfile(
@@ -139,9 +135,7 @@ class TestSyncPhotos(unittest.TestCase):
         )
         with self.assertLogs() as captured:
             self.assertIsNone(
-                sync_photos.sync_photos(
-                    config=config, photos=mock_service.photos, verbose=True
-                )
+                sync_photos.sync_photos(config=config, photos=mock_service.photos)
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(
@@ -172,14 +166,12 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["destination"] = self.destination_path
         mock_read_config.return_value = config
 
-        sync_photos.sync_photos(config=config, photos=mock_service.photos, verbose=True)
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
 
         # No files to download
         with self.assertLogs() as captured:
             self.assertIsNone(
-                sync_photos.sync_photos(
-                    config=config, photos=mock_service.photos, verbose=True
-                )
+                sync_photos.sync_photos(config=config, photos=mock_service.photos)
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNone(
@@ -208,7 +200,7 @@ class TestSyncPhotos(unittest.TestCase):
         album_1_path = os.path.join(
             self.destination_path, config["photos"]["filters"]["albums"][1]
         )
-        sync_photos.sync_photos(config=config, photos=mock_service.photos, verbose=True)
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
 
         # Rename previous original files - upgrade to newer version
         os.rename(
@@ -218,9 +210,7 @@ class TestSyncPhotos(unittest.TestCase):
 
         with self.assertLogs() as captured:
             self.assertIsNone(
-                sync_photos.sync_photos(
-                    config=config, photos=mock_service.photos, verbose=True
-                )
+                sync_photos.sync_photos(config=config, photos=mock_service.photos)
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNone(
@@ -249,9 +239,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_read_config.return_value = config
         with self.assertLogs() as captured:
             self.assertIsNone(
-                sync_photos.sync_photos(
-                    config=config, photos=mock_service.photos, verbose=True
-                )
+                sync_photos.sync_photos(config=config, photos=mock_service.photos)
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(

@@ -138,23 +138,6 @@ class TestConfigParser(unittest.TestCase):
     def test_get_remove_obsolete_none_config(self):
         self.assertFalse(config_parser.get_drive_remove_obsolete(config=None))
 
-    def test_get_verbose(self):
-        config = read_config()
-        self.assertEqual(
-            config["app"]["verbose"], config_parser.get_verbose(config=config)
-        )
-        config["app"]["verbose"] = True
-        self.assertTrue(config_parser.get_verbose(config=config))
-
-    def test_get_verbose_invalids(self):
-        config = read_config()
-        config["app"]["verbose"] = None
-        self.assertFalse(config_parser.get_verbose(config=config))
-        del config["app"]["verbose"]
-        self.assertFalse(config_parser.get_verbose(config=config))
-        del config["app"]
-        self.assertFalse(config_parser.get_verbose(config=config))
-
     def test_get_smtp_no_tls(self):
         config = {"app": {"smtp": {"no_tls": True}}}
         self.assertTrue(config_parser.get_smtp_no_tls(config=config))
