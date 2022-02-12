@@ -10,7 +10,7 @@ on:
       - pylintrc
       - pytest.ini
       - requirements-test.txt
-      - /*requirements.txt
+      - requirements.txt
       - run-ci.sh
   workflow_dispatch:
 jobs:
