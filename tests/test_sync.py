@@ -1,5 +1,6 @@
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+from io import StringIO
 import unittest
 import os
 
@@ -34,7 +35,7 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
-    def test_sync_valids(
+    def test_sync(
         self,
         mock_read_config,
         mock_service,
@@ -73,7 +74,6 @@ class TestSyncDrive(unittest.TestCase):
             os.path.isdir(os.path.join(self.root_dir, config["photos"]["destination"]))
         )
 
-    @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -86,7 +86,6 @@ class TestSyncDrive(unittest.TestCase):
         mock_service,
         mock_get_username,
         mock_get_password,
-        mock_sleep,
     ):
         mock_service = self.service
         # Sync only drive
@@ -108,12 +107,7 @@ class TestSyncDrive(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     def test_sync_empty(
-        self,
-        mock_read_config,
-        mock_service,
-        mock_get_username,
-        mock_get_password,
-        # mock_sleep,
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
     ):
         mock_service = self.service
 
@@ -172,7 +166,7 @@ class TestSyncDrive(unittest.TestCase):
                 > 0
             )
 
-    @patch("time.sleep")
+    @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -189,10 +183,56 @@ class TestSyncDrive(unittest.TestCase):
     ):
         mock_service = self.service
         config = self.config.copy()
+        config["drive"]["sync_interval"] = 1
+        config["drive"]["sync_interval"] = 1
         mock_read_config.return_value = config
         mock_sleep.side_effect = Exception()
         config = self.config.copy()
-        config["app"]["sync_interval"] = 1
         mock_read_config.return_value = config
         with self.assertRaises(Exception):
             sync.sync()
+
+    # Test different schedule for drive and photos
+    @patch("src.sync.sync_drive")
+    @patch("src.sync.sync_photos")
+    @patch(target="sys.stdout", new_callable=StringIO)
+    @patch("src.sync.sleep")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    def test_sync_different_schedule(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+        mock_stdout,
+        mock_sync_photos,
+        mock_sync_drive,
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        config["drive"]["sync_interval"] = 1
+        config["photos"]["sync_interval"] = 2
+        mock_read_config.return_value = config
+        mock_sync_drive.sync_drive.return_value = None
+        mock_sync_photos.sync_photos.return_value = None
+
+        mock_sleep.side_effect = [
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            Exception(),
+        ]
+        with self.assertRaises(Exception):
+            sync.sync()
+        self.assertEqual(mock_sync_drive.sync_drive.call_count, 6)
+        self.assertEqual(mock_sync_photos.sync_photos.call_count, 3)

@@ -822,7 +822,6 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -830,12 +829,7 @@ class TestSyncDrive(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_sync_drive_valids(
-        self,
-        mock_read_config,
-        mock_service,
-        mock_get_username,
-        mock_get_password,
-        mock_sleep,
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
     ):
         mock_service = self.service
         config = self.config.copy()

@@ -45,18 +45,33 @@ def get_username(config):
     return username
 
 
-def get_sync_interval(config):
+def get_drive_sync_interval(config):
     sync_interval = DEFAULT_SYNC_INTERVAL_SEC
-    config_path = ["app", "sync_interval"]
+    config_path = ["drive", "sync_interval"]
     if not traverse_config_path(config=config, config_path=config_path):
         LOGGER.warning(
-            "Warning: sync_interval is not found in %s. Using default sync_interval: %s seconds ...",
-            config_path_to_string(config_path),
+            "sync_interval is not found in %s. Using default sync_interval: %s seconds ...",
+            config_path_to_string(config_path=config_path),
             sync_interval,
         )
     else:
         sync_interval = get_config_value(config=config, config_path=config_path)
-        LOGGER.info("Syncing every %s seconds.", sync_interval)
+        LOGGER.info("Syncing drive every %s seconds.", sync_interval)
+    return sync_interval
+
+
+def get_photos_sync_interval(config):
+    sync_interval = DEFAULT_SYNC_INTERVAL_SEC
+    config_path = ["photos", "sync_interval"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(
+            "sync_interval is not found in %s. Using default sync_interval: %s seconds ...",
+            config_path_to_string(config_path=config_path),
+            sync_interval,
+        )
+    else:
+        sync_interval = get_config_value(config=config, config_path=config_path)
+        LOGGER.info("Syncing photos every %s seconds.", sync_interval)
     return sync_interval
 
 

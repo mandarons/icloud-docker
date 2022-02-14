@@ -7,8 +7,6 @@ app:
   credentials:
     # iCloud drive username
     username: please@replace.me
-  # Sync interval in seconds
-  sync_interval: 300
   # Drive destination
   root: icloud
   smtp:
@@ -22,6 +20,7 @@ app:
 drive:
   destination: drive
   remove_obsolete: false
+  sync_interval: 300
   filters:
     # File filters to be included in syncing iCloud drive content
     folders:
@@ -37,6 +36,7 @@ drive:
 photos:
   destination: photos
   remove_obsolete: false
+  sync_inteval: 500
   filters:
     albums:
       - "album 1"

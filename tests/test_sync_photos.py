@@ -25,7 +25,6 @@ class TestSyncPhotos(unittest.TestCase):
     def tearDown(self) -> None:
         shutil.rmtree(tests.TEMP_DIR)
 
-    @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -33,12 +32,7 @@ class TestSyncPhotos(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_sync_photos_original(
-        self,
-        mock_read_config,
-        mock_service,
-        mock_get_username,
-        mock_get_password,
-        mock_sleep,
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
     ):
         mock_service = self.service
         config = self.config.copy()
@@ -59,7 +53,6 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(len(os.listdir(album_0_path)) > 0)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
 
-    @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -72,7 +65,6 @@ class TestSyncPhotos(unittest.TestCase):
         mock_service,
         mock_get_username,
         mock_get_password,
-        mock_sleep,
     ):
         mock_service = self.service
         config = self.config.copy()
@@ -101,7 +93,6 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(len(os.listdir(album_0_path)) > 0)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
 
-    @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -114,7 +105,6 @@ class TestSyncPhotos(unittest.TestCase):
         mock_service,
         mock_get_username,
         mock_get_password,
-        mock_sleep,
     ):
         mock_service = self.service
         config = self.config.copy()
@@ -146,7 +136,6 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(len(os.listdir(album_0_path)) > 0)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
 
-    @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -159,7 +148,6 @@ class TestSyncPhotos(unittest.TestCase):
         mock_service,
         mock_get_username,
         mock_get_password,
-        mock_sleep,
     ):
         mock_service = self.service
         config = self.config.copy()
@@ -178,7 +166,6 @@ class TestSyncPhotos(unittest.TestCase):
                 next((s for s in captured[1] if "Downloading /" in s), None)
             )
 
-    @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -191,7 +178,6 @@ class TestSyncPhotos(unittest.TestCase):
         mock_service,
         mock_get_username,
         mock_get_password,
-        mock_sleep,
     ):
         mock_service = self.service
         config = self.config.copy()
@@ -217,7 +203,6 @@ class TestSyncPhotos(unittest.TestCase):
                 next((s for s in captured[1] if "Downloading /" in s), None)
             )
 
-    @patch("time.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -230,7 +215,6 @@ class TestSyncPhotos(unittest.TestCase):
         mock_service,
         mock_get_username,
         mock_get_password,
-        mock_sleep,
     ):
         mock_service = self.service
         config = self.config.copy()
