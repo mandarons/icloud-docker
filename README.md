@@ -51,52 +51,52 @@ Follow the steps to authenticate.
 app:
   credentials:
     # iCloud drive username
-    username: please@replace.me
+    username: "please@replace.me"
   # Sync interval in seconds
   sync_interval: 300
   # Drive destination
-  root: icloud
+  root: "icloud"
   # verbose
   verbose: true
   smtp:
     # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
-    # email: user@test.com
+    # email: "user@test.com"
     # password:
-    # host: smtp.test.com
+    # host: "smtp.test.com"
     # port: 587
     # If your email provider doesn't handle TLS
     # no_tls: true
 drive:
   # Destination to store iCloud drive data locally
-  destination: drive
+  destination: "drive"
   # Whether to remove local files that are not present on server
   remove_obsolete: false
   filters:
     # Folder filters to be included in syncing iCloud drive content
     folders:
-      - folder1/subfolder2
-      - folder2
-      - folder3
+      - "folder1/subfolder2"
+      - "folder2"
+      - "folder3"
     file_extensions:
       # File extensions to be included
-      - pdf
-      - png
-      - jpg
-      - jpeg
+      - "pdf"
+      - "png"
+      - "jpg"
+      - "jpeg"
 photos:
   # Destination to store iCloud photos data locally
-  destination: photos
+  destination: "photos"
   # Whether to remove local files that are not present on server
   remove_obsolete: false
   filters:
     # List of albums to download - leave the list empty to download all photos to folder 'all'
     albums:
       - "album 1"
-      - album2
+      - "album2"
     file_sizes: # valid values are original, medium and/or thumb - if empty, only original quality photos will be downloaded
-      - original
-      # - medium
-      # - thumb
+      - "original"
+      # - "medium"
+      # - "thumb"
 ```
 ***Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer.***
 
