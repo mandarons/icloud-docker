@@ -31,7 +31,7 @@ def wanted_folder(filters, root, folder_path):
     for folder in filters:
         child_path = Path(
             os.path.join(
-                os.path.abspath(root), folder.removeprefix("/").removesuffix("/")
+                os.path.abspath(root), str(folder).removeprefix("/").removesuffix("/")
             )
         )
         if (
