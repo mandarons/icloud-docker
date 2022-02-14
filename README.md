@@ -49,15 +49,16 @@ Follow the steps to authenticate.
 ## Sample Configuration File
 ```yaml
 app:
+  logger:
+    # level - debug, info, warning (default) or error
+    level: "warning"
+    # log filename icloud.log (default)
+    filename: "icloud.log"
   credentials:
     # iCloud drive username
     username: "please@replace.me"
-  # Sync interval in seconds
-  sync_interval: 300
   # Drive destination
   root: "icloud"
-  # verbose
-  verbose: true
   smtp:
     # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
     # email: "user@test.com"
@@ -67,14 +68,13 @@ app:
     # If your email provider doesn't handle TLS
     # no_tls: true
 drive:
-  # Destination to store iCloud drive data locally
   destination: "drive"
-  # Whether to remove local files that are not present on server
   remove_obsolete: false
+  sync_interval: 300
   filters:
-    # Folder filters to be included in syncing iCloud drive content
+    # File filters to be included in syncing iCloud drive content
     folders:
-      - "folder1/subfolder2"
+      - "folder1"
       - "folder2"
       - "folder3"
     file_extensions:
@@ -84,16 +84,14 @@ drive:
       - "jpg"
       - "jpeg"
 photos:
-  # Destination to store iCloud photos data locally
   destination: "photos"
-  # Whether to remove local files that are not present on server
   remove_obsolete: false
+  sync_inteval: 500
   filters:
-    # List of albums to download - leave the list empty to download all photos to folder 'all'
     albums:
       - "album 1"
       - "album2"
-    file_sizes: # valid values are original, medium and/or thumb - if empty, only original quality photos will be downloaded
+    file_sizes: # valid values are original, medium and/or thumb
       - "original"
       # - "medium"
       # - "thumb"
