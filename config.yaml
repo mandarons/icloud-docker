@@ -1,47 +1,47 @@
 app:
   logger:
     # level - debug, info, warning (default) or error
-    level: warning
+    level: "warning"
     # log filename icloud.log (default)
-    filename: icloud.log
+    filename: "icloud.log"
   credentials:
     # iCloud drive username
-    username: please@replace.me
+    username: "please@replace.me"
   # Drive destination
-  root: icloud
+  root: "icloud"
   smtp:
     # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
-    # email: user@test.com
+    # email: "user@test.com"
     # password:
-    # host: smtp.test.com
+    # host: "smtp.test.com"
     # port: 587
     # If your email provider doesn't handle TLS
     # no_tls: true
 drive:
-  destination: drive
+  destination: "drive"
   remove_obsolete: false
   sync_interval: 300
   filters:
     # File filters to be included in syncing iCloud drive content
     folders:
-      - folder1
-      - folder2
-      - folder3
+      - "folder1"
+      - "folder2"
+      - "folder3"
     file_extensions:
       # File extensions to be included
-      - pdf
-      - png
-      - jpg
-      - jpeg
+      - "pdf"
+      - "png"
+      - "jpg"
+      - "jpeg"
 photos:
-  destination: photos
+  destination: "photos"
   remove_obsolete: false
   sync_inteval: 500
   filters:
     albums:
       - "album 1"
-      - album2
+      - "album2"
     file_sizes: # valid values are original, medium and/or thumb
-      - original
-      # - medium
-      # - thumb
+      - "original"
+      # - "medium"
+      # - "thumb"
