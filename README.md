@@ -57,6 +57,8 @@ app:
   credentials:
     # iCloud drive username
     username: "please@replace.me"
+    # Retry login interval - default is 10 minutes
+    retry_login_interval: 600
   # Drive destination
   root: "icloud"
   smtp:
