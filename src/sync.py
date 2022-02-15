@@ -39,7 +39,15 @@ def sync():
                         )
                 else:
                     LOGGER.error("Error: 2FA is required. Please log in.")
+                    # Retry again
+                    sleep_for = config_parser.get_retry_login_interval(config=config)
+                    next_sync = (
+                        datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
+                    ).strftime("%c")
+                    LOGGER.info("Retrying login at %s ...", next_sync)
                     last_send = notify.send(config, last_send)
+                    sleep(sleep_for)
+                    continue
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
                 LOGGER.error(
                     "Password is not stored in keyring. Please save the password in keyring."
