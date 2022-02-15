@@ -2,6 +2,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 from src import (
+    DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     LOGGER,
     DEFAULT_ROOT_DESTINATION,
     DEFAULT_DRIVE_DESTINATION,
@@ -43,6 +44,21 @@ def get_username(config):
             username = None
             LOGGER.error("username is empty in %s", config_path_to_string(config_path))
     return username
+
+
+def get_retry_login_interval(config):
+    retry_login_interval = DEFAULT_RETRY_LOGIN_INTERVAL_SEC
+    config_path = ["app", "credentials", "retry_login_interval"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(
+            "retry_login_interval not found in %s. Using default %s seconds ...",
+            config_path_to_string(config_path=config_path),
+            retry_login_interval,
+        )
+    else:
+        retry_login_interval = get_config_value(config=config, config_path=config_path)
+        LOGGER.info("Retrying login every %s seconds.", retry_login_interval)
+    return retry_login_interval
 
 
 def get_drive_sync_interval(config):
