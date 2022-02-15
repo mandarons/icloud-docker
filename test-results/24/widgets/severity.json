@@ -1,0 +1,1241 @@
+[ {
+  "uid" : "1133d2496cb7baed",
+  "name" : "test_wanted_folder_single_variations",
+  "time" : {
+    "start" : 1644892726240,
+    "stop" : 1644892726260,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "4b4b321c1790cbe5",
+  "name" : "test_process_file_none_destination_path",
+  "time" : {
+    "start" : 1644892725452,
+    "stop" : 1644892725471,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a264429e2c9d943d",
+  "name" : "test_get_logger_no_duplicate_handlers",
+  "time" : {
+    "start" : 1644892724720,
+    "stop" : 1644892724737,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "feee57d1c46f1673",
+  "name" : "test_sync_photos_download_changed_photo",
+  "time" : {
+    "start" : 1644892726525,
+    "stop" : 1644892726605,
+    "duration" : 80
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f8797441afafe2c1",
+  "name" : "test_prepare_drive_destination_none_config",
+  "time" : {
+    "start" : 1644892724559,
+    "stop" : 1644892724560,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5c16877068e53f52",
+  "name" : "test_sync_album_none_destination_path",
+  "time" : {
+    "start" : 1644892726482,
+    "stop" : 1644892726500,
+    "duration" : 18
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c698751b92f888f5",
+  "name" : "test_process_file_none_item",
+  "time" : {
+    "start" : 1644892725518,
+    "stop" : 1644892725537,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f665ac1d5967bc24",
+  "name" : "test_process_folder_none_root",
+  "time" : {
+    "start" : 1644892725583,
+    "stop" : 1644892725602,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e4c3453eceafd2a6",
+  "name" : "test_get_drive_sync_interval_none_config",
+  "time" : {
+    "start" : 1644892724248,
+    "stop" : 1644892724248,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "27d1e253f1ac758f",
+  "name" : "test_get_drive_sync_interval",
+  "time" : {
+    "start" : 1644892724209,
+    "stop" : 1644892724225,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "3e90a49513536ba9",
+  "name" : "test_prepare_photos_destination",
+  "time" : {
+    "start" : 1644892724562,
+    "stop" : 1644892724579,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "727011ca41309bd3",
+  "name" : "test_missing_thumb_photo_sizes",
+  "time" : {
+    "start" : 1644892726440,
+    "stop" : 1644892726458,
+    "duration" : 18
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "36238378b044a85f",
+  "name" : "test_download_file",
+  "time" : {
+    "start" : 1644892725182,
+    "stop" : 1644892725203,
+    "duration" : 21
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "bc082a7406bbdf8c",
+  "name" : "test_sync_photos_original",
+  "time" : {
+    "start" : 1644892726818,
+    "stop" : 1644892726890,
+    "duration" : 72
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c23b898ae280762f",
+  "name" : "test_get_smtp_port",
+  "time" : {
+    "start" : 1644892724477,
+    "stop" : 1644892724477,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "a86e8632f577f279",
+  "name" : "test_throttling",
+  "time" : {
+    "start" : 1644892724678,
+    "stop" : 1644892724678,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6b14c2a9c299fc8a",
+  "name" : "test_download_file_key_error_data_token",
+  "time" : {
+    "start" : 1644892725206,
+    "stop" : 1644892725226,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "51f8b8a7ec3e1d42",
+  "name" : "test_download_photo_none_file_size",
+  "time" : {
+    "start" : 1644892726375,
+    "stop" : 1644892726394,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "db58f15a95e6305d",
+  "name" : "test_sync_directory_without_remove",
+  "time" : {
+    "start" : 1644892725883,
+    "stop" : 1644892725911,
+    "duration" : 28
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6368f05a7087ca81",
+  "name" : "test_send_fail",
+  "time" : {
+    "start" : 1644892724674,
+    "stop" : 1644892724675,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "bb02d6313280b384",
+  "name" : "test_sync_album_none_file_sizes",
+  "time" : {
+    "start" : 1644892726503,
+    "stop" : 1644892726522,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "cb7cd78146abbea2",
+  "name" : "test_get_logger_no_config",
+  "time" : {
+    "start" : 1644892724701,
+    "stop" : 1644892724717,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d7085ce4b95bb00c",
+  "name" : "test_remove_obsolete_directory",
+  "time" : {
+    "start" : 1644892725649,
+    "stop" : 1644892725670,
+    "duration" : 21
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6bce79df9ebad8d9",
+  "name" : "test_smtp_port_none_config",
+  "time" : {
+    "start" : 1644892724652,
+    "stop" : 1644892724653,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "fccb8cad5a4439fe",
+  "name" : "test_no_smtp_config",
+  "time" : {
+    "start" : 1644892724662,
+    "stop" : 1644892724663,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "aa4b0ff06d64774c",
+  "name" : "test_get_username_given",
+  "time" : {
+    "start" : 1644892724500,
+    "stop" : 1644892724516,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e1621b9982f48ee3",
+  "name" : "test_get_drive_sync_interval_default",
+  "time" : {
+    "start" : 1644892724229,
+    "stop" : 1644892724245,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "dad98217040c9fc0",
+  "name" : "test_get_smtp_empty",
+  "time" : {
+    "start" : 1644892724468,
+    "stop" : 1644892724468,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "352e2103e7d3505",
+  "name" : "test_sync_password_missing_in_keyring",
+  "time" : {
+    "start" : 1644892725082,
+    "stop" : 1644892725102,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8df87a53da016283",
+  "name" : "test_process_file_non_existing",
+  "time" : {
+    "start" : 1644892725430,
+    "stop" : 1644892725450,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f2a12ea03fdd9c8c",
+  "name" : "test_wanted_folder_multiple_paths",
+  "time" : {
+    "start" : 1644892726124,
+    "stop" : 1644892726147,
+    "duration" : 23
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "196cb39250246a49",
+  "name" : "test_wanted_folder_none_folder_path",
+  "time" : {
+    "start" : 1644892726172,
+    "stop" : 1644892726191,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ee9cbf458aba10d4",
+  "name" : "test_get_smtp_no_tls",
+  "time" : {
+    "start" : 1644892724473,
+    "stop" : 1644892724473,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "99046b2853f42f1b",
+  "name" : "test_wanted_file_check_log",
+  "time" : {
+    "start" : 1644892725991,
+    "stop" : 1644892726011,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f6d11b25229f5b91",
+  "name" : "test_process_file_existing_file",
+  "time" : {
+    "start" : 1644892725407,
+    "stop" : 1644892725427,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "438cb36e572e9c8a",
+  "name" : "test_file_exists_none_local_file",
+  "time" : {
+    "start" : 1644892725340,
+    "stop" : 1644892725360,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2435074a38a9a703",
+  "name" : "test_file_exists_none_item",
+  "time" : {
+    "start" : 1644892725319,
+    "stop" : 1644892725338,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7fbf79615258fd2d",
+  "name" : "test_process_folder_wanted",
+  "time" : {
+    "start" : 1644892725627,
+    "stop" : 1644892725646,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e06bf2606f9a3ba7",
+  "name" : "test_get_photos_filters",
+  "time" : {
+    "start" : 1644892724250,
+    "stop" : 1644892724267,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5ed2846d317b8280",
+  "name" : "test_process_folder_none_item",
+  "time" : {
+    "start" : 1644892725561,
+    "stop" : 1644892725580,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "80c9b9d865cf789",
+  "name" : "test_send",
+  "time" : {
+    "start" : 1644892724665,
+    "stop" : 1644892724672,
+    "duration" : 7
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "53f2378613adb755",
+  "name" : "test_prepare_photos_destination_none_config",
+  "time" : {
+    "start" : 1644892724600,
+    "stop" : 1644892724601,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "18186eb0aea45e79",
+  "name" : "test_prepare_photos_destination_default",
+  "time" : {
+    "start" : 1644892724581,
+    "stop" : 1644892724598,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "54f3528de36b954e",
+  "name" : "test_process_folder_none_destination_path",
+  "time" : {
+    "start" : 1644892725539,
+    "stop" : 1644892725558,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8b55eb924bc27b25",
+  "name" : "test_sync_drive_valids",
+  "time" : {
+    "start" : 1644892725914,
+    "stop" : 1644892725945,
+    "duration" : 31
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "16d3f03221782c60",
+  "name" : "test_sync_directory_none_destination",
+  "time" : {
+    "start" : 1644892725738,
+    "stop" : 1644892725757,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f601feccaa544bfc",
+  "name" : "test_get_photos_filters_no_file_sizes",
+  "time" : {
+    "start" : 1644892724288,
+    "stop" : 1644892724304,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8508ab75ad19611a",
+  "name" : "test_sync_photos_nothing_to_download",
+  "time" : {
+    "start" : 1644892726738,
+    "stop" : 1644892726815,
+    "duration" : 77
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "640d53a0aaa4f581",
+  "name" : "test_smtp_host_none_config",
+  "time" : {
+    "start" : 1644892724647,
+    "stop" : 1644892724648,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2929f567c94da3c5",
+  "name" : "test_sync_directory_none_root",
+  "time" : {
+    "start" : 1644892725804,
+    "stop" : 1644892725823,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e261c9f7013e64d4",
+  "name" : "test_sync_album_none_album",
+  "time" : {
+    "start" : 1644892726461,
+    "stop" : 1644892726479,
+    "duration" : 18
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "be6fab9c1f138192",
+  "name" : "test_sync_drive_only",
+  "time" : {
+    "start" : 1644892724910,
+    "stop" : 1644892724968,
+    "duration" : 58
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6ec11cac8d91543c",
+  "name" : "test_sync_different_schedule",
+  "time" : {
+    "start" : 1644892724871,
+    "stop" : 1644892724907,
+    "duration" : 36
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9fe79810700bd013",
+  "name" : "test_read_config_invalid_config_path",
+  "time" : {
+    "start" : 1644892724622,
+    "stop" : 1644892724622,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "fc0322a617c81a6e",
+  "name" : "test_sync_photos_empty_albums_list",
+  "time" : {
+    "start" : 1644892726608,
+    "stop" : 1644892726653,
+    "duration" : 45
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "db669e79adafa967",
+  "name" : "test_prepare_drive_destination_given",
+  "time" : {
+    "start" : 1644892724540,
+    "stop" : 1644892724557,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "c7c895f8fb969d6",
+  "name" : "test_download_photo_none_photo",
+  "time" : {
+    "start" : 1644892726397,
+    "stop" : 1644892726415,
+    "duration" : 18
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7377b80eab94823",
+  "name" : "test_download_photo_none_destination_path",
+  "time" : {
+    "start" : 1644892726354,
+    "stop" : 1644892726373,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "16fe2479540c7de5",
+  "name" : "test_get_photos_remove_obsolete_missing",
+  "time" : {
+    "start" : 1644892724343,
+    "stop" : 1644892724360,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5b59363867a9f192",
+  "name" : "test_sync_directory_none_items",
+  "time" : {
+    "start" : 1644892725781,
+    "stop" : 1644892725801,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "dc4173b4bfd76db3",
+  "name" : "test_get_smtp_tls",
+  "time" : {
+    "start" : 1644892724479,
+    "stop" : 1644892724479,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8ab64eb1098dda74",
+  "name" : "test_wanted_file_empty_file_extensions",
+  "time" : {
+    "start" : 1644892726014,
+    "stop" : 1644892726033,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f2739a862579ae70",
+  "name" : "test_build_message",
+  "time" : {
+    "start" : 1644892724657,
+    "stop" : 1644892724658,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "efecb297ab8b8e42",
+  "name" : "test_sync_empty",
+  "time" : {
+    "start" : 1644892724971,
+    "stop" : 1644892724992,
+    "duration" : 21
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "dafc07fa4ac59aa0",
+  "name" : "test_process_file_none_files",
+  "time" : {
+    "start" : 1644892725474,
+    "stop" : 1644892725493,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d963f996c9ae5ea8",
+  "name" : "test_get_retry_login_interval_default",
+  "time" : {
+    "start" : 1644892724444,
+    "stop" : 1644892724460,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6a8609646aa99348",
+  "name" : "test_missing_medium_photo_size",
+  "time" : {
+    "start" : 1644892726418,
+    "stop" : 1644892726437,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "77ef36bf21128864",
+  "name" : "test_sync_photos_rename_previous_original_photos",
+  "time" : {
+    "start" : 1644892726893,
+    "stop" : 1644892726970,
+    "duration" : 77
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "13b3a8435655b670",
+  "name" : "test_remove_obsolete_file",
+  "time" : {
+    "start" : 1644892725672,
+    "stop" : 1644892725692,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "46e187acd6ca296b",
+  "name" : "test_download_file_none_local_file",
+  "time" : {
+    "start" : 1644892725274,
+    "stop" : 1644892725293,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "af62cb7f402533ea",
+  "name" : "test_remove_obsolete_none_destination_path",
+  "time" : {
+    "start" : 1644892725695,
+    "stop" : 1644892725714,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b60e65158d879abe",
+  "name" : "test_wanted_folder_none_filters",
+  "time" : {
+    "start" : 1644892726150,
+    "stop" : 1644892726169,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "67e8229496ee091d",
+  "name" : "test_sync",
+  "time" : {
+    "start" : 1644892724740,
+    "stop" : 1644892724835,
+    "duration" : 95
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e3ea4926e652dd83",
+  "name" : "test_sync_2fa_required",
+  "time" : {
+    "start" : 1644892724838,
+    "stop" : 1644892724869,
+    "duration" : 31
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "cc65de61c115d554",
+  "name" : "test_wanted_folder_multiple",
+  "time" : {
+    "start" : 1644892726102,
+    "stop" : 1644892726122,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "e21ce2093f1bf9ea",
+  "name" : "test_wanted_file_case_variations_extensions",
+  "time" : {
+    "start" : 1644892725970,
+    "stop" : 1644892725989,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "cbfa7c12a5981d96",
+  "name" : "test_get_photos_sync_interval_default",
+  "time" : {
+    "start" : 1644892724383,
+    "stop" : 1644892724399,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d90de266740d81d5",
+  "name" : "test_get_photos_remove_obsolete_none_config",
+  "time" : {
+    "start" : 1644892724362,
+    "stop" : 1644892724362,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d5f6d0a5024b6925",
+  "name" : "test_sync_photos_missing_photo_download",
+  "time" : {
+    "start" : 1644892726656,
+    "stop" : 1644892726735,
+    "duration" : 79
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d06d4c58c7e97d6a",
+  "name" : "test_smtp_email_none_config",
+  "time" : {
+    "start" : 1644892724645,
+    "stop" : 1644892724645,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1eecde5287305f7",
+  "name" : "test_sync_directory_with_remove",
+  "time" : {
+    "start" : 1644892725825,
+    "stop" : 1644892725855,
+    "duration" : 30
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "11a9dfd6c46c09e0",
+  "name" : "test_get_photos_remove_obsolete",
+  "time" : {
+    "start" : 1644892724325,
+    "stop" : 1644892724341,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "405b8e7ded0becb3",
+  "name" : "test_get_remove_obsolete",
+  "time" : {
+    "start" : 1644892724404,
+    "stop" : 1644892724421,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b9a6553f55abfed6",
+  "name" : "test_sync_photos_only",
+  "time" : {
+    "start" : 1644892725105,
+    "stop" : 1644892725177,
+    "duration" : 72
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2b8f24fc5a1956e3",
+  "name" : "test_wanted_folder_single_path",
+  "time" : {
+    "start" : 1644892726216,
+    "stop" : 1644892726238,
+    "duration" : 22
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6420488e2c2c264c",
+  "name" : "test_get_photos_filters_no_filters",
+  "time" : {
+    "start" : 1644892724306,
+    "stop" : 1644892724323,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6a77c9cdae4aea79",
+  "name" : "test_get_photos_sync_interval_none_config",
+  "time" : {
+    "start" : 1644892724402,
+    "stop" : 1644892724402,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2ec5490e67d2a4ac",
+  "name" : "test_download_photo_handle_exception",
+  "time" : {
+    "start" : 1644892726332,
+    "stop" : 1644892726351,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9546ff5cd62ef7ad",
+  "name" : "test_get_smtp_host",
+  "time" : {
+    "start" : 1644892724470,
+    "stop" : 1644892724471,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "cfb0d6719313e8b1",
+  "name" : "test_remove_obsolete_none_files",
+  "time" : {
+    "start" : 1644892725717,
+    "stop" : 1644892725735,
+    "duration" : 18
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2704bc66df56414e",
+  "name" : "test_wanted_folder_empty",
+  "time" : {
+    "start" : 1644892726080,
+    "stop" : 1644892726099,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8f997048e06249c3",
+  "name" : "test_wanted_parent_folder_none_filters",
+  "time" : {
+    "start" : 1644892726307,
+    "stop" : 1644892726327,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8d979c0911c5d222",
+  "name" : "test_wanted_file_none_file_path",
+  "time" : {
+    "start" : 1644892726058,
+    "stop" : 1644892726077,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1db296e494a98772",
+  "name" : "test_wanted_file_missing",
+  "time" : {
+    "start" : 1644892726036,
+    "stop" : 1644892726055,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "73d07947f170244e",
+  "name" : "test_get_smtp_email",
+  "time" : {
+    "start" : 1644892724466,
+    "stop" : 1644892724466,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2ffc1e1656bc1460",
+  "name" : "test_read_config_none_config_path",
+  "time" : {
+    "start" : 1644892724624,
+    "stop" : 1644892724624,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "760f69416b3ddedd",
+  "name" : "test_get_retry_login_interval",
+  "time" : {
+    "start" : 1644892724425,
+    "stop" : 1644892724442,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ce1af321c0fa5cb2",
+  "name" : "test_sync_directory_without_folder_filter",
+  "time" : {
+    "start" : 1644892725858,
+    "stop" : 1644892725880,
+    "duration" : 22
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "f5bbc472a51e284e",
+  "name" : "test_wanted_file",
+  "time" : {
+    "start" : 1644892725948,
+    "stop" : 1644892725967,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "afca5ffe9b173080",
+  "name" : "test_wanted_parent_folder",
+  "time" : {
+    "start" : 1644892726263,
+    "stop" : 1644892726282,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8a57249d5114dd34",
+  "name" : "test_download_file_non_existing",
+  "time" : {
+    "start" : 1644892725228,
+    "stop" : 1644892725248,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "ebf0799c3e2b582b",
+  "name" : "test_get_retry_login_interval_none_config",
+  "time" : {
+    "start" : 1644892724463,
+    "stop" : 1644892724463,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "1bc9a72978610927",
+  "name" : "test_file_existing_file",
+  "time" : {
+    "start" : 1644892725295,
+    "stop" : 1644892725316,
+    "duration" : 21
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "292bd69640711eda",
+  "name" : "test_get_photos_filters_invalid_file_size",
+  "time" : {
+    "start" : 1644892724269,
+    "stop" : 1644892724286,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "60431354db163f24",
+  "name" : "test_get_username_empty",
+  "time" : {
+    "start" : 1644892724481,
+    "stop" : 1644892724498,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "74093ffbaf7600f2",
+  "name" : "test_wanted_parent_folder_missing_parent_folder",
+  "time" : {
+    "start" : 1644892726285,
+    "stop" : 1644892726304,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "8f657dab3e1197dc",
+  "name" : "test_download_file_none_item",
+  "time" : {
+    "start" : 1644892725251,
+    "stop" : 1644892725271,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "b6676e9e808afe97",
+  "name" : "test_process_file_none_filters",
+  "time" : {
+    "start" : 1644892725495,
+    "stop" : 1644892725515,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d2953bae21e760c5",
+  "name" : "test_file_non_existing_file",
+  "time" : {
+    "start" : 1644892725362,
+    "stop" : 1644892725381,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "7292fb94059c8872",
+  "name" : "test_sync_directory_none_drive",
+  "time" : {
+    "start" : 1644892725760,
+    "stop" : 1644892725779,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "bfa3c94393bea536",
+  "name" : "test_read_config_overridden_config_path",
+  "time" : {
+    "start" : 1644892724626,
+    "stop" : 1644892724643,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d33dfed176b465c",
+  "name" : "test_get_username_none_config",
+  "time" : {
+    "start" : 1644892724518,
+    "stop" : 1644892724519,
+    "duration" : 1
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "d2abc82f2bc0799a",
+  "name" : "test_get_logger",
+  "time" : {
+    "start" : 1644892724681,
+    "stop" : 1644892724698,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "901a290d7ec21a8b",
+  "name" : "test_get_smtp_password",
+  "time" : {
+    "start" : 1644892724475,
+    "stop" : 1644892724475,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "586668482f6d1dbe",
+  "name" : "test_process_folder_unwanted",
+  "time" : {
+    "start" : 1644892725604,
+    "stop" : 1644892725624,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "927775bbe1313865",
+  "name" : "test_read_config_default_config_path",
+  "time" : {
+    "start" : 1644892724603,
+    "stop" : 1644892724619,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "6083acc4ef6488b6",
+  "name" : "test_process_file_existing",
+  "time" : {
+    "start" : 1644892725384,
+    "stop" : 1644892725404,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "fd2df403e553c308",
+  "name" : "test_dry_run_send",
+  "time" : {
+    "start" : 1644892724660,
+    "stop" : 1644892724660,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "90b6dc115bf8b6a4",
+  "name" : "test_wanted_folder_none_root",
+  "time" : {
+    "start" : 1644892726194,
+    "stop" : 1644892726213,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "884a6d04326928d3",
+  "name" : "test_sync_exception_thrown",
+  "time" : {
+    "start" : 1644892724995,
+    "stop" : 1644892725079,
+    "duration" : 84
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9125c3842abbc124",
+  "name" : "test_get_remove_obsolete_none_config",
+  "time" : {
+    "start" : 1644892724423,
+    "stop" : 1644892724423,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "9d93f463e61c52d9",
+  "name" : "test_get_photos_sync_interval",
+  "time" : {
+    "start" : 1644892724365,
+    "stop" : 1644892724381,
+    "duration" : 16
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "2b29b869d78a86ce",
+  "name" : "test_smtp_password_none_config",
+  "time" : {
+    "start" : 1644892724650,
+    "stop" : 1644892724650,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "severity" : "normal"
+}, {
+  "uid" : "5aa14393504d4b19",
+  "name" : "test_prepare_drive_destination_default",
+  "time" : {
+    "start" : 1644892724521,
+    "stop" : 1644892724538,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "severity" : "normal"
+} ]
