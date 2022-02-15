@@ -7,6 +7,8 @@ app:
   credentials:
     # iCloud drive username
     username: user@test.com
+    # Retry failed login (with/without 2FA) every 10 minutes
+    retry_login_interval: 600
   # Drive destination
   root: "./icloud"
   smtp:

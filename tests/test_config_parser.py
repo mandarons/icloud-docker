@@ -5,6 +5,7 @@ import unittest
 import shutil
 
 from src import (
+    DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     config_parser,
     DEFAULT_DRIVE_DESTINATION,
     DEFAULT_PHOTOS_DESTINATION,
@@ -60,6 +61,30 @@ class TestConfigParser(unittest.TestCase):
         self.assertEqual(
             DEFAULT_SYNC_INTERVAL_SEC,
             config_parser.get_drive_sync_interval(config=None),
+        )
+
+    def test_get_retry_login_interval(self):
+        # Given  interval
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertEqual(
+            config["app"]["credentials"]["retry_login_interval"],
+            config_parser.get_retry_login_interval(config=config),
+        )
+
+    def test_get_retry_login_interval_default(self):
+        # Default interval
+        config = read_config(config_path=tests.CONFIG_PATH)
+        del (config["app"]["credentials"]["retry_login_interval"],)
+        self.assertEqual(
+            DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
+            config_parser.get_retry_login_interval(config=config),
+        )
+
+    def test_get_retry_login_interval_none_config(self):
+        # None config
+        self.assertEqual(
+            DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
+            config_parser.get_retry_login_interval(config=None),
         )
 
     def test_get_photos_sync_interval(self):
