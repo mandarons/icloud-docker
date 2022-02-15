@@ -150,6 +150,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(len(captured.records) > 1)
         self.assertTrue(len([e for e in captured[1] if "2FA is required" in e]) > 0)
 
+    @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
         target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
@@ -157,14 +158,24 @@ class TestSyncDrive(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     def test_sync_password_missing_in_keyring(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
     ):
         mock_service = self.service
         config = self.config.copy()
         mock_read_config.return_value = config
         with self.assertLogs() as captured:
             mock_get_password.return_value = None
-            self.assertIsNone(sync.sync())
+            mock_sleep.side_effect = [
+                None,
+                Exception(),
+            ]
+            with self.assertRaises(Exception):
+                sync.sync()
             self.assertTrue(
                 len(
                     [

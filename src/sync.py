@@ -52,6 +52,15 @@ def sync():
                 LOGGER.error(
                     "Password is not stored in keyring. Please save the password in keyring."
                 )
+                sleep_for = config_parser.get_retry_login_interval(config=config)
+                next_sync = (
+                    datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
+                ).strftime("%c")
+                LOGGER.info("Retrying login at %s ...", next_sync)
+                last_send = notify.send(config, last_send)
+                sleep(sleep_for)
+                continue
+
         if "drive" not in config and "photos" in config:
             sleep_for = photos_sync_interval
             enable_sync_drive = False
