@@ -1,0 +1,108 @@
+{
+  "uid" : "9bd3108e35d8c3cd",
+  "name" : "test_sync_password_as_environment_variable",
+  "fullName" : "tests.test_sync.TestSyncDrive#test_sync_password_as_environment_variable",
+  "historyId" : "7ca4a9d72a9f1e63c832202cb93a83bc",
+  "time" : {
+    "start" : 1645159549480,
+    "stop" : 1645159549503,
+    "duration" : 23
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncDrive",
+    "time" : {
+      "start" : 1645159549139,
+      "stop" : 1645159549139,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "ef33a7277da0b4c3",
+      "name" : "log",
+      "source" : "ef33a7277da0b4c3.txt",
+      "type" : "text/plain",
+      "size" : 325
+    }, {
+      "uid" : "d1fe4b90a5b1a615",
+      "name" : "stdout",
+      "source" : "d1fe4b90a5b1a615.txt",
+      "type" : "text/plain",
+      "size" : 632
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 2,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncDrive::0",
+    "time" : {
+      "start" : 1645159549597,
+      "stop" : 1645159549598,
+      "duration" : 1
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_sync"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestSyncDrive"
+  }, {
+    "name" : "host",
+    "value" : "fv-az212-257"
+  }, {
+    "name" : "thread",
+    "value" : "3464-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_sync"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "9bd3108e35d8c3cd.json",
+  "parameterValues" : [ ]
+}

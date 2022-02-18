@@ -1,0 +1,160 @@
+{
+  "uid" : "64afe116e88a4052",
+  "name" : "test_get_smtp_port",
+  "fullName" : "tests.test_config_parser.TestConfigParser#test_get_smtp_port",
+  "historyId" : "c8818bb60878ac624476b2e68498754e",
+  "time" : {
+    "start" : 1645159548880,
+    "stop" : 1645159548880,
+    "duration" : 0
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestConfigParser",
+    "time" : {
+      "start" : 1645159548593,
+      "stop" : 1645159548593,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestConfigParser::0",
+    "time" : {
+      "start" : 1645159549054,
+      "stop" : 1645159549054,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_config_parser"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestConfigParser"
+  }, {
+    "name" : "host",
+    "value" : "fv-az212-257"
+  }, {
+    "name" : "thread",
+    "value" : "3464-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_config_parser"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 8,
+        "unknown" : 0,
+        "total" : 8
+      },
+      "items" : [ {
+        "uid" : "198c80058c136698",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/25//#testresult/198c80058c136698",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644937625582,
+          "stop" : 1644937625582,
+          "duration" : 0
+        }
+      }, {
+        "uid" : "512aa3a96e4f3308",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/24//#testresult/512aa3a96e4f3308",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644894138039,
+          "stop" : 1644894138039,
+          "duration" : 0
+        }
+      }, {
+        "uid" : "c23b898ae280762f",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/24//#testresult/c23b898ae280762f",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644892724477,
+          "stop" : 1644892724477,
+          "duration" : 0
+        }
+      }, {
+        "uid" : "ee776c6a4a9999e1",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/23//#testresult/ee776c6a4a9999e1",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644863952773,
+          "stop" : 1644863952773,
+          "duration" : 0
+        }
+      }, {
+        "uid" : "2ab039a79fff7865",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/22//#testresult/2ab039a79fff7865",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644861147135,
+          "stop" : 1644861147135,
+          "duration" : 0
+        }
+      }, {
+        "uid" : "5398feec9d77d2af",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/21//#testresult/5398feec9d77d2af",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644860157172,
+          "stop" : 1644860157172,
+          "duration" : 0
+        }
+      }, {
+        "uid" : "905dc940869b32d7",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/20//#testresult/905dc940869b32d7",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644679739436,
+          "stop" : 1644679739436,
+          "duration" : 0
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "64afe116e88a4052.json",
+  "parameterValues" : [ ]
+}
