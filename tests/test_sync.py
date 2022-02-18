@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import tests
 from tests import data
-from src import sync, read_config
+from src import ENV_ICLOUD_PASSWORD_KEY, sync, read_config
 
 
 class TestSyncDrive(unittest.TestCase):
@@ -187,6 +187,41 @@ class TestSyncDrive(unittest.TestCase):
                 )
                 > 0
             )
+
+    @patch("src.sync.sleep")
+    @patch(target="keyring.get_password", return_value="keyring_password")
+    @patch(target="src.config_parser.get_username", return_value=data.REQUIRES_2FA_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    def test_sync_password_as_environment_variable(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+    ):
+        mock_service = self.service
+        config = self.config.copy()
+        mock_read_config.return_value = config
+        with self.assertLogs() as captured:
+            mock_sleep.side_effect = [
+                None,
+                Exception(),
+            ]
+            with patch.dict(os.environ, {ENV_ICLOUD_PASSWORD_KEY: data.VALID_PASSWORD}):
+                with self.assertRaises(Exception):
+                    sync.sync()
+                self.assertTrue(
+                    len(
+                        [
+                            e
+                            for e in captured[1]
+                            if "Error: 2FA is required. Please log in." in e
+                        ]
+                    )
+                    > 0
+                )
 
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)

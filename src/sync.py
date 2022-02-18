@@ -1,8 +1,9 @@
 import datetime
 from time import sleep
+import os
 
 from icloudpy import ICloudPyService, utils, exceptions
-from src import config_parser, notify, LOGGER, read_config
+from src import config_parser, notify, LOGGER, read_config, ENV_ICLOUD_PASSWORD_KEY
 from src import sync_drive, sync_photos
 
 
@@ -20,7 +21,9 @@ def sync():
             try:
                 api = ICloudPyService(
                     apple_id=username,
-                    password=utils.get_password_from_keyring(username=username),
+                    password=os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
+                    if ENV_ICLOUD_PASSWORD_KEY in os.environ
+                    else utils.get_password_from_keyring(username=username),
                 )
                 if not api.requires_2sa:
                     if "drive" in config and enable_sync_drive:
