@@ -16,6 +16,7 @@ ENV_ICLOUD_PASSWORD_KEY = "ENV_ICLOUD_PASSWORD"
 DEFAULT_CONFIG_FILE_PATH = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME
 )
+DEFAULT_COOKIE_DIRECTORY = "session_data"
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
