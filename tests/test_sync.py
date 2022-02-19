@@ -16,6 +16,10 @@ class TestSyncDrive(unittest.TestCase):
     def remove_temp(self):
         if os.path.exists(tests.TEMP_DIR):
             shutil.rmtree(tests.TEMP_DIR)
+        if os.path.exists("session_data"):
+            shutil.rmtree("session_data")
+        if os.path.exists("icloud"):
+            shutil.rmtree("icloud")
 
     def setUp(self) -> None:
         self.config = read_config(config_path=tests.CONFIG_PATH)
@@ -45,8 +49,10 @@ class TestSyncDrive(unittest.TestCase):
         mock_service = self.service
         config = self.config.copy()
         mock_read_config.return_value = config
-
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
         self.assertIsNone(sync.sync())
+        self.assertTrue(os.path.isdir("./session_data"))
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
@@ -62,6 +68,8 @@ class TestSyncDrive(unittest.TestCase):
         mock_get_password,
     ):
         mock_service = self.service
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
         # Sync only photos
         config = self.config.copy()
         del config["drive"]
@@ -88,6 +96,9 @@ class TestSyncDrive(unittest.TestCase):
         mock_get_password,
     ):
         mock_service = self.service
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+
         # Sync only drive
         config = self.config.copy()
         del config["photos"]
@@ -110,6 +121,8 @@ class TestSyncDrive(unittest.TestCase):
         self, mock_read_config, mock_service, mock_get_username, mock_get_password
     ):
         mock_service = self.service
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
 
         # Nothing to sync
         config = self.config.copy()
@@ -138,6 +151,8 @@ class TestSyncDrive(unittest.TestCase):
         mock_service = self.service
         config = self.config.copy()
         mock_read_config.return_value = config
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
 
         with self.assertLogs() as captured:
             mock_get_username.return_value = data.REQUIRES_2FA_USER
@@ -166,6 +181,8 @@ class TestSyncDrive(unittest.TestCase):
         mock_sleep,
     ):
         mock_service = self.service
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
         config = self.config.copy()
         mock_read_config.return_value = config
         with self.assertLogs() as captured:
@@ -272,6 +289,8 @@ class TestSyncDrive(unittest.TestCase):
         mock_sync_drive,
     ):
         mock_service = self.service
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
         config = self.config.copy()
         config["drive"]["sync_interval"] = 1
         config["photos"]["sync_interval"] = 2
