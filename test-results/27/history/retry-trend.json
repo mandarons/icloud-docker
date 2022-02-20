@@ -7,6 +7,14 @@
     "retry" : 0
   }
 }, {
+  "buildOrder" : 27,
+  "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/27/",
+  "reportName" : "Allure Report with history",
+  "data" : {
+    "run" : 125,
+    "retry" : 0
+  }
+}, {
   "buildOrder" : 26,
   "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/26/",
   "reportName" : "Allure Report with history",
@@ -148,14 +156,6 @@
   "reportName" : "Allure Report with history",
   "data" : {
     "run" : 62,
-    "retry" : 0
-  }
-}, {
-  "buildOrder" : 9,
-  "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/9/",
-  "reportName" : "Allure Report with history",
-  "data" : {
-    "run" : 52,
     "retry" : 0
   }
 } ]
