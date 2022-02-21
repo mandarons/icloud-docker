@@ -13,7 +13,9 @@ app:
   root: "./icloud"
   smtp:
     # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
-    # email: user@test.com
+    # email: sender@test.com
+    # default to is same as email above
+    # to: receiver@test.com
     # password:
     # host: smtp.test.com
     # port: 587

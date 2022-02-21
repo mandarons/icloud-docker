@@ -65,13 +65,17 @@ class TestNotify(unittest.TestCase):
             # verify that the correct email is being sent to sendmail()
             self.assertEqual(
                 config_parser.get_smtp_email(config=self.config),
-                instance.sendmail.mock_calls[0][1][1],
+                instance.sendmail.mock_calls[0][2]["from_addr"],
+            )
+            self.assertEqual(
+                config_parser.get_smtp_to_email(config=self.config),
+                instance.sendmail.mock_calls[0][2]["to_addrs"],
             )
 
             # verify that the message was passed to sendmail()
             self.assertIn(
                 "Subject: icloud-docker: Two step authentication required",
-                instance.sendmail.mock_calls[0][1][2],
+                instance.sendmail.mock_calls[0][2]["msg"],
             )
 
     def test_send_fail(self):
