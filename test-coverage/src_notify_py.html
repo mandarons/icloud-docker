@@ -90,7 +90,7 @@
     <p id="t36" class="run"><span class="n"><a href="#t36">36</a></span><span class="t">                <span class="nam">smtp</span><span class="op">.</span><span class="nam">quit</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t37" class="run"><span class="n"><a href="#t37">37</a></span><span class="t">        <span class="key">except</span> <span class="op">(</span><span class="nam">Exception</span><span class="op">)</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t38" class="run"><span class="n"><a href="#t38">38</a></span><span class="t">            <span class="nam">sent_on</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t39" class="run"><span class="n"><a href="#t39">39</a></span><span class="t">            <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">"Failed to send email: %s"</span><span class="op">,</span> <span class="nam">str</span><span class="op">(</span><span class="nam">e</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t39" class="run"><span class="n"><a href="#t39">39</a></span><span class="t">            <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">f"Failed to send email: {str(e)}."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t40" class="pln"><span class="n"><a href="#t40">40</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t41" class="run"><span class="n"><a href="#t41">41</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">"Not sending 2FA notification because SMTP is not configured"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t42" class="pln"><span class="n"><a href="#t42">42</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -112,7 +112,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2022-02-20 01:22 +0000
+            created at 2022-02-21 14:27 +0000
         </p>
     </div>
 </div>
