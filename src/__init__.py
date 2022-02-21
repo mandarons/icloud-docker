@@ -13,6 +13,8 @@ DEFAULT_RETRY_LOGIN_INTERVAL_SEC = 600  # 10 minutes
 DEFAULT_SYNC_INTERVAL_SEC = 1800  # 30 minutes
 DEFAULT_CONFIG_FILE_NAME = "config.yaml"
 ENV_ICLOUD_PASSWORD_KEY = "ENV_ICLOUD_PASSWORD"
+DEFAULT_LOGGER_LEVEL = "info"
+DEFAULT_LOG_FILE_NAME = "icloud.log"
 DEFAULT_CONFIG_FILE_PATH = os.path.join(
     os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME
 )
@@ -23,9 +25,9 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 def read_config(config_path=DEFAULT_CONFIG_FILE_PATH):
     if not (config_path and os.path.exists(config_path)):
-        print("Config file not found at %s.", config_path)
+        print(f"Config file not found at {config_path}.")
         return None
-    print("Loading config from %s ...", config_path)
+    print(f"Loading config from {config_path} ...")
     with open(file=config_path, mode="r") as config_file:
         config = YAML().load(config_file)
     config["app"]["credentials"]["username"] = (
@@ -44,12 +46,12 @@ def get_logger_config(config):
     logger_config["level"] = (
         config_app_logger["level"].strip().lower()
         if "level" in config_app_logger
-        else "warning"
+        else DEFAULT_LOGGER_LEVEL
     )
     logger_config["filename"] = (
         config_app_logger["filename"].strip().lower()
         if "filename" in config_app_logger
-        else "icloud.log"
+        else DEFAULT_LOG_FILE_NAME
     )
     return logger_config
 
@@ -94,11 +96,10 @@ class ColorfulConsoleFormatter(logging.Formatter):
 
 def get_logger():
     logger = logging.getLogger()
-    # if not logger.hasHandlers():
-    # TODO: parse config for logger configuration
     logger_config = get_logger_config(config=read_config())
     if logger_config:
-        logger.setLevel(logging.getLevelName(level=logger_config["level"].upper()))
+        level_name = logging.getLevelName(level=logger_config["level"].upper())
+        logger.setLevel(level=level_name)
         if not log_handler_exists(
             logger=logger,
             handler_type=logging.FileHandler,

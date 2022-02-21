@@ -7,7 +7,7 @@ from unittest.mock import patch
 import icloudpy
 import tests
 from tests import DATA_DIR, data
-from src import sync_photos, read_config
+from src import LOGGER, sync_photos, read_config
 
 
 class TestSyncPhotos(unittest.TestCase):
@@ -157,7 +157,7 @@ class TestSyncPhotos(unittest.TestCase):
         sync_photos.sync_photos(config=config, photos=mock_service.photos)
 
         # No files to download
-        with self.assertLogs() as captured:
+        with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
             self.assertIsNone(
                 sync_photos.sync_photos(config=config, photos=mock_service.photos)
             )
@@ -194,7 +194,7 @@ class TestSyncPhotos(unittest.TestCase):
             os.path.join(album_1_path, "IMG_3148__original.JPG"),
         )
 
-        with self.assertLogs() as captured:
+        with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
             self.assertIsNone(
                 sync_photos.sync_photos(config=config, photos=mock_service.photos)
             )

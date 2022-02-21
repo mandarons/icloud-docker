@@ -1,6 +1,6 @@
 app:
   logger:
-    # level - debug, info, warning (default) or error
+    # level - debug, info (default), warning or error
     level: debug
     # log filename icloud.log (default)
     filename: icloud.log
