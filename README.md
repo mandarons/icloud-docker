@@ -32,7 +32,7 @@ services:
       - PUID=<insert the output of `id -u $user`>
       - GUID=<insert the output of `id -g $user`>
     env_file:
-      - .env.icloud #contains ENV_ICLOUD_PASSWORD=<password>
+      - .env.icloud #should contain ENV_ICLOUD_PASSWORD=<password>
     container_name: icloud
     restart: unless-stopped
     volumes:
