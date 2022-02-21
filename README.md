@@ -66,8 +66,10 @@ app:
   # Drive destination
   root: "icloud"
   smtp:
-    # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
+    ## If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
     # email: "user@test.com"
+    ## optional, to email address. Default is sender email.
+    # to: "receiver@test.com"
     # password:
     # host: "smtp.test.com"
     # port: 587
