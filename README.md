@@ -19,7 +19,7 @@ Primary use case of iCloud-docker is to periodically sync wanted or all of your 
 
 ### Installation using Docker Hub
 ```
-docker run --name icloud -v ${PWD}/icloud:/app/icloud -v ${PWD}/config.yaml:/app/config.yaml mandarons/icloud-drive 
+docker run --name icloud -v ${PWD}/icloud:/app/icloud -v ${PWD}/config.yaml:/app/config.yaml -e ENV_ICLOUD_PASSWORD=<icloud_password> -v ${PWD}/session_data:/app/session_data mandarons/icloud-drive 
 ```
 
 ### Installation using docker-compose
@@ -31,6 +31,8 @@ services:
     environment:
       - PUID=<insert the output of `id -u $user`>
       - GUID=<insert the output of `id -g $user`>
+    env_file:
+      - .env.icloud #should contain ENV_ICLOUD_PASSWORD=<password>
     container_name: icloud
     restart: unless-stopped
     volumes:
@@ -38,11 +40,13 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${PWD}/icloud/config.yaml:/app/config.yaml
       - ${PWD}/icloud/data:/app/icloud
+      - ${PWD}/session_data:/app/session_data
 ```
 
 ### Authentication (required after container creation or authentication expiration)
 ```
-docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username>"
+# Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
+docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/app/session_data"
 ```
 Follow the steps to authenticate.
 
@@ -50,8 +54,8 @@ Follow the steps to authenticate.
 ```yaml
 app:
   logger:
-    # level - debug, info, warning (default) or error
-    level: "warning"
+    # level - debug, info (default), warning or error
+    level: "info"
     # log filename icloud.log (default)
     filename: "icloud.log"
   credentials:
@@ -62,8 +66,10 @@ app:
   # Drive destination
   root: "icloud"
   smtp:
-    # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
+    ## If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
     # email: "user@test.com"
+    ## optional, to email address. Default is sender email.
+    # to: "receiver@test.com"
     # password:
     # host: "smtp.test.com"
     # port: 587
