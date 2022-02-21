@@ -209,6 +209,24 @@ class TestConfigParser(unittest.TestCase):
     def test_smtp_email_none_config(self):
         self.assertIsNone(config_parser.get_smtp_email(config=None))
 
+    def test_get_smtp_to_email(self):
+        # Given email
+        config = {"app": {"smtp": {"to": "receiver@test.com"}}}
+        self.assertEqual(
+            config["app"]["smtp"]["to"], config_parser.get_smtp_to_email(config=config)
+        )
+
+    def test_get_smtp_to_email_default(self):
+        # Given email
+        config = {"app": {"smtp": {"email": "from@test.com"}}}
+        self.assertEqual(
+            config["app"]["smtp"]["email"],
+            config_parser.get_smtp_to_email(config=config),
+        )
+
+    def test_smtp_to_email_none_config(self):
+        self.assertIsNone(config_parser.get_smtp_to_email(config=None))
+
     def test_get_smtp_host(self):
         # Given host
         config = {"app": {"smtp": {"host": "smtp.test.com"}}}

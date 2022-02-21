@@ -111,6 +111,16 @@ def get_smtp_email(config):
     return email
 
 
+def get_smtp_to_email(config):
+    to_email = None
+    config_path = ["app", "smtp", "to"]
+    if traverse_config_path(config=config, config_path=config_path):
+        to_email = get_config_value(config=config, config_path=config_path)
+    else:
+        to_email = get_smtp_email(config=config)
+    return to_email
+
+
 def get_smtp_password(config):
     password = None
     config_path = ["app", "smtp", "password"]

@@ -9,6 +9,7 @@ from src import config_parser, LOGGER
 def send(config, last_send=None, dry_run=False):
     sent_on = None
     email = config_parser.get_smtp_email(config=config)
+    to_email = config_parser.get_smtp_to_email(config=config)
     host = config_parser.get_smtp_host(config=config)
     port = config_parser.get_smtp_port(config=config)
     no_tls = config_parser.get_smtp_no_tls(config=config)
@@ -32,7 +33,7 @@ def send(config, last_send=None, dry_run=False):
 
                 msg = build_message(email)
 
-                smtp.sendmail(email, email, msg.as_string())
+                smtp.sendmail(from_addr=email, to_addrs=to_email, msg=msg.as_string())
                 smtp.quit()
         except (Exception) as e:
             sent_on = None
