@@ -1,0 +1,2 @@
+WARNING  root:config_parser.py:154 Warning: no_tls is not found in app > smtp > no_tls
+INFO     root:notify.py:18 Throttling email to once a day

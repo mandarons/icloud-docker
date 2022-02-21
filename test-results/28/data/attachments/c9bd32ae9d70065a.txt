@@ -1,0 +1,22 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2022-02-21 14:27:30,319 :: DEBUG :: icloudpy.base :: base.py :: 242 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2022-02-21 14:27:30,319 :: INFO :: icloudpy.base :: base.py :: 249 :: Session file does not exist[0m
+[38;21m2022-02-21 14:27:30,320 :: DEBUG :: icloudpy.base :: base.py :: 314 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2022-02-21 14:27:30,320 :: DEBUG :: icloudpy.base :: base.py :: 346 :: Authentication completed successfully[0m
+[38;21m2022-02-21 14:27:30,346 :: DEBUG :: icloudpy.base :: base.py :: 242 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2022-02-21 14:27:30,346 :: INFO :: icloudpy.base :: base.py :: 249 :: Session file does not exist[0m
+[38;21m2022-02-21 14:27:30,346 :: DEBUG :: icloudpy.base :: base.py :: 314 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2022-02-21 14:27:30,347 :: DEBUG :: icloudpy.base :: base.py :: 346 :: Authentication completed successfully[0m
+[38;21m2022-02-21 14:27:30,347 :: DEBUG :: root :: config_parser.py :: 163 :: Checking drive destination ...[0m
+[38;21m2022-02-21 14:27:30,347 :: DEBUG :: root :: config_parser.py :: 91 :: Checking root destination ...[0m
+[38;21m2022-02-21 14:27:30,348 :: DEBUG :: root :: config_parser.py :: 190 :: Removing obsolete files and folders ...[0m
+[38;21m2022-02-21 14:27:30,349 :: DEBUG :: root :: sync_drive.py :: 66 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Numbers ...[0m
+[38;21m2022-02-21 14:27:30,350 :: DEBUG :: root :: sync_drive.py :: 66 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Pages ...[0m
+[38;21m2022-02-21 14:27:30,350 :: DEBUG :: root :: sync_drive.py :: 66 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Preview ...[0m
+[38;5;39m2022-02-21 14:27:30,352 :: INFO :: root :: sync_drive.py :: 90 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/icloudpy/Test/Document scanne 2.pdf ...[0m
+[38;5;39m2022-02-21 14:27:30,353 :: INFO :: root :: sync_drive.py :: 90 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/icloudpy/Test/Scanned document 1.pdf ...[0m
+[38;21m2022-02-21 14:27:30,354 :: DEBUG :: root :: sync_drive.py :: 66 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/unwanted ...[0m
+[38;5;39m2022-02-21 14:27:30,355 :: INFO :: root :: sync_drive.py :: 90 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/This is a title.md ...[0m
+[38;5;39m2022-02-21 14:27:30,356 :: INFO :: root :: config_parser.py :: 72 :: Syncing drive every -1 seconds.[0m
+[38;5;39m2022-02-21 14:27:30,356 :: INFO :: root :: sync.py :: 105 :: Resyncing at Mon Feb 21 14:27:29 2022 ...[0m
+[38;5;39m2022-02-21 14:27:30,357 :: INFO :: root :: config_parser.py :: 72 :: Syncing drive every -1 seconds.[0m
