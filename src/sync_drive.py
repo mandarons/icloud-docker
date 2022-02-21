@@ -18,7 +18,7 @@ def wanted_file(filters, file_path):
     for file_extension in filters:
         if re.search(f"{file_extension}$", file_path, re.IGNORECASE):
             return True
-    LOGGER.info("Skipping the unwanted file %s", file_path)
+    LOGGER.debug(f"Skipping the unwanted file {file_path}")
     return False
 
 
@@ -63,7 +63,7 @@ def process_folder(item, destination_path, filters, root):
         return None
     new_directory = os.path.join(destination_path, item.name)
     if not wanted_folder(filters=filters, folder_path=new_directory, root=root):
-        LOGGER.info("Skipping the unwanted folder %s ...", new_directory)
+        LOGGER.debug(f"Skipping the unwanted folder {new_directory} ...")
         return None
     os.makedirs(new_directory, exist_ok=True)
     return new_directory
@@ -79,7 +79,7 @@ def file_exists(item, local_file):
             local_file_modified_time == remote_file_modified_time
             and local_file_size == remote_file_size
         ):
-            LOGGER.info("No changes detected. Skipping the file %s", local_file)
+            LOGGER.debug(f"No changes detected. Skipping the file {local_file} ...")
             return True
     return False
 
@@ -87,7 +87,7 @@ def file_exists(item, local_file):
 def download_file(item, local_file):
     if not (item and local_file):
         return False
-    LOGGER.info("Downloading %s ...", local_file)
+    LOGGER.info(f"Downloading {local_file} ...")
     try:
         with item.open(stream=True) as response:
             with open(local_file, "wb") as file_out:
@@ -95,7 +95,7 @@ def download_file(item, local_file):
         item_modified_time = time.mktime(item.date_modified.timetuple())
         os.utime(local_file, (item_modified_time, item_modified_time))
     except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
-        LOGGER.error("Failed to download %s: %s", local_file, str(e))
+        LOGGER.error(f"Failed to download {local_file}: {str(e)}")
         return False
     return True
 
@@ -120,7 +120,7 @@ def remove_obsolete(destination_path, files):
     for path in Path(destination_path).rglob("*"):
         local_file = str(path.absolute())
         if local_file not in files:
-            LOGGER.info("Removing %s", local_file)
+            LOGGER.info(f"Removing {local_file} ...")
             if path.is_file():
                 path.unlink(missing_ok=True)
                 removed_paths.add(local_file)

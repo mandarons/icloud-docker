@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import tests
 from tests import data
-from src import sync_drive, read_config
+from src import LOGGER, sync_drive, read_config
 
 
 class TestSyncDrive(unittest.TestCase):
@@ -339,7 +339,7 @@ class TestSyncDrive(unittest.TestCase):
         )
 
     def test_wanted_file_check_log(self):
-        with self.assertLogs() as captured:
+        with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
             sync_drive.wanted_file(
                 filters=self.filters["file_extensions"], file_path=tests.CONFIG_PATH
             )
@@ -449,7 +449,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(actual)
         # Verbose
         sync_drive.download_file(item=self.file_item, local_file=self.local_file_path)
-        with self.assertLogs() as captured:
+        with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
             actual = sync_drive.file_exists(
                 item=self.file_item, local_file=self.local_file_path
             )

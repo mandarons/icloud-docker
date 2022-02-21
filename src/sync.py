@@ -60,7 +60,7 @@ def sync():
                     next_sync = (
                         datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
                     ).strftime("%c")
-                    LOGGER.info("Retrying login at %s ...", next_sync)
+                    LOGGER.info(f"Retrying login at {next_sync} ...")
                     last_send = notify.send(config, last_send)
                     sleep(sleep_for)
                     continue
@@ -72,7 +72,7 @@ def sync():
                 next_sync = (
                     datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
                 ).strftime("%c")
-                LOGGER.info("Retrying login at %s ...", next_sync)
+                LOGGER.info(f"Retrying login at {next_sync} ...")
                 last_send = notify.send(config, last_send)
                 sleep(sleep_for)
                 continue
@@ -102,7 +102,7 @@ def sync():
         next_sync = (
             datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
         ).strftime("%c")
-        LOGGER.info("Resyncing at %s ...", next_sync)
+        LOGGER.info(f"Resyncing at {next_sync} ...")
         if (
             config_parser.get_drive_sync_interval(config=config) < 0
             if "drive" in config

@@ -1,12 +1,12 @@
 app:
   logger:
-    # level - debug, info, warning (default) or error
-    level: "warning"
+    # level - debug, info (default), warning or error
+    level: "info"
     # log filename icloud.log (default)
     filename: "icloud.log"
   credentials:
     # iCloud drive username
-    username: please@replace.me
+    username: "please@replace.me"
     # Retry login interval - default is 10 minutes
     retry_login_interval: 600
   # Drive destination

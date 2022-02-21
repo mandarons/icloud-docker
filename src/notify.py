@@ -36,7 +36,7 @@ def send(config, last_send=None, dry_run=False):
                 smtp.quit()
         except (Exception) as e:
             sent_on = None
-            LOGGER.error("Failed to send email: %s", str(e))
+            LOGGER.error(f"Failed to send email: {str(e)}.")
     else:
         LOGGER.warning("Not sending 2FA notification because SMTP is not configured")
 
