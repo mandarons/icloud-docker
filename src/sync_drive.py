@@ -81,6 +81,14 @@ def file_exists(item, local_file):
         ):
             LOGGER.debug(f"No changes detected. Skipping the file {local_file} ...")
             return True
+        else:
+            LOGGER.debug(
+                f"Changes detected: local_modified_time is {local_file_modified_time}, "
+                + f"remote_modified_time is {remote_file_modified_time}, "
+                + f"local_file_size is {local_file_size} and remote_file_size is {remote_file_size}."
+            )
+    else:
+        LOGGER.debug(f"File {local_file} does not exist locally.")
     return False
 
 

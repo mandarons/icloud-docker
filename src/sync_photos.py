@@ -28,6 +28,10 @@ def photo_exists(photo, file_size, local_path):
         if local_size == remote_size:
             LOGGER.debug(f"No changes detected. Skipping the file {local_path} ...")
             return True
+        else:
+            LOGGER.debug(
+                f"Change detected: local_file_size is {local_size} and remote_file_size is {remote_size}."
+            )
         return False
 
 

@@ -530,7 +530,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters["file_extensions"],
             files=files,
         )
-        # file already exists
+        # file already exists but not changed
         self.assertFalse(
             sync_drive.process_file(
                 item=self.file_item,
@@ -539,6 +539,14 @@ class TestSyncDrive(unittest.TestCase):
                 files=files,
             )
         )
+    def test_process_file_not_wanted(self):
+        files = set()
+        self.assertFalse(sync_drive.process_file(
+            item=self.file_item,
+            destination_path=self.destination_path,
+            filters=self.filters,
+            files=files,
+        ))
 
     def test_process_file_none_item(self):
         files = set()
@@ -591,7 +599,20 @@ class TestSyncDrive(unittest.TestCase):
             sync_drive.process_file(
                 item=self.file_item,
                 destination_path=self.destination_path,
-                filters=self.filters,
+                filters=self.filters["file_extensions"],
+                files=files,
+            )
+        )
+        # Locally modified file
+        shutil.copyfile(
+            os.path.join(tests.DATA_DIR, "thumb.jpeg"),
+            os.path.join(self.destination_path, self.file_item.name),
+        )
+        self.assertTrue(
+            sync_drive.process_file(
+                item=self.file_item,
+                destination_path=self.destination_path,
+                filters=self.filters["file_extensions"],
                 files=files,
             )
         )
