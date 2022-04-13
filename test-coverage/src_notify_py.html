@@ -104,8 +104,8 @@
     <p id="t50" class="run"><span class="n"><a href="#t50">50</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">date</span> <span class="op">=</span> <span class="nam">datetime</span><span class="op">.</span><span class="nam">datetime</span><span class="op">.</span><span class="nam">now</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">strftime</span><span class="op">(</span><span class="str">"%d/%m/%Y %H:%M"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t51" class="run"><span class="n"><a href="#t51">51</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">subject</span> <span class="op">=</span> <span class="str">"icloud-docker: Two step authentication required"</span>&nbsp;</span><span class="r"></span></p>
     <p id="t52" class="run"><span class="n"><a href="#t52">52</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">body</span> <span class="op">=</span> <span class="str">"""Two-step authentication for iCloud Drive, Photos (Docker) is required.</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t53" class="pln"><span class="n"><a href="#t53">53</a></span><span class="t"><span class="str">Please login to your server and authenticate.  Eg:</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t54" class="pln"><span class="n"><a href="#t54">54</a></span><span class="t"><span class="str">`docker exec -it icloud /bin/sh -c "icloud --username=&lt;icloud-username>"`."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t53" class="pln"><span class="n"><a href="#t53">53</a></span><span class="t"><span class="str">Please login to your server and authenticate. Please run - </span>&nbsp;</span><span class="r"></span></p>
+    <p id="t54" class="pln"><span class="n"><a href="#t54">54</a></span><span class="t"><span class="str">`docker exec -it icloud /bin/sh -c "icloud --username=&lt;icloud-username> --session-directory=/app/session_data"`."""</span>&nbsp;</span><span class="r"></span></p>
     <p id="t55" class="pln"><span class="n"><a href="#t55">55</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t56" class="run"><span class="n"><a href="#t56">56</a></span><span class="t">    <span class="key">return</span> <span class="nam">message</span>&nbsp;</span><span class="r"></span></p>
 </div>
@@ -113,7 +113,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2022-02-21 15:44 +0000
+            created at 2022-04-13 21:43 +0000
         </p>
     </div>
 </div>
