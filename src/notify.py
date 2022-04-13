@@ -50,7 +50,7 @@ def build_message(email):
     message.date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
     message.subject = "icloud-docker: Two step authentication required"
     message.body = """Two-step authentication for iCloud Drive, Photos (Docker) is required.
-Please login to your server and authenticate.  Eg:
-`docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username>"`."""
+Please login to your server and authenticate. Please run - 
+`docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/app/session_data"`."""
 
     return message
