@@ -1,0 +1,37 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2022-04-13 21:43:51,310 :: DEBUG :: icloudpy.base :: base.py :: 242 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2022-04-13 21:43:51,311 :: INFO :: icloudpy.base :: base.py :: 249 :: Session file does not exist[0m
+[38;21m2022-04-13 21:43:51,311 :: DEBUG :: icloudpy.base :: base.py :: 314 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2022-04-13 21:43:51,312 :: DEBUG :: icloudpy.base :: base.py :: 346 :: Authentication completed successfully[0m
+[38;21m2022-04-13 21:43:51,314 :: DEBUG :: root :: config_parser.py :: 207 :: Checking photos destination ...[0m
+[38;21m2022-04-13 21:43:51,314 :: DEBUG :: root :: config_parser.py :: 91 :: Checking root destination ...[0m
+[38;5;39m2022-04-13 21:43:51,316 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3328.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,318 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3328__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,319 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3328__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,320 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3327.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,322 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3327__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,323 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3327__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,324 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3322.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,326 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3322__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,327 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3322__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,328 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3206.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,330 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3206__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,331 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3206__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,332 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3148.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,334 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3148__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,335 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album 2/IMG_3148__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,337 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3328.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,339 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3328__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,341 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3328__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,341 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3327.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,343 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3327__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,345 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3327__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,345 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3322.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,347 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3322__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,349 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3322__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,349 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3206.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,351 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3206__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,353 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3206__thumb.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,353 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3148.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,355 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3148__medium.JPG ...[0m
+[38;5;39m2022-04-13 21:43:51,357 :: INFO :: root :: sync_photos.py :: 41 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/album-1/IMG_3148__thumb.JPG ...[0m
