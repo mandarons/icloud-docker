@@ -3568,7 +3568,7 @@ class ICloudPySessionMock(base.ICloudPySession):
         data = json.loads(kwargs.get("data", "{}"))
 
         # Login
-        if self.service.SETUP_ENDPOINT in url:
+        if self.service.setup_endpoint in url:
             if "accountLogin" in url and method == "POST":
                 if data.get("dsWebAuthToken") not in VALID_TOKENS:
                     self._raise_error(None, "Unknown reason")
@@ -3596,7 +3596,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                     return ResponseMock(LOGIN_WORKING)
                 self._raise_error(None, "Session expired")
 
-        if self.service.AUTH_ENDPOINT in url:
+        if self.service.auth_endpoint in url:
             if "signin" in url and method == "POST":
                 if (
                     data.get("accountName") not in VALID_USERS
@@ -3768,8 +3768,22 @@ class ICloudPyServiceMock(base.ICloudPyService):
         verify=True,
         client_id=None,
         with_family=True,
+        auth_endpoint="https://idmsa.apple.com/appleauth/auth",
+        # For China, use "https://www.icloud.com.cn"
+        home_endpoint="https://www.icloud.com",
+        # For China, use "https://setup.icloud.com.cn/setup/ws/1"
+        setup_endpoint="https://setup.icloud.com/setup/ws/1",
     ):
         base.ICloudPySession = ICloudPySessionMock
         base.ICloudPyService.__init__(
-            self, apple_id, password, cookie_directory, verify, client_id, with_family
+            self,
+            apple_id,
+            password,
+            cookie_directory,
+            verify,
+            client_id,
+            with_family,
+            auth_endpoint,
+            home_endpoint,
+            setup_endpoint,
         )

@@ -348,3 +348,21 @@ class TestConfigParser(unittest.TestCase):
         del config["photos"]["filters"]["file_sizes"]
         actual = config_parser.get_photos_filters(config=config)
         self.assertEqual(actual["file_sizes"][0], "original")
+
+    def test_get_region_default(self):
+        config = read_config(config_path=tests.CONFIG_PATH)
+        del config["app"]["region"]
+        actual = config_parser.get_region(config=config)
+        self.assertEqual(actual, "global")
+
+    def test_get_region_default_if_invalid(self):
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["region"] = "invalid"
+        actual = config_parser.get_region(config=config)
+        self.assertEqual(actual, "global")
+
+    def test_get_region_valid(self):
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["region"] = "china"
+        actual = config_parser.get_region(config=config)
+        self.assertEqual(actual, "china")

@@ -14,6 +14,29 @@ from src import (
 from src import sync_drive, sync_photos
 
 
+def get_api_instance(
+    username,
+    password,
+    cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+    server_region="global",
+):
+    return (
+        ICloudPyService(
+            apple_id=username,
+            password=password,
+            cookie_directory=cookie_directory,
+            auth_endpoint="https://www.icloud.com.cn",
+            setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
+        )
+        if server_region == "china"
+        else ICloudPyService(
+            apple_id=username,
+            password=password,
+            cookie_directory=cookie_directory,
+        )
+    )
+
+
 def sync():
     last_send = None
     enable_sync_drive = True
@@ -33,10 +56,9 @@ def sync():
                     )
                 else:
                     password = utils.get_password_from_keyring(username=username)
-                api = ICloudPyService(
-                    apple_id=username,
-                    password=password,
-                    cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+                server_region = config_parser.get_region(config=config)
+                api = get_api_instance(
+                    username=username, password=password, server_region=server_region
                 )
                 if not api.requires_2sa:
                     if "drive" in config and enable_sync_drive:
