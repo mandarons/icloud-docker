@@ -41,6 +41,7 @@ drive:
       - jpg
       - jpeg
       - md
+      - band
 photos:
   destination: photos
   remove_obsolete: false
