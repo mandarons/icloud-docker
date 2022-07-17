@@ -22,8 +22,8 @@
         </h1>
         <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
         <h2 class="stats">
-            159 statements &nbsp;
-            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">159 run</button>
+            169 statements &nbsp;
+            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">169 run</button>
             <button type="button" class="mis show_mis shortkey_m button_toggle_mis" title="Toggle lines missing">0 missing</button>
             <button type="button" class="exc show_exc shortkey_x button_toggle_exc" title="Toggle lines excluded">0 excluded</button>
         </h2>
@@ -333,12 +333,31 @@
     <p id="t279" class="run"><span class="n"><a href="#t279">279</a></span><span class="t">                        <span class="nam">file_sizes</span> <span class="op">=</span> <span class="op">[</span><span class="str">"original"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p id="t280" class="run"><span class="n"><a href="#t280">280</a></span><span class="t">            <span class="nam">photos_filters</span><span class="op">[</span><span class="str">"file_sizes"</span><span class="op">]</span> <span class="op">=</span> <span class="nam">file_sizes</span>&nbsp;</span><span class="r"></span></p>
     <p id="t281" class="run"><span class="n"><a href="#t281">281</a></span><span class="t">    <span class="key">return</span> <span class="nam">photos_filters</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t282" class="pln"><span class="n"><a href="#t282">282</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t283" class="pln"><span class="n"><a href="#t283">283</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t284" class="run"><span class="n"><a href="#t284">284</a></span><span class="t"><span class="key">def</span> <span class="nam">get_region</span><span class="op">(</span><span class="nam">config</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t285" class="run"><span class="n"><a href="#t285">285</a></span><span class="t">    <span class="nam">region</span> <span class="op">=</span> <span class="str">"global"</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t286" class="run"><span class="n"><a href="#t286">286</a></span><span class="t">    <span class="nam">config_path</span> <span class="op">=</span> <span class="op">[</span><span class="str">"app"</span><span class="op">,</span> <span class="str">"region"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t287" class="run"><span class="n"><a href="#t287">287</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">traverse_config_path</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t288" class="run"><span class="n"><a href="#t288">288</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t289" class="pln"><span class="n"><a href="#t289">289</a></span><span class="t">            <span class="str">f"{config_path_to_string(config_path=config_path)} not found. Using default value - global ..."</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t290" class="pln"><span class="n"><a href="#t290">290</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t291" class="pln"><span class="n"><a href="#t291">291</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t292" class="run"><span class="n"><a href="#t292">292</a></span><span class="t">        <span class="nam">region</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t293" class="run"><span class="n"><a href="#t293">293</a></span><span class="t">        <span class="key">if</span> <span class="nam">region</span> <span class="key">not</span> <span class="key">in</span> <span class="op">[</span><span class="str">"global"</span><span class="op">,</span> <span class="str">"china"</span><span class="op">]</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t294" class="run"><span class="n"><a href="#t294">294</a></span><span class="t">            <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t295" class="pln"><span class="n"><a href="#t295">295</a></span><span class="t">                <span class="str">f"{config_path_to_string(config_path=config_path)} is invalid. \</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t296" class="pln"><span class="n"><a href="#t296">296</a></span><span class="t"><span class="str">                            Valid values are - global or china. Using default value - global ..."</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t297" class="pln"><span class="n"><a href="#t297">297</a></span><span class="t">            <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t298" class="run"><span class="n"><a href="#t298">298</a></span><span class="t">            <span class="nam">region</span> <span class="op">=</span> <span class="str">"global"</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t299" class="pln"><span class="n"><a href="#t299">299</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t300" class="run"><span class="n"><a href="#t300">300</a></span><span class="t">    <span class="key">return</span> <span class="nam">region</span>&nbsp;</span><span class="r"></span></p>
 </div>
 <div id="footer">
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2022-04-13 21:43 +0000
+            created at 2022-07-17 01:56 +0000
         </p>
     </div>
 </div>
