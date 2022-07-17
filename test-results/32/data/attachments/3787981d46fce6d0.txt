@@ -1,0 +1,6 @@
+DEBUG    icloudpy.base:base.py:246 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:253 Session file does not exist
+DEBUG    icloudpy.base:base.py:318 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:350 Authentication completed successfully
+INFO     root:sync_drive.py:140 Removing /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/obsolete ...
+INFO     root:sync_drive.py:140 Removing /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/obsolete ...
