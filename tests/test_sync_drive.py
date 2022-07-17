@@ -539,14 +539,17 @@ class TestSyncDrive(unittest.TestCase):
                 files=files,
             )
         )
+
     def test_process_file_not_wanted(self):
         files = set()
-        self.assertFalse(sync_drive.process_file(
-            item=self.file_item,
-            destination_path=self.destination_path,
-            filters=self.filters,
-            files=files,
-        ))
+        self.assertFalse(
+            sync_drive.process_file(
+                item=self.file_item,
+                destination_path=self.destination_path,
+                filters=self.filters,
+                files=files,
+            )
+        )
 
     def test_process_file_none_item(self):
         files = set()
@@ -690,7 +693,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 8)
+        self.assertTrue(len(actual) == 9)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -724,7 +727,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=True,
         )
-        self.assertTrue(len(actual) == 8)
+        self.assertTrue(len(actual) == 9)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -756,7 +759,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 12)
+        self.assertTrue(len(actual) == 13)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -887,4 +890,22 @@ class TestSyncDrive(unittest.TestCase):
                     self.destination_path, "Obsidian", "Sample", "This is a title.md"
                 )
             )
+        )
+        self.assertEqual(
+            sum(
+                os.path.getsize(f)
+                for f in os.listdir(
+                    os.path.join(
+                        self.destination_path, "Obsidian", "Sample", "Project.band"
+                    )
+                )
+                if os.path.isfile(f)
+            ),
+            sum(
+                os.path.getsize(f)
+                for f in os.listdir(
+                    os.path.join(tests.DATA_DIR, "Project_original.band")
+                )
+                if os.path.isfile(f)
+            ),
         )

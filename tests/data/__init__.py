@@ -2644,7 +2644,21 @@ DRIVE_ROOT_WORKING = [
                                 "size": 14,
                                 "etag": "4ioq::4eu3",
                                 "type": "FILE",
-                            }
+                            },
+                            {
+                                "dateCreated": "2021-08-01T19:21:54Z",
+                                "drivewsid": "FILE::com.apple.CloudDocs::111F1760-D940-480F-8C4F-005824A4E05E",
+                                "docwsid": "111F1760-D940-480F-8C4F-005824A4E05E",
+                                "zone": "com.apple.CloudDocs",
+                                "name": "Project",
+                                "extension": "band",
+                                "parentId": "FOLDER::com.apple.CloudDocs::117F1760-D940-480F-8C4F-005824A4E05D",
+                                "dateModified": "2021-08-01T19:21:54Z",
+                                "dateChanged": "2021-12-02T23:44:55Z",
+                                "size": 588272,
+                                "etag": "4ioq::4eu4",
+                                "type": "FILE",
+                            },
                         ],
                     }
                 ],
@@ -3286,6 +3300,28 @@ DRIVE_SUBFOLDER_UNWANTED_WORKING = [
     }
 ]
 
+DRIVE_PACKAGE_DOWNLOAD_WORKING = {
+    "document_id": "111F1760-D940-480F-8C4F-005824A4E05E",
+    "package_token": {
+        "url": "https://cvws.icloud-content.com/B/signature1ref_signature1/Project.band?o=object1&v=1&x=3&a"
+        "=token1&e=1588472097&k=wrapping_key1&fl=&r=request&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p"
+        "=31&s=s1",
+        "token": "token1",
+        "signature": "signature1",
+        "wrapping_key": "wrapping_key1==",
+        "reference_signature": "ref_signature1",
+    },
+    "thumbnail_token": {
+        "url": "https://cvws.icloud-content.com/B/signature2ref_signature2/Scanned+document+1.jpg?o=object2&v=1&x=3&a"
+        "=token2&e=1588472097&k=wrapping_key2&fl=&r=request&ckc=com.apple.clouddocs&ckz=com.apple.CloudDocs&p"
+        "=31&s=s2",
+        "token": "token2",
+        "signature": "signature2",
+        "wrapping_key": "wrapping_key2==",
+        "reference_signature": "ref_signature2",
+    },
+    "double_etag": "32::2x",
+}
 DRIVE_FILE_DOWNLOAD_WORKING = {
     "document_id": "516C896C-6AA5-4A30-B30E-5502C2333DAE",
     "data_token": {
@@ -3552,6 +3588,7 @@ class ResponseMock(Response):
         self.result = result
         self.status_code = status_code
         self.raw = kwargs.get("raw")
+        self.url = kwargs.get("url")
         self.headers = kwargs.get("headers", {})
 
     @property
@@ -3663,11 +3700,24 @@ class ICloudPySessionMock(base.ICloudPySession):
                 "111F1760-D940-480F-8C4F-005824A4E05D",
             ]:
                 return ResponseMock(DRIVE_FILE_DOWNLOAD_WORKING)
+            if params.get("document_id") in [
+                "111F1760-D940-480F-8C4F-005824A4E05E",
+            ]:
+                return ResponseMock(DRIVE_PACKAGE_DOWNLOAD_WORKING)
         if "icloud-content.com" in url and method == "GET":
             if "Scanned+document+1.pdf" in url or u"Document scanne 2.pdf" in url:
                 return ResponseMock({}, raw=open(__file__, "rb"))
             if "This is a title.md" in url:
                 return ResponseMock({}, raw=open("This is a title.md", "rb"))
+            if "Project.band" in url:
+                return ResponseMock(
+                    {},
+                    url="/packageDownload?",
+                    raw=open(
+                        os.path.join(os.path.dirname(__file__), "Project.band.zip"),
+                        "rb",
+                    ),
+                )
         # Find My iPhone
         if "fmi" in url and method == "POST":
             return ResponseMock(FMI_FAMILY_WORKING)

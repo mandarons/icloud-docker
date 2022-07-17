@@ -4,7 +4,7 @@ import os
 import re
 import time
 from pathlib import Path
-from shutil import copyfileobj, rmtree
+from shutil import copyfileobj, rmtree, unpack_archive
 from icloudpy import exceptions
 
 from src import config_parser, LOGGER
@@ -92,6 +92,13 @@ def file_exists(item, local_file):
     return False
 
 
+def process_package(local_file):
+    archive_file = local_file + ".zip"
+    os.rename(local_file, archive_file)
+    unpack_archive(filename=archive_file, extract_dir=os.path.dirname(archive_file))
+    os.remove(archive_file)
+
+
 def download_file(item, local_file):
     if not (item and local_file):
         return False
@@ -100,6 +107,8 @@ def download_file(item, local_file):
         with item.open(stream=True) as response:
             with open(local_file, "wb") as file_out:
                 copyfileobj(response.raw, file_out)
+            if response.url and "/packageDownload?" in response.url:
+                process_package(local_file=local_file)
         item_modified_time = time.mktime(item.date_modified.timetuple())
         os.utime(local_file, (item_modified_time, item_modified_time))
     except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
