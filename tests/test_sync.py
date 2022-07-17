@@ -312,3 +312,37 @@ class TestSyncDrive(unittest.TestCase):
             sync.sync()
         self.assertEqual(mock_sync_drive.sync_drive.call_count, 6)
         self.assertEqual(mock_sync_photos.sync_photos.call_count, 3)
+
+    @patch("src.sync.read_config")
+    def test_get_api_instance_default(
+        self,
+        mock_read_config,
+    ):
+        config = self.config.copy()
+        config["app"]["region"] = "invalid"
+        mock_read_config.return_value = config
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+
+        actual = sync.get_api_instance(
+            username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD
+        )
+        self.assertNotIn(".com.cn", actual.home_endpoint)
+        self.assertNotIn(".com.cn", actual.setup_endpoint)
+
+    @patch("src.sync.read_config")
+    def test_get_api_instance_china_region(
+        self,
+        mock_read_config,
+    ):
+        config = self.config.copy()
+        config["app"]["region"] = "china"
+        mock_read_config.return_value = config
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+
+        actual = sync.get_api_instance(
+            username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD
+        )
+        self.assertNotIn(".com.cn", actual.home_endpoint)
+        self.assertNotIn(".com.cn", actual.setup_endpoint)

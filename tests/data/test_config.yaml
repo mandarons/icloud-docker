@@ -21,6 +21,8 @@ app:
     # port: 587
     # If your email provider doesn't handle TLS
     # no_tls: true
+  region: global # valid values are - global (default - uses .com) or china (uses .com.cn)
+
 drive:
   destination: "./drive"
   remove_obsolete: true

@@ -279,3 +279,22 @@ def get_photos_filters(config):
                         file_sizes = ["original"]
             photos_filters["file_sizes"] = file_sizes
     return photos_filters
+
+
+def get_region(config):
+    region = "global"
+    config_path = ["app", "region"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(
+            f"{config_path_to_string(config_path=config_path)} not found. Using default value - global ..."
+        )
+    else:
+        region = get_config_value(config=config, config_path=config_path)
+        if region not in ["global", "china"]:
+            LOGGER.error(
+                f"{config_path_to_string(config_path=config_path)} is invalid. \
+                            Valid values are - global or china. Using default value - global ..."
+            )
+            region = "global"
+
+    return region
