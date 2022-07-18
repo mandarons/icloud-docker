@@ -23,8 +23,11 @@ class TestSyncDrive(unittest.TestCase):
         self.drive = self.service.drive
         self.items = self.drive.dir()
         self.file_item = self.drive[self.items[4]]["Test"]["Scanned document 1.pdf"]
+        self.package_item = self.drive[self.items[6]]["Sample"]["Project.band"]
         self.file_name = "Scanned document 1.pdf"
+        self.package_name = "Project.band"
         self.local_file_path = os.path.join(self.destination_path, self.file_name)
+        self.local_package_path = os.path.join(self.destination_path, self.package_name)
 
     def tearDown(self) -> None:
         shutil.rmtree(tests.TEMP_DIR)
@@ -908,4 +911,34 @@ class TestSyncDrive(unittest.TestCase):
                 )
                 if os.path.isfile(f)
             ),
+        )
+
+    def test_process_file_existing_package(self):
+        files = set()
+        # Existing package
+        sync_drive.download_file(
+            item=self.package_item, local_file=self.local_package_path
+        )
+        # Do not download the package
+        self.assertFalse(
+            sync_drive.process_file(
+                item=self.package_item,
+                destination_path=self.destination_path,
+                filters=self.filters["file_extensions"],
+                files=files,
+            )
+        )
+        # Modify local package
+        shutil.copyfile(
+            os.path.join(tests.DATA_DIR, "thumb.jpeg"),
+            os.path.join(self.local_package_path, self.file_item.name),
+        )
+        # Download the package
+        self.assertTrue(
+            sync_drive.process_file(
+                item=self.package_item,
+                destination_path=self.destination_path,
+                filters=self.filters["file_extensions"],
+                files=files,
+            )
         )

@@ -69,6 +69,35 @@ def process_folder(item, destination_path, filters, root):
     return new_directory
 
 
+def package_exists(item, local_package_path):
+    if item and local_package_path and os.path.isdir(local_package_path):
+        local_package_modified_time = int(os.path.getmtime(local_package_path))
+        remote_package_modified_time = int(item.date_modified.timestamp())
+        local_package_size = sum(
+            f.stat().st_size
+            for f in Path(local_package_path).glob("**/*")
+            if f.is_file()
+        )
+        remote_package_size = item.size
+        if (
+            local_package_modified_time == remote_package_modified_time
+            and local_package_size == remote_package_size
+        ):
+            LOGGER.debug(
+                f"No changes detected. Skipping the package {local_package_path} ..."
+            )
+            return True
+        else:
+            LOGGER.debug(
+                f"Changes detected: local_modified_time is {local_package_modified_time}, "
+                + f"remote_modified_time is {remote_package_modified_time}, "
+                + f"local_package_size is {local_package_size} and remote_package_size is {remote_package_size}."
+            )
+    else:
+        LOGGER.debug(f"Package {local_package_path} does not exist locally.")
+    return False
+
+
 def file_exists(item, local_file):
     if item and local_file and os.path.isfile(local_file):
         local_file_modified_time = int(os.path.getmtime(local_file))
@@ -99,6 +128,13 @@ def process_package(local_file):
     os.remove(archive_file)
 
 
+def is_package(item):
+    file_is_a_package = False
+    with item.open(stream=True) as response:
+        file_is_a_package = response.url and "/packageDownload?" in response.url
+    return file_is_a_package
+
+
 def download_file(item, local_file):
     if not (item and local_file):
         return False
@@ -124,7 +160,10 @@ def process_file(item, destination_path, filters, files):
     if not wanted_file(filters=filters, file_path=local_file):
         return False
     files.add(local_file)
-    if file_exists(item=item, local_file=local_file):
+    if is_package(item=item):
+        if package_exists(item=item, local_package_path=local_file):
+            return False
+    elif file_exists(item=item, local_file=local_file):
         return False
     download_file(item=item, local_file=local_file)
     return True
