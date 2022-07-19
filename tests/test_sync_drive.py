@@ -24,10 +24,17 @@ class TestSyncDrive(unittest.TestCase):
         self.items = self.drive.dir()
         self.file_item = self.drive[self.items[4]]["Test"]["Scanned document 1.pdf"]
         self.package_item = self.drive[self.items[6]]["Sample"]["Project.band"]
+        self.package_item_extraction_failure = self.drive[self.items[6]]["Sample"][
+            "ms.band"
+        ]
         self.file_name = "Scanned document 1.pdf"
         self.package_name = "Project.band"
+        self.package_name_extraction_failure = "ms.band"
         self.local_file_path = os.path.join(self.destination_path, self.file_name)
         self.local_package_path = os.path.join(self.destination_path, self.package_name)
+        self.local_package_path_extraction_failure = os.path.join(
+            self.destination_path, self.package_name_extraction_failure
+        )
 
     def tearDown(self) -> None:
         shutil.rmtree(tests.TEMP_DIR)
@@ -696,7 +703,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 9)
+        self.assertTrue(len(actual) == 10)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -730,7 +737,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=True,
         )
-        self.assertTrue(len(actual) == 9)
+        self.assertTrue(len(actual) == 10)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -762,7 +769,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 13)
+        self.assertTrue(len(actual) == 14)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -941,4 +948,18 @@ class TestSyncDrive(unittest.TestCase):
                 filters=self.filters["file_extensions"],
                 files=files,
             )
+        )
+
+    def test_process_file_existing_package_extraction_failure(self):
+        files = set()
+        self.assertTrue(
+            sync_drive.process_file(
+                item=self.package_item_extraction_failure,
+                destination_path=self.destination_path,
+                filters=self.filters["file_extensions"],
+                files=files,
+            )
+        )
+        self.assertTrue(
+            os.path.isfile(os.path.join(self.destination_path, "ms.band.zip"))
         )

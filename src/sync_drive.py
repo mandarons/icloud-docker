@@ -4,7 +4,7 @@ import os
 import re
 import time
 from pathlib import Path
-from shutil import copyfileobj, rmtree, unpack_archive
+from shutil import copyfileobj, rmtree, unpack_archive, ReadError
 from icloudpy import exceptions
 
 from src import config_parser, LOGGER
@@ -122,10 +122,19 @@ def file_exists(item, local_file):
 
 
 def process_package(local_file):
-    archive_file = local_file + ".zip"
-    os.rename(local_file, archive_file)
-    unpack_archive(filename=archive_file, extract_dir=os.path.dirname(archive_file))
-    os.remove(archive_file)
+    try:
+        archive_file = local_file + ".zip"
+        os.rename(local_file, archive_file)
+        unpack_archive(filename=archive_file, extract_dir=os.path.dirname(archive_file))
+        os.remove(archive_file)
+        LOGGER.info(f"Successfully unpacked the package {archive_file}.")
+    except ReadError:
+        LOGGER.error(
+            f"Failed to unpack package {archive_file}. Leaving it as-is for you to use. \
+                It will result in re-download on every run. \
+                This is a known issue (https://github.com/mandarons/icloud-drive-docker/issues/76). \
+                Please file a bug and attach {archive_file} to help resolve this issue."
+        )
 
 
 def is_package(item):
