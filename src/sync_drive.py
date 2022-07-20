@@ -4,7 +4,9 @@ import os
 import re
 import time
 from pathlib import Path
-from shutil import copyfileobj, rmtree, unpack_archive, ReadError
+from shutil import copyfileobj, rmtree, unpack_archive
+import magic
+import gzip
 from icloudpy import exceptions
 
 from src import config_parser, LOGGER
@@ -122,19 +124,28 @@ def file_exists(item, local_file):
 
 
 def process_package(local_file):
-    try:
-        archive_file = local_file + ".zip"
+    archive_file = local_file
+    magic_object = magic.Magic(mime=True)
+    if "application/zip" == magic_object.from_file(filename=local_file):
+        archive_file += ".zip"
         os.rename(local_file, archive_file)
         unpack_archive(filename=archive_file, extract_dir=os.path.dirname(archive_file))
         os.remove(archive_file)
-        LOGGER.info(f"Successfully unpacked the package {archive_file}.")
-    except ReadError:
+    elif "application/gzip" == magic_object.from_file(filename=local_file):
+        archive_file += ".gz"
+        os.rename(local_file, archive_file)
+        with gzip.GzipFile(filename=archive_file, mode="rb") as gz_file:
+            with open(file=local_file, mode="wb") as package_file:
+                copyfileobj(gz_file, package_file)
+        os.remove(archive_file)
+        process_package(local_file=local_file)
+    else:
         LOGGER.error(
-            f"Failed to unpack package {archive_file}. Leaving it as-is for you to use. \
-                It will result in re-download on every run. \
-                This is a known issue (https://github.com/mandarons/icloud-drive-docker/issues/76). \
-                Please file a bug and attach {archive_file} to help resolve this issue."
+            f"Unhandled file type - cannot unpack the package {magic_object.from_file(filename=archive_file)}."
         )
+        return False
+    LOGGER.info(f"Successfully unpacked the package {archive_file}.")
+    return True
 
 
 def is_package(item):
