@@ -6,7 +6,7 @@ import shutil
 from unittest.mock import patch
 
 import tests
-from tests import data
+from tests import DATA_DIR, data
 from src import LOGGER, sync_drive, read_config
 
 
@@ -24,17 +24,12 @@ class TestSyncDrive(unittest.TestCase):
         self.items = self.drive.dir()
         self.file_item = self.drive[self.items[4]]["Test"]["Scanned document 1.pdf"]
         self.package_item = self.drive[self.items[6]]["Sample"]["Project.band"]
-        self.package_item_extraction_failure = self.drive[self.items[6]]["Sample"][
-            "ms.band"
-        ]
+        self.package_item_nested = self.drive[self.items[6]]["Sample"]["ms.band"]
         self.file_name = "Scanned document 1.pdf"
         self.package_name = "Project.band"
-        self.package_name_extraction_failure = "ms.band"
+        self.package_name_nested = "ms.band"
         self.local_file_path = os.path.join(self.destination_path, self.file_name)
         self.local_package_path = os.path.join(self.destination_path, self.package_name)
-        self.local_package_path_extraction_failure = os.path.join(
-            self.destination_path, self.package_name_extraction_failure
-        )
 
     def tearDown(self) -> None:
         shutil.rmtree(tests.TEMP_DIR)
@@ -950,16 +945,33 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-    def test_process_file_existing_package_extraction_failure(self):
+    def test_process_file_nested_package_extraction(self):
         files = set()
         self.assertTrue(
             sync_drive.process_file(
-                item=self.package_item_extraction_failure,
+                item=self.package_item_nested,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
                 files=files,
             )
         )
         self.assertTrue(
-            os.path.isfile(os.path.join(self.destination_path, "ms.band.zip"))
+            os.path.exists(os.path.join(self.destination_path, "My Song.band"))
+        )
+        self.assertEqual(
+            sum(
+                os.path.getsize(f)
+                for f in os.listdir(os.path.join(self.destination_path, "My Song.band"))
+                if os.path.isfile(f)
+            ),
+            sum(
+                os.path.getsize(f)
+                for f in os.listdir(os.path.join(tests.DATA_DIR, "My Song.band"))
+                if os.path.isfile(f)
+            ),
+        )
+
+    def test_process_package_invalid_package_type(self):
+        self.assertFalse(
+            sync_drive.process_package(local_file=os.path.join(DATA_DIR, "medium.jpeg"))
         )
