@@ -48,6 +48,11 @@ services:
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
 docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/app/session_data"
 ```
+For China server users, Please add `--region=china` as follows:
+```
+# Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
+docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/app/session_data"
+```
 Follow the steps to authenticate.
 
 ## Sample Configuration File
@@ -75,6 +80,7 @@ app:
     # port: 587
     # If your email provider doesn't handle TLS
     # no_tls: true
+  region: global # For China server users, set this to - china (default: global)
 drive:
   destination: "drive"
   remove_obsolete: false
