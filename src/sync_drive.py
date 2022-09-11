@@ -106,9 +106,10 @@ def file_exists(item, local_file):
         remote_file_modified_time = int(item.date_modified.timestamp())
         local_file_size = os.path.getsize(local_file)
         remote_file_size = item.size
-        if (
-            local_file_modified_time == remote_file_modified_time
-            and local_file_size == remote_file_size
+        if local_file_modified_time == remote_file_modified_time and (
+            local_file_size == remote_file_size
+            or (local_file_size == 0 and remote_file_size is None)
+            or (local_file_size is None and remote_file_size == 0)
         ):
             LOGGER.debug(f"No changes detected. Skipping the file {local_file} ...")
             return True
