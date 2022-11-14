@@ -1,12 +1,15 @@
 import time
 import os
 import shutil
+import hashlib
+
 from src import config_parser, LOGGER
 from icloudpy import exceptions
 
 
 def generate_file_name(photo, file_size, destination_path):
-    filename = photo.filename
+    name, ext = photo.filename.rsplit('.', 1)
+    filename = "{}-{}.{}".format(name, hashlib.sha256(photo.id.encode()).hexdigest()[:8], ext)
     if file_size != "original":
         tokens = photo.filename.rsplit(".", 1)
         tokens.insert(len(tokens) - 1, file_size)
@@ -75,16 +78,47 @@ def sync_album(album, destination_path, file_sizes):
             process_photo(photo, file_size, destination_path)
 
 
+def sync_album_recursive(album, destination_path, file_sizes):
+    if not (album and destination_path and file_sizes):
+        return None
+    os.makedirs(destination_path, exist_ok=True)
+    for photo in album:
+        for file_size in file_sizes:
+            process_photo(photo, file_size, destination_path)
+    for _, v in album.subalbums.items():
+        sync_album_recursive(
+            album=v,
+            destination_path=os.path.join(destination_path, album, v.name),
+            file_sizes=file_sizes,
+        )
+
+
 def sync_photos(config, photos):
     destination_path = config_parser.prepare_photos_destination(config=config)
     filters = config_parser.get_photos_filters(config=config)
     if filters["albums"]:
-        for album in iter(filters["albums"]):
-            sync_album(
-                album=photos.albums[album],
-                destination_path=os.path.join(destination_path, album),
-                file_sizes=filters["file_sizes"],
-            )
+        if filters["albums"] == ["*"]:
+            for album in photos.albums:
+                if album in ["All Photos", "Time-lapse", "Videos", "Slo-mo", "Bursts", "Panoramas", "Live", "Recently Deleted"]:
+                    continue
+                sync_album(
+                    album=photos.albums[album],
+                    destination_path=os.path.join(destination_path, album),
+                    file_sizes=filters["file_sizes"],
+                )
+                for _, v in photos.albums[album].subalbums.items():
+                    sync_album_recursive(
+                        album=v,
+                        destination_path=os.path.join(destination_path, album, v.name),
+                        file_sizes=filters["file_sizes"],
+                    )
+        else:
+            for album in iter(filters["albums"]):
+                sync_album(
+                    album=photos.albums[album],
+                    destination_path=os.path.join(destination_path, album),
+                    file_sizes=filters["file_sizes"],
+                )
     else:
         sync_album(
             album=photos.all,
