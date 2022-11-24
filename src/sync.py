@@ -62,16 +62,16 @@ def sync():
                 )
                 if not api.requires_2sa:
                     if "drive" in config and enable_sync_drive:
-                        LOGGER.info(f"Syncing drive...")
+                        LOGGER.info("Syncing drive...")
                         sync_drive.sync_drive(config=config, drive=api.drive)
-                        LOGGER.info(f"Drive synced")
+                        LOGGER.info("Drive synced")
                         drive_sync_interval = config_parser.get_drive_sync_interval(
                             config=config
                         )
                     if "photos" in config and enable_sync_photos:
-                        LOGGER.info(f"Syncing photos...")
+                        LOGGER.info("Syncing photos...")
                         sync_photos.sync_photos(config=config, photos=api.photos)
-                        LOGGER.info(f"Photos synced")
+                        LOGGER.info("Photos synced")
                         photos_sync_interval = config_parser.get_photos_sync_interval(
                             config=config
                         )

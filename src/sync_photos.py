@@ -8,7 +8,7 @@ from icloudpy import exceptions
 
 
 def generate_file_name(photo, file_size, destination_path):
-    name, ext = photo.filename.rsplit('.', 1)
+    name, ext = photo.filename.rsplit(".", 1)
     filename = "{}-{}.{}".format(name, hashlib.sha256(photo.id.encode()).hexdigest()[:8], ext)
     if file_size != "original":
         tokens = photo.filename.rsplit(".", 1)
@@ -99,7 +99,14 @@ def sync_photos(config, photos):
     if filters["albums"]:
         if filters["albums"] == ["*"]:
             for album in photos.albums:
-                if album in ["All Photos", "Time-lapse", "Videos", "Slo-mo", "Bursts", "Panoramas", "Live", "Recently Deleted"]:
+                if album in ["All Photos",
+                             "Time-lapse",
+                             "Videos",
+                             "Slo-mo",
+                             "Bursts",
+                             "Panoramas",
+                             "Live",
+                             "Recently Deleted"]:
                     continue
                 sync_album(
                     album=photos.albums[album],
