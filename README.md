@@ -100,7 +100,7 @@ drive:
 photos:
   destination: "photos"
   remove_obsolete: false
-  sync_inteval: 500
+  sync_interval: 500
   filters:
     albums:
       - "album 1"
