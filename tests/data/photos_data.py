@@ -44,6 +44,7 @@ DATA = {
             },
             "response": {
                 "records": [
+                    # Project-Root-Folder
                     {
                         "recordName": "----Project-Root-Folder----",
                         "recordType": "CPLAlbum",
@@ -77,6 +78,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # Root-Folder
                     {
                         "recordName": "----Root-Folder----",
                         "recordType": "CPLAlbum",
@@ -110,6 +112,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # All Photos (Album) 
                     {
                         "recordName": "E803E065-D8A4-4398-DE23-23F8FD0886EC",
                         "recordType": "CPLAlbum",
@@ -147,6 +150,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # album-1 (Album)
                     {
                         "recordName": "E803E065-D8A4-4398-DE23-23F8FD0886EB",
                         "recordType": "CPLAlbum",
@@ -184,6 +188,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # album 2 (Album)
                     {
                         "recordName": "E4RT4FB7-4A35-4958-1D42-5769E66BE407",
                         "recordType": "CPLAlbum",
@@ -227,6 +232,7 @@ DATA = {
         },
         {
             "data": {
+                # Query to get contents of album 2
                 "query": {
                     "filterBy": [
                         {
@@ -354,6 +360,7 @@ DATA = {
             },
             "response": {
                 "records": [
+                    # IMG_3328.JPG
                     {
                         "recordName": "YN1v8eGiHYYZ/aKUkMuGtSf0P1BN",
                         "recordType": "CPLMaster",
@@ -448,6 +455,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3327.JPG
                     {
                         "recordName": "ENKzBUr+DdmTaP/GEAglTurWtsen",
                         "recordType": "CPLMaster",
@@ -542,6 +550,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3322.JPG
                     {
                         "recordName": "AUxVFT2yVsQ5739tmU5c1497duFD",
                         "recordType": "CPLMaster",
@@ -636,6 +645,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3206.JPG
                     {
                         "recordName": "Ab/8kUAhnGzSxnl9yWvh8JKBpOvV",
                         "recordType": "CPLMaster",
@@ -730,6 +740,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3148.JPG
                     {
                         "recordName": "AVx3/VKkbWPdNbWw68mrWzSuemXg",
                         "recordType": "CPLMaster",
@@ -824,6 +835,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # Reference to IMG_3328.JPG
                     {
                         "recordName": "248AFAAE-062C-40BB-92C6-B47084527A9E",
                         "recordType": "CPLAsset",
@@ -878,6 +890,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # Reference to IMG_3327.JPG
                     {
                         "recordName": "32187DDB-371D-4616-A311-8A3ACA0FA5FE",
                         "recordType": "CPLAsset",
@@ -932,6 +945,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # Reference to IMG_3322.JPG
                     {
                         "recordName": "BEF79215-3125-45B2-A54C-39E47DBFB23A",
                         "recordType": "CPLAsset",
@@ -986,6 +1000,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # Reference to IMG_3206.JPG
                     {
                         "recordName": "97362090-90E4-4F54-A564-14F7ECC02706",
                         "recordType": "CPLAsset",
@@ -1040,6 +1055,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # Reference to IMG_3148.JPG
                     {
                         "recordName": "986F607D-E8E0-45C4-B230-EF37B7E40B77",
                         "recordType": "CPLAsset",
@@ -1094,6 +1110,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3328.JPG IN album 2
                     {
                         "recordName": "248AFAAE-062C-40BB-92C6-B47084527A9E-IN-E4RT4FB7-4A35-4958-1D42-5769E66BE407",
                         "recordType": "CPLContainerRelation",
@@ -1128,6 +1145,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3327.JPG in album 2
                     {
                         "recordName": "32187DDB-371D-4616-A311-8A3ACA0FA5FE-IN-E4RT4FB7-4A35-4958-1D42-5769E66BE407",
                         "recordType": "CPLContainerRelation",
@@ -1162,6 +1180,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3322.JPG in album 2
                     {
                         "recordName": "BEF79215-3125-45B2-A54C-39E47DBFB23A-IN-E4RT4FB7-4A35-4958-1D42-5769E66BE407",
                         "recordType": "CPLContainerRelation",
@@ -1196,6 +1215,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3206.JPG in album 2
                     {
                         "recordName": "97362090-90E4-4F54-A564-14F7ECC02706-IN-E4RT4FB7-4A35-4958-1D42-5769E66BE407",
                         "recordType": "CPLContainerRelation",
@@ -1230,6 +1250,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # IMG_3148.JPG in album 2
                     {
                         "recordName": "986F607D-E8E0-45C4-B230-EF37B7E40B77-IN-E4RT4FB7-4A35-4958-1D42-5769E66BE407",
                         "recordType": "CPLContainerRelation",
