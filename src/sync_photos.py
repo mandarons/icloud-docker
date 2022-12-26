@@ -1,11 +1,16 @@
-import time
+"""Sync photos module."""
+___author___ = "Mandar Patil <mandarons@pm.me>"
 import os
 import shutil
-from src import config_parser, LOGGER
+import time
+
 from icloudpy import exceptions
+
+from src import LOGGER, config_parser
 
 
 def generate_file_name(photo, file_size, destination_path):
+    """Generate full path to file."""
     filename = photo.filename
     if file_size != "original":
         tokens = photo.filename.rsplit(".", 1)
@@ -22,6 +27,7 @@ def generate_file_name(photo, file_size, destination_path):
 
 
 def photo_exists(photo, file_size, local_path):
+    """Check if photo exist locally."""
     if photo and local_path and os.path.isfile(local_path):
         local_size = os.path.getsize(local_path)
         remote_size = int(photo.versions[file_size]["size"])
@@ -36,6 +42,7 @@ def photo_exists(photo, file_size, local_path):
 
 
 def download_photo(photo, file_size, destination_path):
+    """Download photo from server."""
     if not (photo and file_size and destination_path):
         return False
     LOGGER.info(f"Downloading {destination_path} ...")
@@ -52,6 +59,7 @@ def download_photo(photo, file_size, destination_path):
 
 
 def process_photo(photo, file_size, destination_path):
+    """Process photo details."""
     photo_path = generate_file_name(
         photo=photo, file_size=file_size, destination_path=destination_path
     )
@@ -67,6 +75,7 @@ def process_photo(photo, file_size, destination_path):
 
 
 def sync_album(album, destination_path, file_sizes):
+    """Sync given album."""
     if not (album and destination_path and file_sizes):
         return None
     os.makedirs(destination_path, exist_ok=True)
@@ -76,6 +85,7 @@ def sync_album(album, destination_path, file_sizes):
 
 
 def sync_photos(config, photos):
+    """Sync all photos."""
     destination_path = config_parser.prepare_photos_destination(config=config)
     filters = config_parser.get_photos_filters(config=config)
     if filters["albums"]:

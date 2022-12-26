@@ -1,9 +1,11 @@
+"""Root module."""
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
-import warnings
 import logging
 import os
 import sys
+import warnings
+
 from ruamel.yaml import YAML
 
 DEFAULT_ROOT_DESTINATION = "./icloud"
@@ -24,11 +26,12 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 def read_config(config_path=DEFAULT_CONFIG_FILE_PATH):
+    """Read config file."""
     if not (config_path and os.path.exists(config_path)):
         print(f"Config file not found at {config_path}.")
         return None
     print(f"Loading config from {config_path} ...")
-    with open(file=config_path, mode="r") as config_file:
+    with open(file=config_path) as config_file:
         config = YAML().load(config_file)
     config["app"]["credentials"]["username"] = (
         config["app"]["credentials"]["username"].strip()
@@ -39,6 +42,7 @@ def read_config(config_path=DEFAULT_CONFIG_FILE_PATH):
 
 
 def get_logger_config(config):
+    """Get logger config."""
     logger_config = {}
     if "logger" not in config["app"]:
         return None
@@ -57,6 +61,7 @@ def get_logger_config(config):
 
 
 def log_handler_exists(logger, handler_type, **kwargs):
+    """Check for existing log handler."""
     for handler in logger.handlers:
         if isinstance(handler, handler_type):
             if handler_type is logging.FileHandler:
@@ -69,6 +74,7 @@ def log_handler_exists(logger, handler_type, **kwargs):
 
 
 class ColorfulConsoleFormatter(logging.Formatter):
+    """Console formatter for log messages."""
 
     grey = "\x1b[38;21m"
     blue = "\x1b[38;5;39m"
@@ -78,6 +84,7 @@ class ColorfulConsoleFormatter(logging.Formatter):
     reset = "\x1b[0m"
 
     def __init__(self, fmt):
+        """Construct with defaults."""
         super().__init__()
         self.fmt = fmt
         self.formats = {
@@ -89,12 +96,14 @@ class ColorfulConsoleFormatter(logging.Formatter):
         }
 
     def format(self, record):
+        """Format the record."""
         log_fmt = self.formats.get(record.levelno)
         formatter = logging.Formatter(log_fmt)
         return formatter.format(record)
 
 
 def get_logger():
+    """Return logger."""
     logger = logging.getLogger()
     logger_config = get_logger_config(config=read_config())
     if logger_config:

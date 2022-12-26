@@ -1,14 +1,17 @@
-import unittest
+"""Test for notify.py file."""
 import datetime
-
+import unittest
 from unittest.mock import patch
+
+from src import config_parser, notify
 from src.email_message import EmailMessage as Message
-from src import config_parser
-from src import notify
 
 
 class TestNotify(unittest.TestCase):
+    """Tests class for notify.py file."""
+
     def setUp(self) -> None:
+        """Initialize tests."""
         self.config = {
             "app": {
                 "smtp": {
@@ -20,10 +23,8 @@ class TestNotify(unittest.TestCase):
             }
         }
 
-    def tearDown(self) -> None:
-        pass
-
     def test_throttling(self):
+        """Test for throttled notification."""
         not_24_hours = datetime.datetime.now()
         # if less than 24 hours has passed since last send, then the same
         # datetime object is returned
@@ -32,16 +33,17 @@ class TestNotify(unittest.TestCase):
         )
 
     def test_no_smtp_config(self):
-        # None is returned if email didn't send because of missing config
+        """Test for None is returned if email didn't send because of missing config."""
         self.assertIsNone(notify.send({}, None, dry_run=True))
 
     def test_dry_run_send(self):
-        # send returns the datetime of the request
+        """Test for send returns the datetime of the request."""
         self.assertIsInstance(
             notify.send(self.config, None, dry_run=True), datetime.datetime
         )
 
     def test_build_message(self):
+        """Test for building a valid email."""
         msg = notify.build_message(self.config["app"]["smtp"]["email"])
         self.assertEqual(msg.to, self.config["app"]["smtp"]["email"])
         self.assertIn(self.config["app"]["smtp"]["email"], msg.sender)
@@ -53,6 +55,7 @@ class TestNotify(unittest.TestCase):
         self.assertIsInstance(msg, Message)
 
     def test_send(self):
+        """Test for email send."""
         with patch("smtplib.SMTP") as smtp:
             notify.send(self.config)
 
@@ -79,6 +82,7 @@ class TestNotify(unittest.TestCase):
             )
 
     def test_send_fail(self):
+        """Test for failed send."""
         with patch("smtplib.SMTP") as smtp:
             smtp.side_effect = Exception
 

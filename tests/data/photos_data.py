@@ -1,3 +1,4 @@
+"""Photos fixtures."""
 DATA = {
     "query?remapEnums=True&getCurrentSyncToken=True": [
         {
@@ -112,7 +113,7 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
-                    # All Photos (Album) 
+                    # All Photos (Album)
                     {
                         "recordName": "E803E065-D8A4-4398-DE23-23F8FD0886EC",
                         "recordType": "CPLAlbum",
@@ -381,7 +382,7 @@ DATA = {
                                     "wrappingKey": "amaCdL9Z+QxfzgD4+aYATg==",
                                     "referenceChecksum": "AQYmx+DRYXnMs0tkDZ3rorp4IB99",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/EeGlt2PppPTgd0Q7mp8GenIugSh7AQYmx-DRYXnMs0tkDZ3rorp4IB99/${f}?o=Ai6vEWSVp5w5zaBTm7XvC55prdq006u5yUW5EfZs4KLT&v=1&x=3&a=CAogvhLnXY3DD7gxkuzbuKlak-NMlKvq37s7a-beQRlkZCsSbRCbkq2nty8Ym--IqbcvIgEAUgQugSh6WgR4IB99aiYQWP8altHEtfDsXqRVOJ19O49YwikLbHn5Ha6IeAIHhXVRK7Fpa3ImBoK0z2Usv0QeZBog1G6uVLc1ZapiFVtXuoc52Ijt3dpb4J3VMIA&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=amaCdL9Z-QxfzgD4-aYATg&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=J9LA0hC_xBV3TqYvwg_zAPWPwH8",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/EeGlt2PppPTgd0Q7mp8GenIugSh7AQYmx-DRYXnMs0tkDZ3rorp4IB99/${f}?o=Ai6vEWSVp5w5zaBTm7XvC55prdq006u5yUW5EfZs4KLT&v=1&x=3&a=CAogvhLnXY3DD7gxkuzbuKlak-NMlKvq37s7a-beQRlkZCsSbRCbkq2nty8Ym--IqbcvIgEAUgQugSh6WgR4IB99aiYQWP8altHEtfDsXqRVOJ19O49YwikLbHn5Ha6IeAIHhXVRK7Fpa3ImBoK0z2Usv0QeZBog1G6uVLc1ZapiFVtXuoc52Ijt3dpb4J3VMIA&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=amaCdL9Z-QxfzgD4-aYATg&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=J9LA0hC_xBV3TqYvwg_zAPWPwH8",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -394,7 +395,7 @@ DATA = {
                                     "wrappingKey": "Y40xDPUr6DmxfeoSqxaQ7A==",
                                     "referenceChecksum": "AXKVYPcDa+9Mjvnap0ZS+p2Z24V3",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/YN1v8eGiHYYZ_aKUkMuGtSf0P1BNAXKVYPcDa-9Mjvnap0ZS-p2Z24V3/${f}?o=Ame-Q1e_1nWqIn7YG7VfVZk-XAs8bVdcHo-owaNRmfPn&v=1&x=3&a=CAogwS503Q9EkCdnzvD-kLG0VNwrlEmARONCS-hADMtqg1QSbRCckq2nty8YnO-IqbcvIgEAUgT0P1BNWgSZ24V3aiYLdjzdjGLXPtKfjwtH_PG0ralgbDDBOIftNXxyRxdhzz8OuZztNnImb65YPlo1qUOy4i7tW1pcyAZcjqS8kYfxPQD6SKIAKNk3dUid7mE&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=Y40xDPUr6DmxfeoSqxaQ7A&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=X91oiOo0Avp6TR4d27MGupd_cqY",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/YN1v8eGiHYYZ_aKUkMuGtSf0P1BNAXKVYPcDa-9Mjvnap0ZS-p2Z24V3/${f}?o=Ame-Q1e_1nWqIn7YG7VfVZk-XAs8bVdcHo-owaNRmfPn&v=1&x=3&a=CAogwS503Q9EkCdnzvD-kLG0VNwrlEmARONCS-hADMtqg1QSbRCckq2nty8YnO-IqbcvIgEAUgT0P1BNWgSZ24V3aiYLdjzdjGLXPtKfjwtH_PG0ralgbDDBOIftNXxyRxdhzz8OuZztNnImb65YPlo1qUOy4i7tW1pcyAZcjqS8kYfxPQD6SKIAKNk3dUid7mE&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=Y40xDPUr6DmxfeoSqxaQ7A&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=X91oiOo0Avp6TR4d27MGupd_cqY",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -422,7 +423,7 @@ DATA = {
                                     "wrappingKey": "r7EeA3tyPsWdcECp6X9dHA==",
                                     "referenceChecksum": "AR5TiM9Qko4rHwmoDH1BgNRVZpF4",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/DmK0xzSiAUSFrAsYYAvby7QHrMDeAR5TiM9Qko4rHwmoDH1BgNRVZpF4/${f}?o=AjM3SMy6F9O-5AWTv2HnEp_GiL7ycAx1ls3yOqypKX-3&v=1&x=3&a=CAogiUnx0vJRhNr8Xt_dbOGrxiu8gKNAz_l_8Z5TVGmok64SbRCckq2nty8YnO-IqbcvIgEAUgQHrMObWgRVZpF4aiYwQUojYj2kyD-EyrtVjkw5sVJ60NK0x8nKjsjNXzTYH__dA6VcCHImQduy0Vis9tCiB3ox2KXKiyf3NOaih9TbQ8KfJ8H_8sFzdtXHw8I&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=r7EeA3tyPsWdcECp6X9dHA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=m2Z7uOxYG9iNHiAZbLm6OE2O6hE",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/DmK0xzSiAUSFrAsYYAvby7QHrMDeAR5TiM9Qko4rHwmoDH1BgNRVZpF4/${f}?o=AjM3SMy6F9O-5AWTv2HnEp_GiL7ycAx1ls3yOqypKX-3&v=1&x=3&a=CAogiUnx0vJRhNr8Xt_dbOGrxiu8gKNAz_l_8Z5TVGmok64SbRCckq2nty8YnO-IqbcvIgEAUgQHrMObWgRVZpF4aiYwQUojYj2kyD-EyrtVjkw5sVJ60NK0x8nKjsjNXzTYH__dA6VcCHImQduy0Vis9tCiB3ox2KXKiyf3NOaih9TbQ8KfJ8H_8sFzdtXHw8I&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=r7EeA3tyPsWdcECp6X9dHA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=m2Z7uOxYG9iNHiAZbLm6OE2O6hE",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -476,7 +477,7 @@ DATA = {
                                     "wrappingKey": "eqUQfTajfGXgQHbBJh8Qwg==",
                                     "referenceChecksum": "Ab5Vyk36t2jwuON7WSxvon/DvGtK",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/ARKzBUr-DdmTaP_SAVglTurWtsmrAb5Vyk36t2jwuON7WSxvon_DvGtK/${f}?o=AnHR_fOkcKyPuLPOCXcp9C52pM-oZefmc9efp0e0ahAO&v=1&x=3&a=CAogf7lfgZsLeoZdnUfnSzBMLzy9WrbD7vMgHjmY9CI7_uESbRCmkq2nty8Ypu-IqbcvIgEAUgTWtsmrWgTDvGtKaiYANfDoXLBqjbu3_O1AGa62AuKbnBEsqXqysujWIiFYxe-i-AiEb3ImWrZCs4OP45m3SoQL7fh49dD-aHcXkEMAfevtQ6xh5-RH-5bq3sQ&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=eqUQfTajfGXgQHbBJh8Qwg&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=ci4ad9AWukocHK1gYXbJrx-Ok9M",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ARKzBUr-DdmTaP_SAVglTurWtsmrAb5Vyk36t2jwuON7WSxvon_DvGtK/${f}?o=AnHR_fOkcKyPuLPOCXcp9C52pM-oZefmc9efp0e0ahAO&v=1&x=3&a=CAogf7lfgZsLeoZdnUfnSzBMLzy9WrbD7vMgHjmY9CI7_uESbRCmkq2nty8Ypu-IqbcvIgEAUgTWtsmrWgTDvGtKaiYANfDoXLBqjbu3_O1AGa62AuKbnBEsqXqysujWIiFYxe-i-AiEb3ImWrZCs4OP45m3SoQL7fh49dD-aHcXkEMAfevtQ6xh5-RH-5bq3sQ&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=eqUQfTajfGXgQHbBJh8Qwg&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=ci4ad9AWukocHK1gYXbJrx-Ok9M",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -489,7 +490,7 @@ DATA = {
                                     "wrappingKey": "tPtP2Y7mGQ4yOsOCMFG/sg==",
                                     "referenceChecksum": "Ad0I2qxdsqlGuSLlqtTBgoKndHE/",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/AUvKU8j-Z5pfqGI_fe-9tibuqfVRAd0I2qxdsqlGuSLlqtTBgoKndHE_/${f}?o=AuoILQZ6O-MHJ-g-prxkKJNvAz0wU24Va6re5l5JIhrW&v=1&x=3&a=CAogiV6FTwlLeQt348ipvPuax8JBYrtL7o0q7WMX775pR4YSbRCmkq2nty8Ypu-IqbcvIgEAUgTuqfVRWgSndHE_aiZN21K0DzyVdoR0roYdRIUTUdT16tIhKWq2fJfrIDzHjd0YU3MhW3ImUfLx8SZ3FmkyDDQA-J5nJkGVtdKMsxmegM4H68EIUA9-idz8C-g&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=tPtP2Y7mGQ4yOsOCMFG_sg&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=4MygIoxG8NYN-VK3zWB-a-wqy7c",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/AUvKU8j-Z5pfqGI_fe-9tibuqfVRAd0I2qxdsqlGuSLlqtTBgoKndHE_/${f}?o=AuoILQZ6O-MHJ-g-prxkKJNvAz0wU24Va6re5l5JIhrW&v=1&x=3&a=CAogiV6FTwlLeQt348ipvPuax8JBYrtL7o0q7WMX775pR4YSbRCmkq2nty8Ypu-IqbcvIgEAUgTuqfVRWgSndHE_aiZN21K0DzyVdoR0roYdRIUTUdT16tIhKWq2fJfrIDzHjd0YU3MhW3ImUfLx8SZ3FmkyDDQA-J5nJkGVtdKMsxmegM4H68EIUA9-idz8C-g&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=tPtP2Y7mGQ4yOsOCMFG_sg&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=4MygIoxG8NYN-VK3zWB-a-wqy7c",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -517,7 +518,7 @@ DATA = {
                                     "wrappingKey": "E1zCp4gxgoHQNQHWjS3Wag==",
                                     "referenceChecksum": "ARHOzkI3sbX3SZDmNQgttNJ9DqQa",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/ASy6f_leU1-xkR1aPmQyvYmwHUpEARHOzkI3sbX3SZDmNQgttNJ9DqQa/${f}?o=AiE0LlRJclp9DPkfhwdmJUfxo_vgP7JLWn3qtvPUeTuS&v=1&x=3&a=CAogroLnmMZUEfwNczwEl6zmt6YvBGhwJnPwcJogyD0-dYESbRCmkq2nty8Ypu-IqbcvIgEAUgSwHUpEWgR9DqQaaiZ5SoSlUQbaa-uaRlv6ga8Vyh14lIf466mlURl-3DYa6jr_6SsjQnImlqDZof_hQbcHONiYRrB9MXnKpJ9akb7rPc8_GAwPduNtPHAhBBk&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=E1zCp4gxgoHQNQHWjS3Wag&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=5uuV1dFCaVoK0EhvreVHqYZiBNM",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ASy6f_leU1-xkR1aPmQyvYmwHUpEARHOzkI3sbX3SZDmNQgttNJ9DqQa/${f}?o=AiE0LlRJclp9DPkfhwdmJUfxo_vgP7JLWn3qtvPUeTuS&v=1&x=3&a=CAogroLnmMZUEfwNczwEl6zmt6YvBGhwJnPwcJogyD0-dYESbRCmkq2nty8Ypu-IqbcvIgEAUgSwHUpEWgR9DqQaaiZ5SoSlUQbaa-uaRlv6ga8Vyh14lIf466mlURl-3DYa6jr_6SsjQnImlqDZof_hQbcHONiYRrB9MXnKpJ9akb7rPc8_GAwPduNtPHAhBBk&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=E1zCp4gxgoHQNQHWjS3Wag&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=5uuV1dFCaVoK0EhvreVHqYZiBNM",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -571,7 +572,7 @@ DATA = {
                                     "wrappingKey": "ysHoAuqERA8H3MadxO6+PA==",
                                     "referenceChecksum": "ASIoOBi88potAS0gE8tfnojuSlrb",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/ASTSuc7S58IPmVCJIUslbeCRjsnoASIoOBi88potAS0gE8tfnojuSlrb/${f}?o=AotG4ZrSZDU3u6kP4yWDFXfZ3_6tKEyLXvh4gcpo4ELn&v=1&x=3&a=CAogJr6QVcZkN2p9iAoOF0Tr4qnsmeCHSHrFoTzxEHq7NQUSbRCwkq2nty8YsO-IqbcvIgEAUgSRjsnoWgTuSlrbaibzwCZQjqQ5JaCOYReCcRWatftcle04VKPDs1BnZT75v_W_X7tuyXImMWPY8r1ICHzS3Us89foRJ0jtqcXwvVd3nT7EM6EPexOdJAI4_qQ&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=ysHoAuqERA8H3MadxO6-PA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=TiejMZ9ftbHECNhJzeowymOGu3I",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ASTSuc7S58IPmVCJIUslbeCRjsnoASIoOBi88potAS0gE8tfnojuSlrb/${f}?o=AotG4ZrSZDU3u6kP4yWDFXfZ3_6tKEyLXvh4gcpo4ELn&v=1&x=3&a=CAogJr6QVcZkN2p9iAoOF0Tr4qnsmeCHSHrFoTzxEHq7NQUSbRCwkq2nty8YsO-IqbcvIgEAUgSRjsnoWgTuSlrbaibzwCZQjqQ5JaCOYReCcRWatftcle04VKPDs1BnZT75v_W_X7tuyXImMWPY8r1ICHzS3Us89foRJ0jtqcXwvVd3nT7EM6EPexOdJAI4_qQ&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=ysHoAuqERA8H3MadxO6-PA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=TiejMZ9ftbHECNhJzeowymOGu3I",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -584,7 +585,7 @@ DATA = {
                                     "wrappingKey": "8ydPkuUeW1rXYBf+8EUhWQ==",
                                     "referenceChecksum": "AdkoZP1534bwlULpwCdn2fd44LAt",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/AUxVFT2yVsQ5739tmU5c1497duFDAdkoZP1534bwlULpwCdn2fd44LAt/${f}?o=AtyLCU3HpSWYfXnAPtzDXkhqPhQVX_2KI1m03qQMcrX8&v=1&x=3&a=CAoguSOx9xIzgn8O-3JZPJEFmuCqSpNEdkQUdkK-kdTjfyQSbRCwkq2nty8YsO-IqbcvIgEAUgR7duFDWgR44LAtaiYyf1-bnKqpPXGMfJ_iZeMO0Ar6T3qqD2Nwc5hia_fAPn-qOLNguXImMEz0ks6Sun_tBea1p7Gs39vk_ERXdi-KrSpKwpkhrUNPNhAl3t4&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=8ydPkuUeW1rXYBf-8EUhWQ&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=hYKaX0XrV6ghQqijbnjdyNejnec",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/AUxVFT2yVsQ5739tmU5c1497duFDAdkoZP1534bwlULpwCdn2fd44LAt/${f}?o=AtyLCU3HpSWYfXnAPtzDXkhqPhQVX_2KI1m03qQMcrX8&v=1&x=3&a=CAoguSOx9xIzgn8O-3JZPJEFmuCqSpNEdkQUdkK-kdTjfyQSbRCwkq2nty8YsO-IqbcvIgEAUgR7duFDWgR44LAtaiYyf1-bnKqpPXGMfJ_iZeMO0Ar6T3qqD2Nwc5hia_fAPn-qOLNguXImMEz0ks6Sun_tBea1p7Gs39vk_ERXdi-KrSpKwpkhrUNPNhAl3t4&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=8ydPkuUeW1rXYBf-8EUhWQ&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=hYKaX0XrV6ghQqijbnjdyNejnec",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -612,7 +613,7 @@ DATA = {
                                     "wrappingKey": "3EAjgkS2+Mr38eqQFk7C0A==",
                                     "referenceChecksum": "AXd258pYF6LLhmADLoZAumNqI+8M",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/ASPVZ_Pft6gIN2VEA_oUbqQzh6WyAXd258pYF6LLhmADLoZAumNqI-8M/${f}?o=AtA8VtFypX8-ayXsVGPnssT56G8EM8ZdWr3nFmug2dPM&v=1&x=3&a=CAogZYCSkK2TW_pwByMq7sMg791XyNwx5u0lgyxvV0cKs3YSbRCxkq2nty8Yse-IqbcvIgEAUgQzh6WyWgRqI-8MaibbeMKtZNDpNkTWx6jOoPY4npOZt2t0xHw4QfV3u2b-KI47DIvSOXImJp7IX_oKObj3XLk-Gvvg-9z_e9JYfqbOJyUNAxz_e5wdxr6wQxs&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=3EAjgkS2-Mr38eqQFk7C0A&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=PbVsX_tz5q6QJFzf_TxHZ1SH79I",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ASPVZ_Pft6gIN2VEA_oUbqQzh6WyAXd258pYF6LLhmADLoZAumNqI-8M/${f}?o=AtA8VtFypX8-ayXsVGPnssT56G8EM8ZdWr3nFmug2dPM&v=1&x=3&a=CAogZYCSkK2TW_pwByMq7sMg791XyNwx5u0lgyxvV0cKs3YSbRCxkq2nty8Yse-IqbcvIgEAUgQzh6WyWgRqI-8MaibbeMKtZNDpNkTWx6jOoPY4npOZt2t0xHw4QfV3u2b-KI47DIvSOXImJp7IX_oKObj3XLk-Gvvg-9z_e9JYfqbOJyUNAxz_e5wdxr6wQxs&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=3EAjgkS2-Mr38eqQFk7C0A&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=PbVsX_tz5q6QJFzf_TxHZ1SH79I",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -666,7 +667,7 @@ DATA = {
                                     "wrappingKey": "pYDpdhqdaL9SAxHilZEj3Q==",
                                     "referenceChecksum": "ATqG89bMsXhtmMRMw009uhyJc/Kh",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvnATqG89bMsXhtmMRMw009uhyJc_Kh/${f}?o=AovA4TUyNl2kYkqOdInhEXGZ_6Lgkx1fTEsqpkkMh3hm&v=1&x=3&a=CAogVnr-sKWlefxaxarlxJ-k7EPRB-Q851T9df9zyhCvis0SbRC7kq2nty8Yu--IqbcvIgEAUgSMnjvnWgSJc_KhaiZCiMEZuykdl4ex2Ra8y53DbEEtJi6ItoX1e6b8TOoWXYiLA-mkr3Im7aDvMFg_m7tYuslgLZFXL8hxJftHL4oTy1ZpuVaP__2nTQTPLp4&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=pYDpdhqdaL9SAxHilZEj3Q&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=IKz0oqClwHpM9shdTb3e5liYV5E",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvnATqG89bMsXhtmMRMw009uhyJc_Kh/${f}?o=AovA4TUyNl2kYkqOdInhEXGZ_6Lgkx1fTEsqpkkMh3hm&v=1&x=3&a=CAogVnr-sKWlefxaxarlxJ-k7EPRB-Q851T9df9zyhCvis0SbRC7kq2nty8Yu--IqbcvIgEAUgSMnjvnWgSJc_KhaiZCiMEZuykdl4ex2Ra8y53DbEEtJi6ItoX1e6b8TOoWXYiLA-mkr3Im7aDvMFg_m7tYuslgLZFXL8hxJftHL4oTy1ZpuVaP__2nTQTPLp4&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=pYDpdhqdaL9SAxHilZEj3Q&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=IKz0oqClwHpM9shdTb3e5liYV5E",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -679,7 +680,7 @@ DATA = {
                                     "wrappingKey": "YIFaf0awZsX16khQaJ5pHw==",
                                     "referenceChecksum": "AVLSGMHt+PAQ9/krqqfXATNX57d5",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvVAVLSGMHt-PAQ9_krqqfXATNX57d5/${f}?o=AvHBwurT0LTKni3mzYNLu4FnSeLeXfxYgSThZ4ImxjO8&v=1&x=3&a=CAogTIPbEVbPukTNLTRMbKPr3KEw-OwlmwJ6E2P4TWSVmS0SbRC7kq2nty8Yu--IqbcvIgEAUgSBpOvVWgRX57d5aibAoDs2oxjwpsMmZzKDj2ndE0sAhXdcwzBu-U_oZGpb059mW6D0dnImIjbNA_Bqcyw_VKQmNxeLtnGtGwyFB16OPwFKYcs1KsSFvHFAD7Y&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=YIFaf0awZsX16khQaJ5pHw&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=1bdqdYxBN6JqLAkjMyHSEGNkqDA",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvVAVLSGMHt-PAQ9_krqqfXATNX57d5/${f}?o=AvHBwurT0LTKni3mzYNLu4FnSeLeXfxYgSThZ4ImxjO8&v=1&x=3&a=CAogTIPbEVbPukTNLTRMbKPr3KEw-OwlmwJ6E2P4TWSVmS0SbRC7kq2nty8Yu--IqbcvIgEAUgSBpOvVWgRX57d5aibAoDs2oxjwpsMmZzKDj2ndE0sAhXdcwzBu-U_oZGpb059mW6D0dnImIjbNA_Bqcyw_VKQmNxeLtnGtGwyFB16OPwFKYcs1KsSFvHFAD7Y&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=YIFaf0awZsX16khQaJ5pHw&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=1bdqdYxBN6JqLAkjMyHSEGNkqDA",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -707,7 +708,7 @@ DATA = {
                                     "wrappingKey": "lxLQBw46n1nvea4s30UY+A==",
                                     "referenceChecksum": "AV2Zh7WygJu74eNWVuuMT4lM8qme",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY9AV2Zh7WygJu74eNWVuuMT4lM8qme/${f}?o=ArcD2SL9b5Gy5zcnrnT2luycDRZzFLjOiX-8u9IWdQM2&v=1&x=3&a=CAogfF6-sW-XhnsFDy-vqHQjR8LXVO4OmxBUqG4CZf1zmOwSbRC8kq2nty8YvO-IqbcvIgEAUgTopjY9WgRM8qmeaibiG79B2YhfcchV4W9EgxQXAN4Bpi57NX82WXqo_YW-xi1qLAH9-HImRd8oYhd7r27sXPkUL3GT-rKGSKG-leLeNevi3ay090liNNZH-2U&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=lxLQBw46n1nvea4s30UY-A&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=34vgVK6vLEdlpYceHAmIfqIp1Fk",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY9AV2Zh7WygJu74eNWVuuMT4lM8qme/${f}?o=ArcD2SL9b5Gy5zcnrnT2luycDRZzFLjOiX-8u9IWdQM2&v=1&x=3&a=CAogfF6-sW-XhnsFDy-vqHQjR8LXVO4OmxBUqG4CZf1zmOwSbRC8kq2nty8YvO-IqbcvIgEAUgTopjY9WgRM8qmeaibiG79B2YhfcchV4W9EgxQXAN4Bpi57NX82WXqo_YW-xi1qLAH9-HImRd8oYhd7r27sXPkUL3GT-rKGSKG-leLeNevi3ay090liNNZH-2U&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=lxLQBw46n1nvea4s30UY-A&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=34vgVK6vLEdlpYceHAmIfqIp1Fk",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -761,7 +762,7 @@ DATA = {
                                     "wrappingKey": "dmZqsyvxEA4s3CvifNMApA==",
                                     "referenceChecksum": "ATi6BbOzDuHl6RONNFCub9eqZqSm",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt-jP6UsV4fBZHATi6BbOzDuHl6RONNFCub9eqZqSm/${f}?o=AkMi62tflbXgUrgSyQZ94SinXG9TYXZ6tydGOmDQx9HG&v=1&x=3&a=CAogc8yqpMgxKnf363cp0n1CujaxnsWY_KrZ3VEN9QchlhcSbRDGkq2nty8Yxu-IqbcvIgEAUgR4fBZHWgSqZqSmaiaxcg1zIsiESwGaEOecYR84r83ltACA6SY5ypGyvYxKD0M3LmqI8HIm7n2S2UL6EBM2Z3a9YFIGX8MrKABFDMA5TXFPUVUP6AfsnKigVMc&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=dmZqsyvxEA4s3CvifNMApA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=rYmwpGBg6DPYHSGj6UAOnCfuMPk",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt-jP6UsV4fBZHATi6BbOzDuHl6RONNFCub9eqZqSm/${f}?o=AkMi62tflbXgUrgSyQZ94SinXG9TYXZ6tydGOmDQx9HG&v=1&x=3&a=CAogc8yqpMgxKnf363cp0n1CujaxnsWY_KrZ3VEN9QchlhcSbRDGkq2nty8Yxu-IqbcvIgEAUgR4fBZHWgSqZqSmaiaxcg1zIsiESwGaEOecYR84r83ltACA6SY5ypGyvYxKD0M3LmqI8HIm7n2S2UL6EBM2Z3a9YFIGX8MrKABFDMA5TXFPUVUP6AfsnKigVMc&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=dmZqsyvxEA4s3CvifNMApA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=rYmwpGBg6DPYHSGj6UAOnCfuMPk",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -774,7 +775,7 @@ DATA = {
                                     "wrappingKey": "Nz2a7ohpe3KPptCk0J0lWA==",
                                     "referenceChecksum": "AdUIDFzHC2rVOvwTz0jPi/tKihnb",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXgAdUIDFzHC2rVOvwTz0jPi_tKihnb/${f}?o=AksMTyqi4NosuW50ei90oXcv82fP1r-6QocLorp20RpO&v=1&x=3&a=CAogfvU0-_8L-3qRcy6jZsj3Vuqt4aL2rk5xVXF7lwVV6A8SbRDGkq2nty8Yxu-IqbcvIgEAUgSuemXgWgRKihnbaiZoWboa3qYl3KVDo1VGIHrRDoySixw8lzXtf1Y-AnoVN1Pd4hLkPnImXYuLGS8iK7BRJcQg25R5hk54OD04duy2TscnYu1mACOSERXpXEI&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=Nz2a7ohpe3KPptCk0J0lWA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=t3NT5mCLmsRjPqAGvROVsMrAjfg",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXgAdUIDFzHC2rVOvwTz0jPi_tKihnb/${f}?o=AksMTyqi4NosuW50ei90oXcv82fP1r-6QocLorp20RpO&v=1&x=3&a=CAogfvU0-_8L-3qRcy6jZsj3Vuqt4aL2rk5xVXF7lwVV6A8SbRDGkq2nty8Yxu-IqbcvIgEAUgSuemXgWgRKihnbaiZoWboa3qYl3KVDo1VGIHrRDoySixw8lzXtf1Y-AnoVN1Pd4hLkPnImXYuLGS8iK7BRJcQg25R5hk54OD04duy2TscnYu1mACOSERXpXEI&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=Nz2a7ohpe3KPptCk0J0lWA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=t3NT5mCLmsRjPqAGvROVsMrAjfg",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -802,7 +803,7 @@ DATA = {
                                     "wrappingKey": "UiIQr3rRvyIcoAz/sxDugQ==",
                                     "referenceChecksum": "ARtMrcvA8cbMefPDnmwSWQwe+mBd",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMYARtMrcvA8cbMefPDnmwSWQwe-mBd/${f}?o=Auh2MA-6wuqdRGUDQ4kZL3fuuuMVWVVnTnTcThej9ad5&v=1&x=3&a=CAogaHp1wKKc8QF3MI-2OrLYdQx8V4PIVZvFQyuN1m6pXFMSbRDHkq2nty8Yx--IqbcvIgEAUgQohvMYWgQe-mBdaibQsOQuSEfHUK0xs9nLWG6nHKAvRCwkkmsvXL1Ku9aCARYpDg4mWHImDCoL_RiyOC-KXU_0Jpntuid9MdC08bvpHUp5hkzlctbjsBvT654&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=UiIQr3rRvyIcoAz_sxDugQ&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=Rx2sZoVhs_Phm_Ps3RvVwJ2mgvA",
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMYARtMrcvA8cbMefPDnmwSWQwe-mBd/${f}?o=Auh2MA-6wuqdRGUDQ4kZL3fuuuMVWVVnTnTcThej9ad5&v=1&x=3&a=CAogaHp1wKKc8QF3MI-2OrLYdQx8V4PIVZvFQyuN1m6pXFMSbRDHkq2nty8Yx--IqbcvIgEAUgQohvMYWgQe-mBdaibQsOQuSEfHUK0xs9nLWG6nHKAvRCwkkmsvXL1Ku9aCARYpDg4mWHImDCoL_RiyOC-KXU_0Jpntuid9MdC08bvpHUp5hkzlctbjsBvT654&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=UiIQr3rRvyIcoAz_sxDugQ&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=Rx2sZoVhs_Phm_Ps3RvVwJ2mgvA",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -1452,7 +1453,7 @@ DATA = {
                         "records": [
                             {
                                 # pylint: disable=C0321
-                                "recordName": "CPLContainerRelationNotDeletedByAssetDate:E4RT4FB7-4A35-4958-1D42-5769E66BE407",
+                                "recordName": "CPLContainerRelationNotDeletedByAssetDate:E4RT4FB7-4A35-4958-1D42-5769E66BE407",  # noqa: E501
                                 "recordType": "IndexCountResult",
                                 "fields": {"itemCount": {"value": 5, "type": "INT64"}},
                                 "pluginFields": {},
