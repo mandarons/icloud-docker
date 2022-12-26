@@ -18,6 +18,7 @@ repos:
         args:
           - --quiet
         files: ^((src|tests)/.+)?[^/]+\.py$
+
   - repo: https://github.com/codespell-project/codespell
     rev: v2.2.2
     hooks:
@@ -54,6 +55,8 @@ repos:
     rev: 5.11.4
     hooks:
       - id: isort
+        args:
+          - --profile=black
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v3.2.0
     hooks:

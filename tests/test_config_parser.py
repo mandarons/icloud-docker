@@ -6,9 +6,15 @@ import shutil
 import unittest
 
 import tests
-from src import (DEFAULT_DRIVE_DESTINATION, DEFAULT_PHOTOS_DESTINATION,
-                 DEFAULT_RETRY_LOGIN_INTERVAL_SEC, DEFAULT_ROOT_DESTINATION,
-                 DEFAULT_SYNC_INTERVAL_SEC, config_parser, read_config)
+from src import (
+    DEFAULT_DRIVE_DESTINATION,
+    DEFAULT_PHOTOS_DESTINATION,
+    DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
+    DEFAULT_ROOT_DESTINATION,
+    DEFAULT_SYNC_INTERVAL_SEC,
+    config_parser,
+    read_config,
+)
 
 
 class TestConfigParser(unittest.TestCase):

@@ -3,9 +3,14 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 
-from src import (DEFAULT_DRIVE_DESTINATION, DEFAULT_PHOTOS_DESTINATION,
-                 DEFAULT_RETRY_LOGIN_INTERVAL_SEC, DEFAULT_ROOT_DESTINATION,
-                 DEFAULT_SYNC_INTERVAL_SEC, LOGGER)
+from src import (
+    DEFAULT_DRIVE_DESTINATION,
+    DEFAULT_PHOTOS_DESTINATION,
+    DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
+    DEFAULT_ROOT_DESTINATION,
+    DEFAULT_SYNC_INTERVAL_SEC,
+    LOGGER,
+)
 
 
 def config_path_to_string(config_path):
