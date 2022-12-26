@@ -6,8 +6,16 @@ from time import sleep
 
 from icloudpy import ICloudPyService, exceptions, utils
 
-from src import (DEFAULT_COOKIE_DIRECTORY, ENV_ICLOUD_PASSWORD_KEY, LOGGER,
-                 config_parser, notify, read_config, sync_drive, sync_photos)
+from src import (
+    DEFAULT_COOKIE_DIRECTORY,
+    ENV_ICLOUD_PASSWORD_KEY,
+    LOGGER,
+    config_parser,
+    notify,
+    read_config,
+    sync_drive,
+    sync_photos,
+)
 
 
 def get_api_instance(
