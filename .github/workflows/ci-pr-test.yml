@@ -48,7 +48,7 @@ jobs:
           python-version: 3.9
       - name: Restore pip cache dependencies
         uses: actions/cache@v2
-        with: 
+        with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
           restore-keys: |
@@ -71,7 +71,7 @@ jobs:
       - name: Upload tests artifacts
         if: ${{ failure() }}
         uses: actions/upload-artifact@v2
-        with: 
+        with:
           name: tests-output
           path: allure-history
           retention-days: 1

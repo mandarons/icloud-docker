@@ -1,3 +1,4 @@
+"""Fixtures for tests."""
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import json
@@ -5,6 +6,7 @@ import os
 
 from icloudpy import base
 from requests import Response
+
 from tests.data import photos_data
 
 FIRST_NAME = "Quentin"
@@ -3620,6 +3622,7 @@ class ResponseMock(Response):
     """Mocked Response."""
 
     def __init__(self, result, status_code=200, **kwargs):
+        """Init the object."""
         Response.__init__(self)
         self.result = result
         self.status_code = status_code
@@ -3629,6 +3632,7 @@ class ResponseMock(Response):
 
     @property
     def text(self):
+        """Return json as string."""
         return json.dumps(self.result)
 
 
@@ -3636,6 +3640,7 @@ class ICloudPySessionMock(base.ICloudPySession):
     """Mocked ICloudPySession."""
 
     def request(self, method, url, **kwargs):
+        """Override request method."""
         params = kwargs.get("params")
         headers = kwargs.get("headers")
         data = json.loads(kwargs.get("data", "{}"))
@@ -3745,7 +3750,7 @@ class ICloudPySessionMock(base.ICloudPySession):
             ]:
                 return ResponseMock(DRIVE_PACKAGE_DOWNLOAD_WORKING_EXTRACTION_ERROR)
         if "icloud-content.com" in url and method == "GET":
-            if "Scanned+document+1.pdf" in url or u"Document scanne 2.pdf" in url:
+            if "Scanned+document+1.pdf" in url or "Document scanne 2.pdf" in url:
                 return ResponseMock({}, raw=open(__file__, "rb"))
             if "This is a title.md" in url:
                 return ResponseMock({}, raw=open("This is a title.md", "rb"))
@@ -3873,6 +3878,7 @@ class ICloudPyServiceMock(base.ICloudPyService):
         # For China, use "https://setup.icloud.com.cn/setup/ws/1"
         setup_endpoint="https://setup.icloud.com/setup/ws/1",
     ):
+        """Init with defaults for optionals."""
         base.ICloudPySession = ICloudPySessionMock
         base.ICloudPyService.__init__(
             self,

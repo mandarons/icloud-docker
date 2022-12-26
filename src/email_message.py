@@ -1,12 +1,14 @@
-import uuid
+"""Email message module."""
 import time
-
+import uuid
 from email.mime.text import MIMEText
 
 
-class EmailMessage(object):
-    def __init__(self, **kwargs):
+class EmailMessage:
+    """Email message class."""
 
+    def __init__(self, **kwargs):
+        """Init with defaults."""
         params = {}
         for item in kwargs.items():
             params[item[0]] = item[1]
@@ -28,17 +30,21 @@ class EmailMessage(object):
         self.message_id = self.make_key()
 
     def make_key(self):
+        """Generate unique key."""
         return str(uuid.uuid4())
 
     def as_string(self):
+        """Return plaintext content."""
         return self._plaintext()
 
     def _plaintext(self):
+        """Create plaintext content."""
         msg = MIMEText(self.body, "plain", self.charset)
         self._set_info(msg)
         return msg.as_string()
 
     def _set_info(self, msg):
+        """Set email information."""
         msg["Subject"] = self.subject
         msg["From"] = self.sender
         msg["To"] = self.to

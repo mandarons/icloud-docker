@@ -50,7 +50,7 @@ jobs:
           python-version: 3.9
       - name: Restore pip cache dependencies
         uses: actions/cache@v2
-        with: 
+        with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
           restore-keys: |
@@ -89,7 +89,7 @@ jobs:
           python generate_badges.py
       - name: Upload tests artifacts
         uses: actions/upload-artifact@v2
-        with: 
+        with:
           name: test-output
           path: allure-history/test-results/
           retention-days: 1
@@ -181,7 +181,7 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - name: Check Out Repo 
+      - name: Check Out Repo
         uses: actions/checkout@v2
       - name: Cache Docker layers
         uses: actions/cache@v2

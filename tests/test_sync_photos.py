@@ -1,17 +1,23 @@
+"""Tests for sync_photos.py file."""
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
-import unittest
 import os
 import shutil
+import unittest
 from unittest.mock import patch
+
 import icloudpy
+
 import tests
+from src import LOGGER, read_config, sync_photos
 from tests import DATA_DIR, data
-from src import LOGGER, sync_photos, read_config
 
 
 class TestSyncPhotos(unittest.TestCase):
+    """Tests for sync_photos file."""
+
     def setUp(self) -> None:
+        """Initialize tests."""
         self.config = read_config(config_path=tests.CONFIG_PATH)
 
         self.root = tests.PHOTOS_DIR
@@ -23,6 +29,7 @@ class TestSyncPhotos(unittest.TestCase):
         )
 
     def tearDown(self) -> None:
+        """Remove temp directory."""
         shutil.rmtree(tests.TEMP_DIR)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
@@ -34,6 +41,7 @@ class TestSyncPhotos(unittest.TestCase):
     def test_sync_photos_original(
         self, mock_read_config, mock_service, mock_get_username, mock_get_password
     ):
+        """Test for successful original photo size download."""
         mock_service = self.service
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
@@ -66,6 +74,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_get_username,
         mock_get_password,
     ):
+        """Test if missing local file is downloaded successfully."""
         mock_service = self.service
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
@@ -106,6 +115,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_get_username,
         mock_get_password,
     ):
+        """Test if changed photo downloads successfully."""
         mock_service = self.service
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
@@ -149,6 +159,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_get_username,
         mock_get_password,
     ):
+        """Test if there is nothing new to download."""
         mock_service = self.service
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
@@ -179,6 +190,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_get_username,
         mock_get_password,
     ):
+        """Test for renaming of previously downloaded original photos."""
         mock_service = self.service
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
@@ -216,6 +228,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_get_username,
         mock_get_password,
     ):
+        """Test for empty albums list."""
         mock_service = self.service
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
@@ -233,12 +246,14 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "all")))
 
     def test_download_photo_none_photo(self):
-
+        """Test if download_photo has photo as None."""
         self.assertFalse(
             sync_photos.download_photo(None, ["original"], self.destination_path)
         )
 
     def test_download_photo_none_file_size(self):
+        """Test if download_photo has file size as None."""
+
         class MockPhoto:
             def download(self, quality):
                 raise icloudpy.exceptions.ICloudPyAPIResponseException
@@ -248,6 +263,8 @@ class TestSyncPhotos(unittest.TestCase):
         )
 
     def test_download_photo_none_destination_path(self):
+        """Test if download_photo has destination path as None."""
+
         class MockPhoto:
             def download(self, quality):
                 raise icloudpy.exceptions.ICloudPyAPIResponseException
@@ -255,6 +272,8 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertFalse(sync_photos.download_photo(MockPhoto(), ["original"], None))
 
     def test_download_photo_handle_exception(self):
+        """Test if exception is thrown in dowonload_photo."""
+
         class MockPhoto:
             def download(self, quality):
                 raise icloudpy.exceptions.ICloudPyAPIResponseException
@@ -264,17 +283,22 @@ class TestSyncPhotos(unittest.TestCase):
         )
 
     def test_sync_album_none_album(self):
+        """Test if album is None."""
         self.assertIsNone(
             sync_photos.sync_album(None, self.destination_path, ["original"])
         )
 
     def test_sync_album_none_destination_path(self):
+        """Test if destination path is None."""
         self.assertIsNone(sync_photos.sync_album({}, None, ["original"]))
 
     def test_sync_album_none_file_sizes(self):
+        """Test if file size is None."""
         self.assertIsNone(sync_photos.sync_album({}, self.destination_path, None))
 
     def test_missing_medium_photo_size(self):
+        """Test if medium photo size is missing."""
+
         class MockPhoto:
             @property
             def filename(self):
@@ -293,6 +317,8 @@ class TestSyncPhotos(unittest.TestCase):
         )
 
     def test_missing_thumb_photo_sizes(self):
+        """Test if thumbnail size is missing."""
+
         class MockPhoto:
             @property
             def filename(self):
