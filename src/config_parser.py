@@ -1,21 +1,25 @@
+"""Config file parser."""
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
+
 from src import (
-    DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
-    LOGGER,
-    DEFAULT_ROOT_DESTINATION,
     DEFAULT_DRIVE_DESTINATION,
-    DEFAULT_SYNC_INTERVAL_SEC,
     DEFAULT_PHOTOS_DESTINATION,
+    DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
+    DEFAULT_ROOT_DESTINATION,
+    DEFAULT_SYNC_INTERVAL_SEC,
+    LOGGER,
 )
 
 
 def config_path_to_string(config_path):
+    """Build config path as string."""
     return " > ".join(config_path)
 
 
 def traverse_config_path(config, config_path: list[str]) -> bool:
+    """Traverse given config path."""
     if len(config_path) == 0:
         return True
     if not (config and config_path[0] in config):
@@ -24,12 +28,14 @@ def traverse_config_path(config, config_path: list[str]) -> bool:
 
 
 def get_config_value(config, config_path):
+    """Return config value."""
     if len(config_path) == 1:
         return config[config_path[0]]
     return get_config_value(config=config[config_path[0]], config_path=config_path[1:])
 
 
 def get_username(config):
+    """Get usename from config."""
     username = None
     config_path = ["app", "credentials", "username"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -46,6 +52,7 @@ def get_username(config):
 
 
 def get_retry_login_interval(config):
+    """Return retry login interval from config."""
     retry_login_interval = DEFAULT_RETRY_LOGIN_INTERVAL_SEC
     config_path = ["app", "credentials", "retry_login_interval"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -60,6 +67,7 @@ def get_retry_login_interval(config):
 
 
 def get_drive_sync_interval(config):
+    """Return drive sync interval from config."""
     sync_interval = DEFAULT_SYNC_INTERVAL_SEC
     config_path = ["drive", "sync_interval"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -74,6 +82,7 @@ def get_drive_sync_interval(config):
 
 
 def get_photos_sync_interval(config):
+    """Return photos sync interval from config."""
     sync_interval = DEFAULT_SYNC_INTERVAL_SEC
     config_path = ["photos", "sync_interval"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -88,6 +97,7 @@ def get_photos_sync_interval(config):
 
 
 def prepare_root_destination(config):
+    """Prepare root destination."""
     LOGGER.debug("Checking root destination ...")
     root_destination = DEFAULT_ROOT_DESTINATION
     config_path = ["app", "root"]
@@ -104,6 +114,7 @@ def prepare_root_destination(config):
 
 
 def get_smtp_email(config):
+    """Return smtp from email from config."""
     email = None
     config_path = ["app", "smtp", "email"]
     if traverse_config_path(config=config, config_path=config_path):
@@ -112,6 +123,7 @@ def get_smtp_email(config):
 
 
 def get_smtp_to_email(config):
+    """Return smtp to email from config."""
     to_email = None
     config_path = ["app", "smtp", "to"]
     if traverse_config_path(config=config, config_path=config_path):
@@ -122,6 +134,7 @@ def get_smtp_to_email(config):
 
 
 def get_smtp_password(config):
+    """Return smtp password from config."""
     password = None
     config_path = ["app", "smtp", "password"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -134,6 +147,7 @@ def get_smtp_password(config):
 
 
 def get_smtp_host(config):
+    """Return smtp host from config."""
     host = None
     config_path = ["app", "smtp", "host"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -146,6 +160,7 @@ def get_smtp_host(config):
 
 
 def get_smtp_port(config):
+    """Return smtp port from config."""
     port = None
     config_path = ["app", "smtp", "port"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -158,6 +173,7 @@ def get_smtp_port(config):
 
 
 def get_smtp_no_tls(config):
+    """Return smtp no_tls from config."""
     no_tls = False
     config_path = ["app", "smtp", "no_tls"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -170,6 +186,7 @@ def get_smtp_no_tls(config):
 
 
 def prepare_drive_destination(config):
+    """Prepare drive destination path."""
     LOGGER.debug("Checking drive destination ...")
     config_path = ["drive", "destination"]
     drive_destination = DEFAULT_DRIVE_DESTINATION
@@ -188,6 +205,7 @@ def prepare_drive_destination(config):
 
 
 def get_drive_remove_obsolete(config):
+    """Return drive remove obsolete from config."""
     drive_remove_obsolete = False
     config_path = ["drive", "remove_obsolete"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -204,6 +222,7 @@ def get_drive_remove_obsolete(config):
 
 
 def prepare_photos_destination(config):
+    """Prepare photos destination path."""
     LOGGER.debug("Checking photos destination ...")
     config_path = ["photos", "destination"]
     photos_destination = DEFAULT_PHOTOS_DESTINATION
@@ -222,6 +241,7 @@ def prepare_photos_destination(config):
 
 
 def get_photos_remove_obsolete(config):
+    """Return remove obsolete for photos from config."""
     photos_remove_obsolete = False
     config_path = ["photos", "remove_obsolete"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -240,6 +260,7 @@ def get_photos_remove_obsolete(config):
 
 
 def get_photos_filters(config):
+    """Return photos filters from config."""
     photos_filters = {"albums": None, "file_sizes": ["original"]}
     valid_file_sizes = ["original", "medium", "thumb"]
     config_path = ["photos", "filters"]
@@ -269,7 +290,7 @@ def get_photos_filters(config):
         else:
             file_sizes = get_config_value(config=config, config_path=config_path)
             for file_size in file_sizes:
-                if not file_size in valid_file_sizes:
+                if file_size not in valid_file_sizes:
                     LOGGER.warning(
                         f"Skipping the invalid file size {file_size}, "
                         + f"valid file sizes are {','.join(valid_file_sizes)}."
@@ -282,6 +303,7 @@ def get_photos_filters(config):
 
 
 def get_region(config):
+    """Return region from config."""
     region = "global"
     config_path = ["app", "region"]
     if not traverse_config_path(config=config, config_path=config_path):

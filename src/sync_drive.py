@@ -1,18 +1,21 @@
+"""Sync drive module."""
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import gzip
 import os
 import re
 import time
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
+
 import magic
-import gzip
 from icloudpy import exceptions
 
-from src import config_parser, LOGGER
+from src import LOGGER, config_parser
 
 
 def wanted_file(filters, file_path):
+    """Check if file is wanted."""
     if not file_path:
         return False
     if not filters or len(filters) == 0:
@@ -25,6 +28,7 @@ def wanted_file(filters, file_path):
 
 
 def wanted_folder(filters, root, folder_path):
+    """Check if folder is wanted."""
     if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
         return True
@@ -46,6 +50,7 @@ def wanted_folder(filters, root, folder_path):
 
 
 def wanted_parent_folder(filters, root, folder_path):
+    """Check if parent folder is wanted."""
     if not filters or not folder_path or not root or len(filters) == 0:
         return True
     folder_path = Path(folder_path)
@@ -61,6 +66,7 @@ def wanted_parent_folder(filters, root, folder_path):
 
 
 def process_folder(item, destination_path, filters, root):
+    """Process the given folder."""
     if not (item and destination_path and root):
         return None
     new_directory = os.path.join(destination_path, item.name)
@@ -72,6 +78,7 @@ def process_folder(item, destination_path, filters, root):
 
 
 def package_exists(item, local_package_path):
+    """Check for package existence."""
     if item and local_package_path and os.path.isdir(local_package_path):
         local_package_modified_time = int(os.path.getmtime(local_package_path))
         remote_package_modified_time = int(item.date_modified.timestamp())
@@ -102,6 +109,7 @@ def package_exists(item, local_package_path):
 
 
 def file_exists(item, local_file):
+    """Check for file existence locally."""
     if item and local_file and os.path.isfile(local_file):
         local_file_modified_time = int(os.path.getmtime(local_file))
         remote_file_modified_time = int(item.date_modified.timestamp())
@@ -126,6 +134,7 @@ def file_exists(item, local_file):
 
 
 def process_package(local_file):
+    """Process the package."""
     archive_file = local_file
     magic_object = magic.Magic(mime=True)
     if "application/zip" == magic_object.from_file(filename=local_file):
@@ -153,6 +162,7 @@ def process_package(local_file):
 
 
 def is_package(item):
+    """Determine if item is a package."""
     file_is_a_package = False
     with item.open(stream=True) as response:
         file_is_a_package = response.url and "/packageDownload?" in response.url
@@ -160,6 +170,7 @@ def is_package(item):
 
 
 def download_file(item, local_file):
+    """Download file from server."""
     if not (item and local_file):
         return False
     LOGGER.info(f"Downloading {local_file} ...")
@@ -178,6 +189,7 @@ def download_file(item, local_file):
 
 
 def process_file(item, destination_path, filters, files):
+    """Process given item as file."""
     if not (item and destination_path and files is not None):
         return False
     local_file = os.path.join(destination_path, item.name)
@@ -200,6 +212,7 @@ def process_file(item, destination_path, filters, files):
 
 
 def remove_obsolete(destination_path, files):
+    """Remove local obsolete file."""
     removed_paths = set()
     if not (destination_path and files is not None):
         return removed_paths
@@ -225,6 +238,7 @@ def sync_directory(
     filters=None,
     remove=False,
 ):
+    """Sync folder."""
     files = set()
     if drive and destination_path and items and root:
         for i in items:
@@ -273,6 +287,7 @@ def sync_directory(
 
 
 def sync_drive(config, drive):
+    """Sync drive."""
     destination_path = config_parser.prepare_drive_destination(config=config)
     return sync_directory(
         drive=drive,

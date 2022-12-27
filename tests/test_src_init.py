@@ -1,22 +1,25 @@
+"""Tests for sync module."""
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
-import unittest
 import logging
+import unittest
 from unittest.mock import patch
-from src import read_config, get_logger
+
 import tests
+from src import get_logger, read_config
 
 
 class TestSrcInit(unittest.TestCase):
+    """Tests class for sync module."""
+
     def setUp(self) -> None:
+        """Initialize tests."""
         self.config = read_config(config_path=tests.CONFIG_PATH)
         return super().setUp()
 
-    def tearDown(self) -> None:
-        pass
-
     @patch("src.read_config")
     def test_get_logger_no_config(self, mock_read_config):
+        """Test for no config."""
         config = self.config.copy()
         # Add null handler if not configured
         del config["app"]["logger"]
@@ -28,6 +31,7 @@ class TestSrcInit(unittest.TestCase):
 
     @patch("src.read_config")
     def test_get_logger(self, mock_read_config):
+        """Test for logger."""
         config = self.config.copy()
         # success flow
         mock_read_config.return_value = config
@@ -36,8 +40,9 @@ class TestSrcInit(unittest.TestCase):
 
     @patch("src.read_config")
     def test_get_logger_no_duplicate_handlers(self, mock_read_config):
+        """Test for no duplicate logger handlers."""
         config = self.config.copy()
-        # No duplicate hanlders
+        # No duplicate handlers
         mock_read_config.return_value = config
         logger = get_logger()
         number_of_handlers = len(logger.handlers)

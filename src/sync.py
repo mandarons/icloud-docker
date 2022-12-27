@@ -1,17 +1,21 @@
+"""Sync module."""
+__author__ = "Mandar Patil <mandarons@pm.me>"
 import datetime
-from time import sleep
 import os
+from time import sleep
 
-from icloudpy import ICloudPyService, utils, exceptions
+from icloudpy import ICloudPyService, exceptions, utils
+
 from src import (
     DEFAULT_COOKIE_DIRECTORY,
+    ENV_ICLOUD_PASSWORD_KEY,
+    LOGGER,
     config_parser,
     notify,
-    LOGGER,
     read_config,
-    ENV_ICLOUD_PASSWORD_KEY,
+    sync_drive,
+    sync_photos,
 )
-from src import sync_drive, sync_photos
 
 
 def get_api_instance(
@@ -20,6 +24,7 @@ def get_api_instance(
     cookie_directory=DEFAULT_COOKIE_DIRECTORY,
     server_region="global",
 ):
+    """Get API client instance."""
     return (
         ICloudPyService(
             apple_id=username,
@@ -38,6 +43,7 @@ def get_api_instance(
 
 
 def sync():
+    """Sync data from server."""
     last_send = None
     enable_sync_drive = True
     enable_sync_photos = True
