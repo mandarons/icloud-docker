@@ -742,7 +742,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 10)
+        self.assertTrue(len(actual) == 22)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -777,7 +777,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=True,
         )
-        self.assertTrue(len(actual) == 10)
+        self.assertTrue(len(actual) == 22)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -810,7 +810,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 14)
+        self.assertTrue(len(actual) == 26)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
