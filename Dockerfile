@@ -1,4 +1,4 @@
-FROM python:3.9-alpine AS build
+FROM python:3.10-alpine AS build
 RUN apk update && apk add git gcc musl-dev python3-dev libffi-dev openssl-dev cargo
 WORKDIR /app
 COPY requirements.txt .
