@@ -97,11 +97,12 @@ def package_exists(item, local_package_path):
             )
             return True
         else:
-            LOGGER.debug(
+            LOGGER.info(
                 f"Changes detected: local_modified_time is {local_package_modified_time}, "
                 + f"remote_modified_time is {remote_package_modified_time}, "
                 + f"local_package_size is {local_package_size} and remote_package_size is {remote_package_size}."
             )
+            rmtree(local_package_path)
     else:
         LOGGER.debug(f"Package {local_package_path} does not exist locally.")
     return False
@@ -139,11 +140,13 @@ def process_package(local_file):
     if "application/zip" == magic_object.from_file(filename=local_file):
         archive_file += ".zip"
         os.rename(local_file, archive_file)
+        LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(archive_file)}")
         unpack_archive(filename=archive_file, extract_dir=os.path.dirname(archive_file))
         os.remove(archive_file)
     elif "application/gzip" == magic_object.from_file(filename=local_file):
         archive_file += ".gz"
         os.rename(local_file, archive_file)
+        LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(local_file)}")
         with gzip.GzipFile(filename=archive_file, mode="rb") as gz_file:
             with open(file=local_file, mode="wb") as package_file:
                 copyfileobj(gz_file, package_file)
@@ -193,12 +196,18 @@ def process_file(item, destination_path, filters, files):
     if not wanted_file(filters=filters, file_path=local_file):
         return False
     files.add(local_file)
-    if is_package(item=item):
+    item_is_package = is_package(item=item)
+    if item_is_package:
         if package_exists(item=item, local_package_path=local_file):
+            for f in Path(local_file).glob("**/*"):
+                files.add(str(f))
             return False
     elif file_exists(item=item, local_file=local_file):
         return False
     download_file(item=item, local_file=local_file)
+    if item_is_package:
+        for f in Path(local_file).glob("**/*"):
+            files.add(str(f))
     return True
 
 
