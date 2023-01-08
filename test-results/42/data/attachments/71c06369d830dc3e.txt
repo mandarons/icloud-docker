@@ -1,0 +1,6 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-01-08 22:30:25,158 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-01-08 22:30:25,158 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-01-08 22:30:25,159 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-01-08 22:30:25,160 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;226m2023-01-08 22:30:25,160 :: WARNING :: root :: sync_photos.py :: 67 :: File size medium not found on server. Skipping the photo /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos/medium.filename ...[0m

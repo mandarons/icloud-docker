@@ -1,0 +1,18 @@
+DEBUG    icloudpy.base:base.py:246 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:253 Session file does not exist
+DEBUG    icloudpy.base:base.py:318 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:350 Authentication completed successfully
+DEBUG    root:sync_drive.py:131 File /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/icloudpy/Test/Document scanne 2.pdf does not exist locally.
+INFO     root:sync_drive.py:173 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/icloudpy/Test/Document scanne 2.pdf ...
+DEBUG    root:sync_drive.py:131 File /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/icloudpy/Test/Scanned document 1.pdf does not exist locally.
+INFO     root:sync_drive.py:173 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/icloudpy/Test/Scanned document 1.pdf ...
+DEBUG    root:sync_drive.py:131 File /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/This is a title.md does not exist locally.
+INFO     root:sync_drive.py:173 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/This is a title.md ...
+DEBUG    root:sync_drive.py:106 Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band does not exist locally.
+INFO     root:sync_drive.py:173 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band ...
+INFO     root:sync_drive.py:157 Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band.zip.
+DEBUG    root:sync_drive.py:106 Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band does not exist locally.
+INFO     root:sync_drive.py:173 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band ...
+INFO     root:sync_drive.py:157 Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.zip.
+INFO     root:sync_drive.py:157 Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.gz.
+ERROR    root:sync_drive.py:183 Failed to download /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band: [Errno 2] No such file or directory
