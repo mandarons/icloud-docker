@@ -87,7 +87,12 @@ class TestSyncPhotos(unittest.TestCase):
         )
         sync_photos.sync_photos(config=config, photos=mock_service.photos)
 
-        os.remove(os.path.join(album_1_path, "IMG_3148.JPG"))
+        os.remove(
+            os.path.join(
+                album_1_path,
+                "IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+            )
+        )
         # Download missing file
         with self.assertLogs() as captured:
             self.assertIsNone(
@@ -95,7 +100,15 @@ class TestSyncPhotos(unittest.TestCase):
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(
-                next((s for s in captured[1] if "album-1/IMG_3148.JPG ..." in s), None)
+                next(
+                    (
+                        s
+                        for s in captured[1]
+                        if "album-1/IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
+                        in s
+                    ),
+                    None,
+                )
             )
         self.assertTrue(os.path.isdir(album_0_path))
         self.assertTrue(os.path.isdir(album_1_path))
@@ -128,7 +141,12 @@ class TestSyncPhotos(unittest.TestCase):
         )
         sync_photos.sync_photos(config=config, photos=mock_service.photos)
         # Download changed file
-        os.remove(os.path.join(album_1_path, "IMG_3148.JPG"))
+        os.remove(
+            os.path.join(
+                album_1_path,
+                "IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+            )
+        )
         shutil.copyfile(
             os.path.join(DATA_DIR, "thumb.jpeg"),
             os.path.join(album_1_path, "IMG_3148.JPG"),
@@ -139,7 +157,15 @@ class TestSyncPhotos(unittest.TestCase):
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(
-                next((s for s in captured[1] if "album-1/IMG_3148.JPG ..." in s), None)
+                next(
+                    (
+                        s
+                        for s in captured[1]
+                        if "album-1/IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
+                        in s
+                    ),
+                    None,
+                )
             )
         self.assertTrue(os.path.isdir(album_0_path))
         self.assertTrue(os.path.isdir(album_1_path))
@@ -202,7 +228,28 @@ class TestSyncPhotos(unittest.TestCase):
 
         # Rename previous original files - upgrade to newer version
         os.rename(
+            os.path.join(
+                album_1_path,
+                "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+            ),
             os.path.join(album_1_path, "IMG_3148.JPG"),
+        )
+
+        with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
+            self.assertIsNone(
+                sync_photos.sync_photos(config=config, photos=mock_service.photos)
+            )
+            self.assertTrue(len(captured.records) > 0)
+            self.assertIsNone(
+                next((s for s in captured[1] if "Downloading /" in s), None)
+            )
+
+        # Rename previous __original files - upgrade to newer version
+        os.rename(
+            os.path.join(
+                album_1_path,
+                "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+            ),
             os.path.join(album_1_path, "IMG_3148__original.JPG"),
         )
 
@@ -240,7 +287,15 @@ class TestSyncPhotos(unittest.TestCase):
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(
-                next((s for s in captured[1] if "all/IMG_3148.JPG ..." in s), None)
+                next(
+                    (
+                        s
+                        for s in captured[1]
+                        if "all/IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
+                        in s
+                    ),
+                    None,
+                )
             )
 
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "all")))
@@ -301,8 +356,12 @@ class TestSyncPhotos(unittest.TestCase):
 
         class MockPhoto:
             @property
+            def id(self):
+                return "some-random-id"
+
+            @property
             def filename(self):
-                return "filename"
+                return "filename.JPG"
 
             @property
             def versions(self):
@@ -321,8 +380,12 @@ class TestSyncPhotos(unittest.TestCase):
 
         class MockPhoto:
             @property
+            def id(self):
+                return "some-random-id"
+
+            @property
             def filename(self):
-                return "filename"
+                return "filename.JPG"
 
             @property
             def versions(self):
