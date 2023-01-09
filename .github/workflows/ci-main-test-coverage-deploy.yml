@@ -89,7 +89,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage-output
-          path: coverage.zip
+          path: htmlcov.zip
           retention-days: 1
       - name: Upload badges artifacts
         uses: actions/upload-artifact@v3
