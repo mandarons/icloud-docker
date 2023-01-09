@@ -762,7 +762,7 @@ DATA = {
                                     "wrappingKey": "dmZqsyvxEA4s3CvifNMApA==",
                                     "referenceChecksum": "ATi6BbOzDuHl6RONNFCub9eqZqSm",
                                     # pylint: disable=C0321
-                                    "downloadURL": "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt-jP6UsV4fBZHATi6BbOzDuHl6RONNFCub9eqZqSm/${f}?o=AkMi62tflbXgUrgSyQZ94SinXG9TYXZ6tydGOmDQx9HG&v=1&x=3&a=CAogc8yqpMgxKnf363cp0n1CujaxnsWY_KrZ3VEN9QchlhcSbRDGkq2nty8Yxu-IqbcvIgEAUgR4fBZHWgSqZqSmaiaxcg1zIsiESwGaEOecYR84r83ltACA6SY5ypGyvYxKD0M3LmqI8HIm7n2S2UL6EBM2Z3a9YFIGX8MrKABFDMA5TXFPUVUP6AfsnKigVMc&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=dmZqsyvxEA4s3CvifNMApA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=rYmwpGBg6DPYHSGj6UAOnCfuMPk",  # noqa: E501
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt+jP6UsV4fBZHATi6BbOzDuHl6RONNFCub9eqZqSm/${f}?o=AkMi62tflbXgUrgSyQZ94SinXG9TYXZ6tydGOmDQx9HG&v=1&x=3&a=CAogc8yqpMgxKnf363cp0n1CujaxnsWY_KrZ3VEN9QchlhcSbRDGkq2nty8Yxu-IqbcvIgEAUgR4fBZHWgSqZqSmaiaxcg1zIsiESwGaEOecYR84r83ltACA6SY5ypGyvYxKD0M3LmqI8HIm7n2S2UL6EBM2Z3a9YFIGX8MrKABFDMA5TXFPUVUP6AfsnKigVMc&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=dmZqsyvxEA4s3CvifNMApA&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=rYmwpGBg6DPYHSGj6UAOnCfuMPk",  # noqa: E501
                                 },
                                 "type": "ASSETID",
                             },
@@ -828,6 +828,101 @@ DATA = {
                             "timestamp": 1595187518048,
                             "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
                             "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                        },
+                        "deleted": False,
+                        "zoneID": {
+                            "zoneName": "PrimarySync",
+                            "ownerRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "zoneType": "REGULAR_CUSTOM_ZONE",
+                        },
+                    },
+                    # IMG_3148.JPG - from another device (actual IMG_3206.JPG)
+                    {
+                        "recordName": "Ab/8kUAhnGzSxnl9yWvh8JKBpOvW",
+                        "recordType": "CPLMaster",
+                        "fields": {
+                            "itemType": {"value": "public.jpeg", "type": "STRING"},
+                            "filenameEnc": {
+                                "value": "SU1HXzMxNDguSlBH",
+                                "type": "ENCRYPTED_BYTES",
+                            },
+                            "dataClassType": {"value": 1, "type": "INT64"},
+                            "resJPEGThumbRes": {
+                                "value": {
+                                    "fileChecksum": "ATTRy6p+Q3U1HqcF6BUKrrOMnjvo",
+                                    "size": 1074354,
+                                    "wrappingKey": "pYDpdhqdaL9SAxHilZEj3Q==",
+                                    "referenceChecksum": "ATqG89bMsXhtmMRMw009uhyJc/Kh",
+                                    # pylint: disable=C0321
+                                    "downloadURL": "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvoATqG89bMsXhtmMRMw009uhyJc_Kh/${f}?o=AovA4TUyNl2kYkqOdInhEXGZ_6Lgkx1fTEsqpkkMh3hm&v=1&x=3&a=CAogVnr-sKWlefxaxarlxJ-k7EPRB-Q851T9df9zyhCvis0SbRC7kq2nty8Yu--IqbcvIgEAUgSMnjvnWgSJc_KhaiZCiMEZuykdl4ex2Ra8y53DbEEtJi6ItoX1e6b8TOoWXYiLA-mkr3Im7aDvMFg_m7tYuslgLZFXL8hxJftHL4oTy1ZpuVaP__2nTQTPLp4&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=pYDpdhqdaL9SAxHilZEj3Q&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=IKz0oqClwHpM9shdTb3e5liYV5E",  # noqa: E501
+                                },
+                                "type": "ASSETID",
+                            },
+                            "resJPEGThumbHeight": {"value": 1781, "type": "INT64"},
+                            "resJPEGThumbWidth": {"value": 1765, "type": "INT64"},
+                            "resJPEGThumbFileType": {
+                                "value": "public.jpeg",
+                                "type": "STRING",
+                            },
+                            "resJPEGThumbFingerprint": {
+                                "value": "ATTRy6p+Q3U1HqcF6BUKrrOMnjvn",
+                                "type": "STRING",
+                            },
+                            "originalOrientation": {"value": 1, "type": "INT64"},
+                            "resJPEGMedRes": {
+                                "value": {
+                                    "fileChecksum": "Ab/8kUAhnGzSxnl9yWvh8JKBpOvW",
+                                    "size": 2194253,
+                                    "wrappingKey": "YIFaf0awZsX16khQaJ5pHw==",
+                                    "referenceChecksum": "AVLSGMHt+PAQ9/krqqfXATNX57d5",
+                                    # pylint: disable=C0321
+                                    "downloadURL": "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvWAVLSGMHt-PAQ9_krqqfXATNX57d5/${f}?o=AvHBwurT0LTKni3mzYNLu4FnSeLeXfxYgSThZ4ImxjO8&v=1&x=3&a=CAogTIPbEVbPukTNLTRMbKPr3KEw-OwlmwJ6E2P4TWSVmS0SbRC7kq2nty8Yu--IqbcvIgEAUgSBpOvWWgRX57d5aibAoDs2oxjwpsMmZzKDj2ndE0sAhXdcwzBu-U_oZGpb059mW6D0dnImIjbNA_Bqcyw_VKQmNxeLtnGtGwyFB16OPwFKYcs1KsSFvHFAD7Y&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=YIFaf0awZsX16khQaJ5pHw&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=1bdqdYxBN6JqLAkjMyHSEGNkqDA",  # noqa: E501
+                                },
+                                "type": "ASSETID",
+                            },
+                            "resJPEGMedWidth": {"value": 1995, "type": "INT64"},
+                            "resJPEGMedHeight": {"value": 2013, "type": "INT64"},
+                            "resJPEGMedFileType": {
+                                "value": "public.jpeg",
+                                "type": "STRING",
+                            },
+                            "resJPEGMedFingerprint": {
+                                "value": "Ab/8kUAhnGzSxnl9yWvh8JKBpOvW",
+                                "type": "STRING",
+                            },
+                            "resOriginalFingerprint": {
+                                "value": "AQNND5zpteAXnnBP2BmDd0ropjY9",
+                                "type": "STRING",
+                            },
+                            "resOriginalHeight": {"value": 417, "type": "INT64"},
+                            "resOriginalWidth": {"value": 413, "type": "INT64"},
+                            "resOriginalFileType": {
+                                "value": "public.jpeg",
+                                "type": "STRING",
+                            },
+                            "resOriginalRes": {
+                                "value": {
+                                    "fileChecksum": "AQNND5zpteAXnnBP2BmDd0ropjY0",
+                                    "size": 340532,
+                                    "wrappingKey": "lxLQBw46n1nvea4s30UY+A==",
+                                    "referenceChecksum": "AV2Zh7WygJu74eNWVuuMT4lM8qme",
+                                    # pylint: disable=C0321
+                                    "downloadURL": "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY0AV2Zh7WygJu74eNWVuuMT4lM8qme/${f}?o=ArcD2SL9b5Gy5zcnrnT2luycDRZzFLjOiX-8u9IWdQM2&v=1&x=3&a=CAogfF6-sW-XhnsFDy-vqHQjR8LXVO4OmxBUqG4CZf1zmOwSbRC8kq2nty8YvO-IqbcvIgEAUgTopjY9WgRM8qmeaibiG79B2YhfcchV4W9EgxQXAN4Bpi57NX82WXqo_YW-xi1qLAH9-HImRd8oYhd7r27sXPkUL3GT-rKGSKG-leLeNevi3ay090liNNZH-2U&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=lxLQBw46n1nvea4s30UY-A&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=34vgVK6vLEdlpYceHAmIfqIp1Fk",  # noqa: E501
+                                },
+                                "type": "ASSETID",
+                            },
+                        },
+                        "pluginFields": {},
+                        "recordChangeTag": "2wtv",
+                        "created": {
+                            "timestamp": 1574869225887,
+                            "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c24",
+                        },
+                        "modified": {
+                            "timestamp": 1595187513229,
+                            "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c24",
                         },
                         "deleted": False,
                         "zoneID": {
@@ -1111,6 +1206,61 @@ DATA = {
                             "zoneType": "REGULAR_CUSTOM_ZONE",
                         },
                     },
+                    # Reference to IMG_3148.JPG from another device (actual IMG_3206.JPG)
+                    {
+                        "recordName": "97362090-90E4-4F54-A564-14F7ECC02707",
+                        "recordType": "CPLAsset",
+                        "fields": {
+                            "assetDate": {"value": 1574840964935, "type": "TIMESTAMP"},
+                            "orientation": {"value": 1, "type": "INT64"},
+                            "addedDate": {"value": 1574840964970, "type": "TIMESTAMP"},
+                            "assetSubtypeV2": {"value": 0, "type": "INT64"},
+                            "assetHDRType": {"value": 0, "type": "INT64"},
+                            "timeZoneOffset": {"value": 19800, "type": "INT64"},
+                            "masterRef": {
+                                "value": {
+                                    "recordName": "Ab/8kUAhnGzSxnl9yWvh8JKBpOvW",
+                                    "action": "DELETE_SELF",
+                                    "zoneID": {
+                                        "zoneName": "PrimarySync",
+                                        "ownerRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                                        "zoneType": "REGULAR_CUSTOM_ZONE",
+                                    },
+                                },
+                                "type": "REFERENCE",
+                            },
+                            "adjustmentRenderType": {"value": 0, "type": "INT64"},
+                            "vidComplDispScale": {"value": 0, "type": "INT64"},
+                            "isHidden": {"value": 0, "type": "INT64"},
+                            "duration": {"value": 0, "type": "INT64"},
+                            "burstFlags": {"value": 0, "type": "INT64"},
+                            "assetSubtype": {"value": 0, "type": "INT64"},
+                            "vidComplDurScale": {"value": 0, "type": "INT64"},
+                            "vidComplDurValue": {"value": 0, "type": "INT64"},
+                            "vidComplVisibilityState": {"value": 0, "type": "INT64"},
+                            "customRenderedValue": {"value": 0, "type": "INT64"},
+                            "isFavorite": {"value": 0, "type": "INT64"},
+                            "vidComplDispValue": {"value": 0, "type": "INT64"},
+                        },
+                        "pluginFields": {},
+                        "recordChangeTag": "2wtw",
+                        "created": {
+                            "timestamp": 1574869225891,
+                            "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c24",
+                        },
+                        "modified": {
+                            "timestamp": 1595187513229,
+                            "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c24",
+                        },
+                        "deleted": False,
+                        "zoneID": {
+                            "zoneName": "PrimarySync",
+                            "ownerRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "zoneType": "REGULAR_CUSTOM_ZONE",
+                        },
+                    },
                     # IMG_3328.JPG IN album 2
                     {
                         "recordName": "248AFAAE-062C-40BB-92C6-B47084527A9E-IN-E4RT4FB7-4A35-4958-1D42-5769E66BE407",
@@ -1278,6 +1428,41 @@ DATA = {
                             "timestamp": 1595190039047,
                             "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
                             "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                        },
+                        "deleted": False,
+                        "zoneID": {
+                            "zoneName": "PrimarySync",
+                            "ownerRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "zoneType": "REGULAR_CUSTOM_ZONE",
+                        },
+                    },
+                    # IMG_3148.JPG in album 2 from another device (actual IMG_3206.JPG)
+                    {
+                        "recordName": "97362090-90E4-4F54-A564-14F7ECC02706-IN-E4RT4FB7-4A35-4958-1D42-5769E66BE408",
+                        "recordType": "CPLContainerRelation",
+                        "fields": {
+                            "itemId": {
+                                "value": "97362090-90E4-4F54-A564-14F7ECC02707",
+                                "type": "STRING",
+                            },
+                            "isKeyAsset": {"value": 0, "type": "INT64"},
+                            "position": {"value": 3072, "type": "INT64"},
+                            "containerId": {
+                                "value": "E4RT4FB7-4A35-4958-1D42-5769E66BE407",
+                                "type": "STRING",
+                            },
+                        },
+                        "pluginFields": {},
+                        "recordChangeTag": "3f4w",
+                        "created": {
+                            "timestamp": 1574869421700,
+                            "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c24",
+                        },
+                        "modified": {
+                            "timestamp": 1595190034254,
+                            "userRecordName": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23",
+                            "deviceID": "_1d5r3c201b3a4r5daac8ff7e7fbc0c23_1d5r3c201b3a4r5daac8ff7e7fbc0c24",
                         },
                         "deleted": False,
                         "zoneID": {

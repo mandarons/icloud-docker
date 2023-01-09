@@ -3801,7 +3801,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                                 "query?remapEnums=True&getCurrentSyncToken=True"
                             ][2]["response"]
                         )
-                    if data.get("query").get("filterBy")[0]["fieldValue"]["value"] == 5:
+                    if data.get("query").get("filterBy")[0]["fieldValue"]["value"] == 6:
                         return ResponseMock(
                             photos_data.DATA[
                                 "query?remapEnums=True&getCurrentSyncToken=True"
@@ -3815,13 +3815,23 @@ class ICloudPySessionMock(base.ICloudPySession):
                 )
         # Photos download
         if (
-            "https://cvws.icloud-content.com/B/AeGlt2PppPTgd0Q7mp8GuxIugSh6" in url
-            or "https://cvws.icloud-content.com/B/ARKzBUr-DdmTaP_SAVglTurWtsmr" in url
-            or "https://cvws.icloud-content.com/B/ASTSuc7S58IPmVCJIUslbeCRjsno" in url
-            or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvn" in url
-            or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt-jP6UsV4fBZH" in url
+            # IMG_3327.JPG
+            "https://cvws.icloud-content.com/B/ARKzBUr-DdmTaP_SAVglTurWtsmrAb5Vyk36t2jwuON7WSxvon_DvGtK"
+            in url
+            # IMG_3322.JPG
+            or "https://cvws.icloud-content.com/B/ASTSuc7S58IPmVCJIUslbeCRjsnoASIoOBi88potAS0gE8tfnojuSlrb"
+            in url
+            # IMG_3306.JPG
+            or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvnATqG89bMsXhtmMRMw009uhyJc_Kh"
+            in url
+            # IMG_3148.JPG
+            or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt+jP6UsV4fBZHATi6BbOzDuHl6RONNFCub9eqZqSm"
+            in url
             # IMG_3328.JPG
             or "https://cvws.icloud-content.com/B/EeGlt2PppPTgd0Q7mp8GenIugSh7AQYmx-DRYXnMs0tkDZ3rorp4IB99"
+            in url
+            # IMG_3148.JPG another device
+            or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvoATqG89bMsXhtmMRMw009uhyJc_Kh"
             in url
         ):
             return ResponseMock(
@@ -3829,13 +3839,23 @@ class ICloudPySessionMock(base.ICloudPySession):
                 raw=open(os.path.join(os.path.dirname(__file__), "medium.jpeg"), "rb"),
             )
         if (
-            "https://cvws.icloud-content.com/B/AT1v8eGiHYXP_aKUkMuGtSf0P1BN" in url
-            or "https://cvws.icloud-content.com/B/AUvKU8j-Z5pfqGI_fe-9tibuqfVR" in url
-            or "https://cvws.icloud-content.com/B/AUxVFT2yVsQ5739tmU5c1497duFD" in url
-            or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvV" in url
-            or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXg" in url
+            # IMG_3327.JPG
+            "https://cvws.icloud-content.com/B/AUvKU8j-Z5pfqGI_fe-9tibuqfVRAd0I2qxdsqlGuSLlqtTBgoKndHE_"
+            in url
+            # IMG_3322.JPG
+            or "https://cvws.icloud-content.com/B/AUxVFT2yVsQ5739tmU5c1497duFDAdkoZP1534bwlULpwCdn2fd44LAt"
+            in url
+            # IMG_3306.JPG
+            or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvVAVLSGMHt-PAQ9_krqqfXATNX57d5"
+            in url
+            # IMG_3148.JPG
+            or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXgAdUIDFzHC2rVOvwTz0jPi_tKihnb"
+            in url
             # IMG_3328.JPG
             or "https://cvws.icloud-content.com/B/YN1v8eGiHYYZ_aKUkMuGtSf0P1BNAXKVYPcDa-9Mjvnap0ZS-p2Z24V3"
+            in url
+            # IMG_3148.JPG another device
+            or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvWAVLSGMHt-PAQ9_krqqfXATNX57d5"
             in url
         ):
             return ResponseMock(
@@ -3845,13 +3865,23 @@ class ICloudPySessionMock(base.ICloudPySession):
                 ),
             )
         if (
-            "https://cvws.icloud-content.com/B/AfK0xzSiAUNFrAsZYAvby7QHrMOb" in url
-            or "https://cvws.icloud-content.com/B/ASy6f_leU1-xkR1aPmQyvYmwHUpE" in url
-            or "https://cvws.icloud-content.com/B/ASPVZ_Pft6gIN2VEA_oUbqQzh6Wy" in url
-            or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY9" in url
-            or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMY" in url
+            # IMG_3327.JPG
+            "https://cvws.icloud-content.com/B/ASy6f_leU1-xkR1aPmQyvYmwHUpEARHOzkI3sbX3SZDmNQgttNJ9DqQa"
+            in url
+            # IMG_3322.JPG
+            or "https://cvws.icloud-content.com/B/ASPVZ_Pft6gIN2VEA_oUbqQzh6WyAXd258pYF6LLhmADLoZAumNqI-8M"
+            in url
+            # IMG_3306.JPG
+            or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY9AV2Zh7WygJu74eNWVuuMT4lM8qme"
+            in url
+            # IMG_3148.JPG
+            or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMYARtMrcvA8cbMefPDnmwSWQwe-mBd"
+            in url
             # IMG_3328.JPG
             or "https://cvws.icloud-content.com/B/DmK0xzSiAUSFrAsYYAvby7QHrMDeAR5TiM9Qko4rHwmoDH1BgNRVZpF4"
+            in url
+            # IMG_3148.JPG another device
+            or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY0AV2Zh7WygJu74eNWVuuMT4lM8qme"
             in url
         ):
             return ResponseMock(
