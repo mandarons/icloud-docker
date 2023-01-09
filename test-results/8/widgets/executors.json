@@ -1,0 +1,10 @@
+[ {
+  "name" : "GitHub Actions",
+  "type" : "github",
+  "url" : "https://mandarons.github.io/icloud-drive-docker/test-results",
+  "buildOrder" : 8,
+  "buildName" : "GitHub Actions Run #1121059395",
+  "buildUrl" : "https://github.com/mandarons/icloud-drive-docker/actions/runs/1121059395",
+  "reportName" : "Allure Report with history",
+  "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/8/"
+} ]

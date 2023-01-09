@@ -1,0 +1,155 @@
+{
+  "uid" : "2435074a38a9a703",
+  "name" : "test_file_exists_none_item",
+  "fullName" : "tests.test_sync_drive.TestSyncDrive#test_file_exists_none_item",
+  "historyId" : "0c7479c6c49a5378ccb8c46cf8a3da4a",
+  "time" : {
+    "start" : 1644892725319,
+    "stop" : 1644892725338,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncDrive",
+    "time" : {
+      "start" : 1644892725181,
+      "stop" : 1644892725181,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "9239e433670fad4f",
+      "name" : "log",
+      "source" : "9239e433670fad4f.txt",
+      "type" : "text/plain",
+      "size" : 325
+    }, {
+      "uid" : "d9e41701b859b5df",
+      "name" : "stdout",
+      "source" : "d9e41701b859b5df.txt",
+      "type" : "text/plain",
+      "size" : 632
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 2,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncDrive::0",
+    "time" : {
+      "start" : 1644892726328,
+      "stop" : 1644892726328,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_sync_drive"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestSyncDrive"
+  }, {
+    "name" : "host",
+    "value" : "fv-az223-646"
+  }, {
+    "name" : "thread",
+    "value" : "3534-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_sync_drive"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 5,
+        "unknown" : 0,
+        "total" : 5
+      },
+      "items" : [ {
+        "uid" : "a887f6b3c620899b",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/23//#testresult/a887f6b3c620899b",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644863953770,
+          "stop" : 1644863953791,
+          "duration" : 21
+        }
+      }, {
+        "uid" : "18dd0bb8fbe1c66b",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/22//#testresult/18dd0bb8fbe1c66b",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644861148182,
+          "stop" : 1644861148204,
+          "duration" : 22
+        }
+      }, {
+        "uid" : "e9b83f6f3ea16553",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/21//#testresult/e9b83f6f3ea16553",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644860157986,
+          "stop" : 1644860158003,
+          "duration" : 17
+        }
+      }, {
+        "uid" : "69d73830aa20993a",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/20//#testresult/69d73830aa20993a",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644679740200,
+          "stop" : 1644679740217,
+          "duration" : 17
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "2435074a38a9a703.json",
+  "parameterValues" : [ ]
+}

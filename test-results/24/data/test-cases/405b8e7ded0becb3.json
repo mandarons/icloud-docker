@@ -1,0 +1,155 @@
+{
+  "uid" : "405b8e7ded0becb3",
+  "name" : "test_get_remove_obsolete",
+  "fullName" : "tests.test_config_parser.TestConfigParser#test_get_remove_obsolete",
+  "historyId" : "793be07030a935c32b24cc1574e14e19",
+  "time" : {
+    "start" : 1644892724404,
+    "stop" : 1644892724421,
+    "duration" : 17
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestConfigParser",
+    "time" : {
+      "start" : 1644892724195,
+      "stop" : 1644892724195,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "ec21110934b53363",
+      "name" : "log",
+      "source" : "ec21110934b53363.txt",
+      "type" : "text/plain",
+      "size" : 145
+    }, {
+      "uid" : "2db048b55bb4f001",
+      "name" : "stdout",
+      "source" : "2db048b55bb4f001.txt",
+      "type" : "text/plain",
+      "size" : 312
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 2,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestConfigParser::0",
+    "time" : {
+      "start" : 1644892724653,
+      "stop" : 1644892724653,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_config_parser"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestConfigParser"
+  }, {
+    "name" : "host",
+    "value" : "fv-az223-646"
+  }, {
+    "name" : "thread",
+    "value" : "3534-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_config_parser"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "history" : {
+      "statistic" : {
+        "failed" : 0,
+        "broken" : 0,
+        "skipped" : 0,
+        "passed" : 5,
+        "unknown" : 0,
+        "total" : 5
+      },
+      "items" : [ {
+        "uid" : "c2782058e2612097",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/23//#testresult/c2782058e2612097",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644863952735,
+          "stop" : 1644863952754,
+          "duration" : 19
+        }
+      }, {
+        "uid" : "7c2cc17aeee31fc1",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/22//#testresult/7c2cc17aeee31fc1",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644861147093,
+          "stop" : 1644861147112,
+          "duration" : 19
+        }
+      }, {
+        "uid" : "a34a0338a7ae4c8e",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/21//#testresult/a34a0338a7ae4c8e",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644860157140,
+          "stop" : 1644860157156,
+          "duration" : 16
+        }
+      }, {
+        "uid" : "cb63ece31b4b1d39",
+        "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/20//#testresult/cb63ece31b4b1d39",
+        "status" : "passed",
+        "time" : {
+          "start" : 1644679739407,
+          "stop" : 1644679739421,
+          "duration" : 14
+        }
+      } ]
+    },
+    "tags" : [ ]
+  },
+  "source" : "405b8e7ded0becb3.json",
+  "parameterValues" : [ ]
+}

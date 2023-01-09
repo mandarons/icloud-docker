@@ -1,0 +1,5 @@
+Warning: host is not found in config > smtp
+Warning: port is not found in config > smtp
+Warning: no_tls is not found in config > smtp
+Warning: password is not found in config > smtp
+Not sending 2FA notification because SMTP is not configured

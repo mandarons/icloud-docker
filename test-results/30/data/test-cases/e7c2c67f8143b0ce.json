@@ -1,0 +1,108 @@
+{
+  "uid" : "e7c2c67f8143b0ce",
+  "name" : "test_process_file_not_wanted",
+  "fullName" : "tests.test_sync_drive.TestSyncDrive#test_process_file_not_wanted",
+  "historyId" : "81967cbe573d66e26f64d3a08c2f6a23",
+  "time" : {
+    "start" : 1649886229987,
+    "stop" : 1649886230007,
+    "duration" : 20
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncDrive",
+    "time" : {
+      "start" : 1649886229618,
+      "stop" : 1649886229618,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "565615f71d67e15",
+      "name" : "log",
+      "source" : "565615f71d67e15.txt",
+      "type" : "text/plain",
+      "size" : 488
+    }, {
+      "uid" : "a341bcb597e48459",
+      "name" : "stdout",
+      "source" : "a341bcb597e48459.txt",
+      "type" : "text/plain",
+      "size" : 840
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 2,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncDrive::0",
+    "time" : {
+      "start" : 1649886230814,
+      "stop" : 1649886230814,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_sync_drive"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestSyncDrive"
+  }, {
+    "name" : "host",
+    "value" : "fv-az68-583"
+  }, {
+    "name" : "thread",
+    "value" : "3280-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_sync_drive"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "e7c2c67f8143b0ce.json",
+  "parameterValues" : [ ]
+}

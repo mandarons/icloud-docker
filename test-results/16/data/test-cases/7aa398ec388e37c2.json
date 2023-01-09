@@ -1,0 +1,102 @@
+{
+  "uid" : "7aa398ec388e37c2",
+  "name" : "test_missing_medium_thumb_photo_sizes",
+  "fullName" : "tests.test_sync_photos.TestSyncPhotos#test_missing_medium_thumb_photo_sizes",
+  "historyId" : "ff917cc18de9503312d9dabb7e8a79d0",
+  "time" : {
+    "start" : 1643156533781,
+    "stop" : 1643156533800,
+    "duration" : 19
+  },
+  "status" : "passed",
+  "flaky" : false,
+  "newFailed" : false,
+  "beforeStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncPhotos",
+    "time" : {
+      "start" : 1643156533759,
+      "stop" : 1643156533759,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "testStage" : {
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ {
+      "uid" : "c848fd91f863c4c7",
+      "name" : "stdout",
+      "source" : "c848fd91f863c4c7.txt",
+      "type" : "text/plain",
+      "size" : 428
+    } ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 1,
+    "shouldDisplayMessage" : false,
+    "hasContent" : true
+  },
+  "afterStages" : [ {
+    "name" : "unittest_setUpClass_fixture_TestSyncPhotos::0",
+    "time" : {
+      "start" : 1643156533971,
+      "stop" : 1643156533971,
+      "duration" : 0
+    },
+    "status" : "passed",
+    "steps" : [ ],
+    "attachments" : [ ],
+    "parameters" : [ ],
+    "stepsCount" : 0,
+    "attachmentsCount" : 0,
+    "shouldDisplayMessage" : false,
+    "hasContent" : false
+  } ],
+  "labels" : [ {
+    "name" : "parentSuite",
+    "value" : "tests"
+  }, {
+    "name" : "suite",
+    "value" : "test_sync_photos"
+  }, {
+    "name" : "subSuite",
+    "value" : "TestSyncPhotos"
+  }, {
+    "name" : "host",
+    "value" : "fv-az18-289"
+  }, {
+    "name" : "thread",
+    "value" : "3468-MainThread"
+  }, {
+    "name" : "framework",
+    "value" : "pytest"
+  }, {
+    "name" : "language",
+    "value" : "cpython3"
+  }, {
+    "name" : "package",
+    "value" : "tests.test_sync_photos"
+  }, {
+    "name" : "resultFormat",
+    "value" : "allure2"
+  } ],
+  "parameters" : [ ],
+  "links" : [ ],
+  "hidden" : false,
+  "retry" : false,
+  "extra" : {
+    "severity" : "normal",
+    "retries" : [ ],
+    "categories" : [ ],
+    "tags" : [ ]
+  },
+  "source" : "7aa398ec388e37c2.json",
+  "parameterValues" : [ ]
+}

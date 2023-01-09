@@ -1,0 +1,26 @@
+Loading config from %s ... /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml
+[38;21m2022-02-12 01:23:50,160 :: DEBUG :: icloudpy.base :: base.py :: 242 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2022-02-12 01:23:50,161 :: INFO :: icloudpy.base :: base.py :: 249 :: Session file does not exist[0m
+[38;21m2022-02-12 01:23:50,161 :: DEBUG :: icloudpy.base :: base.py :: 314 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2022-02-12 01:23:50,162 :: DEBUG :: icloudpy.base :: base.py :: 346 :: Authentication completed successfully[0m
+[38;5;39m2022-02-12 01:23:50,164 :: INFO :: root :: config_parser.py :: 58 :: Enabled verbose ...[0m
+[38;21m2022-02-12 01:23:50,164 :: DEBUG :: icloudpy.base :: base.py :: 242 :: Using session file /tmp/icloudpy/runner/requires_2fa_user.session[0m
+[38;5;39m2022-02-12 01:23:50,165 :: INFO :: icloudpy.base :: base.py :: 249 :: Session file does not exist[0m
+[38;21m2022-02-12 01:23:50,165 :: DEBUG :: icloudpy.base :: base.py :: 314 :: Authenticating as requires_2fa_user[0m
+[38;21m2022-02-12 01:23:50,165 :: DEBUG :: icloudpy.base :: base.py :: 346 :: Authentication completed successfully[0m
+[38;5;196m2022-02-12 01:23:50,166 :: ERROR :: root :: sync.py :: 36 :: Error: 2FA is required. Please log in.[0m
+[38;5;226m2022-02-12 01:23:50,166 :: WARNING :: root :: config_parser.py :: 118 :: Warning: host is not found in app > smtp > host[0m
+[38;5;226m2022-02-12 01:23:50,166 :: WARNING :: root :: config_parser.py :: 130 :: Warning: port is not found in app > smtp > port[0m
+[38;5;226m2022-02-12 01:23:50,166 :: WARNING :: root :: config_parser.py :: 142 :: Warning: no_tls is not found in app > smtp > no_tls[0m
+[38;5;226m2022-02-12 01:23:50,166 :: WARNING :: root :: config_parser.py :: 106 :: Warning: password is not found in app > smtp > password[0m
+[38;5;226m2022-02-12 01:23:50,166 :: WARNING :: root :: notify.py :: 41 :: Not sending 2FA notification because SMTP is not configured[0m
+[38;5;39m2022-02-12 01:23:50,167 :: INFO :: root :: config_parser.py :: 73 :: Syncing every -1 seconds.[0m
+[38;5;39m2022-02-12 01:23:50,167 :: INFO :: root :: sync.py :: 46 :: Resyncing at Sat Feb 12 01:23:49 2022 ...[0m
+[38;5;39m2022-02-12 01:23:50,167 :: INFO :: root :: config_parser.py :: 58 :: Enabled verbose ...[0m
+[38;5;196m2022-02-12 01:23:50,167 :: ERROR :: root :: sync.py :: 39 :: password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;39m2022-02-12 01:23:50,167 :: INFO :: root :: config_parser.py :: 73 :: Syncing every -1 seconds.[0m
+[38;5;39m2022-02-12 01:23:50,167 :: INFO :: root :: sync.py :: 46 :: Resyncing at Sat Feb 12 01:23:49 2022 ...[0m
+[38;5;39m2022-02-12 01:23:50,168 :: INFO :: root :: config_parser.py :: 58 :: Enabled verbose ...[0m
+[38;5;196m2022-02-12 01:23:50,168 :: ERROR :: root :: sync.py :: 39 :: password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;39m2022-02-12 01:23:50,168 :: INFO :: root :: config_parser.py :: 73 :: Syncing every 1 seconds.[0m
+[38;5;39m2022-02-12 01:23:50,168 :: INFO :: root :: sync.py :: 46 :: Resyncing at Sat Feb 12 01:23:51 2022 ...[0m

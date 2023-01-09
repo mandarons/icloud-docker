@@ -1,0 +1,15 @@
+[ {
+  "buildOrder" : 6,
+  "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/6/",
+  "reportName" : "Allure Report with history",
+  "data" : {
+    "duration" : 597
+  }
+}, {
+  "buildOrder" : 5,
+  "reportUrl" : "https://mandarons.github.io/icloud-drive-docker/test-results/5/",
+  "reportName" : "Allure Report with history",
+  "data" : {
+    "duration" : 490
+  }
+} ]

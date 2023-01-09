@@ -1,0 +1,12 @@
+DEBUG    icloudpy.base:base.py:242 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:249 Session file does not exist
+DEBUG    icloudpy.base:base.py:314 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:346 Authentication completed successfully
+INFO     root:config_parser.py:58 Enabled verbose ...
+DEBUG    icloudpy.base:base.py:242 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:249 Session file does not exist
+DEBUG    icloudpy.base:base.py:314 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:346 Authentication completed successfully
+WARNING  root:sync.py:32 Nothing to sync. Please add drive: and/or photos: section in config.yaml file.
+INFO     root:config_parser.py:73 Syncing every -1 seconds.
+INFO     root:sync.py:46 Resyncing at Sat Feb 12 01:23:49 2022 ...

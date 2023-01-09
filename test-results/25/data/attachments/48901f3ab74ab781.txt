@@ -1,0 +1,2 @@
+Loading config from %s ... /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml
+[38;5;226m2022-02-15 15:07:05,566 :: WARNING :: root :: config_parser.py :: 53 :: retry_login_interval not found in app > credentials > retry_login_interval. Using default 600 seconds ...[0m

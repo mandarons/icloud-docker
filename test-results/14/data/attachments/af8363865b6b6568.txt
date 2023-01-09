@@ -1,0 +1,3 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/config.yaml ...
+Error: username is missing in app > credentials > username. Please set the username.
+Error: username is empty in app > credentials > username.

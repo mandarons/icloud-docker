@@ -1,0 +1,25 @@
+DEBUG    icloudpy.base:base.py:242 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:249 Session file does not exist
+DEBUG    icloudpy.base:base.py:314 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:346 Authentication completed successfully
+INFO     root:config_parser.py:58 Enabled verbose ...
+DEBUG    icloudpy.base:base.py:242 Using session file /tmp/icloudpy/runner/requires_2fa_user.session
+INFO     icloudpy.base:base.py:249 Session file does not exist
+DEBUG    icloudpy.base:base.py:314 Authenticating as requires_2fa_user
+DEBUG    icloudpy.base:base.py:346 Authentication completed successfully
+ERROR    root:sync.py:36 Error: 2FA is required. Please log in.
+WARNING  root:config_parser.py:118 Warning: host is not found in app > smtp > host
+WARNING  root:config_parser.py:130 Warning: port is not found in app > smtp > port
+WARNING  root:config_parser.py:142 Warning: no_tls is not found in app > smtp > no_tls
+WARNING  root:config_parser.py:106 Warning: password is not found in app > smtp > password
+WARNING  root:notify.py:41 Not sending 2FA notification because SMTP is not configured
+INFO     root:config_parser.py:73 Syncing every -1 seconds.
+INFO     root:sync.py:46 Resyncing at Sat Feb 12 01:23:49 2022 ...
+INFO     root:config_parser.py:58 Enabled verbose ...
+ERROR    root:sync.py:39 password is not stored in keyring. Please save the password in keyring.
+INFO     root:config_parser.py:73 Syncing every -1 seconds.
+INFO     root:sync.py:46 Resyncing at Sat Feb 12 01:23:49 2022 ...
+INFO     root:config_parser.py:58 Enabled verbose ...
+ERROR    root:sync.py:39 password is not stored in keyring. Please save the password in keyring.
+INFO     root:config_parser.py:73 Syncing every 1 seconds.
+INFO     root:sync.py:46 Resyncing at Sat Feb 12 01:23:51 2022 ...

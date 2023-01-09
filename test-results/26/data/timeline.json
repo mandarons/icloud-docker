@@ -1,0 +1,1638 @@
+{
+  "uid" : "ab17fc5a4eb3bca4b216b548c7f9fcbc",
+  "children" : [ {
+    "name" : "fv-az212-257",
+    "children" : [ {
+      "name" : "3464-MainThread",
+      "children" : [ {
+        "name" : "test_sync_directory_none_root",
+        "uid" : "5783ae6765c09068",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550205,
+          "stop" : 1645159550224,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_different_schedule",
+        "uid" : "b92af0962e409931",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549279,
+          "stop" : 1645159549315,
+          "duration" : 36
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_photos_download_changed_photo",
+        "uid" : "88135850206d70d5",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550896,
+          "stop" : 1645159550973,
+          "duration" : 77
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_album_none_file_sizes",
+        "uid" : "87fc0a51ae372657",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550876,
+          "stop" : 1645159550894,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_throttling",
+        "uid" : "9119c7a9fc64de90",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549078,
+          "stop" : 1645159549079,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_retry_login_interval_none_config",
+        "uid" : "7cd310472bc362b4",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548866,
+          "stop" : 1645159548867,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync",
+        "uid" : "5fbbd46c678d192b",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549139,
+          "stop" : 1645159549231,
+          "duration" : 92
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_remove_obsolete_none_destination_path",
+        "uid" : "363d03087e1e7878",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550100,
+          "stop" : 1645159550118,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_remove_obsolete_directory",
+        "uid" : "a6d8488d31a2b03d",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550055,
+          "stop" : 1645159550076,
+          "duration" : 21
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_file_none_item",
+        "uid" : "bee44ce484c4bb35",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549668,
+          "stop" : 1645159549687,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_photos_original",
+        "uid" : "2624825f6bbdc3fb",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159551176,
+          "stop" : 1645159551244,
+          "duration" : 68
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_no_smtp_config",
+        "uid" : "eb04a932400b2fd5",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549063,
+          "stop" : 1645159549064,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_file_exists_none_local_file",
+        "uid" : "2eba14f394ad79ad",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549754,
+          "stop" : 1645159549772,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_username_none_config",
+        "uid" : "f51a563a8574ac2a",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548921,
+          "stop" : 1645159548922,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_directory_without_folder_filter",
+        "uid" : "389a5fa1d41a2769",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550257,
+          "stop" : 1645159550279,
+          "duration" : 22
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_dry_run_send",
+        "uid" : "ea0707a249fc186a",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549060,
+          "stop" : 1645159549061,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_folder_single_variations",
+        "uid" : "de718d750ad09a97",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550624,
+          "stop" : 1645159550644,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_remove_obsolete_none_config",
+        "uid" : "3c20fde9f80870c0",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548827,
+          "stop" : 1645159548827,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_folder_multiple",
+        "uid" : "8e540c40bf5a62e1",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550491,
+          "stop" : 1645159550511,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_file_none_file_path",
+        "uid" : "7dad1ae4a8dca590",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550449,
+          "stop" : 1645159550468,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_sync_interval_none_config",
+        "uid" : "12632672aae5e3d3",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548806,
+          "stop" : 1645159548806,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_folder_wanted",
+        "uid" : "d1b813897c631ca8",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550033,
+          "stop" : 1645159550053,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_smtp_port",
+        "uid" : "64afe116e88a4052",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548880,
+          "stop" : 1645159548880,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_album_none_destination_path",
+        "uid" : "cf2824ae2537745d",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550855,
+          "stop" : 1645159550873,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_parent_folder_missing_parent_folder",
+        "uid" : "9d1f2689702c7241",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550667,
+          "stop" : 1645159550686,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_filters_no_file_sizes",
+        "uid" : "7329df4d78138c82",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548692,
+          "stop" : 1645159548709,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_album_none_album",
+        "uid" : "667eb6c894e1b9a1",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550835,
+          "stop" : 1645159550853,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_photos_empty_albums_list",
+        "uid" : "50da87e81de8ad7e",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550976,
+          "stop" : 1645159551019,
+          "duration" : 43
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_file_existing_file",
+        "uid" : "5c06346aec8b4b6b",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549817,
+          "stop" : 1645159549837,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_filters_no_filters",
+        "uid" : "7201b566dd544e27",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548711,
+          "stop" : 1645159548727,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_prepare_drive_destination_given",
+        "uid" : "d195062b7d3621b9",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548943,
+          "stop" : 1645159548959,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_directory_none_drive",
+        "uid" : "cc72bd0407502c13",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550163,
+          "stop" : 1645159550182,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_empty",
+        "uid" : "308109f012eaeb91",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549373,
+          "stop" : 1645159549394,
+          "duration" : 21
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_sync_interval_default",
+        "uid" : "ae3ceb9c2d5f3e1e",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548787,
+          "stop" : 1645159548803,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_prepare_drive_destination_none_config",
+        "uid" : "aa66bdcbc8265e02",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548961,
+          "stop" : 1645159548962,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_file",
+        "uid" : "1d8e0a09d4fb0d0c",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550344,
+          "stop" : 1645159550363,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_smtp_port_none_config",
+        "uid" : "ea06842a7ef4b56f",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549053,
+          "stop" : 1645159549053,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_logger",
+        "uid" : "9e6f3f0adf395ab",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549082,
+          "stop" : 1645159549099,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_smtp_password_none_config",
+        "uid" : "ebe9e239a45f0a92",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549050,
+          "stop" : 1645159549051,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_smtp_empty",
+        "uid" : "63f266773b5f110e",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548871,
+          "stop" : 1645159548871,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_file_existing_file",
+        "uid" : "6d032c86458397e5",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549710,
+          "stop" : 1645159549730,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_photos_only",
+        "uid" : "b32918ca5df5e019",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549528,
+          "stop" : 1645159549597,
+          "duration" : 69
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_smtp_host_none_config",
+        "uid" : "18c58d581d1d42f4",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549048,
+          "stop" : 1645159549048,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_username_given",
+        "uid" : "6ddf7ddb38e185a3",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548903,
+          "stop" : 1645159548919,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_exception_thrown",
+        "uid" : "e4daf4f400fe7573",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549397,
+          "stop" : 1645159549477,
+          "duration" : 80
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_file_none_local_file",
+        "uid" : "719b4758ea4ca469",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549689,
+          "stop" : 1645159549708,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_password_missing_in_keyring",
+        "uid" : "3dab53038aa527ac",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549505,
+          "stop" : 1645159549526,
+          "duration" : 21
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_file_missing",
+        "uid" : "ce1bc08ccd29db4b",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550428,
+          "stop" : 1645159550447,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_file_non_existing",
+        "uid" : "d704c4d35978cf2d",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549647,
+          "stop" : 1645159549666,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_read_config_invalid_config_path",
+        "uid" : "4517d5f845581ca3",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549023,
+          "stop" : 1645159549023,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_read_config_default_config_path",
+        "uid" : "f995e9f1cd19fea7",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549005,
+          "stop" : 1645159549021,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_smtp_email",
+        "uid" : "58d6af61da6c8710",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548869,
+          "stop" : 1645159548869,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_file_case_variations_extensions",
+        "uid" : "b5e3d84266c3ba38",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550365,
+          "stop" : 1645159550384,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_smtp_password",
+        "uid" : "966cf6db1c62e07b",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548878,
+          "stop" : 1645159548878,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_sync_interval",
+        "uid" : "d7c6888497273e12",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548769,
+          "stop" : 1645159548785,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_build_message",
+        "uid" : "430e9613f0d6c8e0",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549058,
+          "stop" : 1645159549058,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_prepare_photos_destination_none_config",
+        "uid" : "898bb8af6e1645b3",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549002,
+          "stop" : 1645159549002,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_missing_thumb_photo_sizes",
+        "uid" : "73be164f58dac7c1",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550814,
+          "stop" : 1645159550833,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_directory_none_items",
+        "uid" : "a82c111ba2ba3e59",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550184,
+          "stop" : 1645159550203,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_file_exists_none_item",
+        "uid" : "a38b5d08d6507c41",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549732,
+          "stop" : 1645159549751,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_folder_none_filters",
+        "uid" : "b10063ef08d73189",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550537,
+          "stop" : 1645159550556,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_directory_none_destination",
+        "uid" : "7bdbedb938d51623",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550142,
+          "stop" : 1645159550160,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_logger_no_duplicate_handlers",
+        "uid" : "cb6c569d8fdd5c51",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549120,
+          "stop" : 1645159549136,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_remove_obsolete_none_files",
+        "uid" : "3d2cce2b4bebd007",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550120,
+          "stop" : 1645159550140,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_parent_folder",
+        "uid" : "3c8739eabedb9a79",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550646,
+          "stop" : 1645159550665,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_smtp_host",
+        "uid" : "572f5489f301e8f5",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548874,
+          "stop" : 1645159548874,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_remove_obsolete_file",
+        "uid" : "a6d559a732f439b",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550078,
+          "stop" : 1645159550097,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_photo_none_file_size",
+        "uid" : "2b72d73d33ebcbd6",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550753,
+          "stop" : 1645159550771,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_smtp_email_none_config",
+        "uid" : "f0d5268f98e90ea5",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549046,
+          "stop" : 1645159549046,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_directory_without_remove",
+        "uid" : "1f7f3b51eb609060",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550281,
+          "stop" : 1645159550309,
+          "duration" : 28
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_send",
+        "uid" : "57f29f0a2e5fdac5",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549066,
+          "stop" : 1645159549072,
+          "duration" : 6
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_folder_none_folder_path",
+        "uid" : "69a6b85973b0e78c",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550559,
+          "stop" : 1645159550577,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_send_fail",
+        "uid" : "9548b3a6fb4a8f14",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549075,
+          "stop" : 1645159549076,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_retry_login_interval",
+        "uid" : "d6d6b1b8eaba3a92",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548829,
+          "stop" : 1645159548846,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_remove_obsolete",
+        "uid" : "ea8b763f0964d335",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548730,
+          "stop" : 1645159548746,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_file_non_existing_file",
+        "uid" : "399aa58ea7fb1cec",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549774,
+          "stop" : 1645159549793,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_remove_obsolete_missing",
+        "uid" : "f04960f6078b6c9e",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548748,
+          "stop" : 1645159548764,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_drive_sync_interval_none_config",
+        "uid" : "2b18678b83c6e216",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548652,
+          "stop" : 1645159548653,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_drive_sync_interval_default",
+        "uid" : "444406b97c9d5700",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548633,
+          "stop" : 1645159548650,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_file_key_error_data_token",
+        "uid" : "abe2cc22c2deaad",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549624,
+          "stop" : 1645159549645,
+          "duration" : 21
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_smtp_tls",
+        "uid" : "94509fbff39560fe",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548882,
+          "stop" : 1645159548882,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_photos_missing_photo_download",
+        "uid" : "cfa3f22ea0aee1ce",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159551022,
+          "stop" : 1645159551097,
+          "duration" : 75
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_file_non_existing",
+        "uid" : "b3bcf2fe50df0565",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549839,
+          "stop" : 1645159549858,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_password_as_environment_variable",
+        "uid" : "9bd3108e35d8c3cd",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549480,
+          "stop" : 1645159549503,
+          "duration" : 23
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_photos_rename_previous_original_photos",
+        "uid" : "1f62ba654d7697d7",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159551247,
+          "stop" : 1645159551319,
+          "duration" : 72
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_file_none_filters",
+        "uid" : "542ea7478c0d6967",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549903,
+          "stop" : 1645159549922,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_folder_single_path",
+        "uid" : "39a28f1e24a75858",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550601,
+          "stop" : 1645159550621,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_photo_handle_exception",
+        "uid" : "247952a5881c8a70",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550712,
+          "stop" : 1645159550730,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_2fa_required",
+        "uid" : "251b7b4960d963bd",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549235,
+          "stop" : 1645159549277,
+          "duration" : 42
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_folder_none_destination_path",
+        "uid" : "b16973b075d1020f",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549945,
+          "stop" : 1645159549965,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_smtp_no_tls",
+        "uid" : "47c086f20584fbd7",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548876,
+          "stop" : 1645159548876,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_file_empty_file_extensions",
+        "uid" : "6095a810f27af294",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550407,
+          "stop" : 1645159550426,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_prepare_drive_destination_default",
+        "uid" : "f59fd3c5649734e1",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548924,
+          "stop" : 1645159548941,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_read_config_overridden_config_path",
+        "uid" : "9ef1867c0d4a3b6e",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549027,
+          "stop" : 1645159549044,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_file_existing",
+        "uid" : "83d00cd90c94657d",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549795,
+          "stop" : 1645159549815,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_folder_none_item",
+        "uid" : "13a2f520ad7d072e",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549968,
+          "stop" : 1645159549988,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_parent_folder_none_filters",
+        "uid" : "2744db2e80ec971d",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550689,
+          "stop" : 1645159550707,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_file_check_log",
+        "uid" : "37f1fc8c63cd69b9",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550386,
+          "stop" : 1645159550405,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_drive_only",
+        "uid" : "256bbb1033d5c37a",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549317,
+          "stop" : 1645159549371,
+          "duration" : 54
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_file_none_item",
+        "uid" : "7fd7ec3b5d7b6450",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549924,
+          "stop" : 1645159549943,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_filters_invalid_file_size",
+        "uid" : "d418895e3ed457e6",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548674,
+          "stop" : 1645159548690,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_logger_no_config",
+        "uid" : "a0a268c01ea610eb",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549101,
+          "stop" : 1645159549117,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_directory_with_remove",
+        "uid" : "209971710711cc42",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550226,
+          "stop" : 1645159550254,
+          "duration" : 28
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_photo_none_destination_path",
+        "uid" : "9acbb96e370f16db",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550733,
+          "stop" : 1645159550751,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_remove_obsolete",
+        "uid" : "d406a3b5d8563b7b",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548808,
+          "stop" : 1645159548825,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_drive_valids",
+        "uid" : "1cf26d543b0bbd46",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550311,
+          "stop" : 1645159550342,
+          "duration" : 31
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_folder_empty",
+        "uid" : "4cbab8e59309e957",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550471,
+          "stop" : 1645159550489,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_folder_none_root",
+        "uid" : "86873b444ac1acdd",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549991,
+          "stop" : 1645159550010,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_filters",
+        "uid" : "e6d660f3456957f4",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548655,
+          "stop" : 1645159548671,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_photos_remove_obsolete_none_config",
+        "uid" : "85e5612b495d9a24",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548766,
+          "stop" : 1645159548767,
+          "duration" : 1
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_photo_none_photo",
+        "uid" : "664b957f46ae2575",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550774,
+          "stop" : 1645159550792,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_download_file",
+        "uid" : "2cba8968d1ee172d",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549601,
+          "stop" : 1645159549621,
+          "duration" : 20
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_sync_photos_nothing_to_download",
+        "uid" : "d9ad3f77f60cbf89",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159551100,
+          "stop" : 1645159551173,
+          "duration" : 73
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_read_config_none_config_path",
+        "uid" : "6684b54cb3e334da",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549025,
+          "stop" : 1645159549025,
+          "duration" : 0
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_prepare_photos_destination",
+        "uid" : "2f6a40e08e9d2c57",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548964,
+          "stop" : 1645159548981,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_username_empty",
+        "uid" : "c8a698ae41dd0420",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548884,
+          "stop" : 1645159548901,
+          "duration" : 17
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_folder_multiple_paths",
+        "uid" : "af29554f28e03e6a",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550513,
+          "stop" : 1645159550535,
+          "duration" : 22
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_file_none_files",
+        "uid" : "1ad3e7c0345764e9",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549882,
+          "stop" : 1645159549900,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_wanted_folder_none_root",
+        "uid" : "d44ac556a864ab21",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550579,
+          "stop" : 1645159550598,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_drive_sync_interval",
+        "uid" : "14c2d027be82deb3",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548613,
+          "stop" : 1645159548631,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_get_retry_login_interval_default",
+        "uid" : "747de98940fc6b30",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548848,
+          "stop" : 1645159548864,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_file_none_destination_path",
+        "uid" : "d3795e517d332a70",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159549861,
+          "stop" : 1645159549879,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_prepare_photos_destination_default",
+        "uid" : "6ec4690d12cb7693",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159548983,
+          "stop" : 1645159548999,
+          "duration" : 16
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_missing_medium_photo_size",
+        "uid" : "fcd91ddc884f2918",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550794,
+          "stop" : 1645159550812,
+          "duration" : 18
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      }, {
+        "name" : "test_process_folder_unwanted",
+        "uid" : "2d03946907c92386",
+        "parentUid" : "3ae9419cdf26cc8f5de90eb7010653bb",
+        "status" : "passed",
+        "time" : {
+          "start" : 1645159550012,
+          "stop" : 1645159550031,
+          "duration" : 19
+        },
+        "flaky" : false,
+        "newFailed" : false,
+        "parameters" : [ ]
+      } ],
+      "uid" : "3ae9419cdf26cc8f5de90eb7010653bb"
+    } ],
+    "uid" : "40e2552f4e8a02a8d3eeb7efc0d6422c"
+  } ],
+  "name" : "timeline"
+}

@@ -1,0 +1,2 @@
+[38;5;226m2022-02-15 03:02:18,292 :: WARNING :: root :: config_parser.py :: 159 :: Warning: no_tls is not found in app > smtp > no_tls[0m
+[38;5;196m2022-02-15 03:02:18,293 :: ERROR :: root :: notify.py :: 39 :: Failed to send email: [0m
