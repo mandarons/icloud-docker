@@ -1,2 +1,0 @@
-WARNING  root:config_parser.py:164 Warning: no_tls is not found in app > smtp > no_tls
-ERROR    root:notify.py:40 Failed to send email: .

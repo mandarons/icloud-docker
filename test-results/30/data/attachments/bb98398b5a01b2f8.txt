@@ -1,8 +1,0 @@
-Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
-[38;21m2022-04-13 21:43:49,749 :: DEBUG :: icloudpy.base :: base.py :: 242 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
-[38;5;39m2022-04-13 21:43:49,749 :: INFO :: icloudpy.base :: base.py :: 249 :: Session file does not exist[0m
-[38;21m2022-04-13 21:43:49,749 :: DEBUG :: icloudpy.base :: base.py :: 314 :: Authenticating as quentintarantino@hotmail.fr[0m
-[38;21m2022-04-13 21:43:49,750 :: DEBUG :: icloudpy.base :: base.py :: 346 :: Authentication completed successfully[0m
-[38;5;39m2022-04-13 21:43:49,751 :: INFO :: root :: sync_drive.py :: 98 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Scanned document 1.pdf ...[0m
-[38;21m2022-04-13 21:43:49,752 :: DEBUG :: root :: sync_drive.py :: 82 :: No changes detected. Skipping the file /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Scanned document 1.pdf ...[0m
-[38;5;39m2022-04-13 21:43:49,752 :: INFO :: root :: sync_drive.py :: 98 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Scanned document 1.pdf ...[0m
