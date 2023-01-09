@@ -61,20 +61,6 @@ jobs:
       - name: Test with pytest
         run: |
           pylint src/ tests/ && pytest
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v3
-        if: ${{ success() }}
-        with:
-          name: coverage-output
-          path: htmlcov
-          retention-days: 1
-      - name: Checkout gh-pages
-        uses: actions/checkout@v3
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
@@ -87,23 +73,29 @@ jobs:
       - name: Generate badges
         run: |
           python generate_badges.py
+      - name: Zip tests artifacts
+        run: zip test-results.zip allure-history/test-results/ -r
+      - name: Zip coverage artifacts
+        run: zip htmlcov.zip htmlcov/ -r
+      - name: Zip badges artifacts
+        run: zip badges.zip badges -r
       - name: Upload tests artifacts
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: test-output
-          path: allure-history/test-results/
+          path: test-results.zip
           retention-days: 1
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
         with:
           name: coverage-output
-          path: htmlcov
+          path: coverage.zip
           retention-days: 1
       - name: Upload badges artifacts
         uses: actions/upload-artifact@v3
         with:
           name: badges-output
-          path: badges
+          path: badges.zip
           retention-days: 1
   publish-test-report:
     needs: test
@@ -114,6 +106,8 @@ jobs:
         with:
           name: test-output
           path: allure-history
+      - name: unzip tests artifacts
+        run: unzip -d allure-history test-results.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -138,6 +132,8 @@ jobs:
         with:
           name: coverage-output
           path: coverage
+      - name: unzip coverage artifacts
+        run: unzip -d coverage htmlcov.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -162,6 +158,8 @@ jobs:
         with:
           name: badges-output
           path: badges
+      - name: unzip badges artifacts
+        run: unzip -d badges badges.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
