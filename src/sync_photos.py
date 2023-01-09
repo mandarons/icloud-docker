@@ -1,5 +1,6 @@
 """Sync photos module."""
 ___author___ = "Mandar Patil <mandarons@pm.me>"
+import base64
 import os
 import shutil
 import time
@@ -12,18 +13,20 @@ from src import LOGGER, config_parser
 def generate_file_name(photo, file_size, destination_path):
     """Generate full path to file."""
     filename = photo.filename
-    if file_size != "original":
-        tokens = photo.filename.rsplit(".", 1)
-        tokens.insert(len(tokens) - 1, file_size)
-        filename = "__".join(tokens[:-1]) + "." + tokens[-1]
-    else:
-        tokens = photo.filename.rsplit(".", 1)
-        tokens.insert(len(tokens) - 1, file_size)
-        original_filename = "__".join(tokens[:-1]) + "." + tokens[-1]
-        original_file_path = os.path.join(destination_path, original_filename)
-        if os.path.isfile(original_file_path):
-            os.rename(original_file_path, os.path.join(destination_path, filename))
-    return os.path.abspath(os.path.join(destination_path, filename))
+    name, extension = filename.rsplit(".", 1)
+    file_path = os.path.join(destination_path, filename)
+    file_size_path = os.path.join(
+        destination_path, f'{"__".join([name, file_size])}.{extension}'
+    )
+    file_size_id_path = os.path.join(
+        destination_path,
+        f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
+    )
+    if os.path.isfile(file_path):
+        os.rename(file_path, file_size_id_path)
+    if os.path.isfile(file_size_path):
+        os.rename(file_size_path, file_size_id_path)
+    return file_size_id_path
 
 
 def photo_exists(photo, file_size, local_path):
