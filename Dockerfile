@@ -6,7 +6,7 @@ RUN python -m venv venv
 ENV PATH="/app/venv/bin/:$PATH"
 RUN pip install -U pip
 RUN pip install -r requirements.txt
-FROM python:3.9-alpine
+FROM python:3.10-alpine
 WORKDIR /app
 COPY --from=build /app/venv /app/venv
 # Libmagic is required at runtime by python-magic
