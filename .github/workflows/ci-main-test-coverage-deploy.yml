@@ -133,7 +133,7 @@ jobs:
         with:
           deploy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           publish_branch: gh-pages
-          publish_dir: allure-history/test-output
+          publish_dir: allure-history/test-results
           destination_dir: test-results
   publish-coverage-report:
     needs: publish-test-report
