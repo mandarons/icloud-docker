@@ -66,9 +66,7 @@ repos:
         exclude: (.vscode|.devcontainer)
       - id: no-commit-to-branch
         args:
-          - --branch=dev
-          - --branch=master
-          - --branch=rc
+          - --branch=main
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.28.0
     hooks:
@@ -77,64 +75,32 @@ repos:
     rev: v2.7.1
     hooks:
       - id: prettier
-# - repo: https://github.com/cdce8p/python-typing-update
-#   rev: v0.5.0
-#   hooks:
-#     # Run `python-typing-update` hook manually from time to time
-#     # to update python typing syntax.
-#     # Will require manual work, before submitting changes!
-#     # pre-commit run --hook-stage manual python-typing-update --all-files
-#     - id: python-typing-update
-#       stages: [manual]
-#       args:
-#         - --py39-plus
-#         - --force
-#         - --keep-updates
-#       files: ^(homeassistant|tests|script)/.+\.py$
-# - repo: local
-#   hooks:
-# Run mypy through our wrapper script in order to get the possible
-# pyenv and/or virtualenv activated; it may not have been e.g. if
-# committing from a GUI tool that was not launched from an activated
-# shell.
-# - id: mypy
-#   name: mypy
-#   entry: script/run-in-env.sh mypy
-#   language: script
-#   types: [python]
-#   require_serial: true
-#   files: ^(homeassistant|pylint)/.+\.py$
-# - id: pylint
-#   name: pylint
-#   entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
-#   language: script
-#   types: [python]
-#   files: ^src/.+\.py$
-# - id: gen_requirements_all
-#   name: gen_requirements_all
-#   entry: script/run-in-env.sh python3 -m script.gen_requirements_all
-#   pass_filenames: false
-#   language: script
-#   types: [text]
-#   files: ^(homeassistant/.+/manifest\.json|homeassistant/brands/.+\.json|pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
-# - id: hassfest
-#   name: hassfest
-#   entry: script/run-in-env.sh python3 -m script.hassfest
-#   pass_filenames: false
-#   language: script
-#   types: [text]
-#   files: ^(homeassistant/.+/(manifest|strings)\.json|homeassistant/brands/.*\.json|\.coveragerc|homeassistant/.+/services\.yaml|script/hassfest/(?!metadata|mypy_config).+\.py)$
-# - id: hassfest-metadata
-#   name: hassfest-metadata
-#   entry: script/run-in-env.sh python3 -m script.hassfest -p metadata
-#   pass_filenames: false
-#   language: script
-#   types: [text]
-#   files: ^(script/hassfest/metadata\.py|homeassistant/const\.py$|pyproject\.toml)$
-# - id: hassfest-mypy-config
-#   name: hassfest-mypy-config
-#   entry: script/run-in-env.sh python3 -m script.hassfest -p mypy_config
-#   pass_filenames: false
-#   language: script
-#   types: [text]
-#   files: ^(script/hassfest/mypy_config\.py|\.strict-typing|mypy\.ini)$
+  # - repo: https://github.com/cdce8p/python-typing-update
+  #   rev: v0.5.0
+  #   hooks:
+  #     # Run `python-typing-update` hook manually from time to time
+  #     # to update python typing syntax.
+  #     # Will require manual work, before submitting changes!
+  #     # pre-commit run --hook-stage manual python-typing-update --all-files
+  #     - id: python-typing-update
+  #       stages: [manual]
+  #       args:
+  #         - --py39-plus
+  #         - --force
+  #         - --keep-updates
+  #       files: ^(src|tests)/.+\.py$
+  - repo: local
+    hooks:
+      # - id: mypy
+      #   name: mypy
+      #   entry: mypy
+      #   language: script
+      #   types: [python]
+      #   require_serial: true
+      #   files: ^(src|tests)/.+\.py$
+      - id: pylint
+        name: pylint
+        entry: run-in-env.sh pylint
+        language: script
+        types: [python]
+        files: ^(src|tests)/.+\.py$
