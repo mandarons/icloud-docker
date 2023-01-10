@@ -117,6 +117,10 @@ photos:
       - "original"
       # - "medium"
       # - "thumb"
+    extensions: #Optional, media extensions to be included in syncing iCloud Photos content
+      # - jpg
+      # - heic
+      # - png
 ```
 
 **_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
