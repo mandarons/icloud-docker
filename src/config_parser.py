@@ -261,7 +261,7 @@ def get_photos_remove_obsolete(config):
 
 def get_photos_filters(config):
     """Return photos filters from config."""
-    photos_filters = {"albums": None, "file_sizes": ["original"]}
+    photos_filters = {"albums": None, "file_sizes": ["original"], "extensions": None}
     valid_file_sizes = ["original", "medium", "thumb"]
     config_path = ["photos", "filters"]
     if not traverse_config_path(config=config, config_path=config_path):
@@ -282,6 +282,7 @@ def get_photos_filters(config):
             photos_filters["albums"] = get_config_value(
                 config=config, config_path=config_path
             )
+
         config_path[2] = "file_sizes"
         if not traverse_config_path(config=config, config_path=config_path):
             LOGGER.warning(
@@ -299,6 +300,21 @@ def get_photos_filters(config):
                     if len(file_sizes) == 0:
                         file_sizes = ["original"]
             photos_filters["file_sizes"] = file_sizes
+
+        config_path[2] = "extensions"
+        if (
+            not traverse_config_path(config=config, config_path=config_path)
+            or not get_config_value(config=config, config_path=config_path)
+            or len(get_config_value(config=config, config_path=config_path)) == 0
+        ):
+            LOGGER.warning(
+                f"{config_path_to_string(config_path=config_path)} not found. Downloading all extensions ..."
+            )
+        else:
+            photos_filters["extensions"] = get_config_value(
+                config=config, config_path=config_path
+            )
+
     return photos_filters
 
 
