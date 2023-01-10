@@ -92,7 +92,7 @@ jobs:
       - name: Upload tests artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: test-output
+          name: test-output.zip
           path: test-results.zip
           retention-days: 1
       - name: Upload coverage artifacts
