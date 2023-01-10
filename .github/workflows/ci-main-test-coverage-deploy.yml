@@ -184,8 +184,7 @@ jobs:
           publish_dir: badges
           destination_dir: badges
   deploy:
-    needs: publish-badges
-#    needs: test
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repo
