@@ -116,6 +116,8 @@ jobs:
         with:
           name: test-output
           path: allure-history
+      - name: unzip tests artifacts
+        run: unzip test-results.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -123,8 +125,6 @@ jobs:
         with:
           ref: gh-pages
           path: gh-pages
-      - name: unzip tests artifacts
-        run: unzip test-results.zip
       - name: Publish test report to gh-pages
         if: always()
         uses: peaceiris/actions-gh-pages@v3
