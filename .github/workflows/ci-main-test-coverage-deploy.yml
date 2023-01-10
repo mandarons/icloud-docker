@@ -105,7 +105,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: test-output
-          path: allure-history
+#          path: allure-history
       - name: unzip tests artifacts
         run: unzip -d allure-history test-results.zip
       - name: Checkout gh-pages
