@@ -85,7 +85,7 @@
     <p id="t31" class="run"><span class="n"><a href="#t31">31</a></span><span class="t">        <span class="nam">print</span><span class="op">(</span><span class="str">f"Config file not found at {config_path}."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t32" class="run"><span class="n"><a href="#t32">32</a></span><span class="t">        <span class="key">return</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p id="t33" class="run"><span class="n"><a href="#t33">33</a></span><span class="t">    <span class="nam">print</span><span class="op">(</span><span class="str">f"Loading config from {config_path} ..."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t34" class="run"><span class="n"><a href="#t34">34</a></span><span class="t">    <span class="key">with</span> <span class="nam">open</span><span class="op">(</span><span class="nam">file</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span> <span class="key">as</span> <span class="nam">config_file</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t34" class="run"><span class="n"><a href="#t34">34</a></span><span class="t">    <span class="key">with</span> <span class="nam">open</span><span class="op">(</span><span class="nam">file</span><span class="op">=</span><span class="nam">config_path</span><span class="op">,</span> <span class="nam">encoding</span><span class="op">=</span><span class="str">"utf-8"</span><span class="op">)</span> <span class="key">as</span> <span class="nam">config_file</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t35" class="run"><span class="n"><a href="#t35">35</a></span><span class="t">        <span class="nam">config</span> <span class="op">=</span> <span class="nam">YAML</span><span class="op">(</span><span class="op">)</span><span class="op">.</span><span class="nam">load</span><span class="op">(</span><span class="nam">config_file</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t36" class="run"><span class="n"><a href="#t36">36</a></span><span class="t">    <span class="nam">config</span><span class="op">[</span><span class="str">"app"</span><span class="op">]</span><span class="op">[</span><span class="str">"credentials"</span><span class="op">]</span><span class="op">[</span><span class="str">"username"</span><span class="op">]</span> <span class="op">=</span> <span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p id="t37" class="pln"><span class="n"><a href="#t37">37</a></span><span class="t">        <span class="nam">config</span><span class="op">[</span><span class="str">"app"</span><span class="op">]</span><span class="op">[</span><span class="str">"credentials"</span><span class="op">]</span><span class="op">[</span><span class="str">"username"</span><span class="op">]</span><span class="op">.</span><span class="nam">strip</span><span class="op">(</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -194,7 +194,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2023-01-10 17:43 +0000
+            created at 2023-01-10 18:01 +0000
         </p>
     </div>
 </div>
