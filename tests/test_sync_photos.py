@@ -405,7 +405,7 @@ class TestSyncPhotos(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
-    def test_photo_wanted_extensions_JPG(
+    def test_photo_wanted_extensions_jpg(
         self, mock_read_config, mock_service, mock_get_username, mock_get_password
     ):
         """Test for JPG extension filter."""
@@ -435,7 +435,7 @@ class TestSyncPhotos(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
-    def test_photo_wanted_extensions_PNG(
+    def test_photo_wanted_extensions_png(
         self, mock_read_config, mock_service, mock_get_username, mock_get_password
     ):
         """Test for PNG extension filter."""
