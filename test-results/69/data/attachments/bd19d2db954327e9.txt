@@ -1,0 +1,5 @@
+[38;5;226m2023-01-10 18:01:30,637 :: WARNING :: root :: config_parser.py :: 154 :: Warning: host is not found in app > smtp > host[0m
+[38;5;226m2023-01-10 18:01:30,637 :: WARNING :: root :: config_parser.py :: 167 :: Warning: port is not found in app > smtp > port[0m
+[38;5;226m2023-01-10 18:01:30,637 :: WARNING :: root :: config_parser.py :: 180 :: Warning: no_tls is not found in app > smtp > no_tls[0m
+[38;5;226m2023-01-10 18:01:30,637 :: WARNING :: root :: config_parser.py :: 141 :: Warning: password is not found in app > smtp > password[0m
+[38;5;226m2023-01-10 18:01:30,637 :: WARNING :: root :: notify.py :: 43 :: Not sending 2FA notification because SMTP is not configured[0m

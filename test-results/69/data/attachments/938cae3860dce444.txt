@@ -1,0 +1,39 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-01-10 18:01:31,886 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-01-10 18:01:31,886 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-01-10 18:01:31,887 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-01-10 18:01:31,887 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;21m2023-01-10 18:01:31,889 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-01-10 18:01:31,890 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-01-10 18:01:31,890 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-01-10 18:01:31,890 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-01-10 18:01:31,891 :: INFO :: root :: sync.py :: 71 :: Syncing drive...[0m
+[38;21m2023-01-10 18:01:31,891 :: DEBUG :: root :: config_parser.py :: 190 :: Checking drive destination ...[0m
+[38;21m2023-01-10 18:01:31,891 :: DEBUG :: root :: config_parser.py :: 101 :: Checking root destination ...[0m
+[38;21m2023-01-10 18:01:31,892 :: DEBUG :: root :: config_parser.py :: 218 :: Removing obsolete files and folders ...[0m
+[38;21m2023-01-10 18:01:31,893 :: DEBUG :: root :: sync_drive.py :: 74 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Numbers ...[0m
+[38;21m2023-01-10 18:01:31,894 :: DEBUG :: root :: sync_drive.py :: 74 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Pages ...[0m
+[38;21m2023-01-10 18:01:31,894 :: DEBUG :: root :: sync_drive.py :: 74 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Preview ...[0m
+[38;21m2023-01-10 18:01:31,897 :: DEBUG :: root :: sync_drive.py :: 132 :: File /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/icloudpy/Test/Document scanne 2.pdf does not exist locally.[0m
+[38;5;39m2023-01-10 18:01:31,897 :: INFO :: root :: sync_drive.py :: 176 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/icloudpy/Test/Document scanne 2.pdf ...[0m
+[38;21m2023-01-10 18:01:31,898 :: DEBUG :: root :: sync_drive.py :: 132 :: File /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/icloudpy/Test/Scanned document 1.pdf does not exist locally.[0m
+[38;5;39m2023-01-10 18:01:31,898 :: INFO :: root :: sync_drive.py :: 176 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/icloudpy/Test/Scanned document 1.pdf ...[0m
+[38;21m2023-01-10 18:01:31,899 :: DEBUG :: root :: sync_drive.py :: 74 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/unwanted ...[0m
+[38;21m2023-01-10 18:01:31,901 :: DEBUG :: root :: sync_drive.py :: 132 :: File /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/This is a title.md does not exist locally.[0m
+[38;5;39m2023-01-10 18:01:31,901 :: INFO :: root :: sync_drive.py :: 176 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/This is a title.md ...[0m
+[38;21m2023-01-10 18:01:31,902 :: DEBUG :: root :: sync_drive.py :: 107 :: Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/Project.band does not exist locally.[0m
+[38;5;39m2023-01-10 18:01:31,903 :: INFO :: root :: sync_drive.py :: 176 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/Project.band ...[0m
+[38;5;39m2023-01-10 18:01:31,904 :: INFO :: root :: sync_drive.py :: 143 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/Project.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample[0m
+[38;5;39m2023-01-10 18:01:31,909 :: INFO :: root :: sync_drive.py :: 160 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/Project.band.zip.[0m
+[38;21m2023-01-10 18:01:31,910 :: DEBUG :: root :: sync_drive.py :: 107 :: Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/ms.band does not exist locally.[0m
+[38;5;39m2023-01-10 18:01:31,910 :: INFO :: root :: sync_drive.py :: 176 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/ms.band ...[0m
+[38;5;39m2023-01-10 18:01:31,912 :: INFO :: root :: sync_drive.py :: 149 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/ms.band.gz to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample[0m
+[38;5;39m2023-01-10 18:01:31,914 :: INFO :: root :: sync_drive.py :: 143 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/ms.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample[0m
+[38;5;39m2023-01-10 18:01:31,918 :: INFO :: root :: sync_drive.py :: 160 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/ms.band.zip.[0m
+[38;5;39m2023-01-10 18:01:31,918 :: INFO :: root :: sync_drive.py :: 160 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/ms.band.gz.[0m
+[38;5;196m2023-01-10 18:01:31,919 :: ERROR :: root :: sync_drive.py :: 186 :: Failed to download /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/ms.band: [Errno 2] No such file or directory[0m
+[38;5;39m2023-01-10 18:01:31,919 :: INFO :: root :: sync_drive.py :: 222 :: Removing /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/drive/Obsidian/Sample/My Song.band ...[0m
+[38;5;39m2023-01-10 18:01:31,920 :: INFO :: root :: sync.py :: 73 :: Drive synced[0m
+[38;5;39m2023-01-10 18:01:31,921 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every -1 seconds.[0m
+[38;5;39m2023-01-10 18:01:31,921 :: INFO :: root :: sync.py :: 137 :: Resyncing at Tue Jan 10 18:01:30 2023 ...[0m
+[38;5;39m2023-01-10 18:01:31,921 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every -1 seconds.[0m
