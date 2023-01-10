@@ -115,9 +115,8 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: test-output.zip
-          path: allure-history
       - name: unzip tests artifacts
-        run: cd allure-history && unzip test-output.zip
+        run: unzip test-output.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -131,7 +130,7 @@ jobs:
         with:
           deploy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: test-output
           destination_dir: test-results
   publish-coverage-report:
     needs: publish-test-report
