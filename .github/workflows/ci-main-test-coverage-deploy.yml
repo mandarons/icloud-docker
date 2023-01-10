@@ -85,7 +85,7 @@ jobs:
           allure_history: allure-history
           keep_reports: 100
       - name: Zip tests artifacts
-        run: zip test-results.zip allure-history/* -r
+        run: zip test-output.zip allure-history/* -r
       - name: Generate badges
         run: |
           python generate_badges.py
@@ -93,7 +93,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: test-output.zip
-          path: test-results.zip
+          path: test-output.zip
           retention-days: 1
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
@@ -115,10 +115,11 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: test-output.zip
+      - name: unzip tests artifacts
+        run: |
+          unzip test-output.zip
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
-      - name: unzip tests artifacts
-        run: unzip ${PWD}/test-output.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
