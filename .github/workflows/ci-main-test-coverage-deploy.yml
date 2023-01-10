@@ -114,7 +114,7 @@ jobs:
       - name: Download test artifacts
         uses: actions/download-artifact@v3
         with:
-          name: test-output
+          name: test-output.zip
           path: allure-history
       - name: unzip tests artifacts
         run: cd allure-history && unzip test-output.zip
