@@ -398,3 +398,63 @@ class TestSyncPhotos(unittest.TestCase):
                 destination_path=self.destination_path,
             )
         )
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_photo_wanted_extensions_JPG(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for JPG extension filter."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["filters"]["extensions"] = ["JpG"]
+        mock_read_config.return_value = config
+        # Sync original photos
+        self.assertIsNone(
+            sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        )
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        self.assertTrue(os.path.isdir(album_0_path))
+        self.assertTrue(os.path.isdir(album_1_path))
+        self.assertTrue(len(os.listdir(album_0_path)) > 0)
+        self.assertTrue(len(os.listdir(album_1_path)) > 0)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_photo_wanted_extensions_PNG(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for PNG extension filter."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["filters"]["extensions"] = ["PnG"]
+        mock_read_config.return_value = config
+        # Sync original photos
+        self.assertIsNone(
+            sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        )
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        self.assertTrue(os.path.isdir(album_0_path))
+        self.assertTrue(os.path.isdir(album_1_path))
+        self.assertTrue(len(os.listdir(album_0_path)) == 0)
+        self.assertTrue(len(os.listdir(album_1_path)) == 0)

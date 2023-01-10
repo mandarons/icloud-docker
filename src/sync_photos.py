@@ -10,6 +10,16 @@ from icloudpy import exceptions
 from src import LOGGER, config_parser
 
 
+def photo_wanted(photo, extensions):
+    """Check if photo is wanted based on extension."""
+    if not extensions or len(extensions) == 0:
+        return True
+    for extension in extensions:
+        if photo.filename.lower().endswith(str(extension).lower()):
+            return True
+    return False
+
+
 def generate_file_name(photo, file_size, destination_path):
     """Generate full path to file."""
     filename = photo.filename
@@ -77,14 +87,18 @@ def process_photo(photo, file_size, destination_path):
     return True
 
 
-def sync_album(album, destination_path, file_sizes):
+def sync_album(album, destination_path, file_sizes, extensions=None):
     """Sync given album."""
     if not (album and destination_path and file_sizes):
         return None
     os.makedirs(destination_path, exist_ok=True)
     for photo in album:
-        for file_size in file_sizes:
-            process_photo(photo, file_size, destination_path)
+        if photo_wanted(photo, extensions):
+            for file_size in file_sizes:
+                process_photo(photo, file_size, destination_path)
+        else:
+            LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
+    return True
 
 
 def sync_photos(config, photos):
@@ -97,12 +111,14 @@ def sync_photos(config, photos):
                 album=photos.albums[album],
                 destination_path=os.path.join(destination_path, album),
                 file_sizes=filters["file_sizes"],
+                extensions=filters["extensions"],
             )
     else:
         sync_album(
             album=photos.all,
             destination_path=os.path.join(destination_path, "all"),
             file_sizes=filters["file_sizes"],
+            extensions=filters["extensions"],
         )
 
 
