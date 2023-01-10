@@ -117,7 +117,7 @@ jobs:
           name: test-output
           path: allure-history
       - name: unzip tests artifacts
-        run: unzip test-output.zip
+        run: cd allure-history && unzip test-output.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
