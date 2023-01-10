@@ -61,6 +61,20 @@ jobs:
       - name: Test with pytest
         run: |
           pytest
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v3
+        if: ${{ success() }}
+        with:
+          name: coverage-output
+          path: htmlcov
+          retention-days: 1
+      - name: Checkout gh-pages
+        uses: actions/checkout@v3
+        if: always()
+        continue-on-error: true
+        with:
+          ref: gh-pages
+          path: gh-pages
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
@@ -69,16 +83,12 @@ jobs:
           subfolder: test-results
           allure_report: allure-report
           allure_history: allure-history
-          keep_reports: 1000
+          keep_reports: 100
+      - name: Zip tests artifacts
+        run: zip test-results.zip allure-history/* -r
       - name: Generate badges
         run: |
           python generate_badges.py
-      - name: Zip tests artifacts
-        run: zip test-results.zip allure-history/test-results/* -r
-      - name: Zip coverage artifacts
-        run: zip coverage.zip htmlcov/* -r
-      - name: Zip badges artifacts
-        run: zip badges.zip badges/* -r
       - name: Upload tests artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -89,13 +99,13 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage-output
-          path: coverage.zip
+          path: htmlcov
           retention-days: 1
       - name: Upload badges artifacts
         uses: actions/upload-artifact@v3
         with:
           name: badges-output
-          path: badges.zip
+          path: badges
           retention-days: 1
   publish-test-report:
     needs: test
@@ -105,8 +115,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: test-output
-      - name: unzip tests artifacts
-        run: unzip test-results.zip
+          path: allure-history
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -114,13 +123,15 @@ jobs:
         with:
           ref: gh-pages
           path: gh-pages
+      - name: unzip tests artifacts
+        run: unzip test-results.zip
       - name: Publish test report to gh-pages
         if: always()
         uses: peaceiris/actions-gh-pages@v3
         with:
           deploy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           publish_branch: gh-pages
-          publish_dir: test-results/test-results
+          publish_dir: allure-history
           destination_dir: test-results
   publish-coverage-report:
     needs: publish-test-report
@@ -130,8 +141,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage-output
-      - name: unzip coverage artifacts
-        run: unzip coverage.zip
+          path: coverage
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -155,8 +165,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: badges-output
-      - name: unzip badges artifacts
-        run: unzip badges.zip
+          path: badges
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -173,7 +182,8 @@ jobs:
           publish_dir: badges
           destination_dir: badges
   deploy:
-    needs: test
+    needs: publish-badges
+#    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repo
