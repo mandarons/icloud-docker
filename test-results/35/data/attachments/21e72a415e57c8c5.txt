@@ -1,5 +1,0 @@
-WARNING  root:config_parser.py:140 Warning: host is not found in app > smtp > host
-WARNING  root:config_parser.py:152 Warning: port is not found in app > smtp > port
-WARNING  root:config_parser.py:164 Warning: no_tls is not found in app > smtp > no_tls
-WARNING  root:config_parser.py:128 Warning: password is not found in app > smtp > password
-WARNING  root:notify.py:42 Not sending 2FA notification because SMTP is not configured

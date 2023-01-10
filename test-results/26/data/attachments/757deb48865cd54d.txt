@@ -1,2 +1,0 @@
-Loading config from %s ... /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml
-[38;5;226m2022-02-18 04:45:48,649 :: WARNING :: root :: config_parser.py :: 68 :: sync_interval is not found in drive > sync_interval. Using default sync_interval: 1800 seconds ...[0m

@@ -1,8 +1,0 @@
-DEBUG    icloudpy.base:base.py:246 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
-INFO     icloudpy.base:base.py:253 Session file does not exist
-DEBUG    icloudpy.base:base.py:318 Authenticating as quentintarantino@hotmail.fr
-DEBUG    icloudpy.base:base.py:350 Authentication completed successfully
-DEBUG    root:sync_drive.py:97 Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band does not exist locally.
-INFO     root:sync_drive.py:150 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band ...
-ERROR    root:sync_drive.py:132 Failed to unpack package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.zip. Leaving it as-is for you to use.                 It will result in re-download on every run.                 This is a known issue (https://github.com/mandarons/icloud-drive-docker/issues/76).                 Please file a bug and attach /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.zip to help resolve this issue.
-ERROR    root:sync_drive.py:160 Failed to download /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band: [Errno 2] No such file or directory
