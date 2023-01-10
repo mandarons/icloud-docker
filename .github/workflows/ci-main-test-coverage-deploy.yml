@@ -118,7 +118,7 @@ jobs:
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
       - name: unzip tests artifacts
-        run: unzip test-output.zip
+        run: unzip ./test-output.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
