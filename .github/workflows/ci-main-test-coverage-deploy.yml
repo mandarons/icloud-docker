@@ -105,7 +105,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: test-output
-#          path: allure-history
       - name: unzip tests artifacts
         run: unzip -d allure-history test-results.zip
       - name: Checkout gh-pages
@@ -131,7 +130,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: coverage-output
-          path: coverage
       - name: unzip coverage artifacts
         run: unzip -d coverage htmlcov.zip
       - name: Checkout gh-pages
@@ -157,7 +155,6 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: badges-output
-          path: badges
       - name: unzip badges artifacts
         run: unzip -d badges badges.zip
       - name: Checkout gh-pages
