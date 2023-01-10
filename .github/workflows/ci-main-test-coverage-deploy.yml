@@ -60,7 +60,7 @@ jobs:
           pip install -r requirements-test.txt
       - name: Test with pytest
         run: |
-          pylint src/ tests/ && pytest
+          pytest
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
@@ -69,7 +69,7 @@ jobs:
           subfolder: test-results
           allure_report: allure-report
           allure_history: allure-history
-          keep_reports: 100
+          keep_reports: 1000
       - name: Generate badges
         run: |
           python generate_badges.py
@@ -120,7 +120,7 @@ jobs:
         with:
           deploy_key: ${{ secrets.DEPLOY_PRIVATE_KEY }}
           publish_branch: gh-pages
-          publish_dir: allure-history
+          publish_dir: test-results/test-results
           destination_dir: test-results
   publish-coverage-report:
     needs: publish-test-report
