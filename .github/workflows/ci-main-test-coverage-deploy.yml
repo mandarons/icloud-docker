@@ -76,7 +76,7 @@ jobs:
       - name: Zip tests artifacts
         run: zip test-results.zip allure-history/test-results/ -r
       - name: Zip coverage artifacts
-        run: zip htmlcov.zip htmlcov/ -r
+        run: zip coverage.zip htmlcov/ -r
       - name: Zip badges artifacts
         run: zip badges.zip badges -r
       - name: Upload tests artifacts
@@ -89,7 +89,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: coverage-output
-          path: htmlcov.zip
+          path: coverage.zip
           retention-days: 1
       - name: Upload badges artifacts
         uses: actions/upload-artifact@v3
@@ -106,7 +106,7 @@ jobs:
         with:
           name: test-output
       - name: unzip tests artifacts
-        run: unzip -d allure-history test-results.zip
+        run: unzip test-results.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -131,7 +131,7 @@ jobs:
         with:
           name: coverage-output
       - name: unzip coverage artifacts
-        run: unzip -d coverage htmlcov.zip
+        run: unzip coverage.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
@@ -156,7 +156,7 @@ jobs:
         with:
           name: badges-output
       - name: unzip badges artifacts
-        run: unzip -d badges badges.zip
+        run: unzip badges.zip
       - name: Checkout gh-pages
         uses: actions/checkout@v3
         if: always()
