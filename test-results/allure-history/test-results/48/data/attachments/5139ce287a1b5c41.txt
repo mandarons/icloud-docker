@@ -1,0 +1,7 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-01-10 00:03:38,746 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-01-10 00:03:38,746 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-01-10 00:03:38,747 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-01-10 00:03:38,748 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-01-10 00:03:38,748 :: INFO :: root :: sync_photos.py :: 51 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos ...[0m
+[38;5;196m2023-01-10 00:03:38,748 :: ERROR :: root :: sync_photos.py :: 59 :: Failed to download /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/photos: ICloudPyAPIResponseException.__init__() missing 1 required positional argument: 'reason'[0m
