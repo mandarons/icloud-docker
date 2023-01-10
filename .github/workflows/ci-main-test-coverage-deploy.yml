@@ -74,11 +74,11 @@ jobs:
         run: |
           python generate_badges.py
       - name: Zip tests artifacts
-        run: zip test-results.zip allure-history/test-results/ -r
+        run: zip test-results.zip allure-history/test-results/* -r
       - name: Zip coverage artifacts
-        run: zip coverage.zip htmlcov/ -r
+        run: zip coverage.zip htmlcov/* -r
       - name: Zip badges artifacts
-        run: zip badges.zip badges -r
+        run: zip badges.zip badges/* -r
       - name: Upload tests artifacts
         uses: actions/upload-artifact@v3
         with:
