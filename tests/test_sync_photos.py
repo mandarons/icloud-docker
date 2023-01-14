@@ -58,7 +58,7 @@ class TestSyncPhotos(unittest.TestCase):
         )
         self.assertTrue(os.path.isdir(album_0_path))
         self.assertTrue(os.path.isdir(album_1_path))
-        self.assertTrue(len(os.listdir(album_0_path)) > 0)
+        self.assertTrue(len(os.listdir(album_0_path)) > 1)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
@@ -426,7 +426,7 @@ class TestSyncPhotos(unittest.TestCase):
         )
         self.assertTrue(os.path.isdir(album_0_path))
         self.assertTrue(os.path.isdir(album_1_path))
-        self.assertTrue(len(os.listdir(album_0_path)) > 0)
+        self.assertTrue(len(os.listdir(album_0_path)) > 1)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
@@ -456,5 +456,5 @@ class TestSyncPhotos(unittest.TestCase):
         )
         self.assertTrue(os.path.isdir(album_0_path))
         self.assertTrue(os.path.isdir(album_1_path))
-        self.assertTrue(len(os.listdir(album_0_path)) == 0)
+        self.assertTrue(len(os.listdir(album_0_path)) == 1)
         self.assertTrue(len(os.listdir(album_1_path)) == 0)

@@ -13,3 +13,5 @@ allure-report
 pytest.ini
 run-tests.sh
 requirements-test.txt
+session
+session_data

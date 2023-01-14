@@ -89,7 +89,7 @@ def process_photo(photo, file_size, destination_path):
 
 def sync_album(album, destination_path, file_sizes, extensions=None):
     """Sync given album."""
-    if not (album and destination_path and file_sizes):
+    if album is None or destination_path is None or file_sizes is None:
         return None
     os.makedirs(destination_path, exist_ok=True)
     for photo in album:
@@ -98,6 +98,13 @@ def sync_album(album, destination_path, file_sizes, extensions=None):
                 process_photo(photo, file_size, destination_path)
         else:
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
+    for subalbum in album.subalbums:
+        sync_album(
+            album.subalbums[subalbum],
+            os.path.join(destination_path, subalbum),
+            file_sizes,
+            extensions,
+        )
     return True
 
 
