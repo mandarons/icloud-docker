@@ -1,0 +1,24 @@
+DEBUG    icloudpy.base:base.py:246 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:253 Session file does not exist
+DEBUG    icloudpy.base:base.py:318 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:350 Authentication completed successfully
+DEBUG    root:config_parser.py:226 Checking photos destination ...
+DEBUG    root:config_parser.py:101 Checking root destination ...
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:sync_photos.py:100 Skipping the unwanted photo IMG_3148.JPG.
