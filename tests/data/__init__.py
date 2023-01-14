@@ -3786,6 +3786,48 @@ class ICloudPySessionMock(base.ICloudPySession):
                         ][0]["response"]
                     )
                 if data.get("query").get("recordType") == "CPLAlbumByPositionLive":
+                    if (
+                        "filterBy" in data["query"]
+                        and data.get("query").get("filterBy")[0]["fieldValue"]["value"]
+                        == "E4RT4FB7-4A35-4958-1D42-5769E66BE407"
+                    ):
+                        return ResponseMock(
+                            photos_data.DATA[
+                                "query?remapEnums=True&getCurrentSyncToken=True"
+                            ][4]["response"]
+                        )
+
+                    if (
+                        "filterBy" in data["query"]
+                        and data.get("query").get("filterBy")[0]["fieldValue"]["value"]
+                        == "CB3DB78F-D683-42D5-A340-A5DECC7397F6"
+                    ):
+                        return ResponseMock(
+                            photos_data.DATA[
+                                "query?remapEnums=True&getCurrentSyncToken=True"
+                            ][5]["response"]
+                        )
+                    if (
+                        "filterBy" in data["query"]
+                        and data.get("query").get("filterBy")[0]["fieldValue"]["value"]
+                        == "E803E065-D8A4-4398-DE23-23F8FD0886EB"
+                    ):
+                        return ResponseMock(
+                            photos_data.DATA[
+                                "query?remapEnums=True&getCurrentSyncToken=True"
+                            ][6]["response"]
+                        )
+                    if (
+                        "filterBy" in data["query"]
+                        and data.get("query").get("filterBy")[0]["fieldValue"]["value"]
+                        == "E803E065-D8A4-4398-DE23-23F8FD0886EC"
+                    ):
+                        return ResponseMock(
+                            photos_data.DATA[
+                                "query?remapEnums=True&getCurrentSyncToken=True"
+                            ][7]["response"]
+                        )
+
                     return ResponseMock(
                         photos_data.DATA[
                             "query?remapEnums=True&getCurrentSyncToken=True"

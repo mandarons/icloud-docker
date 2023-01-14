@@ -281,7 +281,7 @@ class TestConfigParser(unittest.TestCase):
         )
         self.assertTrue(os.path.exists(actual))
         self.assertTrue(os.path.isdir(actual))
-        os.rmdir(actual)
+        shutil.rmtree(actual)
 
     def test_prepare_photos_destination_default(self):
         """Default photos destination."""
