@@ -14,6 +14,8 @@ app:
   smtp:
   # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
   # email: sender@test.com
+  # Uncomment this if your SMTP username is different than your sender address (for services like AWS SES)
+  # username: ""
   # default to is same as email above
   # to: receiver@test.com
   # password:

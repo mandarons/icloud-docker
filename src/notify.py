@@ -14,6 +14,7 @@ def send(config, last_send=None, dry_run=False):
     host = config_parser.get_smtp_host(config=config)
     port = config_parser.get_smtp_port(config=config)
     no_tls = config_parser.get_smtp_no_tls(config=config)
+    username = config_parser.get_smtp_username(config=config)
     password = config_parser.get_smtp_password(config=config)
 
     if last_send and last_send > datetime.datetime.now() - datetime.timedelta(hours=24):
@@ -30,7 +31,10 @@ def send(config, last_send=None, dry_run=False):
                     smtp.starttls()
 
                 if password:
-                    smtp.login(email, password)
+                    if username:
+                        smtp.login(username, password)
+                    else:
+                        smtp.login(email, password)
 
                 msg = build_message(email)
 

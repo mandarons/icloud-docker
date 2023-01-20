@@ -211,6 +211,17 @@ class TestConfigParser(unittest.TestCase):
             config["app"]["smtp"]["email"], config_parser.get_smtp_email(config=config)
         )
 
+    def test_get_smtp_username(self):
+        """If present, get smtp username else None."""
+        config = {"app": {"smtp": {"username": "smtp-username"}}}
+        self.assertEqual(
+            config["app"]["smtp"]["username"],
+            config_parser.get_smtp_username(config=config),
+        )
+
+        del config["app"]["smtp"]["username"]
+        self.assertIsNone(config_parser.get_smtp_username(config=config))
+
     def test_smtp_email_none_config(self):
         """None config."""
         self.assertIsNone(config_parser.get_smtp_email(config=None))

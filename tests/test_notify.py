@@ -81,6 +81,34 @@ class TestNotify(unittest.TestCase):
                 instance.sendmail.mock_calls[0][2]["msg"],
             )
 
+    def test_send_with_username(self):
+        """Test for email send."""
+        with patch("smtplib.SMTP") as smtp:
+            self.config["app"]["smtp"]["username"] = "smtp-username"
+            notify.send(self.config)
+
+            instance = smtp.return_value
+
+            # verify that sendmail() was called
+            self.assertTrue(instance.sendmail.called)
+            self.assertEqual(instance.sendmail.call_count, 1)
+
+            # verify that the correct email is being sent to sendmail()
+            self.assertEqual(
+                config_parser.get_smtp_email(config=self.config),
+                instance.sendmail.mock_calls[0][2]["from_addr"],
+            )
+            self.assertEqual(
+                config_parser.get_smtp_to_email(config=self.config),
+                instance.sendmail.mock_calls[0][2]["to_addrs"],
+            )
+
+            # verify that the message was passed to sendmail()
+            self.assertIn(
+                "Subject: icloud-docker: Two step authentication required",
+                instance.sendmail.mock_calls[0][2]["msg"],
+            )
+
     def test_send_fail(self):
         """Test for failed send."""
         with patch("smtplib.SMTP") as smtp:
