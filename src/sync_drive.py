@@ -254,17 +254,21 @@ def sync_directory(
                 )
                 if not new_folder:
                     continue
-                files.add(new_folder)
-                files.update(
-                    sync_directory(
-                        drive=item,
-                        destination_path=new_folder,
-                        items=item.dir(),
-                        root=root,
-                        top=False,
-                        filters=filters,
+                try:
+                    files.add(new_folder)
+                    files.update(
+                        sync_directory(
+                            drive=item,
+                            destination_path=new_folder,
+                            items=item.dir(),
+                            root=root,
+                            top=False,
+                            filters=filters,
+                        )
                     )
-                )
+                except Exception:
+                    # Continue execution to next item, without crashing the app
+                    pass
             elif item.type == "file":
                 if wanted_parent_folder(
                     filters=filters["folders"]
@@ -273,14 +277,18 @@ def sync_directory(
                     root=root,
                     folder_path=destination_path,
                 ):
-                    process_file(
-                        item=item,
-                        destination_path=destination_path,
-                        filters=filters["file_extensions"]
-                        if filters and "file_extensions" in filters
-                        else None,
-                        files=files,
-                    )
+                    try:
+                        process_file(
+                            item=item,
+                            destination_path=destination_path,
+                            filters=filters["file_extensions"]
+                            if filters and "file_extensions" in filters
+                            else None,
+                            files=files,
+                        )
+                    except Exception:
+                        # Continue execution to next item, without crashing the app
+                        pass
         if top and remove:
             remove_obsolete(destination_path=destination_path, files=files)
     return files

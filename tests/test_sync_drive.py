@@ -6,6 +6,8 @@ import shutil
 import unittest
 from unittest.mock import patch
 
+from icloudpy.exceptions import ICloudPyAPIResponseException
+
 import tests
 from src import LOGGER, read_config, sync_drive
 from tests import DATA_DIR, data
@@ -26,6 +28,7 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.drive = self.service.drive
         self.items = self.drive.dir()
+        self.folder_item = self.drive[self.items[5]]
         self.file_item = self.drive[self.items[4]]["Test"]["Scanned document 1.pdf"]
         self.package_item = self.drive[self.items[6]]["Sample"]["Project.band"]
         self.package_item_nested = self.drive[self.items[6]]["Sample"]["ms.band"]
@@ -1029,3 +1032,50 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.process_package(local_file=os.path.join(DATA_DIR, "medium.jpeg"))
         )
+
+    def test_execution_continuation_on_icloudpy_exception(self):
+        """Test for icloudpy exception."""
+        with patch.object(self.file_item, "open") as mocked_file_method, patch.object(
+            self.folder_item, "dir"
+        ) as mocked_folder_method:
+            mocked_file_method.side_effect = (
+                mocked_folder_method.side_effect
+            ) = ICloudPyAPIResponseException("Exception occurred.")
+            filters = dict(self.filters)
+            filters["folders"].append("unwanted")
+            actual = sync_drive.sync_directory(
+                drive=self.drive,
+                destination_path=self.destination_path,
+                root=self.root,
+                items=self.drive.dir(),
+                top=True,
+                filters=filters,
+                remove=False,
+            )
+            self.assertTrue(len(actual) == 23)
+            self.assertTrue(
+                os.path.isdir(os.path.join(self.destination_path, "icloudpy"))
+            )
+            self.assertTrue(
+                os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
+            )
+            self.assertTrue(
+                os.path.isfile(
+                    os.path.join(
+                        self.destination_path,
+                        "icloudpy",
+                        "Test",
+                        "Document scanne 2.pdf",
+                    )
+                )
+            )
+            self.assertFalse(
+                os.path.isfile(
+                    os.path.join(
+                        self.destination_path,
+                        "icloudpy",
+                        "Test",
+                        "Scanned document 1.pdf",
+                    )
+                )
+            )
