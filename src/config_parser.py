@@ -122,6 +122,15 @@ def get_smtp_email(config):
     return email
 
 
+def get_smtp_username(config):
+    """Return smtp username from the config, if set."""
+    username = None
+    config_path = ["app", "smtp", "username"]
+    if traverse_config_path(config=config, config_path=config_path):
+        username = get_config_value(config=config, config_path=config_path)
+    return username
+
+
 def get_smtp_to_email(config):
     """Return smtp to email from config."""
     to_email = None
