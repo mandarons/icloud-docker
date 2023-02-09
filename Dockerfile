@@ -14,5 +14,7 @@ RUN apk update && apk add libmagic
 ENV PATH="/app/venv/bin/:$PATH"
 ENV PYTHONPATH /app
 COPY . /app/
-ARG APP_VERSION=main
+ARG APP_VERSION=dev
+ARG NEW_INSTALLATION_ENDPOINT=dev
+ARG NEW_HEARTBEAT_ENDPOINT=dev
 CMD ["python", "-u", "./src/main.py"]

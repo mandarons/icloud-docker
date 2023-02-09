@@ -56,6 +56,10 @@ jobs:
         with:
           context: ./
           file: ./Dockerfile
+          build-args: |
+            NEW_INSTALLATION_ENDPOINT=${{ secrets.NEW_INSTALLATION_ENDPOINT }}
+            NEW_HEARTBEAT_ENDPOINT=${{ secrets.NEW_HEARTBEAT_ENDPOINT }}
+            APP_VERSION=${GITHUB_REF#refs/tags/v}
           push: true
           platforms: linux/386,linux/amd64, linux/arm64, linux/arm/7
           tags: ${{ steps.prep.outputs.tags }}
