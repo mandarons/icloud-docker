@@ -212,6 +212,10 @@ jobs:
         with:
           context: ./
           file: ./Dockerfile
+          build-args: |
+            NEW_INSTALLATION_ENDPOINT=${{ secrets.NEW_INSTALLATION_ENDPOINT }}
+            NEW_HEARTBEAT_ENDPOINT=${{ secrets.NEW_HEARTBEAT_ENDPOINT }}
+            APP_VERSION=main
           push: true
           platforms: linux/arm64, linux/amd64, linux/arm/v7, linux/386
           tags: mandarons/icloud-drive:main
