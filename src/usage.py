@@ -1,0 +1,106 @@
+"""To record usage of the app."""
+import json
+import os
+
+import requests
+
+from src.config_parser import prepare_root_destination
+
+CACHE_FILE_NAME = ".data"
+NEW_INSTALLATION_ENDPOINT = os.environ.get("NEW_INSTALLATION_ENDPOINT", None)
+NEW_HEARTBEAT_ENDPOINT = os.environ.get("NEW_HEARTBEAT_ENDPOINT", None)
+APP_NAME = "icloud-drive-docker"
+APP_VERSION = os.environ.get("APP_VERSION", "dev")
+NEW_INSTALLATION_DATA = {"appName": APP_NAME, "appVersion": APP_VERSION}
+
+
+def init_cache(config):
+    """Initialize the cache file."""
+    root_destination_path = prepare_root_destination(config=config)
+    cache_file_path = os.path.join(root_destination_path, CACHE_FILE_NAME)
+    return cache_file_path
+
+
+def load_cache(file_path: str):
+    """Load the cache file."""
+    data = {}
+    if os.path.isfile(file_path):
+        with open(file_path) as f:
+            data = json.load(f)
+    else:
+        save_cache(file_path=file_path, data={})
+    return data
+
+
+def save_cache(file_path: str, data: object):
+    """Save data to the cache file."""
+    with open(file_path, "w") as f:
+        json.dump(data, f)
+    return True
+
+
+def post_new_installation(data, endpoint=NEW_INSTALLATION_ENDPOINT):
+    """Post new installation to server."""
+    try:
+        response = requests.post(endpoint, data)
+        if response.ok:
+            data = response.json()
+            return data["id"]
+    except Exception:
+        pass
+    return None
+
+
+def record_new_installation(previous_id=None):
+    """Record new or upgrade existing installation."""
+    data = dict(NEW_INSTALLATION_DATA)
+    if previous_id:
+        data["previousId"] = previous_id
+    return post_new_installation(data)
+
+
+def already_installed(cached_data):
+    """Check if already installed."""
+    return (
+        "id" in cached_data
+        and "app_version" in cached_data
+        and cached_data["app_version"] == APP_VERSION
+    )
+
+
+def install(cached_data):
+    """Install the app."""
+    new_id = record_new_installation(cached_data.get("id", None))
+    if new_id:
+        cached_data["id"] = new_id
+        cached_data["app_version"] = APP_VERSION
+        return cached_data
+    return False
+
+
+def post_new_heartbeat(data, endpoint=NEW_HEARTBEAT_ENDPOINT):
+    """Post the heartbeat to server."""
+    try:
+        response = requests.post(endpoint, data)
+        if response.ok:
+            return True
+    except Exception:
+        pass
+    return False
+
+
+def send_heartbeat(app_id, data=None):
+    """Prepare and send heartbeat to server."""
+    data = {"installationId": app_id, "data": data}
+    return post_new_heartbeat(data)
+
+
+def alive(config, data=None):
+    """Record liveliness."""
+    cache_file_path = init_cache(config=config)
+    cached_data = load_cache(cache_file_path)
+    if not already_installed(cached_data=cached_data):
+        installed_data = install(cached_data=cached_data)
+        if installed_data:
+            return save_cache(file_path=cache_file_path, data=installed_data)
+    return send_heartbeat(app_id=cached_data.get("id"), data=data)
