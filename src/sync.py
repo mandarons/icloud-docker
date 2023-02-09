@@ -16,6 +16,7 @@ from src import (
     sync_drive,
     sync_photos,
 )
+from src.usage import alive
 
 
 def get_api_instance(
@@ -52,6 +53,7 @@ def sync():
     sleep_for = 10
     while True:
         config = read_config()
+        alive(config=config)
         username = config_parser.get_username(config=config)
         if username:
             try:

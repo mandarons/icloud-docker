@@ -44,8 +44,10 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync(
         self,
+        mock_usage_post,
         mock_read_config,
         mock_service,
         mock_get_username,
@@ -65,8 +67,10 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_photos_only(
         self,
+        mock_usage_post,
         mock_read_config,
         mock_service,
         mock_get_username,
@@ -82,7 +86,7 @@ class TestSyncDrive(unittest.TestCase):
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
         dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(1 == dir_length)
+        self.assertTrue(2 == dir_length)
         self.assertTrue(
             os.path.isdir(os.path.join(self.root_dir, config["photos"]["destination"]))
         )
@@ -93,8 +97,10 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_drive_only(
         self,
+        mock_usage_post,
         mock_read_config,
         mock_service,
         mock_get_username,
@@ -114,7 +120,7 @@ class TestSyncDrive(unittest.TestCase):
             os.path.isdir(os.path.join(self.root_dir, config["drive"]["destination"]))
         )
         dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(1 == dir_length)
+        self.assertTrue(2 == dir_length)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
@@ -122,8 +128,14 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_empty(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+        self,
+        mock_usage_post,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
     ):
         """Test for nothing to sync."""
         if ENV_ICLOUD_PASSWORD_KEY in os.environ:
@@ -136,7 +148,7 @@ class TestSyncDrive(unittest.TestCase):
         self.remove_temp()
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
-        self.assertFalse(os.path.exists(self.root_dir))
+        self.assertTrue(os.path.exists(self.root_dir))
 
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
@@ -145,8 +157,10 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_2fa_required(
         self,
+        mock_usage_post,
         mock_read_config,
         mock_service,
         mock_get_username,
@@ -177,8 +191,10 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_password_missing_in_keyring(
         self,
+        mock_usage_post,
         mock_read_config,
         mock_service,
         mock_get_username,
@@ -215,8 +231,10 @@ class TestSyncDrive(unittest.TestCase):
     @patch(target="src.config_parser.get_username", return_value=data.REQUIRES_2FA_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_password_as_environment_variable(
         self,
+        mock_usage_post,
         mock_read_config,
         mock_service,
         mock_get_username,
@@ -252,8 +270,10 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_exception_thrown(
         self,
+        mock_usage_post,
         mock_read_config,
         mock_service,
         mock_get_username,
@@ -281,8 +301,10 @@ class TestSyncDrive(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_different_schedule(
         self,
+        mock_usage_post,
         mock_read_config,
         mock_service,
         mock_get_username,
