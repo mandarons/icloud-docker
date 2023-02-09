@@ -1,0 +1,12 @@
+DEBUG    icloudpy.base:base.py:246 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:253 Session file does not exist
+DEBUG    icloudpy.base:base.py:318 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:350 Authentication completed successfully
+INFO     root:sync_drive.py:176 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Project.band ...
+INFO     root:sync_drive.py:143 Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Project.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive
+INFO     root:sync_drive.py:160 Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Project.band.zip.
+DEBUG    root:sync_drive.py:95 No changes detected. Skipping the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Project.band ...
+INFO     root:sync_drive.py:100 Changes detected: local_modified_time is 1675969357, remote_modified_time is 1627845714, local_package_size is 928804 and remote_package_size is 588272.
+INFO     root:sync_drive.py:176 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Project.band ...
+INFO     root:sync_drive.py:143 Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Project.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive
+INFO     root:sync_drive.py:160 Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Project.band.zip.
