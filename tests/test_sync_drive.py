@@ -19,6 +19,7 @@ class TestSyncDrive(unittest.TestCase):
     def setUp(self) -> None:
         """Initialize tests."""
         self.config = read_config(config_path=tests.CONFIG_PATH)
+        self.ignore = self.config["drive"]["ignore"]
         self.filters = self.config["drive"]["filters"]
         self.root = tests.DRIVE_DIR
         self.destination_path = self.root
@@ -352,7 +353,7 @@ class TestSyncDrive(unittest.TestCase):
         self.filters["file_extensions"] = ["py"]
         self.assertTrue(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], file_path=__file__
+                filters=self.filters["file_extensions"], ignore=None, file_path=__file__
             )
         )
 
@@ -360,7 +361,7 @@ class TestSyncDrive(unittest.TestCase):
         """Test for a missing wanted file."""
         self.assertFalse(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], file_path=tests.CONFIG_PATH
+                filters=self.filters["file_extensions"], ignore=None, file_path=tests.CONFIG_PATH
             )
         )
 
@@ -368,7 +369,7 @@ class TestSyncDrive(unittest.TestCase):
         """Test for valid unwanted file."""
         with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], file_path=tests.CONFIG_PATH
+                filters=self.filters["file_extensions"], ignore=None, file_path=tests.CONFIG_PATH
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIn(
@@ -377,10 +378,10 @@ class TestSyncDrive(unittest.TestCase):
 
     def test_wanted_file_none_file_path(self):
         """Test for unexpected wanted file path."""
-        self.assertTrue(sync_drive.wanted_file(filters=None, file_path=__file__))
+        self.assertTrue(sync_drive.wanted_file(filters=None, ignore=None, file_path=__file__))
         self.assertFalse(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], file_path=None
+                filters=self.filters["file_extensions"], ignore=None, file_path=None
             )
         )
 
@@ -390,7 +391,7 @@ class TestSyncDrive(unittest.TestCase):
         self.filters["file_extensions"] = []
         self.assertTrue(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], file_path=__file__
+                filters=self.filters["file_extensions"], ignore=None, file_path=__file__
             )
         )
         self.filters = dict(original_filters)
@@ -400,14 +401,52 @@ class TestSyncDrive(unittest.TestCase):
         self.filters["file_extensions"] = ["pY"]
         self.assertTrue(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], file_path=__file__
+                filters=self.filters["file_extensions"], ignore=None, file_path=__file__
             )
         )
         self.filters["file_extensions"] = ["pY"]
         self.assertTrue(
             sync_drive.wanted_file(
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 file_path=os.path.join(os.path.dirname(__file__), "file.Py"),
+            )
+        )
+
+    def test_wanted_file_ignore(self):
+        """Test for wanted file exclude regex."""
+        self.ignore = ["*.md", ".git/"]
+        self.assertFalse(
+            sync_drive.wanted_file(
+                filters=None,
+                ignore=self.ignore,
+                file_path=os.path.join(self.root, "/dir1/README.md"),
+            )
+        )
+        self.assertFalse(
+            sync_drive.wanted_file(
+                filters=None,
+                ignore=self.ignore,
+                file_path=os.path.join(self.root, "/.git/index"),
+            )
+        )
+        self.assertTrue(
+            sync_drive.wanted_file(
+                filters=None,
+                ignore=self.ignore,
+                file_path=os.path.join(os.path.dirname(__file__), "/dir1/index.html"),
+            )
+        )
+
+    def test_wanted_file_ignore_takes_precedences_over_filters(self):
+        """Test for wanted folder exclude regex."""
+        self.ignore = ["*.py"]
+        self.filters["file_extensions"] = ["py"]
+        self.assertFalse(
+            sync_drive.wanted_file(
+                filters=self.filters["file_extensions"],
+                ignore=self.ignore,
+                file_path=os.path.join(self.root, "/dir1/index.py"),
             )
         )
 
@@ -557,6 +596,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )
@@ -569,6 +609,7 @@ class TestSyncDrive(unittest.TestCase):
             item=self.file_item,
             destination_path=self.destination_path,
             filters=self.filters["file_extensions"],
+            ignore=None,
             files=files,
         )
         # file already exists but not changed
@@ -577,6 +618,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )
@@ -589,6 +631,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item,
                 destination_path=self.destination_path,
                 filters=self.filters,
+                ignore=None,
                 files=files,
             )
         )
@@ -601,6 +644,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=None,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )
@@ -613,6 +657,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item,
                 destination_path=None,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )
@@ -625,6 +670,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item,
                 destination_path=self.destination_path,
                 filters=None,
+                ignore=None,
                 files=files,
             )
         )
@@ -636,6 +682,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=None,
             )
         )
@@ -650,6 +697,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )
@@ -663,6 +711,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.file_item,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )
@@ -982,6 +1031,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.package_item,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )
@@ -996,6 +1046,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.package_item,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )
@@ -1008,6 +1059,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.package_item_nested,
                 destination_path=self.destination_path,
                 filters=self.filters["file_extensions"],
+                ignore=None,
                 files=files,
             )
         )

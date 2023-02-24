@@ -5,6 +5,7 @@ import gzip
 import os
 import re
 import time
+from pathspec import PathSpec
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
 
@@ -14,10 +15,14 @@ from icloudpy import exceptions
 from src import LOGGER, config_parser
 
 
-def wanted_file(filters, file_path):
+def wanted_file(filters, ignore, file_path):
     """Check if file is wanted."""
     if not file_path:
         return False
+    if ignore:
+        if PathSpec.from_lines("gitwildmatch", ignore).match_file(file_path):
+            LOGGER.debug(f"Skipping the unwanted file {file_path}")
+            return False
     if not filters or len(filters) == 0:
         return True
     for file_extension in filters:
@@ -188,12 +193,12 @@ def download_file(item, local_file):
     return True
 
 
-def process_file(item, destination_path, filters, files):
+def process_file(item, destination_path, filters, ignore, files):
     """Process given item as file."""
     if not (item and destination_path and files is not None):
         return False
     local_file = os.path.join(destination_path, item.name)
-    if not wanted_file(filters=filters, file_path=local_file):
+    if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
         return False
     files.add(local_file)
     item_is_package = is_package(item=item)
@@ -236,6 +241,7 @@ def sync_directory(
     root,
     top=True,
     filters=None,
+    ignore=None,
     remove=False,
 ):
     """Sync folder."""
@@ -284,6 +290,7 @@ def sync_directory(
                             filters=filters["file_extensions"]
                             if filters and "file_extensions" in filters
                             else None,
+                            ignore=ignore,
                             files=files,
                         )
                     except Exception:
@@ -305,6 +312,9 @@ def sync_drive(config, drive):
         top=True,
         filters=config["drive"]["filters"]
         if "drive" in config and "filters" in config["drive"]
+        else None,
+        ignore=config["drive"]["ignore"]
+        if "drive" in config and "ignore" in config["drive"]
         else None,
         remove=config_parser.get_drive_remove_obsolete(config=config),
     )
