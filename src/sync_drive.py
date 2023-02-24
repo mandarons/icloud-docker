@@ -32,8 +32,11 @@ def wanted_file(filters, ignore, file_path):
     return False
 
 
-def wanted_folder(filters, root, folder_path):
+def wanted_folder(filters, ignore, root, folder_path):
     """Check if folder is wanted."""
+    if ignore:
+        if PathSpec.from_lines("gitwildmatch", ignore).match_file(f"{folder_path}/foo.bar"):
+            return False
     if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
         return True
@@ -70,12 +73,12 @@ def wanted_parent_folder(filters, root, folder_path):
     return False
 
 
-def process_folder(item, destination_path, filters, root):
+def process_folder(item, destination_path, filters, ignore, root):
     """Process the given folder."""
     if not (item and destination_path and root):
         return None
     new_directory = os.path.join(destination_path, item.name)
-    if not wanted_folder(filters=filters, folder_path=new_directory, root=root):
+    if not wanted_folder(filters=filters, ignore=ignore, folder_path=new_directory, root=root):
         LOGGER.debug(f"Skipping the unwanted folder {new_directory} ...")
         return None
     os.makedirs(new_directory, exist_ok=True)
@@ -256,6 +259,7 @@ def sync_directory(
                     filters=filters["folders"]
                     if filters and "folders" in filters
                     else None,
+                    ignore=ignore,
                     root=root,
                 )
                 if not new_folder:
@@ -270,6 +274,7 @@ def sync_directory(
                             root=root,
                             top=False,
                             filters=filters,
+                            ignore=ignore,
                         )
                     )
                 except Exception:

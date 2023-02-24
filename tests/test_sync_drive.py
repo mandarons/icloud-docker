@@ -82,6 +82,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -90,6 +91,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -98,6 +100,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -106,6 +109,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -117,6 +121,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -124,6 +129,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir2"),
             )
@@ -131,6 +137,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir2", "dir3"),
             )
@@ -138,6 +145,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir3"),
             )
@@ -145,6 +153,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir2"),
             )
@@ -152,6 +161,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir3"),
             )
@@ -160,6 +170,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -167,6 +178,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir2"),
             )
@@ -174,6 +186,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir2", "dir3"),
             )
@@ -181,6 +194,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir3"),
             )
@@ -188,6 +202,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir2"),
             )
@@ -195,6 +210,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir3"),
             )
@@ -206,6 +222,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -213,6 +230,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir2"),
             )
@@ -220,6 +238,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir3"),
             )
@@ -231,6 +250,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -238,6 +258,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir2"),
             )
@@ -245,6 +266,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir2", "dir3"),
             )
@@ -252,6 +274,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir3"),
             )
@@ -259,6 +282,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir2"),
             )
@@ -266,6 +290,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir3"),
             )
@@ -273,6 +298,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dirA"),
             )
@@ -280,6 +306,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dirA", "dirB"),
             )
@@ -287,6 +314,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dirA", "dirB", "dirC"),
             )
@@ -294,6 +322,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dirA", "dirC"),
             )
@@ -301,6 +330,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dirB"),
             )
@@ -308,10 +338,105 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=self.filters,
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dirC"),
             )
         )
+
+    def test_wanted_folder_ignore(self):
+        """Tes for wanted folder ignore."""
+        self.ignore = ["dir2/"]
+        self.assertTrue(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir1"),
+            )
+        )
+        self.assertTrue(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir1", "dir3"),
+            )
+        )
+        self.assertFalse(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir1", "dir2"),
+            )
+        )
+        self.assertFalse(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir2", "dir1"),
+            )
+        )
+
+    def test_wanted_folder_ignore_multiple_paths(self):
+        """Test for wanted folder ignore multiple paths."""
+        self.ignore = ["dir2/", "dir1/dir3/"]
+        self.assertTrue(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir1"),
+            )
+        )
+        self.assertTrue(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir1", "dir4"),
+            )
+        )
+        self.assertFalse(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir1", "dir2"),
+            )
+        )
+        self.assertFalse(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=["dir3"],
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir1", "dir3"),
+            )
+        )
+        self.assertFalse(
+            sync_drive.wanted_folder(
+                filters=None,
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir2", "dir1"),
+            )
+        )
+
+    def test_wanted_folder_ignore_takes_precedence_to_filters(self):
+        """Test for wanted folder ignore takes precedence to filters."""
+        self.ignore = ["dir2/"]
+        self.filters["folders"] = ["dir2/"]
+        self.assertFalse(
+            sync_drive.wanted_folder(
+                filters=self.filters["folders"],
+                ignore=self.ignore,
+                root=self.root,
+                folder_path=os.path.join(self.root, "dir2"),
+            )
+        )
+
 
     def test_wanted_folder_empty(self):
         """Test for empty wanted folder."""
@@ -320,6 +445,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
             )
@@ -330,21 +456,21 @@ class TestSyncDrive(unittest.TestCase):
         """Test for wanted folder path as None."""
         self.assertTrue(
             sync_drive.wanted_folder(
-                filters=self.filters["folders"], root=self.root, folder_path=None
+                filters=self.filters["folders"], ignore=None, root=self.root, folder_path=None
             )
         )
 
     def test_wanted_folder_none_filters(self):
         """Test for wanted folder filters as None."""
         self.assertTrue(
-            sync_drive.wanted_folder(filters=None, root=self.root, folder_path="dir1")
+            sync_drive.wanted_folder(filters=None, ignore=None, root=self.root, folder_path="dir1")
         )
 
     def test_wanted_folder_none_root(self):
         """Test for wanted folder root as None."""
         self.assertTrue(
             sync_drive.wanted_folder(
-                filters=self.filters["folders"], root=None, folder_path="dir1"
+                filters=self.filters["folders"], ignore=None, root=None, folder_path="dir1"
             )
         )
 
@@ -456,6 +582,7 @@ class TestSyncDrive(unittest.TestCase):
             item=self.drive[self.items[0]],
             destination_path=self.destination_path,
             filters=self.filters["folders"],
+            ignore=None,
             root=self.root,
         )
         self.assertIsNotNone(actual)
@@ -468,6 +595,7 @@ class TestSyncDrive(unittest.TestCase):
             item=self.drive[self.items[1]],
             destination_path=self.destination_path,
             filters=self.filters,
+            ignore=None,
             root=self.root,
         )
         self.assertIsNone(actual)
@@ -479,6 +607,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=None,
                 destination_path=self.destination_path,
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
             )
         )
@@ -490,6 +619,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.drive[self.items[1]],
                 destination_path=None,
                 filters=self.filters["folders"],
+                ignore=None,
                 root=self.root,
             )
         )
@@ -501,6 +631,7 @@ class TestSyncDrive(unittest.TestCase):
                 item=self.drive[self.items[1]],
                 destination_path=self.destination_path,
                 filters=self.filters["folders"],
+                ignore=None,
                 root=None,
             )
         )
@@ -827,6 +958,7 @@ class TestSyncDrive(unittest.TestCase):
             items=self.drive.dir(),
             top=True,
             filters=self.filters,
+            ignore=self.ignore,
             remove=True,
         )
         self.assertTrue(len(actual) == 22)
@@ -860,6 +992,7 @@ class TestSyncDrive(unittest.TestCase):
             items=self.drive.dir(),
             top=True,
             filters=self.filters,
+            ignore=self.ignore,
             remove=False,
         )
         self.assertTrue(len(actual) == 26)
@@ -897,6 +1030,7 @@ class TestSyncDrive(unittest.TestCase):
                     items=self.drive.dir(),
                     top=True,
                     filters=self.filters,
+                    ignore=self.ignore,
                     remove=False,
                 )
             )
@@ -914,6 +1048,7 @@ class TestSyncDrive(unittest.TestCase):
                     items=self.drive.dir(),
                     top=True,
                     filters=self.filters,
+                    ignore=self.ignore,
                     remove=False,
                 )
             )
@@ -931,6 +1066,7 @@ class TestSyncDrive(unittest.TestCase):
                     items=self.drive.dir(),
                     top=True,
                     filters=self.filters,
+                    ignore=self.ignore,
                     remove=False,
                 )
             )
@@ -948,6 +1084,7 @@ class TestSyncDrive(unittest.TestCase):
                     items=None,
                     top=True,
                     filters=self.filters,
+                    ignore=self.ignore,
                     remove=False,
                 )
             )
@@ -1102,6 +1239,7 @@ class TestSyncDrive(unittest.TestCase):
                 items=self.drive.dir(),
                 top=True,
                 filters=filters,
+                ignore=self.ignore,
                 remove=False,
             )
             self.assertTrue(len(actual) == 23)
