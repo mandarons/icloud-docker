@@ -1,3 +1,5 @@
 icloudpy==0.3.3
 ruamel.yaml==0.16.12
 python-magic==0.4.27
+requests~=2.28.1
+pathspec~=0.11.0

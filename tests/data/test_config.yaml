@@ -30,6 +30,9 @@ drive:
   destination: "./drive"
   remove_obsolete: true
   sync_interval: -1
+  ignore:
+    - "*.psd"
+    - .git/
   filters:
     # File filters to be included in syncing iCloud drive content
     folders:
