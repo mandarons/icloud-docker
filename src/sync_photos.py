@@ -125,7 +125,6 @@ def remove_obsolete(destination_path, files):
                 LOGGER.info(f"Removing {local_file} ...")
                 path.unlink(missing_ok=True)
                 removed_paths.add(local_file)
-    # TODO maybe remove empty dirs?
     return removed_paths
 
 
