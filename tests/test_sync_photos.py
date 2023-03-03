@@ -244,6 +244,8 @@ class TestSyncPhotos(unittest.TestCase):
                 next((s for s in captured[1] if "Downloading /" in s), None)
             )
 
+        self.assertFalse(os.path.exists(os.path.join(album_1_path, "IMG_3148.JPG")))
+
         # Rename previous __original files - upgrade to newer version
         os.rename(
             os.path.join(
@@ -261,6 +263,94 @@ class TestSyncPhotos(unittest.TestCase):
             self.assertIsNone(
                 next((s for s in captured[1] if "Downloading /" in s), None)
             )
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_rename_original_photos_obsolete_false(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+    ):
+        """Test for renaming of previously downloaded original photos."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["remove_obsolete"] = False
+        mock_read_config.return_value = config
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
+
+        # Rename previous original files - upgrade to newer version
+        os.rename(
+            os.path.join(
+                album_1_path,
+                "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+            ),
+            os.path.join(album_1_path, "delete_me.JPG"),
+        )
+
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
+
+        self.assertTrue(os.path.exists(os.path.join(album_1_path, "delete_me.JPG")))
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_rename_original_photos_obsolete_true(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+    ):
+        """Test for renaming of previously downloaded original photos."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["remove_obsolete"] = True
+        mock_read_config.return_value = config
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
+
+        # Rename previous original files - upgrade to newer version
+        os.rename(
+            os.path.join(
+                album_1_path,
+                "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+            ),
+            os.path.join(album_1_path, "delete_me.JPG"),
+        )
+
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
+
+        self.assertFalse(os.path.exists(os.path.join(album_1_path, "delete_me.JPG")))
+
+    def test_remove_obsolete_none_destination_path(self):
+        """Test for destination path as None."""
+        self.assertTrue(
+            len(sync_photos.remove_obsolete(destination_path=None, files=set())) == 0
+        )
+
+    def test_remove_obsolete_none_files(self):
+        """Test for files as None."""
+        obsolete_path = os.path.join(self.destination_path, "obsolete")
+        self.assertTrue(
+            len(sync_photos.remove_obsolete(destination_path=obsolete_path, files=None))
+            == 0
+        )
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
@@ -372,6 +462,7 @@ class TestSyncPhotos(unittest.TestCase):
                 photo=MockPhoto(),
                 file_size="medium",
                 destination_path=self.destination_path,
+                files=None,
             )
         )
 
@@ -396,6 +487,7 @@ class TestSyncPhotos(unittest.TestCase):
                 photo=MockPhoto(),
                 file_size="thumb",
                 destination_path=self.destination_path,
+                files=None,
             )
         )
 

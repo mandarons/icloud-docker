@@ -4,6 +4,7 @@ import base64
 import os
 import shutil
 import time
+from pathlib import Path
 
 from icloudpy import exceptions
 
@@ -71,7 +72,7 @@ def download_photo(photo, file_size, destination_path):
     return True
 
 
-def process_photo(photo, file_size, destination_path):
+def process_photo(photo, file_size, destination_path, files):
     """Process photo details."""
     photo_path = generate_file_name(
         photo=photo, file_size=file_size, destination_path=destination_path
@@ -81,21 +82,24 @@ def process_photo(photo, file_size, destination_path):
             f"File size {file_size} not found on server. Skipping the photo {photo_path} ..."
         )
         return False
+    if not files is None:
+        files.add(photo_path)
     if photo_exists(photo, file_size, photo_path):
         return False
     download_photo(photo, file_size, photo_path)
     return True
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None):
+def sync_album(album, destination_path, file_sizes, extensions=None, files=None):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
     os.makedirs(destination_path, exist_ok=True)
+    LOGGER.info(f"Syncing {album.title}")
     for photo in album:
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
-                process_photo(photo, file_size, destination_path)
+                process_photo(photo, file_size, destination_path, files)
         else:
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
     for subalbum in album.subalbums:
@@ -104,14 +108,32 @@ def sync_album(album, destination_path, file_sizes, extensions=None):
             os.path.join(destination_path, subalbum),
             file_sizes,
             extensions,
+            files,
         )
     return True
+
+
+def remove_obsolete(destination_path, files):
+    """Remove local obsolete file."""
+    removed_paths = set()
+    if not (destination_path and files is not None):
+        return removed_paths
+    for path in Path(destination_path).rglob("*"):
+        local_file = str(path.absolute())
+        if local_file not in files:
+            if path.is_file():
+                LOGGER.info(f"Removing {local_file} ...")
+                path.unlink(missing_ok=True)
+                removed_paths.add(local_file)
+    # TODO maybe remove empty dirs?
+    return removed_paths
 
 
 def sync_photos(config, photos):
     """Sync all photos."""
     destination_path = config_parser.prepare_photos_destination(config=config)
     filters = config_parser.get_photos_filters(config=config)
+    files = set()
     if filters["albums"]:
         for album in iter(filters["albums"]):
             sync_album(
@@ -119,6 +141,7 @@ def sync_photos(config, photos):
                 destination_path=os.path.join(destination_path, album),
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
+                files=files,
             )
     else:
         sync_album(
@@ -126,7 +149,11 @@ def sync_photos(config, photos):
             destination_path=os.path.join(destination_path, "all"),
             file_sizes=filters["file_sizes"],
             extensions=filters["extensions"],
+            files=files,
         )
+
+    if config_parser.get_photos_remove_obsolete(config=config):
+        remove_obsolete(destination_path, files)
 
 
 # def enable_debug():
