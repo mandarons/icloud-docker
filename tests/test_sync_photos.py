@@ -90,7 +90,7 @@ class TestSyncPhotos(unittest.TestCase):
         os.remove(
             os.path.join(
                 album_1_path,
-                "IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+                "album-1__IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
             )
         )
         # Download missing file
@@ -104,7 +104,7 @@ class TestSyncPhotos(unittest.TestCase):
                     (
                         s
                         for s in captured[1]
-                        if "album-1/IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
+                        if "album-1/album-1__IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
                         in s
                     ),
                     None,
@@ -144,7 +144,7 @@ class TestSyncPhotos(unittest.TestCase):
         os.remove(
             os.path.join(
                 album_1_path,
-                "IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+                "album-1__IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
             )
         )
         shutil.copyfile(
@@ -161,7 +161,7 @@ class TestSyncPhotos(unittest.TestCase):
                     (
                         s
                         for s in captured[1]
-                        if "album-1/IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
+                        if "album-1/album-1__IMG_3148__medium__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
                         in s
                     ),
                     None,
@@ -230,7 +230,7 @@ class TestSyncPhotos(unittest.TestCase):
         os.rename(
             os.path.join(
                 album_1_path,
-                "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+                "album-1__IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
             ),
             os.path.join(album_1_path, "IMG_3148.JPG"),
         )
@@ -246,11 +246,37 @@ class TestSyncPhotos(unittest.TestCase):
 
         self.assertFalse(os.path.exists(os.path.join(album_1_path, "IMG_3148.JPG")))
 
+        # Rename previous original files - upgrade to newer version
+        os.rename(
+            os.path.join(
+                album_1_path,
+                "album-1__IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+            ),
+            os.path.join(album_1_path, "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG"),
+        )
+
+        with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
+            self.assertIsNone(
+                sync_photos.sync_photos(config=config, photos=mock_service.photos)
+            )
+            self.assertTrue(len(captured.records) > 0)
+            self.assertIsNone(
+                next((s for s in captured[1] if "Downloading /" in s), None)
+            )
+
+        self.assertFalse(os.path.exists(
+                            os.path.join(
+                                         album_1_path,
+                                         "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG"
+                                        )
+                            )
+                        )
+
         # Rename previous __original files - upgrade to newer version
         os.rename(
             os.path.join(
                 album_1_path,
-                "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+                "album-1__IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
             ),
             os.path.join(album_1_path, "IMG_3148__original.JPG"),
         )
@@ -292,7 +318,7 @@ class TestSyncPhotos(unittest.TestCase):
         os.rename(
             os.path.join(
                 album_1_path,
-                "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+                "album-1__IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
             ),
             os.path.join(album_1_path, "delete_me.JPG"),
         )
@@ -329,7 +355,7 @@ class TestSyncPhotos(unittest.TestCase):
         os.rename(
             os.path.join(
                 album_1_path,
-                "IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
+                "album-1__IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG",
             ),
             os.path.join(album_1_path, "delete_me.JPG"),
         )
@@ -381,7 +407,7 @@ class TestSyncPhotos(unittest.TestCase):
                     (
                         s
                         for s in captured[1]
-                        if "all/IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
+                        if "all/all__IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ..."
                         in s
                     ),
                     None,
