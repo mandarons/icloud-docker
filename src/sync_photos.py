@@ -38,14 +38,20 @@ def generate_file_name(photo, file_size, destination_path):
         destination_path,
         f'{"__".join([album_name, name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
     )
+    file_size_id_album_name_short_path = os.path.join(
+        destination_path,
+        f'{"__".join([album_name, name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()[2:10]])}.{extension}',
+    )
 
     if os.path.isfile(file_path):
-        os.rename(file_path, file_size_id_album_name_path)
+        os.rename(file_path, file_size_id_album_name_short_path)
     if os.path.isfile(file_size_path):
-        os.rename(file_size_path, file_size_id_album_name_path)
+        os.rename(file_size_path, file_size_id_album_name_short_path)
     if os.path.isfile(file_size_id_path):
-        os.rename(file_size_id_path, file_size_id_album_name_path)
-    return file_size_id_album_name_path
+        os.rename(file_size_id_path, file_size_id_album_name_short_path)
+    if os.path.isfile(file_size_id_album_name_path):
+        os.rename(file_size_id_album_name_path, file_size_id_album_name_short_path)
+    return file_size_id_album_name_short_path
 
 
 def photo_exists(photo, file_size, local_path):
