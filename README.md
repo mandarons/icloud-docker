@@ -105,6 +105,9 @@ drive:
       - "png"
       - "jpg"
       - "jpeg"
+  ignore:
+    - "node_modules"
+    - "*.md"
 photos:
   destination: "photos"
   remove_obsolete: false
