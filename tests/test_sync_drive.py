@@ -346,7 +346,7 @@ class TestSyncDrive(unittest.TestCase):
 
     def test_wanted_folder_ignore(self):
         """Tes for wanted folder ignore."""
-        self.ignore = ["dir2/"]
+        self.ignore = ["*/dir2/*"]
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=None,
@@ -382,7 +382,7 @@ class TestSyncDrive(unittest.TestCase):
 
     def test_wanted_folder_ignore_multiple_paths(self):
         """Test for wanted folder ignore multiple paths."""
-        self.ignore = ["dir2/", "dir1/dir3/"]
+        self.ignore = ["*/dir2/*", "*/dir1/dir3/*"]
         self.assertTrue(
             sync_drive.wanted_folder(
                 filters=None,
@@ -410,7 +410,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertFalse(
             sync_drive.wanted_folder(
                 filters=None,
-                ignore=["dir3"],
+                ignore=["*/dir3/*"],
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1", "dir3"),
             )
@@ -426,7 +426,7 @@ class TestSyncDrive(unittest.TestCase):
 
     def test_wanted_folder_ignore_takes_precedence_to_filters(self):
         """Test for wanted folder ignore takes precedence to filters."""
-        self.ignore = ["dir2/"]
+        self.ignore = ["*/dir2/*"]
         self.filters["folders"] = ["dir2/"]
         self.assertFalse(
             sync_drive.wanted_folder(
@@ -541,7 +541,7 @@ class TestSyncDrive(unittest.TestCase):
 
     def test_wanted_file_ignore(self):
         """Test for wanted file exclude regex."""
-        self.ignore = ["*.md", ".git/"]
+        self.ignore = ["*.md", "*/.git/*"]
         self.assertFalse(
             sync_drive.wanted_file(
                 filters=None,

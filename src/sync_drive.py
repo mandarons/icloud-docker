@@ -5,7 +5,7 @@ import gzip
 import os
 import re
 import time
-from pathspec import PathSpec
+import fnmatch
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
 
@@ -20,9 +20,10 @@ def wanted_file(filters, ignore, file_path):
     if not file_path:
         return False
     if ignore:
-        if PathSpec.from_lines("gitwildmatch", ignore).match_file(file_path):
-            LOGGER.debug(f"Skipping the unwanted file {file_path}")
-            return False
+        for pattern in ignore:
+            if fnmatch.fnmatch(file_path, pattern):
+                LOGGER.debug(f"Skipping the unwanted file {file_path}")
+                return False
     if not filters or len(filters) == 0:
         return True
     for file_extension in filters:
@@ -35,8 +36,9 @@ def wanted_file(filters, ignore, file_path):
 def wanted_folder(filters, ignore, root, folder_path):
     """Check if folder is wanted."""
     if ignore:
-        if PathSpec.from_lines("gitwildmatch", ignore).match_file(f"{folder_path}/foo.bar"):
-            return False
+        for pattern in ignore:
+            if fnmatch.fnmatch(f"{folder_path}/foo", pattern):
+                return False
     if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
         return True
