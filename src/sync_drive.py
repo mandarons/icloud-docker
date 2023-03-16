@@ -5,12 +5,12 @@ import gzip
 import os
 import re
 import time
-from pathspec import PathSpec
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
 
 import magic
 from icloudpy import exceptions
+from pathspec import PathSpec
 
 from src import LOGGER, config_parser
 
@@ -35,7 +35,7 @@ def wanted_file(filters, ignore, file_path):
 def wanted_folder(filters, ignore, root, folder_path):
     """Check if folder is wanted."""
     if ignore:
-        if PathSpec.from_lines("gitwildmatch", ignore).match_file(f"{folder_path}/foo.bar"):
+        if PathSpec.from_lines("gitwildmatch", ignore).match_file(f"{folder_path}/"):
             return False
     if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
@@ -78,7 +78,9 @@ def process_folder(item, destination_path, filters, ignore, root):
     if not (item and destination_path and root):
         return None
     new_directory = os.path.join(destination_path, item.name)
-    if not wanted_folder(filters=filters, ignore=ignore, folder_path=new_directory, root=root):
+    if not wanted_folder(
+        filters=filters, ignore=ignore, folder_path=new_directory, root=root
+    ):
         LOGGER.debug(f"Skipping the unwanted folder {new_directory} ...")
         return None
     os.makedirs(new_directory, exist_ok=True)
