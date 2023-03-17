@@ -1,4 +1,5 @@
 """Tests for usage.py file."""
+import datetime
 import os
 import unittest
 import uuid
@@ -147,3 +148,23 @@ class TestUsage(unittest.TestCase):
             data={"installationId": fresh["id"], "data": None}
         )
         self.assertFalse(actual)
+
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_alive_valid(self, mock_post):
+        """Test alive functionality."""
+        # Test first run - install
+        actual = usage.alive(config=self.config)
+        self.assertTrue(actual)
+        # Test second run - no install but heartbeat
+        actual = usage.alive(config=self.config)
+        self.assertTrue(actual)
+        # Test third run - no install, no heartbeat
+        actual = usage.alive(config=self.config)
+        self.assertFalse(actual)
+
+        # Test heartbeat 24 hours ago
+        mock_now = datetime.datetime.now() + datetime.timedelta(hours=25)
+        with patch("src.usage.current_time") as mock_datetime_now:
+            mock_datetime_now.return_value = mock_now
+            actual = usage.alive(config=self.config)
+            self.assertTrue(actual)

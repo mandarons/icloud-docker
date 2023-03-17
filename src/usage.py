@@ -1,6 +1,7 @@
 """To record usage of the app."""
 import json
 import os
+from datetime import datetime, timedelta
 
 import requests
 
@@ -95,6 +96,28 @@ def send_heartbeat(app_id, data=None):
     return post_new_heartbeat(data)
 
 
+def current_time():
+    """Get current time."""
+    return datetime.now()
+
+
+def heartbeat(cached_data, data):
+    """Send heartbeat."""
+    previous_heartbeat = cached_data.get("heartbeat_timestamp", None)
+    current = current_time()
+    if previous_heartbeat:
+        previous = datetime.strptime(previous_heartbeat, "%Y-%m-%d %H:%M:%S.%f")
+        if previous < (current - timedelta(hours=24)):
+            if send_heartbeat(cached_data.get("id"), data=data):
+                cached_data["heartbeat_timestamp"] = str(current)
+                return cached_data
+        else:
+            return False
+    elif send_heartbeat(cached_data.get("id"), data=data):
+        cached_data["heartbeat_timestamp"] = str(current)
+        return cached_data
+
+
 def alive(config, data=None):
     """Record liveliness."""
     cache_file_path = init_cache(config=config)
@@ -103,4 +126,7 @@ def alive(config, data=None):
         installed_data = install(cached_data=cached_data)
         if installed_data:
             return save_cache(file_path=cache_file_path, data=installed_data)
-    return send_heartbeat(app_id=cached_data.get("id"), data=data)
+    heartbeat_data = heartbeat(cached_data=cached_data, data=data)
+    if heartbeat_data:
+        return save_cache(file_path=cache_file_path, data=heartbeat_data)
+    return False
