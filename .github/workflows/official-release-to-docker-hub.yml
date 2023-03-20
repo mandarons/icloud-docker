@@ -60,7 +60,7 @@ jobs:
           build-args: |
             NEW_INSTALLATION_ENDPOINT=${{ secrets.NEW_INSTALLATION_ENDPOINT }}
             NEW_HEARTBEAT_ENDPOINT=${{ secrets.NEW_HEARTBEAT_ENDPOINT }}
-            APP_VERSION=${{ steps.prep.output.version }}
+            APP_VERSION=${{ steps.prep.outputs.version }}
           push: true
 #           platforms: linux/386,linux/amd64, linux/arm64, linux/arm/7
           platforms: linux/386,linux/amd64, linux/arm64
