@@ -112,7 +112,7 @@ photos:
   destination: "photos"
   remove_obsolete: false
   sync_interval: 500
-  filters:
+  filters: # Optional, use it only if you want to download specific albums. Else, all photos are downloaded to `all` folder.
     albums:
       - "album 1"
       - "album2"
