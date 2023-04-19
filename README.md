@@ -93,7 +93,7 @@ drive:
   destination: "drive"
   remove_obsolete: false
   sync_interval: 300
-  filters:
+  filters: # Optional - use it only if you want to download specific folders.
     # File filters to be included in syncing iCloud drive content
     folders:
       - "folder1"
