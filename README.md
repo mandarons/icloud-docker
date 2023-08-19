@@ -93,7 +93,7 @@ drive:
   destination: "drive"
   remove_obsolete: false
   sync_interval: 300
-  filters:
+  filters: # Optional - use it only if you want to download specific folders.
     # File filters to be included in syncing iCloud drive content
     folders:
       - "folder1"
@@ -105,11 +105,14 @@ drive:
       - "png"
       - "jpg"
       - "jpeg"
+  ignore:
+    - "node_modules"
+    - "*.md"
 photos:
   destination: "photos"
   remove_obsolete: false
   sync_interval: 500
-  filters:
+  filters: # Optional, use it only if you want to download specific albums. Else, all photos are downloaded to `all` folder.
     albums:
       - "album 1"
       - "album2"
@@ -124,6 +127,8 @@ photos:
 ```
 
 **_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
+## Usage Policy
+As mentioned in [USAGE.md](https://github.com/mandarons/icloud-drive-docker/blob/main/USAGE.md)
 
 [github-sponsors]: https://github.com/sponsors/mandarons
 [github-sponsors-badge]: https://img.shields.io/github/sponsors/mandarons

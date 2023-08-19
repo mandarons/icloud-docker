@@ -10,14 +10,19 @@ from shutil import copyfileobj, rmtree, unpack_archive
 
 import magic
 from icloudpy import exceptions
+from pathspec import PathSpec
 
 from src import LOGGER, config_parser
 
 
-def wanted_file(filters, file_path):
+def wanted_file(filters, ignore, file_path):
     """Check if file is wanted."""
     if not file_path:
         return False
+    if ignore:
+        if PathSpec.from_lines("gitwildmatch", ignore).match_file(file_path):
+            LOGGER.debug(f"Skipping the unwanted file {file_path}")
+            return False
     if not filters or len(filters) == 0:
         return True
     for file_extension in filters:
@@ -27,8 +32,11 @@ def wanted_file(filters, file_path):
     return False
 
 
-def wanted_folder(filters, root, folder_path):
+def wanted_folder(filters, ignore, root, folder_path):
     """Check if folder is wanted."""
+    if ignore:
+        if PathSpec.from_lines("gitwildmatch", ignore).match_file(f"{folder_path}/"):
+            return False
     if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
         return True
@@ -65,12 +73,14 @@ def wanted_parent_folder(filters, root, folder_path):
     return False
 
 
-def process_folder(item, destination_path, filters, root):
+def process_folder(item, destination_path, filters, ignore, root):
     """Process the given folder."""
     if not (item and destination_path and root):
         return None
     new_directory = os.path.join(destination_path, item.name)
-    if not wanted_folder(filters=filters, folder_path=new_directory, root=root):
+    if not wanted_folder(
+        filters=filters, ignore=ignore, folder_path=new_directory, root=root
+    ):
         LOGGER.debug(f"Skipping the unwanted folder {new_directory} ...")
         return None
     os.makedirs(new_directory, exist_ok=True)
@@ -188,12 +198,12 @@ def download_file(item, local_file):
     return True
 
 
-def process_file(item, destination_path, filters, files):
+def process_file(item, destination_path, filters, ignore, files):
     """Process given item as file."""
     if not (item and destination_path and files is not None):
         return False
     local_file = os.path.join(destination_path, item.name)
-    if not wanted_file(filters=filters, file_path=local_file):
+    if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
         return False
     files.add(local_file)
     item_is_package = is_package(item=item)
@@ -236,6 +246,7 @@ def sync_directory(
     root,
     top=True,
     filters=None,
+    ignore=None,
     remove=False,
 ):
     """Sync folder."""
@@ -250,6 +261,7 @@ def sync_directory(
                     filters=filters["folders"]
                     if filters and "folders" in filters
                     else None,
+                    ignore=ignore,
                     root=root,
                 )
                 if not new_folder:
@@ -264,6 +276,7 @@ def sync_directory(
                             root=root,
                             top=False,
                             filters=filters,
+                            ignore=ignore,
                         )
                     )
                 except Exception:
@@ -284,6 +297,7 @@ def sync_directory(
                             filters=filters["file_extensions"]
                             if filters and "file_extensions" in filters
                             else None,
+                            ignore=ignore,
                             files=files,
                         )
                     except Exception:
@@ -305,6 +319,9 @@ def sync_drive(config, drive):
         top=True,
         filters=config["drive"]["filters"]
         if "drive" in config and "filters" in config["drive"]
+        else None,
+        ignore=config["drive"]["ignore"]
+        if "drive" in config and "ignore" in config["drive"]
         else None,
         remove=config_parser.get_drive_remove_obsolete(config=config),
     )

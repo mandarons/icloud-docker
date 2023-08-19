@@ -33,6 +33,7 @@ jobs:
           TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:latest"
           echo "${TAGS}"
           echo ::set-output name=tags::${TAGS}
+          echo ::set-output name=version::${VERSION}
       - name: Cache Docker layers
         uses: actions/cache@v3
         with:
@@ -59,7 +60,7 @@ jobs:
           build-args: |
             NEW_INSTALLATION_ENDPOINT=${{ secrets.NEW_INSTALLATION_ENDPOINT }}
             NEW_HEARTBEAT_ENDPOINT=${{ secrets.NEW_HEARTBEAT_ENDPOINT }}
-            APP_VERSION=${GITHUB_REF#refs/tags/v}
+            APP_VERSION=${{ steps.prep.outputs.version }}
           push: true
 #           platforms: linux/386,linux/amd64, linux/arm64, linux/arm/7
           platforms: linux/386,linux/amd64, linux/arm64
