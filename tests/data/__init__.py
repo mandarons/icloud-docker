@@ -3843,7 +3843,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                                 "query?remapEnums=True&getCurrentSyncToken=True"
                             ][2]["response"]
                         )
-                    if data.get("query").get("filterBy")[0]["fieldValue"]["value"] == 6:
+                    if data.get("query").get("filterBy")[0]["fieldValue"]["value"] == 7:
                         return ResponseMock(
                             photos_data.DATA[
                                 "query?remapEnums=True&getCurrentSyncToken=True"
@@ -3869,6 +3869,9 @@ class ICloudPySessionMock(base.ICloudPySession):
             # IMG_3148.JPG
             or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt+jP6UsV4fBZHATi6BbOzDuHl6RONNFCub9eqZqSm"
             in url
+            # no-extension
+            or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt+jP6UsV4fBZIATi6BbOzDuHl6RONNFCub9eqZqSn"
+            in url
             # IMG_3328.JPG
             or "https://cvws.icloud-content.com/B/EeGlt2PppPTgd0Q7mp8GenIugSh7AQYmx-DRYXnMs0tkDZ3rorp4IB99"
             in url
@@ -3892,6 +3895,9 @@ class ICloudPySessionMock(base.ICloudPySession):
             in url
             # IMG_3148.JPG
             or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXgAdUIDFzHC2rVOvwTz0jPi_tKihnb"
+            in url
+            # no-extension
+            or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXiAdUIDFzHC2rVOvwTz0jPi_tKihnn"
             in url
             # IMG_3328.JPG
             or "https://cvws.icloud-content.com/B/YN1v8eGiHYYZ_aKUkMuGtSf0P1BNAXKVYPcDa-9Mjvnap0ZS-p2Z24V3"
@@ -3918,6 +3924,9 @@ class ICloudPySessionMock(base.ICloudPySession):
             in url
             # IMG_3148.JPG
             or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMYARtMrcvA8cbMefPDnmwSWQwe-mBd"
+            in url
+            # no-extension
+            or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMZARtMrcvA8cbMefPDnmwSWQwe-mBe"
             in url
             # IMG_3328.JPG
             or "https://cvws.icloud-content.com/B/DmK0xzSiAUSFrAsYYAvby7QHrMDeAR5TiM9Qko4rHwmoDH1BgNRVZpF4"

@@ -25,14 +25,19 @@ def photo_wanted(photo, extensions):
 def generate_file_name(photo, file_size, destination_path):
     """Generate full path to file."""
     filename = photo.filename
-    name, extension = filename.rsplit(".", 1)
+    name, extension = filename.rsplit(".", 1) if "." in filename else [filename, ""]
     file_path = os.path.join(destination_path, filename)
     file_size_path = os.path.join(
-        destination_path, f'{"__".join([name, file_size])}.{extension}'
+        destination_path,
+        f'{"__".join([name, file_size])}'
+        if extension == ""
+        else f'{"__".join([name, file_size])}.{extension}',
     )
     file_size_id_path = os.path.join(
         destination_path,
-        f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
+        f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}'
+        if extension == ""
+        else f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
     )
 
     file_size_id_path_norm = unicodedata.normalize('NFC', file_size_id_path)
@@ -88,7 +93,7 @@ def process_photo(photo, file_size, destination_path, files):
             f"File size {file_size} not found on server. Skipping the photo {photo_path} ..."
         )
         return False
-    if not files is None:
+    if files is not None:
         files.add(photo_path)
     if photo_exists(photo, file_size, photo_path):
         return False
