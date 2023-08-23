@@ -5,6 +5,7 @@ import gzip
 import os
 import re
 import time
+import unicodedata
 from pathlib import Path
 from shutil import copyfileobj, rmtree, unpack_archive
 
@@ -78,12 +79,13 @@ def process_folder(item, destination_path, filters, ignore, root):
     if not (item and destination_path and root):
         return None
     new_directory = os.path.join(destination_path, item.name)
+    new_directory_norm = unicodedata.normalize('NFC', new_directory)
     if not wanted_folder(
-        filters=filters, ignore=ignore, folder_path=new_directory, root=root
+        filters=filters, ignore=ignore, folder_path=new_directory_norm, root=root
     ):
         LOGGER.debug(f"Skipping the unwanted folder {new_directory} ...")
         return None
-    os.makedirs(new_directory, exist_ok=True)
+    os.makedirs(new_directory_norm, exist_ok=True)
     return new_directory
 
 
@@ -152,6 +154,10 @@ def process_package(local_file):
         os.rename(local_file, archive_file)
         LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(archive_file)}")
         unpack_archive(filename=archive_file, extract_dir=os.path.dirname(archive_file))
+        try:
+            os.rename(unicodedata.normalize('NFD', local_file), local_file)
+        except:
+            LOGGER.warning("Normalizing failed")
         os.remove(archive_file)
     elif "application/gzip" == magic_object.from_file(filename=local_file):
         archive_file += ".gz"
@@ -203,6 +209,7 @@ def process_file(item, destination_path, filters, ignore, files):
     if not (item and destination_path and files is not None):
         return False
     local_file = os.path.join(destination_path, item.name)
+    local_file = unicodedata.normalize('NFC', local_file)
     if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
         return False
     files.add(local_file)
@@ -267,7 +274,7 @@ def sync_directory(
                 if not new_folder:
                     continue
                 try:
-                    files.add(new_folder)
+                    files.add(unicodedata.normalize('NFC', new_folder))
                     files.update(
                         sync_directory(
                             drive=item,

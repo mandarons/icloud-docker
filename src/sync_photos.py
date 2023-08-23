@@ -4,6 +4,7 @@ import base64
 import os
 import shutil
 import time
+import unicodedata
 from pathlib import Path
 
 from icloudpy import exceptions
@@ -38,11 +39,16 @@ def generate_file_name(photo, file_size, destination_path):
         if extension == ""
         else f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
     )
+
+    file_size_id_path_norm = unicodedata.normalize('NFC', file_size_id_path)
+
     if os.path.isfile(file_path):
         os.rename(file_path, file_size_id_path)
     if os.path.isfile(file_size_path):
         os.rename(file_size_path, file_size_id_path)
-    return file_size_id_path
+    if os.path.isfile(file_size_id_path):
+        os.rename(file_size_id_path, file_size_id_path_norm)
+    return file_size_id_path_norm
 
 
 def photo_exists(photo, file_size, local_path):
