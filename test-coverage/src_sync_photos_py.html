@@ -159,7 +159,7 @@
     <p id="t105" class="pln"><span class="n"><a href="#t105">105</a></span><span class="t">    <span class="str">"""Sync given album."""</span>&nbsp;</span><span class="r"></span></p>
     <p id="t106" class="run"><span class="n"><a href="#t106">106</a></span><span class="t">    <span class="key">if</span> <span class="nam">album</span> <span class="key">is</span> <span class="key">None</span> <span class="key">or</span> <span class="nam">destination_path</span> <span class="key">is</span> <span class="key">None</span> <span class="key">or</span> <span class="nam">file_sizes</span> <span class="key">is</span> <span class="key">None</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t107" class="run"><span class="n"><a href="#t107">107</a></span><span class="t">        <span class="key">return</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t108" class="run"><span class="n"><a href="#t108">108</a></span><span class="t">    <span class="nam">os</span><span class="op">.</span><span class="nam">makedirs</span><span class="op">(</span><span class="nam">destination_path</span><span class="op">,</span> <span class="nam">exist_ok</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t108" class="run"><span class="n"><a href="#t108">108</a></span><span class="t">    <span class="nam">os</span><span class="op">.</span><span class="nam">makedirs</span><span class="op">(</span><span class="nam">unicodedata</span><span class="op">.</span><span class="nam">normalize</span><span class="op">(</span><span class="str">"NFC"</span><span class="op">,</span> <span class="nam">destination_path</span><span class="op">)</span><span class="op">,</span> <span class="nam">exist_ok</span><span class="op">=</span><span class="key">True</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t109" class="run"><span class="n"><a href="#t109">109</a></span><span class="t">    <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"Syncing {album.title}"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t110" class="run"><span class="n"><a href="#t110">110</a></span><span class="t">    <span class="key">for</span> <span class="nam">photo</span> <span class="key">in</span> <span class="nam">album</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t111" class="run"><span class="n"><a href="#t111">111</a></span><span class="t">        <span class="key">if</span> <span class="nam">photo_wanted</span><span class="op">(</span><span class="nam">photo</span><span class="op">,</span> <span class="nam">extensions</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -295,7 +295,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2023-08-29 14:14 +0000
+            created at 2023-08-29 16:33 +0000
         </p>
     </div>
 </div>
