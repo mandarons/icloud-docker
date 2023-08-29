@@ -40,7 +40,7 @@ def generate_file_name(photo, file_size, destination_path):
         else f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
     )
 
-    file_size_id_path_norm = unicodedata.normalize('NFC', file_size_id_path)
+    file_size_id_path_norm = unicodedata.normalize("NFC", file_size_id_path)
 
     if os.path.isfile(file_path):
         os.rename(file_path, file_size_id_path)
