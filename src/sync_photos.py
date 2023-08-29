@@ -105,7 +105,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None)
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
-    os.makedirs(destination_path, exist_ok=True)
+    os.makedirs(unicodedata.normalize("NFC", destination_path), exist_ok=True)
     LOGGER.info(f"Syncing {album.title}")
     for photo in album:
         if photo_wanted(photo, extensions):
