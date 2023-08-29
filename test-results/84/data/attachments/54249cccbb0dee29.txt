@@ -1,0 +1,13 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-08-29 16:33:18,758 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-08-29 16:33:18,759 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-08-29 16:33:18,759 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-08-29 16:33:18,760 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;21m2023-08-29 16:33:18,761 :: DEBUG :: root :: sync_drive.py :: 119 :: Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band does not exist locally.[0m
+[38;5;39m2023-08-29 16:33:18,761 :: INFO :: root :: sync_drive.py :: 192 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band ...[0m
+[38;5;39m2023-08-29 16:33:18,763 :: INFO :: root :: sync_drive.py :: 165 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.gz to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive[0m
+[38;5;39m2023-08-29 16:33:18,765 :: INFO :: root :: sync_drive.py :: 155 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive[0m
+[38;5;226m2023-08-29 16:33:18,770 :: WARNING :: root :: sync_drive.py :: 160 :: Normalizing failed - [Errno 2] No such file or directory: '/home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band' -> '/home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band'[0m
+[38;5;39m2023-08-29 16:33:18,770 :: INFO :: root :: sync_drive.py :: 176 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.zip.[0m
+[38;5;39m2023-08-29 16:33:18,770 :: INFO :: root :: sync_drive.py :: 176 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.gz.[0m
+[38;5;196m2023-08-29 16:33:18,770 :: ERROR :: root :: sync_drive.py :: 202 :: Failed to download /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band: [Errno 2] No such file or directory[0m
