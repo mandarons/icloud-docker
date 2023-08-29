@@ -26,7 +26,7 @@ def load_cache(file_path: str):
     """Load the cache file."""
     data = {}
     if os.path.isfile(file_path):
-        with open(file_path) as f:
+        with open(file_path, encoding="utf-8") as f:
             data = json.load(f)
     else:
         save_cache(file_path=file_path, data={})
@@ -35,7 +35,7 @@ def load_cache(file_path: str):
 
 def save_cache(file_path: str, data: object):
     """Save data to the cache file."""
-    with open(file_path, "w") as f:
+    with open(file_path, "w", encoding="utf-8") as f:
         json.dump(data, f)
     return True
 
@@ -43,7 +43,7 @@ def save_cache(file_path: str, data: object):
 def post_new_installation(data, endpoint=NEW_INSTALLATION_ENDPOINT):
     """Post new installation to server."""
     try:
-        response = requests.post(endpoint, data)
+        response = requests.post(endpoint, data, timeout=10000)
         if response.ok:
             data = response.json()
             return data["id"]
@@ -82,7 +82,7 @@ def install(cached_data):
 def post_new_heartbeat(data, endpoint=NEW_HEARTBEAT_ENDPOINT):
     """Post the heartbeat to server."""
     try:
-        response = requests.post(endpoint, data)
+        response = requests.post(endpoint, data, timeout=10000)
         if response.ok:
             return True
     except Exception:
