@@ -463,6 +463,7 @@ class TestSyncPhotos(unittest.TestCase):
                 file_size="medium",
                 destination_path=self.destination_path,
                 files=None,
+                unique_file_names=False,
             )
         )
 
@@ -488,6 +489,7 @@ class TestSyncPhotos(unittest.TestCase):
                 file_size="thumb",
                 destination_path=self.destination_path,
                 files=None,
+                unique_file_names=False,
             )
         )
 
