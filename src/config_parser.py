@@ -106,6 +106,16 @@ def get_photos_all_albums(config):
     return download_all
 
 
+def get_photos_unique_file_names(config):
+    """Return flag to use unique filenames."""
+    unique_filenames = False
+    config_path = ["photos", "unique_filenames"]
+    if traverse_config_path(config=config, config_path=config_path):
+        unique_filenames = get_config_value(config=config, config_path=config_path)
+        LOGGER.info("Using unique filenames.")
+    return unique_filenames
+
+
 def prepare_root_destination(config):
     """Prepare root destination."""
     LOGGER.debug("Checking root destination ...")

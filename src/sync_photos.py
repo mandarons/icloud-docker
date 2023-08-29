@@ -22,7 +22,7 @@ def photo_wanted(photo, extensions):
     return False
 
 
-def generate_file_name(photo, file_size, destination_path):
+def generate_file_name(photo, file_size, destination_path, unique_file_names):
     """Generate full path to file."""
     filename = photo.filename
     name, extension = filename.rsplit(".", 1) if "." in filename else [filename, ""]
@@ -48,7 +48,20 @@ def generate_file_name(photo, file_size, destination_path):
         os.rename(file_size_path, file_size_id_path)
     if os.path.isfile(file_size_id_path):
         os.rename(file_size_id_path, file_size_id_path_norm)
-    return file_size_id_path_norm
+
+    photo_file_name = file_size_id_path_norm
+
+    if unique_file_names:
+        album_name = destination_path.split("/")[-1]
+        file_size_id_album_name_short_path = os.path.join(
+            destination_path,
+            f'{"__".join([album_name, name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()[2:10]])}.{extension}',
+        )
+        photo_file_name = unicodedata.normalize("NFC", file_size_id_album_name_short_path)
+        if os.path.isfile(file_size_id_path_norm):
+            os.rename(file_size_id_path_norm, photo_file_name)
+
+    return photo_file_name
 
 
 def photo_exists(photo, file_size, local_path):
@@ -83,10 +96,10 @@ def download_photo(photo, file_size, destination_path):
     return True
 
 
-def process_photo(photo, file_size, destination_path, files):
+def process_photo(photo, file_size, destination_path, files, unique_file_names):
     """Process photo details."""
     photo_path = generate_file_name(
-        photo=photo, file_size=file_size, destination_path=destination_path
+        photo=photo, file_size=file_size, destination_path=destination_path, unique_file_names=unique_file_names
     )
     if file_size not in photo.versions:
         LOGGER.warning(
@@ -101,7 +114,7 @@ def process_photo(photo, file_size, destination_path, files):
     return True
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None, files=None):
+def sync_album(album, destination_path, file_sizes, extensions=None, files=None, unique_file_names=False):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
@@ -110,7 +123,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None)
     for photo in album:
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
-                process_photo(photo, file_size, destination_path, files)
+                process_photo(photo, file_size, destination_path, files, unique_file_names)
         else:
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
     for subalbum in album.subalbums:
@@ -120,6 +133,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None)
             file_sizes,
             extensions,
             files,
+            unique_file_names=unique_file_names,
         )
     return True
 
@@ -145,6 +159,7 @@ def sync_photos(config, photos):
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
+    unique_file_names = config_parser.get_photos_unique_file_names(config=config)
     if download_all:
         for album in photos.albums.keys():
             if album in iter(filters["albums"]):
@@ -155,6 +170,7 @@ def sync_photos(config, photos):
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
                 files=files,
+                unique_file_names=unique_file_names,
             )
     elif filters["albums"]:
         for album in iter(filters["albums"]):
@@ -164,6 +180,7 @@ def sync_photos(config, photos):
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
                 files=files,
+                unique_file_names=unique_file_names,
             )
     else:
         sync_album(
@@ -172,6 +189,7 @@ def sync_photos(config, photos):
             file_sizes=filters["file_sizes"],
             extensions=filters["extensions"],
             files=files,
+            unique_file_names=unique_file_names,
         )
 
     if config_parser.get_photos_remove_obsolete(config=config):
