@@ -224,7 +224,18 @@ def process_file(item, destination_path, filters, ignore, files):
     download_file(item=item, local_file=local_file)
     if item_is_package:
         for f in Path(local_file).glob("**/*"):
-            files.add(str(f))
+            f = str(f)
+            f_normalized = unicodedata.normalize("NFC", f)
+            try:
+                os.rename(f, f_normalized)
+            except Exception as e:
+                LOGGER.warning("Normalizing failed - " + str(e))
+            f_dir = os.path.dirname(f)
+            # delete empty folder if any after normalization
+            with os.scandir(f_dir) as it:
+                if not any(it):
+                    os.rmdir(f_dir)
+            files.add(f_normalized)
     return True
 
 
