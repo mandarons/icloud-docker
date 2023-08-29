@@ -399,3 +399,21 @@ class TestConfigParser(unittest.TestCase):
         config["app"]["region"] = "china"
         actual = config_parser.get_region(config=config)
         self.assertEqual(actual, "china")
+
+    def test_get_all_albums_empty(self):
+        """Empty all_albums."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertFalse(config_parser.get_photos_all_albums(config=config))
+
+    def test_get_all_albums_true(self):
+        """True all_albums."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["photos"]["all_albums"] = True
+        self.assertTrue(config_parser.get_photos_all_albums(config=config))
+
+    def test_get_all_albums_false(self):
+        """False all_albums."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["photos"]["all_albums"] = False
+        self.assertFalse(config_parser.get_photos_all_albums(config=config))
+
