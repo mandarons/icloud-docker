@@ -53,11 +53,19 @@ def generate_file_name(photo, file_size, destination_path, unique_file_names):
 
     if unique_file_names:
         album_name = destination_path.split("/")[-1]
+        file_size_id_album_name = [
+            album_name,
+            name,
+            file_size,
+            base64.urlsafe_b64encode(photo.id.encode()).decode()[2:10],
+        ]
         file_size_id_album_name_short_path = os.path.join(
             destination_path,
-            f'{"__".join([album_name, name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()[2:10]])}.{extension}',
+            f'{"__".join(file_size_id_album_name)}.{extension}',
         )
-        photo_file_name = unicodedata.normalize("NFC", file_size_id_album_name_short_path)
+        photo_file_name = unicodedata.normalize(
+            "NFC", file_size_id_album_name_short_path
+        )
         if os.path.isfile(file_size_id_path_norm):
             os.rename(file_size_id_path_norm, photo_file_name)
 
@@ -99,7 +107,10 @@ def download_photo(photo, file_size, destination_path):
 def process_photo(photo, file_size, destination_path, files, unique_file_names):
     """Process photo details."""
     photo_path = generate_file_name(
-        photo=photo, file_size=file_size, destination_path=destination_path, unique_file_names=unique_file_names
+        photo=photo,
+        file_size=file_size,
+        destination_path=destination_path,
+        unique_file_names=unique_file_names,
     )
     if file_size not in photo.versions:
         LOGGER.warning(
@@ -114,7 +125,14 @@ def process_photo(photo, file_size, destination_path, files, unique_file_names):
     return True
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None, files=None, unique_file_names=False):
+def sync_album(
+    album,
+    destination_path,
+    file_sizes,
+    extensions=None,
+    files=None,
+    unique_file_names=False,
+):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
@@ -123,7 +141,9 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
     for photo in album:
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
-                process_photo(photo, file_size, destination_path, files, unique_file_names)
+                process_photo(
+                    photo, file_size, destination_path, files, unique_file_names
+                )
         else:
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
     for subalbum in album.subalbums:
