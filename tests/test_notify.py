@@ -44,7 +44,7 @@ class TestNotify(unittest.TestCase):
 
     def test_build_message(self):
         """Test for building a valid email."""
-        msg = notify.build_message(self.config["app"]["smtp"]["email"])
+        msg = notify.build_message(self.config["app"]["smtp"]["email"], self.config["app"]["smtp"]["email"])
         self.assertEqual(msg.to, self.config["app"]["smtp"]["email"])
         self.assertIn(self.config["app"]["smtp"]["email"], msg.sender)
         self.assertIn("icloud-docker: Two step authentication required", msg.subject)
