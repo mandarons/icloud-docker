@@ -36,7 +36,7 @@ def send(config, last_send=None, dry_run=False):
                     else:
                         smtp.login(email, password)
 
-                msg = build_message(email)
+                msg = build_message(email, to_email)
 
                 smtp.sendmail(from_addr=email, to_addrs=to_email, msg=msg.as_string())
                 smtp.quit()
@@ -49,9 +49,9 @@ def send(config, last_send=None, dry_run=False):
     return sent_on
 
 
-def build_message(email):
+def build_message(email, to_email):
     """Create email message."""
-    message = Message(to=email)
+    message = Message(to=to_email)
     message.sender = "icloud-docker <" + email + ">"
     message.date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
     message.subject = "icloud-docker: Two step authentication required"
