@@ -32,6 +32,9 @@ class TestSyncDrive(unittest.TestCase):
         self.folder_item = self.drive[self.items[5]]
         self.file_item = self.drive[self.items[4]]["Test"]["Scanned document 1.pdf"]
         self.package_item = self.drive[self.items[6]]["Sample"]["Project.band"]
+        self.special_chars_package_item = self.drive[self.items[6]]["Sample"][
+            "Fotoksiążka-Wzór.xmcf"
+        ]
         self.package_item_nested = self.drive[self.items[6]]["Sample"]["ms.band"]
         self.file_name = "Scanned document 1.pdf"
         self.package_name = "Project.band"
@@ -437,7 +440,6 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
 
-
     def test_wanted_folder_empty(self):
         """Test for empty wanted folder."""
         original_filters = dict(self.filters)
@@ -456,21 +458,29 @@ class TestSyncDrive(unittest.TestCase):
         """Test for wanted folder path as None."""
         self.assertTrue(
             sync_drive.wanted_folder(
-                filters=self.filters["folders"], ignore=None, root=self.root, folder_path=None
+                filters=self.filters["folders"],
+                ignore=None,
+                root=self.root,
+                folder_path=None,
             )
         )
 
     def test_wanted_folder_none_filters(self):
         """Test for wanted folder filters as None."""
         self.assertTrue(
-            sync_drive.wanted_folder(filters=None, ignore=None, root=self.root, folder_path="dir1")
+            sync_drive.wanted_folder(
+                filters=None, ignore=None, root=self.root, folder_path="dir1"
+            )
         )
 
     def test_wanted_folder_none_root(self):
         """Test for wanted folder root as None."""
         self.assertTrue(
             sync_drive.wanted_folder(
-                filters=self.filters["folders"], ignore=None, root=None, folder_path="dir1"
+                filters=self.filters["folders"],
+                ignore=None,
+                root=None,
+                folder_path="dir1",
             )
         )
 
@@ -487,7 +497,9 @@ class TestSyncDrive(unittest.TestCase):
         """Test for a missing wanted file."""
         self.assertFalse(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], ignore=None, file_path=tests.CONFIG_PATH
+                filters=self.filters["file_extensions"],
+                ignore=None,
+                file_path=tests.CONFIG_PATH,
             )
         )
 
@@ -495,7 +507,9 @@ class TestSyncDrive(unittest.TestCase):
         """Test for valid unwanted file."""
         with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], ignore=None, file_path=tests.CONFIG_PATH
+                filters=self.filters["file_extensions"],
+                ignore=None,
+                file_path=tests.CONFIG_PATH,
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIn(
@@ -504,7 +518,9 @@ class TestSyncDrive(unittest.TestCase):
 
     def test_wanted_file_none_file_path(self):
         """Test for unexpected wanted file path."""
-        self.assertTrue(sync_drive.wanted_file(filters=None, ignore=None, file_path=__file__))
+        self.assertTrue(
+            sync_drive.wanted_file(filters=None, ignore=None, file_path=__file__)
+        )
         self.assertFalse(
             sync_drive.wanted_file(
                 filters=self.filters["file_extensions"], ignore=None, file_path=None
@@ -925,7 +941,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 22)
+        self.assertTrue(len(actual) == 11)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -961,7 +977,7 @@ class TestSyncDrive(unittest.TestCase):
             ignore=self.ignore,
             remove=True,
         )
-        self.assertTrue(len(actual) == 22)
+        self.assertTrue(len(actual) == 11)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -995,7 +1011,7 @@ class TestSyncDrive(unittest.TestCase):
             ignore=self.ignore,
             remove=False,
         )
-        self.assertTrue(len(actual) == 26)
+        self.assertTrue(len(actual) == 15)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -1155,6 +1171,20 @@ class TestSyncDrive(unittest.TestCase):
             ),
         )
 
+    def test_process_file_special_chars_package(self):
+        """Test for special characters package."""
+        files = set()
+        # Download the package
+        self.assertTrue(
+            sync_drive.process_file(
+                item=self.special_chars_package_item,
+                destination_path=self.destination_path,
+                filters=self.filters["file_extensions"],
+                ignore=None,
+                files=files,
+            )
+        )
+
     def test_process_file_existing_package(self):
         """Test for existing package."""
         files = set()
@@ -1200,18 +1230,16 @@ class TestSyncDrive(unittest.TestCase):
                 files=files,
             )
         )
-        self.assertTrue(
-            os.path.exists(os.path.join(self.destination_path, "My Song.band"))
-        )
+        self.assertTrue(os.path.exists(os.path.join(self.destination_path, "ms.band")))
         self.assertEqual(
             sum(
                 os.path.getsize(f)
-                for f in os.listdir(os.path.join(self.destination_path, "My Song.band"))
+                for f in os.listdir(os.path.join(self.destination_path, "ms.band"))
                 if os.path.isfile(f)
             ),
             sum(
                 os.path.getsize(f)
-                for f in os.listdir(os.path.join(tests.DATA_DIR, "My Song.band"))
+                for f in os.listdir(os.path.join(tests.DATA_DIR, "ms.band"))
                 if os.path.isfile(f)
             ),
         )
@@ -1242,7 +1270,7 @@ class TestSyncDrive(unittest.TestCase):
                 ignore=self.ignore,
                 remove=False,
             )
-            self.assertTrue(len(actual) == 23)
+            self.assertTrue(len(actual) == 12)
             self.assertTrue(
                 os.path.isdir(os.path.join(self.destination_path, "icloudpy"))
             )

@@ -48,6 +48,7 @@ drive:
       - jpeg
       - md
       - band
+      - xmcf
 photos:
   destination: photos
   remove_obsolete: false

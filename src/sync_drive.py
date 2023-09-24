@@ -6,8 +6,9 @@ import os
 import re
 import time
 import unicodedata
+import zipfile
 from pathlib import Path
-from shutil import copyfileobj, rmtree, unpack_archive
+from shutil import copyfileobj, rmtree
 
 import magic
 from icloudpy import exceptions
@@ -153,11 +154,11 @@ def process_package(local_file):
         archive_file += ".zip"
         os.rename(local_file, archive_file)
         LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(archive_file)}")
-        unpack_archive(filename=archive_file, extract_dir=os.path.dirname(archive_file))
-        try:
-            os.rename(unicodedata.normalize("NFD", local_file), local_file)
-        except Exception as e:
-            LOGGER.warning("Normalizing failed - " + str(e))
+        zipfile.ZipFile(archive_file).extractall(path=os.path.dirname(archive_file))
+        normalized_path = unicodedata.normalize("NFD", local_file)
+        if normalized_path is not local_file:
+            os.rename(local_file, normalized_path)
+            local_file = normalized_path
         os.remove(archive_file)
     elif "application/gzip" == magic_object.from_file(filename=local_file):
         archive_file += ".gz"
@@ -174,7 +175,7 @@ def process_package(local_file):
         )
         return False
     LOGGER.info(f"Successfully unpacked the package {archive_file}.")
-    return True
+    return local_file
 
 
 def is_package(item):
@@ -195,13 +196,13 @@ def download_file(item, local_file):
             with open(local_file, "wb") as file_out:
                 copyfileobj(response.raw, file_out)
             if response.url and "/packageDownload?" in response.url:
-                process_package(local_file=local_file)
+                local_file = process_package(local_file=local_file)
         item_modified_time = time.mktime(item.date_modified.timetuple())
         os.utime(local_file, (item_modified_time, item_modified_time))
     except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
         LOGGER.error(f"Failed to download {local_file}: {str(e)}")
         return False
-    return True
+    return local_file
 
 
 def process_file(item, destination_path, filters, ignore, files):
@@ -221,21 +222,14 @@ def process_file(item, destination_path, filters, ignore, files):
             return False
     elif file_exists(item=item, local_file=local_file):
         return False
-    download_file(item=item, local_file=local_file)
+    local_file = download_file(item=item, local_file=local_file)
     if item_is_package:
         for f in Path(local_file).glob("**/*"):
             f = str(f)
-            f_normalized = unicodedata.normalize("NFC", f)
-            try:
+            f_normalized = unicodedata.normalize("NFD", f)
+            if f is not f_normalized and os.path.exists(f):
                 os.rename(f, f_normalized)
-            except Exception as e:
-                LOGGER.warning("Normalizing failed - " + str(e))
-            f_dir = os.path.dirname(f)
-            # delete empty folder if any after normalization
-            with os.scandir(f_dir) as it:
-                if not any(it):
-                    os.rmdir(f_dir)
-            files.add(f_normalized)
+                files.add(f_normalized)
     return True
 
 
