@@ -16,6 +16,7 @@ class TestNotify(unittest.TestCase):
             "app": {
                 "smtp": {
                     "email": "user@test.com",
+                    "to": "to@email.com",
                     "host": "smtp.test.com",
                     "port": "587",
                     "password": "password",
@@ -44,8 +45,11 @@ class TestNotify(unittest.TestCase):
 
     def test_build_message(self):
         """Test for building a valid email."""
-        msg = notify.build_message(self.config["app"]["smtp"]["email"])
-        self.assertEqual(msg.to, self.config["app"]["smtp"]["email"])
+        msg = notify.build_message(
+            email=self.config["app"]["smtp"]["email"],
+            to_email=self.config["app"]["smtp"]["to"],
+        )
+        self.assertEqual(msg.to, self.config["app"]["smtp"]["to"])
         self.assertIn(self.config["app"]["smtp"]["email"], msg.sender)
         self.assertIn("icloud-docker: Two step authentication required", msg.subject)
         self.assertIn(
