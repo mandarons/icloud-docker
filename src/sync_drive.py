@@ -223,13 +223,6 @@ def process_file(item, destination_path, filters, ignore, files):
     elif file_exists(item=item, local_file=local_file):
         return False
     local_file = download_file(item=item, local_file=local_file)
-    if item_is_package:
-        for f in Path(local_file).glob("**/*"):
-            f = str(f)
-            f_normalized = unicodedata.normalize("NFD", f)
-            if f is not f_normalized and os.path.exists(f):
-                os.rename(f, f_normalized)
-                files.add(f_normalized)
     return True
 
 
