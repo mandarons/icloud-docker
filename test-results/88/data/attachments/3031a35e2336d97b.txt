@@ -1,0 +1,7 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-10-05 05:30:17,870 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-05 05:30:17,871 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-05 05:30:17,871 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-05 05:30:17,871 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-05 05:30:17,873 :: INFO :: root :: sync_drive.py :: 193 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Scanned document 1.pdf ...[0m
+[38;5;196m2023-10-05 05:30:17,873 :: ERROR :: root :: sync_drive.py :: 203 :: Failed to download /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Scanned document 1.pdf: 'data_token'[0m
