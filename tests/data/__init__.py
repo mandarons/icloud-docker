@@ -3834,6 +3834,64 @@ class ICloudPySessionMock(base.ICloudPySession):
                             "query?remapEnums=True&getCurrentSyncToken=True"
                         ][0]["response"]
                     )
+                if (
+                    data.get("query").get("recordType")
+                    == "CPLAssetAndMasterHiddenByAssetDate"
+                ):
+                    return ResponseMock(
+                        photos_data.DATA[
+                            "query?remapEnums=True&getCurrentSyncToken=True"
+                        ][5]["response"]
+                    )
+                if (
+                    data.get("query").get("recordType")
+                    == "CPLAssetAndMasterDeletedByExpungedDate"
+                ):
+                    return ResponseMock(
+                        photos_data.DATA[
+                            "query?remapEnums=True&getCurrentSyncToken=True"
+                        ][5]["response"]
+                    )
+                if (
+                    data.get("query").get("recordType")
+                    == "CPLBurstStackAssetAndMasterByAssetDate"
+                ):
+                    return ResponseMock(
+                        photos_data.DATA[
+                            "query?remapEnums=True&getCurrentSyncToken=True"
+                        ][5]["response"]
+                    )
+
+                if data.get("query").get("recordType") in (
+                    "CPLAssetAndMasterInSmartAlbumByAssetDate"
+                ):
+                    if "filterBy" in data["query"] and data.get("query").get(
+                        "filterBy"
+                    )[2]["fieldValue"]["value"] in (
+                        "TIMELAPSE",
+                        "LIVE",
+                        "VIDEO",
+                        "SLOMO",
+                        "FAVORITE",
+                        "SCREENSHOT",
+                        "BURST",
+                        "PANORAMA",
+                    ):
+                        return ResponseMock(
+                            photos_data.DATA[
+                                "query?remapEnums=True&getCurrentSyncToken=True"
+                            ][5]["response"]
+                        )
+                    if (
+                        "filterBy" in data["query"]
+                        and data.get("query").get("filterBy")[2]["fieldValue"]["value"]
+                        == "VIDEO"
+                    ):
+                        return ResponseMock(
+                            photos_data.DATA[
+                                "query?remapEnums=True&getCurrentSyncToken=True"
+                            ][5]["response"]
+                        )
                 if data.get("query").get("recordType") == "CPLAlbumByPositionLive":
                     if (
                         "filterBy" in data["query"]

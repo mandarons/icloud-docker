@@ -96,6 +96,16 @@ def get_photos_sync_interval(config):
     return sync_interval
 
 
+def get_photos_all_albums(config):
+    """Return flag to download all albums from config."""
+    download_all = False
+    config_path = ["photos", "all_albums"]
+    if traverse_config_path(config=config, config_path=config_path):
+        download_all = get_config_value(config=config, config_path=config_path)
+        LOGGER.info("Syncing all albums.")
+    return download_all
+
+
 def prepare_root_destination(config):
     """Prepare root destination."""
     LOGGER.debug("Checking root destination ...")

@@ -112,7 +112,10 @@ photos:
   destination: "photos"
   remove_obsolete: false
   sync_interval: 500
-  filters: # Optional, use it only if you want to download specific albums. Else, all photos are downloaded to `all` folder.
+  all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
+  filters:
+    # if all_albums is false list of albums to download, if all_albums is true list of ignored albums
+    # if empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders
     albums:
       - "album 1"
       - "album2"
@@ -120,7 +123,7 @@ photos:
       - "original"
       # - "medium"
       # - "thumb"
-    extensions: #Optional, media extensions to be included in syncing iCloud Photos content
+    extensions: # Optional, media extensions to be included in syncing iCloud Photos content
       # - jpg
       # - heic
       # - png
