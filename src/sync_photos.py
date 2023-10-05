@@ -145,10 +145,11 @@ def sync_photos(config, photos):
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
+    library = config_parser.get_photos_library(config=config)
     if download_all:
         for album in photos.albums.keys():
             sync_album(
-                album=photos.albums[album],
+                album=photos.libraries[library].albums[album],
                 destination_path=os.path.join(destination_path, album),
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
@@ -157,7 +158,7 @@ def sync_photos(config, photos):
     elif filters["albums"]:
         for album in iter(filters["albums"]):
             sync_album(
-                album=photos.albums[album],
+                album=photos.libraries[library].albums[album],
                 destination_path=os.path.join(destination_path, album),
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
@@ -165,7 +166,7 @@ def sync_photos(config, photos):
             )
     else:
         sync_album(
-            album=photos.all,
+            album=photos.libraries[library].all,
             destination_path=os.path.join(destination_path, "all"),
             file_sizes=filters["file_sizes"],
             extensions=filters["extensions"],

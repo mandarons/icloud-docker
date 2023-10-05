@@ -355,3 +355,13 @@ def get_region(config):
             region = "global"
 
     return region
+
+
+def get_photos_library(config):
+    """Return libary to download."""
+    library = "PrimarySync"
+    config_path = ["photos", "library"]
+    if traverse_config_path(config=config, config_path=config_path):
+        library = get_config_value(config=config, config_path=config_path)
+        LOGGER.info(f"Syncing {library}.")
+    return library
