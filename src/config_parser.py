@@ -115,7 +115,6 @@ def get_photos_unique_file_names(config):
         LOGGER.info("Using unique filenames.")
     return unique_filenames
 
-
 def prepare_root_destination(config):
     """Prepare root destination."""
     LOGGER.debug("Checking root destination ...")

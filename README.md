@@ -113,8 +113,7 @@ photos:
   remove_obsolete: false
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
-  # Optional, default false. If true all files have globally unique filenames, it should matter when all_albums is true and one photo is in pultpile album
-  unique_filenames: false
+  unique_filenames: false # Optional, default false. If true all files have globally unique filenames, it should matter when filter > albums is empty and one photo is in multiple album  
   filters:
     # if all_albums is false list of albums to download, if all_albums is true list of ignored albums
     # if empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders

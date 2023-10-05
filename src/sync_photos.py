@@ -182,8 +182,6 @@ def sync_photos(config, photos):
     unique_file_names = config_parser.get_photos_unique_file_names(config=config)
     if download_all:
         for album in photos.albums.keys():
-            if album in iter(filters["albums"]):
-                continue
             sync_album(
                 album=photos.albums[album],
                 destination_path=os.path.join(destination_path, album),
