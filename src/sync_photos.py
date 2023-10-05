@@ -141,6 +141,8 @@ def remove_obsolete(destination_path, files):
 
 def sync_photos(config, photos):
     """Sync all photos."""
+    for l in photos.libraries:
+        LOGGER.info(f"Available library: {l}")
     destination_path = config_parser.prepare_photos_destination(config=config)
     filters = config_parser.get_photos_filters(config=config)
     files = set()
