@@ -22,8 +22,8 @@
         </h1>
         <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
         <h2 class="stats">
-            186 statements &nbsp;
-            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">186 run</button>
+            193 statements &nbsp;
+            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">193 run</button>
             <button type="button" class="mis show_mis shortkey_m button_toggle_mis" title="Toggle lines missing">0 missing</button>
             <button type="button" class="exc show_exc shortkey_x button_toggle_exc" title="Toggle lines excluded">0 excluded</button>
         </h2>
@@ -409,12 +409,22 @@
     <p id="t355" class="run"><span class="n"><a href="#t355">355</a></span><span class="t">            <span class="nam">region</span> <span class="op">=</span> <span class="str">"global"</span>&nbsp;</span><span class="r"></span></p>
     <p id="t356" class="pln"><span class="n"><a href="#t356">356</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t357" class="run"><span class="n"><a href="#t357">357</a></span><span class="t">    <span class="key">return</span> <span class="nam">region</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t358" class="pln"><span class="n"><a href="#t358">358</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t359" class="pln"><span class="n"><a href="#t359">359</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t360" class="run"><span class="n"><a href="#t360">360</a></span><span class="t"><span class="key">def</span> <span class="nam">get_photos_folder_format</span><span class="op">(</span><span class="nam">config</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t361" class="pln"><span class="n"><a href="#t361">361</a></span><span class="t">    <span class="str">"""Return filename format or None."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t362" class="run"><span class="n"><a href="#t362">362</a></span><span class="t">    <span class="nam">fmt</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t363" class="run"><span class="n"><a href="#t363">363</a></span><span class="t">    <span class="nam">config_path</span> <span class="op">=</span> <span class="op">[</span><span class="str">"photos"</span><span class="op">,</span> <span class="str">"folder_format"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t364" class="run"><span class="n"><a href="#t364">364</a></span><span class="t">    <span class="key">if</span> <span class="nam">traverse_config_path</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t365" class="run"><span class="n"><a href="#t365">365</a></span><span class="t">        <span class="nam">fmt</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t366" class="run"><span class="n"><a href="#t366">366</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"Using format {fmt}."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t367" class="run"><span class="n"><a href="#t367">367</a></span><span class="t">    <span class="key">return</span> <span class="nam">fmt</span>&nbsp;</span><span class="r"></span></p>
 </div>
 <div id="footer">
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2023-10-05 15:53 +0000
+            created at 2023-10-07 16:08 +0000
         </p>
     </div>
 </div>
