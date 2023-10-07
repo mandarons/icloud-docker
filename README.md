@@ -1,4 +1,5 @@
-# iCloud-docker 
+# iCloud-docker
+
 [![CI - Main](https://github.com/mandarons/icloud-drive-docker/actions/workflows/ci-main-test-coverage-deploy.yml/badge.svg?branch=main)](https://github.com/mandarons/icloud-drive-docker/actions/workflows/ci-main-test-coverage-deploy.yml)
 [![Tests](https://mandarons.github.io/icloud-drive-docker/badges/tests.svg)](https://mandarons.github.io/icloud-drive-docker/test-results/)
 [![Coverage](https://mandarons.github.io/icloud-drive-docker/badges/coverage.svg)](https://mandarons.github.io/icloud-drive-docker/test-coverage/index.html)
@@ -8,7 +9,7 @@
 [![GitHub Sponsors][github-sponsors-badge]][github-sponsors]
 <a href="https://www.buymeacoffee.com/mandarons" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 30px !important;width: 150px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
 
-🤟 __Please star this repository if you end up using this project. If it has improved your life in any way, consider donating to my mission using 'Sponsor' or 'Buy Me a Coffee' button. It will help me to continue supporting this product.__ :pray:
+🤟 **Please star this repository if you end up using this project. If it has improved your life in any way, consider donating to my mission using 'Sponsor' or 'Buy Me a Coffee' button. It will help me to continue supporting this product.** :pray:
 
 iCloud-docker (previously known as iCloud-drive-docker) is a simple iCloud client in Docker environment. It uses [iCloudPy](https://github.com/mandarons/icloudpy) python library to interact with iCloud server.
 
@@ -115,8 +116,8 @@ photos:
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
   folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
   filters:
-    # if all_albums is false list of albums to download, if all_albums is true list of ignored albums
-    # if empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders
+    # if all_albums is false - albums list is used as filter-in, if all_albums is true - albums list is used as filter-out
+    # if albums list is empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders
     albums:
       - "album 1"
       - "album2"
@@ -124,14 +125,16 @@ photos:
       - "original"
       # - "medium"
       # - "thumb"
-    extensions: # Optional, media extensions to be included in syncing iCloud Photos content
+    extensions:# Optional, media extensions to be included in syncing iCloud Photos content
       # - jpg
       # - heic
       # - png
 ```
 
 **_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
+
 ## Usage Policy
+
 As mentioned in [USAGE.md](https://github.com/mandarons/icloud-drive-docker/blob/main/USAGE.md)
 
 [github-sponsors]: https://github.com/sponsors/mandarons
