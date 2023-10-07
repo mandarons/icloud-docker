@@ -417,3 +417,14 @@ class TestConfigParser(unittest.TestCase):
         config["photos"]["all_albums"] = False
         self.assertFalse(config_parser.get_photos_all_albums(config=config))
 
+    def test_folder_fmt_empty(self):
+        """Empty folder_format."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertIsNone(config_parser.get_folder_format(config=config))
+
+    def test_folder_fmt_set(self):
+        """folder_format is set."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["photos"]["folder_format"] = "%Y/%m"
+        self.assertEqual(config_parser.get_folder_format(config=config), "%Y/%m")
+

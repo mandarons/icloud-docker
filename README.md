@@ -113,6 +113,7 @@ photos:
   remove_obsolete: false
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
+  folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format
   filters:
     # if all_albums is false list of albums to download, if all_albums is true list of ignored albums
     # if empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders
