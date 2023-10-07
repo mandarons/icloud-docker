@@ -1,0 +1,88 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-10-07 16:08:18,531 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,531 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,532 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,533 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;21m2023-10-07 16:08:18,538 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;21m2023-10-07 16:08:18,539 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,540 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,540 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,541 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-07 16:08:18,541 :: INFO :: root :: sync.py :: 73 :: Syncing drive...[0m
+[38;5;39m2023-10-07 16:08:18,541 :: INFO :: root :: sync.py :: 75 :: Drive synced[0m
+[38;5;39m2023-10-07 16:08:18,541 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,542 :: INFO :: root :: sync.py :: 80 :: Syncing photos...[0m
+[38;5;39m2023-10-07 16:08:18,542 :: INFO :: root :: sync.py :: 82 :: Photos synced[0m
+[38;5;39m2023-10-07 16:08:18,542 :: INFO :: root :: config_parser.py :: 95 :: Syncing photos every 2 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,542 :: INFO :: root :: sync.py :: 139 :: Resyncing at Sat Oct  7 16:08:19 2023 ...[0m
+[38;5;39m2023-10-07 16:08:18,542 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;21m2023-10-07 16:08:18,543 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;21m2023-10-07 16:08:18,544 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,544 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,544 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,545 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-07 16:08:18,545 :: INFO :: root :: sync.py :: 73 :: Syncing drive...[0m
+[38;5;39m2023-10-07 16:08:18,545 :: INFO :: root :: sync.py :: 75 :: Drive synced[0m
+[38;5;39m2023-10-07 16:08:18,546 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,546 :: INFO :: root :: sync.py :: 139 :: Resyncing at Sat Oct  7 16:08:18 2023 ...[0m
+[38;5;39m2023-10-07 16:08:18,546 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;21m2023-10-07 16:08:18,546 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;21m2023-10-07 16:08:18,549 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,549 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,550 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,550 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-07 16:08:18,550 :: INFO :: root :: sync.py :: 73 :: Syncing drive...[0m
+[38;5;39m2023-10-07 16:08:18,551 :: INFO :: root :: sync.py :: 75 :: Drive synced[0m
+[38;5;39m2023-10-07 16:08:18,551 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,551 :: INFO :: root :: sync.py :: 139 :: Resyncing at Sat Oct  7 16:08:19 2023 ...[0m
+[38;5;39m2023-10-07 16:08:18,551 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;21m2023-10-07 16:08:18,551 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;21m2023-10-07 16:08:18,552 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,552 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,553 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,553 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-07 16:08:18,553 :: INFO :: root :: sync.py :: 80 :: Syncing photos...[0m
+[38;5;39m2023-10-07 16:08:18,554 :: INFO :: root :: sync.py :: 82 :: Photos synced[0m
+[38;5;39m2023-10-07 16:08:18,554 :: INFO :: root :: config_parser.py :: 95 :: Syncing photos every 2 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,554 :: INFO :: root :: sync.py :: 139 :: Resyncing at Sat Oct  7 16:08:19 2023 ...[0m
+[38;5;39m2023-10-07 16:08:18,554 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;21m2023-10-07 16:08:18,554 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;21m2023-10-07 16:08:18,555 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,555 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,556 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,556 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-07 16:08:18,556 :: INFO :: root :: sync.py :: 73 :: Syncing drive...[0m
+[38;5;39m2023-10-07 16:08:18,557 :: INFO :: root :: sync.py :: 75 :: Drive synced[0m
+[38;5;39m2023-10-07 16:08:18,557 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,557 :: INFO :: root :: sync.py :: 139 :: Resyncing at Sat Oct  7 16:08:18 2023 ...[0m
+[38;5;39m2023-10-07 16:08:18,557 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;21m2023-10-07 16:08:18,558 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;21m2023-10-07 16:08:18,558 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,559 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,559 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,560 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-07 16:08:18,560 :: INFO :: root :: sync.py :: 73 :: Syncing drive...[0m
+[38;5;39m2023-10-07 16:08:18,560 :: INFO :: root :: sync.py :: 75 :: Drive synced[0m
+[38;5;39m2023-10-07 16:08:18,560 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,561 :: INFO :: root :: sync.py :: 139 :: Resyncing at Sat Oct  7 16:08:19 2023 ...[0m
+[38;5;39m2023-10-07 16:08:18,561 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;21m2023-10-07 16:08:18,561 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;21m2023-10-07 16:08:18,562 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,562 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,562 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,563 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-07 16:08:18,563 :: INFO :: root :: sync.py :: 80 :: Syncing photos...[0m
+[38;5;39m2023-10-07 16:08:18,564 :: INFO :: root :: sync.py :: 82 :: Photos synced[0m
+[38;5;39m2023-10-07 16:08:18,564 :: INFO :: root :: config_parser.py :: 95 :: Syncing photos every 2 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,564 :: INFO :: root :: sync.py :: 139 :: Resyncing at Sat Oct  7 16:08:19 2023 ...[0m
+[38;5;39m2023-10-07 16:08:18,564 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;21m2023-10-07 16:08:18,564 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;21m2023-10-07 16:08:18,565 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-10-07 16:08:18,565 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-10-07 16:08:18,566 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-10-07 16:08:18,566 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;39m2023-10-07 16:08:18,566 :: INFO :: root :: sync.py :: 73 :: Syncing drive...[0m
+[38;5;39m2023-10-07 16:08:18,567 :: INFO :: root :: sync.py :: 75 :: Drive synced[0m
+[38;5;39m2023-10-07 16:08:18,567 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2023-10-07 16:08:18,567 :: INFO :: root :: sync.py :: 139 :: Resyncing at Sat Oct  7 16:08:18 2023 ...[0m
+[38;5;39m2023-10-07 16:08:18,567 :: INFO :: root :: config_parser.py :: 80 :: Syncing drive every 1 seconds.[0m
