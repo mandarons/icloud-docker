@@ -97,7 +97,10 @@ def download_photo(photo, file_size, destination_path):
 def process_photo(photo, file_size, destination_path, files, folder_fmt):
     """Process photo details."""
     photo_path = generate_file_name(
-        photo=photo, file_size=file_size, destination_path=destination_path, folder_fmt=folder_fmt
+        photo=photo,
+        file_size=file_size,
+        destination_path=destination_path,
+        folder_fmt=folder_fmt,
     )
     if file_size not in photo.versions:
         LOGGER.warning(
@@ -112,7 +115,9 @@ def process_photo(photo, file_size, destination_path, files, folder_fmt):
     return True
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_fmt=None):
+def sync_album(
+    album, destination_path, file_sizes, extensions=None, files=None, folder_fmt=None
+):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
@@ -131,7 +136,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
             file_sizes,
             extensions,
             files,
-            folder_fmt
+            folder_fmt,
         )
     return True
 
@@ -157,7 +162,7 @@ def sync_photos(config, photos):
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
-    folder_fmt = config_parser.get_folder_format(config=config)
+    folder_fmt = config_parser.get_photos_folder_format(config=config)
     if download_all:
         for album in photos.albums.keys():
             sync_album(
