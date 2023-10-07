@@ -357,7 +357,7 @@ def get_region(config):
     return region
 
 
-def get_folder_format(config):
+def get_photos_folder_format(config):
     """Return filename format or None."""
     fmt = None
     config_path = ["photos", "folder_format"]
