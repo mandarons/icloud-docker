@@ -519,7 +519,7 @@ class TestSyncPhotos(unittest.TestCase):
                 file_size="medium",
                 destination_path=self.destination_path,
                 files=None,
-                folder_fmt=None,
+                folder_format=None,
             )
         )
 
@@ -545,7 +545,7 @@ class TestSyncPhotos(unittest.TestCase):
                 file_size="thumb",
                 destination_path=self.destination_path,
                 files=None,
-                folder_fmt=None,
+                folder_format=None,
             )
         )
 
