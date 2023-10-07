@@ -357,6 +357,16 @@ def get_region(config):
     return region
 
 
+def get_photos_folder_format(config):
+    """Return filename format or None."""
+    fmt = None
+    config_path = ["photos", "folder_format"]
+    if traverse_config_path(config=config, config_path=config_path):
+        fmt = get_config_value(config=config, config_path=config_path)
+        LOGGER.info(f"Using format {fmt}.")
+    return fmt
+
+
 def get_photos_library(config):
     """Return libary to download."""
     library = "PrimarySync"

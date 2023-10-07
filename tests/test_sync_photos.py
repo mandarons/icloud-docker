@@ -31,6 +31,8 @@ class TestSyncPhotos(unittest.TestCase):
     def tearDown(self) -> None:
         """Remove temp directory."""
         shutil.rmtree(tests.TEMP_DIR)
+        if os.path.exists(tests.PHOTOS_DIR):
+            shutil.rmtree(tests.PHOTOS_DIR)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
@@ -65,7 +67,7 @@ class TestSyncPhotos(unittest.TestCase):
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
-    def test_sync_photos_all_albums(
+    def test_sync_photos_all_albums_filtered(
         self, mock_read_config, mock_service, mock_get_username, mock_get_password
     ):
         """Test for successful original photo size download."""
@@ -84,10 +86,67 @@ class TestSyncPhotos(unittest.TestCase):
         album_1_path = os.path.join(
             self.destination_path, config["photos"]["filters"]["albums"][1]
         )
+        self.assertFalse(os.path.isdir(album_0_path))
+        self.assertFalse(os.path.isdir(album_1_path))
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_all_albums_not_filtered(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for successful original photo size download."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["all_albums"] = True
+        mock_read_config.return_value = config
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        config["photos"]["filters"]["albums"] = None
+        # Sync original photos
+        self.assertIsNone(
+            sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        )
         self.assertTrue(os.path.isdir(album_0_path))
         self.assertTrue(os.path.isdir(album_1_path))
         self.assertTrue(len(os.listdir(album_0_path)) > 1)
         self.assertTrue(len(os.listdir(album_1_path)) > 0)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_folder_format(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for successful original photo size download with folder format."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["folder_format"] = "%Y/%m"
+        mock_read_config.return_value = config
+        # Sync original photos
+        self.assertIsNone(
+            sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        )
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        self.assertTrue(os.path.isdir(os.path.join(album_0_path, "2020", "08")))
+        self.assertTrue(os.path.isdir(os.path.join(album_1_path, "2020", "07")))
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
@@ -491,6 +550,7 @@ class TestSyncPhotos(unittest.TestCase):
                 file_size="medium",
                 destination_path=self.destination_path,
                 files=None,
+                folder_format=None,
             )
         )
 
@@ -516,6 +576,7 @@ class TestSyncPhotos(unittest.TestCase):
                 file_size="thumb",
                 destination_path=self.destination_path,
                 files=None,
+                folder_format=None,
             )
         )
 
