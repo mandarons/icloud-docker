@@ -194,7 +194,7 @@ def download_file(item, local_file):
     try:
         with item.open(stream=True) as response:
             with open(local_file, "wb") as file_out:
-                copyfileobj(response.raw, file_out)
+                file_out.write(response.content)
             if response.url and "/packageDownload?" in response.url:
                 local_file = process_package(local_file=local_file)
         item_modified_time = time.mktime(item.date_modified.timetuple())
