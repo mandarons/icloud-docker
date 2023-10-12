@@ -3283,7 +3283,15 @@ DRIVE_SUBFOLDER_WORKING = [
                 "parentId": "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF",
                 "dateModified": "2020-04-27T21:37:36Z",
                 "dateChanged": "2020-04-27T14:44:29-07:00",
-                "size": 19876991,
+                "size": os.path.getsize(
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        "ms.band",
+                        "Alternatives",
+                        "000",
+                        "WindowImage.jpg",
+                    )
+                ),
                 "etag": "2k::2j",
                 "extension": "pdf",
                 "hiddenExtension": True,
@@ -3299,7 +3307,15 @@ DRIVE_SUBFOLDER_WORKING = [
                 "dateModified": "2020-05-03T00:15:17Z",
                 "dateChanged": "2020-05-02T17:16:17-07:00",
                 # 'size': 21644358,
-                "size": os.path.getsize(__file__),
+                "size": os.path.getsize(
+                    os.path.join(
+                        os.path.dirname(__file__),
+                        "ms.band",
+                        "Alternatives",
+                        "000",
+                        "WindowImage.jpg",
+                    )
+                ),
                 "etag": "32::2x",
                 "extension": "pdf",
                 "hiddenExtension": True,
@@ -3789,7 +3805,19 @@ class ICloudPySessionMock(base.ICloudPySession):
                 return ResponseMock(DRIVE_PACKAGE_SPECIAL_CHARS_WORKING)
         if "icloud-content.com" in url and method == "GET":
             if "Scanned+document+1.pdf" in url or "Document scanne 2.pdf" in url:
-                return ResponseMock({}, raw=open(__file__, "rb"))
+                return ResponseMock(
+                    {},
+                    raw=open(
+                        os.path.join(
+                            os.path.dirname(__file__),
+                            "ms.band",
+                            "Alternatives",
+                            "000",
+                            "WindowImage.jpg",
+                        ),
+                        "rb",
+                    ),
+                )
             if "This is a title.md" in url:
                 return ResponseMock({}, raw=open("This is a title.md", "rb"))
             if "Fotoksiążka-Wzór.xmcf" in url:
