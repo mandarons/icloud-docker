@@ -7,7 +7,9 @@ from time import sleep
 from icloudpy import ICloudPyService, exceptions, utils
 
 from src import (
+    DEFAULT_CONFIG_FILE_PATH,
     DEFAULT_COOKIE_DIRECTORY,
+    ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
     LOGGER,
     config_parser,
@@ -52,7 +54,11 @@ def sync():
     photos_sync_interval = 0
     sleep_for = 10
     while True:
-        config = read_config()
+        config = read_config(
+            config_path=os.environ.get(
+                ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH
+            )
+        )
         alive(config=config)
         username = config_parser.get_username(config=config)
         if username:
