@@ -12,6 +12,7 @@ from src import (
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     DEFAULT_ROOT_DESTINATION,
     DEFAULT_SYNC_INTERVAL_SEC,
+    ENV_CONFIG_FILE_PATH_KEY,
     config_parser,
     read_config,
 )
@@ -20,9 +21,25 @@ from src import (
 class TestConfigParser(unittest.TestCase):
     """Tests for config parser."""
 
+    def tearDown(self):
+        """Clean up."""
+        if ENV_CONFIG_FILE_PATH_KEY in os.environ:
+            os.environ.pop(ENV_CONFIG_FILE_PATH_KEY)
+
     def test_read_config_default_config_path(self):
         """Test for Default config path."""
         self.assertIsNotNone(read_config(config_path=tests.CONFIG_PATH))
+
+    def test_read_config_env_config_path(self):
+        """Test for ENV_CONFIG_FILE_PATH."""
+        os.environ[ENV_CONFIG_FILE_PATH_KEY] = tests.ENV_CONFIG_PATH
+        config = read_config(
+            config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, tests.CONFIG_PATH)
+        )
+        self.assertEqual(
+            config["app"]["logger"]["filename"],
+            "config_loaded_using_env_config_path.log",
+        )
 
     def test_read_config_overridden_config_path(self):
         """Test for Overridden config path."""
