@@ -54,6 +54,35 @@ CLIENT_ID = "client_id"
 # Data
 AUTH_OK = {"authType": "hsa2"}
 
+ZONES_LIST_WORKING = {
+    "zones": [
+        {
+            "zoneID": {
+                "zoneName": "PrimarySync",
+                "ownerRecordName": "_fvhhqlzef1uvsgxnrw119mylkpjut1a0",
+                "zoneType": "REGULAR_CUSTOM_ZONE",
+            },
+            "syncToken": "HwoECJGaGRgAIhYI/ZL516KyxaXfARDm2sbu7KeQiZABKAA=",
+            "atomic": True,
+            "isEligibleForZoneShare": True,
+            "isEligibleForHierarchicalShare": True,
+            "ttl": 0,
+            "disableZoneDuringTtl": True,
+        },
+        {
+            "zoneID": {
+                "zoneName": "SharedSync-9DD9B767-9F30-4D6F-B658-F17DBA16D107",
+                "ownerRecordName": "_fvhhqlzef1uvsgxnrw119mylkpjut1a0",
+                "zoneType": "REGULAR_CUSTOM_ZONE",
+            },
+            "syncToken": "HwoECLiXBRgAIhUIs5Xxntqrrr9UEOLj2/q+geCjpAEoAA==",
+            "atomic": True,
+            "isEligibleForZoneShare": True,
+            "isEligibleForHierarchicalShare": False,
+        },
+    ]
+}
+
 LOGIN_WORKING = {
     "dsInfo": {
         "lastName": LAST_NAME,
@@ -3661,7 +3690,7 @@ PHOTOS_GET_CURRENT_SYNC_TOKEN_WORKING = {
             "deleted": False,
             "zoneID": {
                 "zoneName": "PrimarySync",
-                "ownerRecordName": "_0b5c3c201b3a7f1daac8ff7e7fbc0c35",
+                "ownerRecordName": "_fvhhqlzef1uvsgxnrw119mylkpjut1a0",
                 "zoneType": "REGULAR_CUSTOM_ZONE",
             },
         }
@@ -3855,6 +3884,8 @@ class ICloudPySessionMock(base.ICloudPySession):
 
         # Photos
         if "com.apple.photos.cloud" in url:
+            if url.endswith("zones/list"):
+                return ResponseMock(ZONES_LIST_WORKING)
             if "query?remapEnums=True&getCurrentSyncToken=True" in url:
                 if data.get("query").get("recordType") == "CheckIndexingState":
                     return ResponseMock(

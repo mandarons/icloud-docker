@@ -53,6 +53,7 @@ photos:
   destination: photos
   remove_obsolete: false
   sync_interval: -1
+  library: PrimarySync
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
   # folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
   filters:
