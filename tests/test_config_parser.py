@@ -445,17 +445,21 @@ class TestConfigParser(unittest.TestCase):
         config["photos"]["folder_format"] = "%Y/%m"
         self.assertEqual(config_parser.get_photos_folder_format(config=config), "%Y/%m")
 
-    def test_get_photos_library_empty(self):
+    def test_get_photos_filters_libraries_empty(self):
         """Photos > library is missing in config."""
         config = read_config(config_path=tests.CONFIG_PATH)
-        del config["photos"]["library"]
-        self.assertEqual(config_parser.get_photos_library(config=config), "PrimarySync")
+        self.assertEqual(
+            config_parser.get_photos_filters(config=config)["libraries"], None
+        )
 
-    def test_get_photos_library_shared(self):
+    def test_get_photos_filters_libraries_specified(self):
         """Photos > library is specified as shared."""
         config = read_config(config_path=tests.CONFIG_PATH)
-        config["photos"]["library"] = "SharedSync-9DD9B767-9F30-4D6F-B658-F17DBA16D107"
-        self.assertEqual(
-            config_parser.get_photos_library(config=config),
+        config["photos"]["filters"]["libraries"] = [
+            "PrimarySync",
             "SharedSync-9DD9B767-9F30-4D6F-B658-F17DBA16D107",
+        ]
+        self.assertListEqual(
+            config_parser.get_photos_filters(config=config)["libraries"],
+            config["photos"]["filters"]["libraries"],
         )

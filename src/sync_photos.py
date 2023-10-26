@@ -158,45 +158,46 @@ def remove_obsolete(destination_path, files):
 
 def sync_photos(config, photos):
     """Sync all photos."""
-    for l in photos.libraries:
-        LOGGER.info(f"Available library: {l}")
     destination_path = config_parser.prepare_photos_destination(config=config)
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
-    library = config_parser.get_photos_library(config=config)
+    libraries = (
+        filters["libraries"] if filters["libraries"] is not None else photos.libraries
+    )
     folder_format = config_parser.get_photos_folder_format(config=config)
-    if download_all:
-        for album in photos.libraries[library].albums.keys():
-            if filters["albums"] and album in iter(filters["albums"]):
-                continue
+    for library in libraries:
+        if download_all and library == "PrimarySync":
+            for album in photos.libraries[library].albums.keys():
+                if filters["albums"] and album in iter(filters["albums"]):
+                    continue
+                sync_album(
+                    album=photos.libraries[library].albums[album],
+                    destination_path=os.path.join(destination_path, album),
+                    file_sizes=filters["file_sizes"],
+                    extensions=filters["extensions"],
+                    files=files,
+                    folder_format=folder_format,
+                )
+        elif filters["albums"] and library == "PrimarySync":
+            for album in iter(filters["albums"]):
+                sync_album(
+                    album=photos.libraries[library].albums[album],
+                    destination_path=os.path.join(destination_path, album),
+                    file_sizes=filters["file_sizes"],
+                    extensions=filters["extensions"],
+                    files=files,
+                    folder_format=folder_format,
+                )
+        else:
             sync_album(
-                album=photos.libraries[library].albums[album],
-                destination_path=os.path.join(destination_path, album),
+                album=photos.libraries[library].all,
+                destination_path=os.path.join(destination_path, "all"),
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
                 files=files,
                 folder_format=folder_format,
             )
-    elif filters["albums"]:
-        for album in iter(filters["albums"]):
-            sync_album(
-                album=photos.libraries[library].albums[album],
-                destination_path=os.path.join(destination_path, album),
-                file_sizes=filters["file_sizes"],
-                extensions=filters["extensions"],
-                files=files,
-                folder_format=folder_format,
-            )
-    else:
-        sync_album(
-            album=photos.libraries[library].all,
-            destination_path=os.path.join(destination_path, "all"),
-            file_sizes=filters["file_sizes"],
-            extensions=filters["extensions"],
-            files=files,
-            folder_format=folder_format,
-        )
 
     if config_parser.get_photos_remove_obsolete(config=config):
         remove_obsolete(destination_path, files)
