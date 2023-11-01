@@ -1,0 +1,11 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-11-01 23:03:14,432 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-11-01 23:03:14,433 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-11-01 23:03:14,433 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-11-01 23:03:14,434 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;21m2023-11-01 23:03:14,436 :: DEBUG :: root :: sync_drive.py :: 120 :: Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band does not exist locally.[0m
+[38;5;39m2023-11-01 23:03:14,436 :: INFO :: root :: sync_drive.py :: 193 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band ...[0m
+[38;5;39m2023-11-01 23:03:14,438 :: INFO :: root :: sync_drive.py :: 166 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.gz to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive[0m
+[38;5;39m2023-11-01 23:03:14,440 :: INFO :: root :: sync_drive.py :: 156 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive[0m
+[38;5;39m2023-11-01 23:03:14,446 :: INFO :: root :: sync_drive.py :: 177 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.zip.[0m
+[38;5;39m2023-11-01 23:03:14,446 :: INFO :: root :: sync_drive.py :: 177 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.gz.[0m
