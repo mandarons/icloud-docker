@@ -34,6 +34,11 @@ drive:
     - "*.psd"
     - .git/
   filters:
+    # List of libraries to download. If omitted (default), photos from all libraries (own and shared) are downloaded. If included, photos only
+    # from the listed libraries are downloaded.
+    # libraries:
+    #   - PrimarySync # Name of the own library
+
     # File filters to be included in syncing iCloud drive content
     folders:
       - dir1/dir2/dir3
