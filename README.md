@@ -117,6 +117,11 @@ photos:
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
   folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
   filters:
+    # List of libraries to download. If omitted (default), photos from all libraries (own and shared) are downloaded. If included, photos only
+    # from the listed libraries are downloaded.
+    # libraries:
+    #   - PrimarySync # Name of the own library
+
     # if all_albums is false - albums list is used as filter-in, if all_albums is true - albums list is used as filter-out
     # if albums list is empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders
     albums:
