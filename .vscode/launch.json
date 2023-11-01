@@ -15,6 +15,13 @@
       "env": {
         "PYTHONPATH": "${workspaceFolder}"
       }
+    },
+    {
+      "name": "Python: Debug Tests",
+      "type": "python",
+      "request": "attach",
+      "purpose": ["debug-test"],
+      "justMyCode": false
     }
   ]
 }

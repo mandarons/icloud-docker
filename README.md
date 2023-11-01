@@ -114,7 +114,7 @@ photos:
   destination: "photos"
   remove_obsolete: false
   sync_interval: 500
-  all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
+  all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
   filters:
     # List of libraries to download. If omitted (default), photos from all libraries (own and shared) are downloaded. If included, photos only
