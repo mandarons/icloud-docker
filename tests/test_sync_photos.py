@@ -1,6 +1,7 @@
 """Tests for sync_photos.py file."""
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import glob
 import os
 import shutil
 import unittest
@@ -47,6 +48,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_service = self.service
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
+        config["photos"]["filters"]["libraries"] = ["PrimarySync"]
         mock_read_config.return_value = config
         # Sync original photos
         self.assertIsNone(
@@ -639,3 +641,29 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(os.path.isdir(album_1_path))
         self.assertTrue(len(os.listdir(album_0_path)) == 1)
         self.assertTrue(len(os.listdir(album_1_path)) == 0)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_photo_download_with_shared_libraries(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for downloading photos from shared libraries."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        del config["photos"]["filters"]["albums"]
+        mock_read_config.return_value = config
+        # Sync original photos
+        self.assertIsNone(
+            sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        )
+        all_path = os.path.join(self.destination_path, "all")
+        self.assertTrue(os.path.isdir(all_path))
+        # Check for PrimarySync photo
+        self.assertTrue(len(glob.glob(os.path.join(all_path, "IMG_3148*.JPG"))) > 0)
+        # Check for shared photo
+        self.assertTrue(len(glob.glob(os.path.join(all_path, "IMG_5513*.HEIC"))) > 0)

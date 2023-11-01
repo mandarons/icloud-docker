@@ -3993,11 +3993,36 @@ class ICloudPySessionMock(base.ICloudPySession):
                                 "query?remapEnums=True&getCurrentSyncToken=True"
                             ][7]["response"]
                         )
+                    if (
+                        "zoneID" in data
+                        and data.get("zoneID").get("zoneName")
+                        == "SharedSync-9DD9B767-9F30-4D6F-B658-F17DBA16D107"
+                    ):
+                        return ResponseMock(
+                            photos_data.DATA[
+                                "query?remapEnums=True&getCurrentSyncToken=True"
+                            ][8]["response"]
+                        )
 
                     return ResponseMock(
                         photos_data.DATA[
                             "query?remapEnums=True&getCurrentSyncToken=True"
                         ][1]["response"]
+                    )
+                if (
+                    data.get("query").get("recordType")
+                    == "CPLAssetAndMasterByAddedDate"
+                ):
+                    if data.get("query").get("filterBy")[0]["fieldValue"]["value"] == 0:
+                        return ResponseMock(
+                            photos_data.DATA[
+                                "query?remapEnums=True&getCurrentSyncToken=True"
+                            ][9]["response"]
+                        )
+                    return ResponseMock(
+                        photos_data.DATA[
+                            "query?remapEnums=True&getCurrentSyncToken=True"
+                        ][8]["response"]
                     )
                 if (
                     data.get("query").get("recordType")
@@ -4044,6 +4069,9 @@ class ICloudPySessionMock(base.ICloudPySession):
             # IMG_3148.JPG another device
             or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvoATqG89bMsXhtmMRMw009uhyJc_Kh"
             in url
+            # IMG_5513.HEIC Shared Library
+            or "https://cvws.icloud-content.com/B/AQDN6auXvelQyb_btBqkNNjA97E2AZ_h3_ZBuSDV7J1SfMKpllmP-FGN"
+            in url
         ):
             return ResponseMock(
                 {},
@@ -4070,6 +4098,9 @@ class ICloudPySessionMock(base.ICloudPySession):
             in url
             # IMG_3148.JPG another device
             or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvWAVLSGMHt-PAQ9_krqqfXATNX57d5"
+            in url
+            # IMG_5513.HEIC Shared Library
+            or "https://cvws.icloud-content.com/B/AY4eS1ezj9pmMHzfVzwC2CLmBwZOAXKLBx985QzfCKCGyN0wbGs6SuTf"
             in url
         ):
             return ResponseMock(
@@ -4099,6 +4130,9 @@ class ICloudPySessionMock(base.ICloudPySession):
             in url
             # IMG_3148.JPG another device
             or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY0AV2Zh7WygJu74eNWVuuMT4lM8qme"
+            in url
+            # IMG_5513.HEIC Shared Library
+            or "https://cvws.icloud-content.com/B/Aa_QVPVEM9bvm5Owy3GRFNyqbKuXAbgec55EhUFp9db5znXM3Xz-nq1X"
             in url
         ):
             return ResponseMock(
