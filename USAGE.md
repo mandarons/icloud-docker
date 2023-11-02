@@ -1,4 +1,5 @@
-### ICloud-Drive-Docker Usage 
+### ICloud-Drive-Docker Usage
+
 We collect following information to analyze usage of `mandarons/icloud-drive-docker` project:
 
 1. `Application version` - to track which versions of `mandarons/icloud-drive-docker` are currently in use

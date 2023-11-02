@@ -217,7 +217,7 @@ jobs:
             NEW_HEARTBEAT_ENDPOINT=${{ secrets.NEW_HEARTBEAT_ENDPOINT }}
             APP_VERSION=main
           push: true
-#           platforms: linux/arm64, linux/amd64, linux/arm/v7, linux/386
+          #           platforms: linux/arm64, linux/amd64, linux/arm/v7, linux/386
           platforms: linux/arm64, linux/amd64
           tags: mandarons/icloud-drive:main
           cache-from: type=local,src=/tmp/.buildx-cache

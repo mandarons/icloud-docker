@@ -40,7 +40,7 @@ def send(config, last_send=None, dry_run=False):
 
                 smtp.sendmail(from_addr=email, to_addrs=to_email, msg=msg.as_string())
                 smtp.quit()
-        except (Exception) as e:
+        except Exception as e:
             sent_on = None
             LOGGER.error(f"Failed to send email: {str(e)}.")
     else:
