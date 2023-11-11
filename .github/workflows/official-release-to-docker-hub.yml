@@ -62,8 +62,7 @@ jobs:
             NEW_HEARTBEAT_ENDPOINT=${{ secrets.NEW_HEARTBEAT_ENDPOINT }}
             APP_VERSION=${{ steps.prep.outputs.version }}
           push: true
-          #           platforms: linux/386,linux/amd64, linux/arm64, linux/arm/7
-          platforms: linux/386,linux/amd64, linux/arm64
+          platforms: linux/386,linux/amd64, linux/arm64, linux/arm/7
           tags: ${{ steps.prep.outputs.tags }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
