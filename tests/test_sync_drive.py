@@ -4,6 +4,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import os
 import shutil
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from icloudpy.exceptions import ICloudPyAPIResponseException
@@ -916,6 +917,32 @@ class TestSyncDrive(unittest.TestCase):
             self.assertTrue(len(captured.records) > 0)
             self.assertIn("Removing ", captured.records[0].getMessage())
 
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_remove_obsolete_package(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for removing obsolete package."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["drive"]["remove_obsolete"] = True
+        config["drive"]["destination"] = self.destination_path
+        mock_read_config.return_value = config
+        ms_band_package_local_path = os.path.join(
+            self.destination_path, "Obsidian", "Sample", "ms.band"
+        )
+        files = sync_drive.sync_drive(config=config, drive=mock_service.drive)
+        self.assertIsNotNone(files)
+        files.remove(ms_band_package_local_path)
+        files = sync_drive.remove_obsolete(
+            destination_path=self.destination_path, files=files
+        )
+        self.assertFalse(os.path.exists(ms_band_package_local_path))
+
     def test_remove_obsolete_none_destination_path(self):
         """Test for destination path as None."""
         self.assertTrue(
@@ -941,7 +968,7 @@ class TestSyncDrive(unittest.TestCase):
             filters=self.filters,
             remove=False,
         )
-        self.assertTrue(len(actual) == 11)
+        self.assertTrue(len(actual) == 49)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -977,7 +1004,7 @@ class TestSyncDrive(unittest.TestCase):
             ignore=self.ignore,
             remove=True,
         )
-        self.assertTrue(len(actual) == 11)
+        self.assertTrue(len(actual) == 49)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -1011,7 +1038,7 @@ class TestSyncDrive(unittest.TestCase):
             ignore=self.ignore,
             remove=False,
         )
-        self.assertTrue(len(actual) == 15)
+        self.assertTrue(len(actual) == 53)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
             os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
@@ -1154,20 +1181,20 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.assertEqual(
             sum(
-                os.path.getsize(f)
-                for f in os.listdir(
+                f.stat().st_size
+                for f in Path(
                     os.path.join(
                         self.destination_path, "Obsidian", "Sample", "Project.band"
                     )
-                )
-                if os.path.isfile(f)
+                ).glob("**/*")
+                if f.is_file()
             ),
             sum(
-                os.path.getsize(f)
-                for f in os.listdir(
+                f.stat().st_size
+                for f in Path(
                     os.path.join(tests.DATA_DIR, "Project_original.band")
-                )
-                if os.path.isfile(f)
+                ).glob("**/*")
+                if f.is_file()
             ),
         )
 
@@ -1231,16 +1258,19 @@ class TestSyncDrive(unittest.TestCase):
             )
         )
         self.assertTrue(os.path.exists(os.path.join(self.destination_path, "ms.band")))
+
         self.assertEqual(
             sum(
-                os.path.getsize(f)
-                for f in os.listdir(os.path.join(self.destination_path, "ms.band"))
-                if os.path.isfile(f)
+                f.stat().st_size
+                for f in Path(os.path.join(self.destination_path, "ms.band")).glob(
+                    "**/*"
+                )
+                if f.is_file()
             ),
             sum(
-                os.path.getsize(f)
-                for f in os.listdir(os.path.join(tests.DATA_DIR, "ms.band"))
-                if os.path.isfile(f)
+                f.stat().st_size
+                for f in Path(os.path.join(tests.DATA_DIR, "ms.band")).glob("**/*")
+                if f.is_file()
             ),
         )
 
@@ -1270,7 +1300,7 @@ class TestSyncDrive(unittest.TestCase):
                 ignore=self.ignore,
                 remove=False,
             )
-            self.assertTrue(len(actual) == 12)
+            self.assertTrue(len(actual) == 50)
             self.assertTrue(
                 os.path.isdir(os.path.join(self.destination_path, "icloudpy"))
             )
