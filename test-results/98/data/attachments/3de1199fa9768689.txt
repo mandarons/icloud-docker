@@ -1,0 +1,9 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-12-01 18:04:29,136 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-12-01 18:04:29,136 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-12-01 18:04:29,137 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-12-01 18:04:29,137 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;21m2023-12-01 18:04:29,138 :: DEBUG :: root :: sync_drive.py :: 120 :: Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Fotoksiążka-Wzór.xmcf does not exist locally.[0m
+[38;5;39m2023-12-01 18:04:29,138 :: INFO :: root :: sync_drive.py :: 193 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Fotoksiążka-Wzór.xmcf ...[0m
+[38;5;39m2023-12-01 18:04:29,139 :: INFO :: root :: sync_drive.py :: 156 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Fotoksiążka-Wzór.xmcf.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive[0m
+[38;5;39m2023-12-01 18:04:29,142 :: INFO :: root :: sync_drive.py :: 177 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Fotoksiążka-Wzór.xmcf.zip.[0m
