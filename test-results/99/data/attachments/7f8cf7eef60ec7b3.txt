@@ -1,0 +1,36 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2023-12-01 18:24:21,313 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2023-12-01 18:24:21,313 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2023-12-01 18:24:21,314 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2023-12-01 18:24:21,314 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;21m2023-12-01 18:24:21,316 :: DEBUG :: root :: config_parser.py :: 245 :: Checking photos destination ...[0m
+[38;21m2023-12-01 18:24:21,316 :: DEBUG :: root :: config_parser.py :: 111 :: Checking root destination ...[0m
+[38;5;226m2023-12-01 18:24:21,316 :: WARNING :: root :: config_parser.py :: 307 :: photos > filters > libraries not found. Downloading all libraries ...[0m
+[38;5;39m2023-12-01 18:24:21,316 :: INFO :: root :: config_parser.py :: 105 :: Syncing all albums.[0m
+[38;5;39m2023-12-01 18:24:21,317 :: INFO :: root :: sync_photos.py :: 125 :: Syncing album 2[0m
+[38;21m2023-12-01 18:24:21,318 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3328.JPG.[0m
+[38;21m2023-12-01 18:24:21,318 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3327.JPG.[0m
+[38;21m2023-12-01 18:24:21,318 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3322.JPG.[0m
+[38;21m2023-12-01 18:24:21,318 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3206.JPG.[0m
+[38;21m2023-12-01 18:24:21,318 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;21m2023-12-01 18:24:21,319 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo no-extension.[0m
+[38;21m2023-12-01 18:24:21,319 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;5;39m2023-12-01 18:24:21,319 :: INFO :: root :: sync_photos.py :: 125 :: Syncing album-1-1[0m
+[38;21m2023-12-01 18:24:21,320 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3328.JPG.[0m
+[38;21m2023-12-01 18:24:21,320 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3327.JPG.[0m
+[38;21m2023-12-01 18:24:21,320 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3322.JPG.[0m
+[38;21m2023-12-01 18:24:21,320 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3206.JPG.[0m
+[38;21m2023-12-01 18:24:21,320 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;21m2023-12-01 18:24:21,321 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo no-extension.[0m
+[38;21m2023-12-01 18:24:21,321 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;5;39m2023-12-01 18:24:21,321 :: INFO :: root :: sync_photos.py :: 125 :: Syncing album-1[0m
+[38;21m2023-12-01 18:24:21,322 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3328.JPG.[0m
+[38;21m2023-12-01 18:24:21,322 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3327.JPG.[0m
+[38;21m2023-12-01 18:24:21,322 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3322.JPG.[0m
+[38;21m2023-12-01 18:24:21,322 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3206.JPG.[0m
+[38;21m2023-12-01 18:24:21,322 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;21m2023-12-01 18:24:21,322 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo no-extension.[0m
+[38;21m2023-12-01 18:24:21,323 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;5;39m2023-12-01 18:24:21,323 :: INFO :: root :: sync_photos.py :: 125 :: Syncing All Photos[0m
+[38;21m2023-12-01 18:24:21,323 :: DEBUG :: root :: sync_photos.py :: 131 :: Skipping the unwanted photo IMG_5513.HEIC.[0m
+[38;21m2023-12-01 18:24:21,324 :: DEBUG :: root :: config_parser.py :: 275 :: Not Removing obsolete photos ...[0m
