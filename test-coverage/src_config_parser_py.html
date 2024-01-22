@@ -22,8 +22,8 @@
         </h1>
         <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
         <h2 class="stats">
-            198 statements &nbsp;
-            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">198 run</button>
+            212 statements &nbsp;
+            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">212 run</button>
             <button type="button" class="mis show_mis shortkey_m button_toggle_mis" title="Toggle lines missing">0 missing</button>
             <button type="button" class="exc show_exc shortkey_x button_toggle_exc" title="Toggle lines excluded">0 excluded</button>
         </h2>
@@ -446,12 +446,38 @@
     <p id="t392" class="run"><span class="n"><a href="#t392">392</a></span><span class="t">        <span class="nam">fmt</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t393" class="run"><span class="n"><a href="#t393">393</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span><span class="str">f"Using format {fmt}."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t394" class="run"><span class="n"><a href="#t394">394</a></span><span class="t">    <span class="key">return</span> <span class="nam">fmt</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t395" class="pln"><span class="n"><a href="#t395">395</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t396" class="pln"><span class="n"><a href="#t396">396</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t397" class="run"><span class="n"><a href="#t397">397</a></span><span class="t"><span class="key">def</span> <span class="nam">get_telegram_bot_token</span><span class="op">(</span><span class="nam">config</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t398" class="pln"><span class="n"><a href="#t398">398</a></span><span class="t">    <span class="str">"""Return telegram bot token from config."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t399" class="run"><span class="n"><a href="#t399">399</a></span><span class="t">    <span class="nam">bot_token</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t400" class="run"><span class="n"><a href="#t400">400</a></span><span class="t">    <span class="nam">config_path</span> <span class="op">=</span> <span class="op">[</span><span class="str">"app"</span><span class="op">,</span> <span class="str">"telegram"</span><span class="op">,</span> <span class="str">"bot_token"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t401" class="run"><span class="n"><a href="#t401">401</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">traverse_config_path</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t402" class="run"><span class="n"><a href="#t402">402</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t403" class="pln"><span class="n"><a href="#t403">403</a></span><span class="t">            <span class="str">f"Warning: bot_token is not found in {config_path_to_string(config_path)}."</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t404" class="pln"><span class="n"><a href="#t404">404</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t405" class="pln"><span class="n"><a href="#t405">405</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t406" class="run"><span class="n"><a href="#t406">406</a></span><span class="t">        <span class="nam">bot_token</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t407" class="run"><span class="n"><a href="#t407">407</a></span><span class="t">    <span class="key">return</span> <span class="nam">bot_token</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t408" class="pln"><span class="n"><a href="#t408">408</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t409" class="pln"><span class="n"><a href="#t409">409</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t410" class="run"><span class="n"><a href="#t410">410</a></span><span class="t"><span class="key">def</span> <span class="nam">get_telegram_chat_id</span><span class="op">(</span><span class="nam">config</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t411" class="pln"><span class="n"><a href="#t411">411</a></span><span class="t">    <span class="str">"""Return telegram chat id from config."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t412" class="run"><span class="n"><a href="#t412">412</a></span><span class="t">    <span class="nam">chat_id</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t413" class="run"><span class="n"><a href="#t413">413</a></span><span class="t">    <span class="nam">config_path</span> <span class="op">=</span> <span class="op">[</span><span class="str">"app"</span><span class="op">,</span> <span class="str">"telegram"</span><span class="op">,</span> <span class="str">"chat_id"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t414" class="run"><span class="n"><a href="#t414">414</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">traverse_config_path</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t415" class="run"><span class="n"><a href="#t415">415</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t416" class="pln"><span class="n"><a href="#t416">416</a></span><span class="t">            <span class="str">f"Warning: chat_id is not found in {config_path_to_string(config_path)}."</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t417" class="pln"><span class="n"><a href="#t417">417</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t418" class="pln"><span class="n"><a href="#t418">418</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t419" class="run"><span class="n"><a href="#t419">419</a></span><span class="t">        <span class="nam">chat_id</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t420" class="run"><span class="n"><a href="#t420">420</a></span><span class="t">    <span class="key">return</span> <span class="nam">chat_id</span>&nbsp;</span><span class="r"></span></p>
 </div>
 <div id="footer">
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2023-12-01 18:24 +0000
+            created at 2024-01-22 06:37 +0000
         </p>
     </div>
 </div>
