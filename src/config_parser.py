@@ -392,3 +392,29 @@ def get_photos_folder_format(config):
         fmt = get_config_value(config=config, config_path=config_path)
         LOGGER.info(f"Using format {fmt}.")
     return fmt
+
+
+def get_telegram_bot_token(config):
+    """Return telegram bot token from config."""
+    bot_token = None
+    config_path = ["app", "telegram", "bot_token"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(
+            f"Warning: bot_token is not found in {config_path_to_string(config_path)}."
+        )
+    else:
+        bot_token = get_config_value(config=config, config_path=config_path)
+    return bot_token
+
+
+def get_telegram_chat_id(config):
+    """Return telegram chat id from config."""
+    chat_id = None
+    config_path = ["app", "telegram", "chat_id"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(
+            f"Warning: chat_id is not found in {config_path_to_string(config_path)}."
+        )
+    else:
+        chat_id = get_config_value(config=config, config_path=config_path)
+    return chat_id
