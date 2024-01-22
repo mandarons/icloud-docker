@@ -463,3 +463,29 @@ class TestConfigParser(unittest.TestCase):
             config_parser.get_photos_filters(config=config)["libraries"],
             config["photos"]["filters"]["libraries"],
         )
+
+    def test_get_telegram_bot_token(self):
+        """Test for telegram bot token."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["telegram"] = {"bot_token": "bot_token"}
+        self.assertEqual(
+            config["app"]["telegram"]["bot_token"],
+            config_parser.get_telegram_bot_token(config=config),
+        )
+
+    def test_get_telegram_bot_token_none_config(self):
+        """None config."""
+        self.assertIsNone(config_parser.get_telegram_bot_token(config=None))
+
+    def test_get_telegram_chat_id(self):
+        """Test for telegram chat id."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["telegram"] = {"chat_id": "chat_id"}
+        self.assertEqual(
+            config["app"]["telegram"]["chat_id"],
+            config_parser.get_telegram_chat_id(config=config),
+        )
+
+    def test_get_telegram_chat_id_none_config(self):
+        """None config."""
+        self.assertIsNone(config_parser.get_telegram_chat_id(config=None))
