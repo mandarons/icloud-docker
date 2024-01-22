@@ -80,6 +80,9 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "icloud"
+  telegram:
+    # bot_token: <your Telegram bot token>
+    # chat_id: <your Telegram user or chat ID>
   smtp:
     ## If you want to receive email notifications about expired/missing 2FA credentials then uncomment
     # email: "user@test.com"
