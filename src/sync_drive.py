@@ -7,12 +7,11 @@ import re
 import time
 import unicodedata
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePath
 from shutil import copyfileobj, rmtree
 
 import magic
 from icloudpy import exceptions
-from pathspec import PathSpec
 
 from src import LOGGER, config_parser
 
@@ -22,7 +21,7 @@ def wanted_file(filters, ignore, file_path):
     if not file_path:
         return False
     if ignore:
-        if PathSpec.from_lines("gitwildmatch", ignore).match_file(file_path):
+        if ignored_path(ignore, file_path):
             LOGGER.debug(f"Skipping the unwanted file {file_path}")
             return False
     if not filters or len(filters) == 0:
@@ -37,8 +36,9 @@ def wanted_file(filters, ignore, file_path):
 def wanted_folder(filters, ignore, root, folder_path):
     """Check if folder is wanted."""
     if ignore:
-        if PathSpec.from_lines("gitwildmatch", ignore).match_file(f"{folder_path}/"):
+        if ignored_path(ignore, folder_path):
             return False
+
     if not filters or not folder_path or not root or len(filters) == 0:
         # Nothing to filter, return True
         return True
@@ -59,7 +59,15 @@ def wanted_folder(filters, ignore, root, folder_path):
     return False
 
 
-def wanted_parent_folder(filters, root, folder_path):
+def ignored_path(ignore_list, path):
+    """Check if path is ignored."""
+    for ignore in ignore_list:
+        if PurePath(path).match(ignore + "*" if ignore.endswith("/") else ignore):
+            return True
+    return False
+
+
+def wanted_parent_folder(filters, ignore, root, folder_path):
     """Check if parent folder is wanted."""
     if not filters or not folder_path or not root or len(filters) == 0:
         return True
@@ -300,6 +308,7 @@ def sync_directory(
                     filters=filters["folders"]
                     if filters and "folders" in filters
                     else None,
+                    ignore=ignore,
                     root=root,
                     folder_path=destination_path,
                 ):

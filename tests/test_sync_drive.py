@@ -53,6 +53,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(
             sync_drive.wanted_parent_folder(
                 filters=None,
+                ignore=None,
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1/dir11"),
             )
@@ -63,6 +64,7 @@ class TestSyncDrive(unittest.TestCase):
         self.filters["folders"] = ["dir1/dir11"]
         self.assertTrue(
             sync_drive.wanted_parent_folder(
+                ignore=None,
                 filters=self.filters["folders"],
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1/dir11/some/dirs/file.ext"),
@@ -74,6 +76,7 @@ class TestSyncDrive(unittest.TestCase):
         self.filters["folders"] = ["dir1/dir11"]
         self.assertFalse(
             sync_drive.wanted_parent_folder(
+                ignore=None,
                 filters=self.filters["folders"],
                 root=self.root,
                 folder_path=os.path.join(self.root, "dir1"),
@@ -372,7 +375,7 @@ class TestSyncDrive(unittest.TestCase):
                 filters=None,
                 ignore=self.ignore,
                 root=self.root,
-                folder_path=os.path.join(self.root, "dir1", "dir2"),
+                folder_path=os.path.join(self.root, "dir1", "dir2", "dir3"),
             )
         )
         self.assertFalse(
@@ -408,7 +411,7 @@ class TestSyncDrive(unittest.TestCase):
                 filters=None,
                 ignore=self.ignore,
                 root=self.root,
-                folder_path=os.path.join(self.root, "dir1", "dir2"),
+                folder_path=os.path.join(self.root, "dir1", "dir2", "dir3"),
             )
         )
         self.assertFalse(
@@ -437,7 +440,7 @@ class TestSyncDrive(unittest.TestCase):
                 filters=self.filters["folders"],
                 ignore=self.ignore,
                 root=self.root,
-                folder_path=os.path.join(self.root, "dir2"),
+                folder_path=os.path.join(self.root, "dir2", "dir3"),
             )
         )
 
@@ -1327,3 +1330,54 @@ class TestSyncDrive(unittest.TestCase):
                     )
                 )
             )
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_child_ignored_folder(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for child ignored folder."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["drive"]["destination"] = self.destination_path
+        config["drive"]["ignore"] = ["icloudpy/*"]
+        mock_read_config.return_value = config
+        self.assertIsNotNone(
+            sync_drive.sync_drive(config=config, drive=mock_service.drive)
+        )
+        self.assertFalse(
+            os.path.exists(os.path.join(self.destination_path, "icloudpy", "Test"))
+        )
+        self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "Obsidian")))
+        self.assertTrue(
+            os.path.isdir(os.path.join(self.destination_path, "Obsidian", "Sample"))
+        )
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(
+                    self.destination_path, "Obsidian", "Sample", "This is a title.md"
+                )
+            )
+        )
+        self.assertEqual(
+            sum(
+                f.stat().st_size
+                for f in Path(
+                    os.path.join(
+                        self.destination_path, "Obsidian", "Sample", "Project.band"
+                    )
+                ).glob("**/*")
+                if f.is_file()
+            ),
+            sum(
+                f.stat().st_size
+                for f in Path(
+                    os.path.join(tests.DATA_DIR, "Project_original.band")
+                ).glob("**/*")
+                if f.is_file()
+            ),
+        )
