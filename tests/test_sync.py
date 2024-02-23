@@ -12,7 +12,7 @@ from src import ENV_ICLOUD_PASSWORD_KEY, read_config, sync
 from tests import data
 
 
-class TestSyncDrive(unittest.TestCase):
+class TestSync(unittest.TestCase):
     """Tests class for sync.py file."""
 
     def remove_temp(self):
@@ -374,3 +374,46 @@ class TestSyncDrive(unittest.TestCase):
         )
         self.assertNotIn(".com.cn", actual.home_endpoint)
         self.assertNotIn(".com.cn", actual.setup_endpoint)
+
+    @patch("src.sync.sleep")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_sync_negative_retry_login_interval(
+        self,
+        mock_usage_post,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+    ):
+        """Test for negative retry login interval."""
+        config = self.config.copy()
+        config["app"]["credentials"]["retry_login_interval"] = -1
+        mock_read_config.return_value = config
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+
+        with self.assertLogs() as captured:
+            mock_get_username.return_value = data.REQUIRES_2FA_USER
+            mock_sleep.side_effect = [
+                None,
+            ]
+            sync.sync()
+        self.assertTrue(len(captured.records) > 1)
+        self.assertTrue(len([e for e in captured[1] if "2FA is required" in e]) > 0)
+        self.assertTrue(
+            len(
+                [
+                    e
+                    for e in captured[1]
+                    if "retry_login_interval is < 0, exiting ..." in e
+                ]
+            )
+            > 0
+        )

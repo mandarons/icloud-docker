@@ -100,6 +100,9 @@ def sync():
                     next_sync = (
                         datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
                     ).strftime("%c")
+                    if sleep_for < 0:
+                        LOGGER.info("retry_login_interval is < 0, exiting ...")
+                        break
                     LOGGER.info(f"Retrying login at {next_sync} ...")
                     last_send = notify.send(config, last_send)
                     sleep(sleep_for)
