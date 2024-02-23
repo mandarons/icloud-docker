@@ -1,0 +1,8 @@
+WARNING  root:config_parser.py:402 Warning: bot_token is not found in app > telegram > bot_token.
+WARNING  root:config_parser.py:415 Warning: chat_id is not found in app > telegram > chat_id.
+WARNING  root:notify.py:34 Not sending 2FA notification because Telegram is not configured.
+WARNING  root:config_parser.py:173 Warning: host is not found in app > smtp > host
+WARNING  root:config_parser.py:186 Warning: port is not found in app > smtp > port
+WARNING  root:config_parser.py:199 Warning: no_tls is not found in app > smtp > no_tls
+WARNING  root:config_parser.py:160 Warning: password is not found in app > smtp > password
+WARNING  root:notify.py:92 Not sending 2FA notification because SMTP is not configured

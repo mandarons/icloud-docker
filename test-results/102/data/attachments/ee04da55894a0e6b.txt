@@ -1,0 +1,2 @@
+ERROR    root:notify.py:49 Failed to send telegram notification. Response: {"ok":false,"error_code":404,"description":"Not Found"}
+WARNING  root:config_parser.py:199 Warning: no_tls is not found in app > smtp > no_tls
