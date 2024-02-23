@@ -41,7 +41,7 @@ def post_message_to_telegram(bot_token, chat_id, message):
     """Post message to telegram bot using API."""
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     params = {"chat_id": chat_id, "text": message}
-    response = requests.post(url, params=params)
+    response = requests.post(url, params=params, timeout=10)
     if response.status_code == 200:
         return True
     else:

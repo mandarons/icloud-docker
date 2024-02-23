@@ -217,6 +217,7 @@ class TestNotify(unittest.TestCase):
             post_mock.assert_called_once_with(
                 "https://api.telegram.org/botbot_token/sendMessage",
                 params={"chat_id": "chat_id", "text": "message"},
+                timeout=10,
             )
 
     def test_post_message_to_telegram_fail(self):
@@ -229,4 +230,5 @@ class TestNotify(unittest.TestCase):
             post_mock.assert_called_once_with(
                 "https://api.telegram.org/botbot_token/sendMessage",
                 params={"chat_id": "chat_id", "text": "message"},
+                timeout=10,
             )

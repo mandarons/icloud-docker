@@ -61,9 +61,6 @@ def wanted_folder(filters, ignore, root, folder_path):
 
 def ignored_path(ignore_list, path):
     """Check if path is ignored."""
-    if ignore_list is None:
-        return False
-
     for ignore in ignore_list:
         if PurePath(path).match(ignore + "*" if ignore.endswith("/") else ignore):
             return True
@@ -72,10 +69,6 @@ def ignored_path(ignore_list, path):
 
 def wanted_parent_folder(filters, ignore, root, folder_path):
     """Check if parent folder is wanted."""
-    if ignore:
-        if ignored_path(ignore, folder_path):
-            return False
-
     if not filters or not folder_path or not root or len(filters) == 0:
         return True
     folder_path = Path(folder_path)
