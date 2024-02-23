@@ -95,7 +95,7 @@
     <p id="t41" class="pln"><span class="n"><a href="#t41">41</a></span><span class="t">    <span class="str">"""Post message to telegram bot using API."""</span>&nbsp;</span><span class="r"></span></p>
     <p id="t42" class="run"><span class="n"><a href="#t42">42</a></span><span class="t">    <span class="nam">url</span> <span class="op">=</span> <span class="str">f"https://api.telegram.org/bot{bot_token}/sendMessage"</span>&nbsp;</span><span class="r"></span></p>
     <p id="t43" class="run"><span class="n"><a href="#t43">43</a></span><span class="t">    <span class="nam">params</span> <span class="op">=</span> <span class="op">{</span><span class="str">"chat_id"</span><span class="op">:</span> <span class="nam">chat_id</span><span class="op">,</span> <span class="str">"text"</span><span class="op">:</span> <span class="nam">message</span><span class="op">}</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t44" class="run"><span class="n"><a href="#t44">44</a></span><span class="t">    <span class="nam">response</span> <span class="op">=</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">post</span><span class="op">(</span><span class="nam">url</span><span class="op">,</span> <span class="nam">params</span><span class="op">=</span><span class="nam">params</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t44" class="run"><span class="n"><a href="#t44">44</a></span><span class="t">    <span class="nam">response</span> <span class="op">=</span> <span class="nam">requests</span><span class="op">.</span><span class="nam">post</span><span class="op">(</span><span class="nam">url</span><span class="op">,</span> <span class="nam">params</span><span class="op">=</span><span class="nam">params</span><span class="op">,</span> <span class="nam">timeout</span><span class="op">=</span><span class="num">10</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t45" class="run"><span class="n"><a href="#t45">45</a></span><span class="t">    <span class="key">if</span> <span class="nam">response</span><span class="op">.</span><span class="nam">status_code</span> <span class="op">==</span> <span class="num">200</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t46" class="run"><span class="n"><a href="#t46">46</a></span><span class="t">        <span class="key">return</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p id="t47" class="pln"><span class="n"><a href="#t47">47</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
@@ -164,7 +164,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2024-01-22 06:37 +0000
+            created at 2024-02-23 05:53 +0000
         </p>
     </div>
 </div>
