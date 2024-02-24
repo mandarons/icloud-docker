@@ -11,6 +11,9 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "icloud"
+  discord:
+  # webhook_url: <your server webhook URL here>
+  # username: icloud-docker #or any other name you prefer
   telegram:
   # bot_token: <your Telegram bot token>
   # chat_id: <your Telegram user or chat ID>

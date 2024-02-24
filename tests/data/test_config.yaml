@@ -11,6 +11,9 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "./icloud"
+  discord:
+    webhook_url: <server webhook>
+    username: icloud-docker
   smtp:
   # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
   # email: sender@test.com

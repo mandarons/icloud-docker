@@ -489,3 +489,31 @@ class TestConfigParser(unittest.TestCase):
     def test_get_telegram_chat_id_none_config(self):
         """None config."""
         self.assertIsNone(config_parser.get_telegram_chat_id(config=None))
+
+    # write a test for discord webhook url
+    def test_get_discord_webhook_url(self):
+        """Test for discord webhook url."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["discord"] = {"webhook_url": "webhook_url"}
+        self.assertEqual(
+            config["app"]["discord"]["webhook_url"],
+            config_parser.get_discord_webhook_url(config=config),
+        )
+
+    def test_get_discord_webhook_url_none_config(self):
+        """None config."""
+        self.assertIsNone(config_parser.get_discord_webhook_url(config=None))
+
+    # write a test for discord username
+    def test_get_discord_username(self):
+        """Test for discord username."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["discord"] = {"username": "username"}
+        self.assertEqual(
+            config["app"]["discord"]["username"],
+            config_parser.get_discord_username(config=config),
+        )
+
+    def test_get_discord_username_none_config(self):
+        """None config."""
+        self.assertIsNone(config_parser.get_discord_username(config=None))

@@ -418,3 +418,31 @@ def get_telegram_chat_id(config):
     else:
         chat_id = get_config_value(config=config, config_path=config_path)
     return chat_id
+
+
+# Get discord webhook_url
+def get_discord_webhook_url(config):
+    """Return discord webhook_url from config."""
+    webhook_url = None
+    config_path = ["app", "discord", "webhook_url"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(
+            f"Warning: webhook_url is not found in {config_path_to_string(config_path)}."
+        )
+    else:
+        webhook_url = get_config_value(config=config, config_path=config_path)
+    return webhook_url
+
+
+# Get discord username
+def get_discord_username(config):
+    """Return discord username from config."""
+    username = None
+    config_path = ["app", "discord", "username"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(
+            f"Warning: username is not found in {config_path_to_string(config_path)}."
+        )
+    else:
+        username = get_config_value(config=config, config_path=config_path)
+    return username
