@@ -22,8 +22,8 @@
         </h1>
         <img id="keyboard_icon" src="keybd_closed.png" alt="Show keyboard shortcuts" />
         <h2 class="stats">
-            212 statements &nbsp;
-            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">212 run</button>
+            226 statements &nbsp;
+            <button type="button" class="run shortkey_r button_toggle_run" title="Toggle lines run">226 run</button>
             <button type="button" class="mis show_mis shortkey_m button_toggle_mis" title="Toggle lines missing">0 missing</button>
             <button type="button" class="exc show_exc shortkey_x button_toggle_exc" title="Toggle lines excluded">0 excluded</button>
         </h2>
@@ -472,12 +472,40 @@
     <p id="t418" class="pln"><span class="n"><a href="#t418">418</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p id="t419" class="run"><span class="n"><a href="#t419">419</a></span><span class="t">        <span class="nam">chat_id</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p id="t420" class="run"><span class="n"><a href="#t420">420</a></span><span class="t">    <span class="key">return</span> <span class="nam">chat_id</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t421" class="pln"><span class="n"><a href="#t421">421</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t422" class="pln"><span class="n"><a href="#t422">422</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t423" class="pln"><span class="n"><a href="#t423">423</a></span><span class="t"><span class="com"># Get discord webhook_url</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t424" class="run"><span class="n"><a href="#t424">424</a></span><span class="t"><span class="key">def</span> <span class="nam">get_discord_webhook_url</span><span class="op">(</span><span class="nam">config</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t425" class="pln"><span class="n"><a href="#t425">425</a></span><span class="t">    <span class="str">"""Return discord webhook_url from config."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t426" class="run"><span class="n"><a href="#t426">426</a></span><span class="t">    <span class="nam">webhook_url</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t427" class="run"><span class="n"><a href="#t427">427</a></span><span class="t">    <span class="nam">config_path</span> <span class="op">=</span> <span class="op">[</span><span class="str">"app"</span><span class="op">,</span> <span class="str">"discord"</span><span class="op">,</span> <span class="str">"webhook_url"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t428" class="run"><span class="n"><a href="#t428">428</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">traverse_config_path</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t429" class="run"><span class="n"><a href="#t429">429</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t430" class="pln"><span class="n"><a href="#t430">430</a></span><span class="t">            <span class="str">f"Warning: webhook_url is not found in {config_path_to_string(config_path)}."</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t431" class="pln"><span class="n"><a href="#t431">431</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t432" class="pln"><span class="n"><a href="#t432">432</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t433" class="run"><span class="n"><a href="#t433">433</a></span><span class="t">        <span class="nam">webhook_url</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t434" class="run"><span class="n"><a href="#t434">434</a></span><span class="t">    <span class="key">return</span> <span class="nam">webhook_url</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t435" class="pln"><span class="n"><a href="#t435">435</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t436" class="pln"><span class="n"><a href="#t436">436</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t437" class="pln"><span class="n"><a href="#t437">437</a></span><span class="t"><span class="com"># Get discord username</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t438" class="run"><span class="n"><a href="#t438">438</a></span><span class="t"><span class="key">def</span> <span class="nam">get_discord_username</span><span class="op">(</span><span class="nam">config</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t439" class="pln"><span class="n"><a href="#t439">439</a></span><span class="t">    <span class="str">"""Return discord username from config."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t440" class="run"><span class="n"><a href="#t440">440</a></span><span class="t">    <span class="nam">username</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t441" class="run"><span class="n"><a href="#t441">441</a></span><span class="t">    <span class="nam">config_path</span> <span class="op">=</span> <span class="op">[</span><span class="str">"app"</span><span class="op">,</span> <span class="str">"discord"</span><span class="op">,</span> <span class="str">"username"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t442" class="run"><span class="n"><a href="#t442">442</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">traverse_config_path</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t443" class="run"><span class="n"><a href="#t443">443</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t444" class="pln"><span class="n"><a href="#t444">444</a></span><span class="t">            <span class="str">f"Warning: username is not found in {config_path_to_string(config_path)}."</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t445" class="pln"><span class="n"><a href="#t445">445</a></span><span class="t">        <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t446" class="pln"><span class="n"><a href="#t446">446</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t447" class="run"><span class="n"><a href="#t447">447</a></span><span class="t">        <span class="nam">username</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t448" class="run"><span class="n"><a href="#t448">448</a></span><span class="t">    <span class="key">return</span> <span class="nam">username</span>&nbsp;</span><span class="r"></span></p>
 </div>
 <div id="footer">
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2024-02-23 16:41 +0000
+            created at 2024-02-24 16:06 +0000
         </p>
     </div>
 </div>
