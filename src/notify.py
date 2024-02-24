@@ -7,6 +7,11 @@ import requests
 from src import LOGGER, config_parser
 from src.email_message import EmailMessage as Message
 
+MESSAGE_BODY = """Two-step authentication for iCloud Drive, Photos (Docker) is required.
+                Please login to your server and authenticate. Please run -
+                `docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username>
+                --session-directory=/app/session_data"`."""
+
 
 def notify_telegram(config, last_send=None, dry_run=False):
     """Send telegram notification."""
@@ -24,10 +29,7 @@ def notify_telegram(config, last_send=None, dry_run=False):
             if not post_message_to_telegram(
                 bot_token,
                 chat_id,
-                """Two-step authentication for iCloud Drive, Photos (Docker) is required.
-                Please login to your server and authenticate. Please run -
-                `docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username>
-                --session-directory=/app/session_data"`.""",
+                MESSAGE_BODY,
             ):
                 sent_on = None
     else:
@@ -44,16 +46,49 @@ def post_message_to_telegram(bot_token, chat_id, message):
     response = requests.post(url, params=params, timeout=10)
     if response.status_code == 200:
         return True
+    # Log error message
+    LOGGER.error(f"Failed to send telegram notification. Response: {response.text}")
+    return False
+
+
+def post_message_to_discord(webhook_url, username):
+    """Post message to discord webhook."""
+    data = {"username": username, "content": MESSAGE_BODY}
+    response = requests.post(webhook_url, data=data, timeout=10)
+    if response.status_code == 204:
+        return True
+    # Log error message
+    LOGGER.error(f"Failed to send telegram notification. Response: {response.text}")
+    return False
+
+
+def notify_discord(config, last_send=None, dry_run=False):
+    """Send discord notification."""
+    sent_on = None
+    webhook_url = config_parser.get_discord_webhook_url(config=config)
+    username = config_parser.get_discord_username(config=config)
+
+    if last_send and last_send > datetime.datetime.now() - datetime.timedelta(hours=24):
+        LOGGER.info("Throttling discord to once a day")
+        sent_on = last_send
+    elif webhook_url and username:
+        sent_on = datetime.datetime.now()
+        if not dry_run:
+            # Post message to discord webhook using API
+            if not post_message_to_discord(webhook_url, username):
+                sent_on = None
     else:
-        # Log error message
-        LOGGER.error(f"Failed to send telegram notification. Response: {response.text}")
-        return False
+        LOGGER.warning(
+            "Not sending 2FA notification because Discord is not configured."
+        )
+    return sent_on
 
 
 def send(config, last_send=None, dry_run=False):
     """Send notifications."""
     sent_on = None
     notify_telegram(config=config, last_send=last_send, dry_run=dry_run)
+    notify_discord(config=config, last_send=last_send, dry_run=dry_run)
     email = config_parser.get_smtp_email(config=config)
     to_email = config_parser.get_smtp_to_email(config=config)
     host = config_parser.get_smtp_host(config=config)
