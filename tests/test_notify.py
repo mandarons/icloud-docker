@@ -308,7 +308,7 @@ class TestNotify(unittest.TestCase):
     def test_post_message_to_discord(self):
         """Test for successful post."""
         with patch("requests.post") as post_mock:
-            post_mock.return_value.status_code = 200
+            post_mock.return_value.status_code = 204
             post_message_to_discord("webhook_url", "username")
 
             # Verify that post is called with the correct arguments
