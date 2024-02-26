@@ -76,13 +76,16 @@ app:
   credentials:
     # iCloud drive username
     username: "please@replace.me"
-    # Retry login interval - default is 10 minutes
+    # Retry login interval - default is 10 minutes, specifying -1 will retry login only once and exit
     retry_login_interval: 600
   # Drive destination
   root: "icloud"
+  discord:
+  # webhook_url: <your server webhook URL here>
+  # username: icloud-docker #or any other name you prefer
   telegram:
-    # bot_token: <your Telegram bot token>
-    # chat_id: <your Telegram user or chat ID>
+  # bot_token: <your Telegram bot token>
+  # chat_id: <your Telegram user or chat ID>
   smtp:
     ## If you want to receive email notifications about expired/missing 2FA credentials then uncomment
     # email: "user@test.com"
@@ -111,7 +114,8 @@ drive:
       - "jpg"
       - "jpeg"
   ignore:
-    - "node_modules"
+    # When specifying folder paths, append it with /*
+    - "node_modules/*"
     - "*.md"
 photos:
   destination: "photos"
