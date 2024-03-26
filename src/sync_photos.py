@@ -189,6 +189,21 @@ def sync_photos(config, photos):
                     files=files,
                     folder_format=folder_format,
                 )
+        elif filters["albums"]:
+            for album in iter(filters["albums"]):
+                if album in photos.libraries[library].albums:
+                    sync_album(
+                        album=photos.libraries[library].albums[album],
+                        destination_path=os.path.join(destination_path, album),
+                        file_sizes=filters["file_sizes"],
+                        extensions=filters["extensions"],
+                        files=files,
+                        folder_format=folder_format,
+                    )
+                else:
+                    LOGGER.warning(
+                        f"Album {album} not found in {library}. Skipping the album {album} ..."
+                    )
         else:
             sync_album(
                 album=photos.libraries[library].all,

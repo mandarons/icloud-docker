@@ -656,6 +656,8 @@ class TestSyncPhotos(unittest.TestCase):
         config = self.config.copy()
         config["photos"]["destination"] = self.destination_path
         del config["photos"]["filters"]["albums"]
+        # delete libraries from config
+        del config["photos"]["filters"]["libraries"]
         mock_read_config.return_value = config
         # Sync original photos
         self.assertIsNone(
@@ -667,3 +669,36 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(len(glob.glob(os.path.join(all_path, "IMG_3148*.JPG"))) > 0)
         # Check for shared photo
         self.assertTrue(len(glob.glob(os.path.join(all_path, "IMG_5513*.HEIC"))) > 0)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_all_albums_filtered_missing_primary_sync(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for successful original photo size download."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        del config["photos"]["filters"]["libraries"]
+        config["photos"]["filters"]["albums"] += ["Favorites"]
+        mock_read_config.return_value = config
+        # Sync original photos
+        self.assertIsNone(
+            sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        )
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        album_2_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][2]
+        )
+        self.assertTrue(os.path.isdir(album_0_path))
+        self.assertTrue(os.path.isdir(album_1_path))
+        self.assertTrue(os.path.isdir(album_2_path))
