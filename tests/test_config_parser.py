@@ -448,6 +448,7 @@ class TestConfigParser(unittest.TestCase):
     def test_get_photos_filters_libraries_empty(self):
         """Photos > library is missing in config."""
         config = read_config(config_path=tests.CONFIG_PATH)
+        del config["photos"]["filters"]["libraries"]
         self.assertEqual(
             config_parser.get_photos_filters(config=config)["libraries"], None
         )
