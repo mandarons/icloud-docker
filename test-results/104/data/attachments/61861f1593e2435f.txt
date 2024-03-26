@@ -1,0 +1,6 @@
+[38;5;39m2024-03-26 23:47:49,749 :: INFO :: root :: notify.py :: 23 :: Throttling telegram to once a day[0m
+[38;5;226m2024-03-26 23:47:49,749 :: WARNING :: root :: config_parser.py :: 429 :: Warning: webhook_url is not found in app > discord > webhook_url.[0m
+[38;5;226m2024-03-26 23:47:49,749 :: WARNING :: root :: config_parser.py :: 443 :: Warning: username is not found in app > discord > username.[0m
+[38;5;39m2024-03-26 23:47:49,749 :: INFO :: root :: notify.py :: 72 :: Throttling discord to once a day[0m
+[38;5;226m2024-03-26 23:47:49,749 :: WARNING :: root :: config_parser.py :: 199 :: Warning: no_tls is not found in app > smtp > no_tls[0m
+[38;5;39m2024-03-26 23:47:49,750 :: INFO :: root :: notify.py :: 101 :: Throttling email to once a day[0m

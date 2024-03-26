@@ -1,0 +1,10 @@
+DEBUG    icloudpy.base:base.py:246 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:253 Session file does not exist
+DEBUG    icloudpy.base:base.py:318 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:350 Authentication completed successfully
+DEBUG    root:sync_drive.py:128 Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band does not exist locally.
+INFO     root:sync_drive.py:201 Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band ...
+INFO     root:sync_drive.py:174 Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.gz to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive
+INFO     root:sync_drive.py:164 Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive
+INFO     root:sync_drive.py:185 Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.zip.
+INFO     root:sync_drive.py:185 Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/ms.band.gz.
