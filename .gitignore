@@ -136,3 +136,6 @@ allure-report
 ignore-config.yaml
 session
 session_data
+
+# Tests
+tests

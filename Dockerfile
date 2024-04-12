@@ -1,12 +1,12 @@
-FROM python:3.10-alpine AS build
-RUN apk update && apk add git gcc musl-dev python3-dev libffi-dev openssl-dev cargo
+FROM ghcr.io/linuxserver/baseimage-alpine:3.16 AS build
+RUN apk update && apk add git gcc musl-dev python3-dev libffi-dev openssl-dev
 WORKDIR /app
 COPY requirements.txt .
-RUN python -m venv venv
+RUN python3 -m venv venv
 ENV PATH="/app/venv/bin/:$PATH"
-RUN pip install -U pip
-RUN pip install -r requirements.txt
-FROM python:3.10-alpine
+RUN pip3 install -U pip
+RUN pip3 install -r requirements.txt
+FROM ghcr.io/linuxserver/baseimage-alpine:3.16
 ARG APP_VERSION=dev
 ARG NEW_INSTALLATION_ENDPOINT=dev
 ARG NEW_HEARTBEAT_ENDPOINT=dev
@@ -20,4 +20,4 @@ ENV NEW_INSTALLATION_ENDPOINT=$NEW_INSTALLATION_ENDPOINT
 ENV NEW_HEARTBEAT_ENDPOINT=$NEW_HEARTBEAT_ENDPOINT
 ENV APP_VERSION=$APP_VERSION
 COPY . /app/
-CMD ["python", "-u", "./src/main.py"]
+CMD ["python3", "-u", "./src/main.py"]
