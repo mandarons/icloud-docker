@@ -1,5 +1,5 @@
 FROM ghcr.io/linuxserver/baseimage-alpine:3.16 AS build
-RUN apk update && apk add git gcc musl-dev python3-dev libffi-dev openssl-dev
+RUN apk update && apk add git gcc musl-dev py3-pip python3 python3-dev libffi-dev openssl-dev
 WORKDIR /app
 COPY requirements.txt .
 RUN python3 -m venv venv
@@ -11,7 +11,7 @@ FROM ghcr.io/linuxserver/baseimage-alpine:3.16
 WORKDIR /app
 COPY --from=build /app/venv /app/venv
 # Libmagic is required at runtime by python-magic
-RUN apk update && apk add libmagic
+RUN apk update && apk add python3 libmagic
 ENV PATH="/app/venv/bin/:$PATH"
 ENV PYTHONPATH /app
 # Map local folder to /app instead
@@ -19,4 +19,4 @@ ENV PYTHONPATH /app
 
 EXPOSE 5678
 # Run below command 
-#CMD ["python3", "-m", "debugpy","--listen", "0.0.0.0:5678", "--wait-for-client", "./src/main.py"]
+#CMD ["python3", "-m", "debugpy","--listen", "0.0.0.0:5678", "--wait-for-client", "main.py"]
