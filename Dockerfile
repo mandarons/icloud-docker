@@ -14,7 +14,7 @@ ENV NEW_HEARTBEAT_ENDPOINT=$NEW_HEARTBEAT_ENDPOINT
 ENV APP_VERSION=$APP_VERSION
 COPY --from=build /venv /venv
 # Libmagic is required at runtime by python-magic
-RUN apk update && apk add sudo libmagic shadow dumb-init;
+RUN apk update && apk add sudo libmagic shadow dumb-init
 COPY . /app/
 WORKDIR /app
 ENTRYPOINT ["dumb-init", "--"]
