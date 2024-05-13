@@ -150,7 +150,18 @@ photos:
 
 As mentioned in [USAGE.md](https://github.com/mandarons/icloud-drive-docker/blob/main/USAGE.md)
 
+## Star History
+
+<a href="https://star-history.com/#mandarons/icloud-drive-docker&Timeline">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mandarons/icloud-drive-docker&type=Timeline&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mandarons/icloud-drive-docker&type=Timeline" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mandarons/icloud-drive-docker&type=Timeline" />
+ </picture>
+</a>
+
 [github-sponsors]: https://github.com/sponsors/mandarons
 [github-sponsors-badge]: https://img.shields.io/github/sponsors/mandarons
 [discord]: https://discord.gg/33TuzKFE
 [discord-badge]: https://img.shields.io/discord/871555550444408883
+
