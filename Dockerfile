@@ -9,21 +9,13 @@ FROM python:3.10-alpine3.19
 ARG APP_VERSION=dev
 ARG NEW_INSTALLATION_ENDPOINT=dev
 ARG NEW_HEARTBEAT_ENDPOINT=dev
-RUN apk add doas; \
-    addgroup --gid 1000 icd; \
-    adduser -D --uid 1000 icd -G icd; \
-    echo "permit nopass :icd as root" > /etc/doas.d/doas.conf
-COPY --from=build /venv /venv
-USER icd
-# Libmagic is required at runtime by python-magic
-RUN doas apk update && doas apk add libmagic shadow dumb-init
-ENV PATH="/venv/bin/:$PATH"
-ENV PYTHONPATH /app
 ENV NEW_INSTALLATION_ENDPOINT=$NEW_INSTALLATION_ENDPOINT
 ENV NEW_HEARTBEAT_ENDPOINT=$NEW_HEARTBEAT_ENDPOINT
 ENV APP_VERSION=$APP_VERSION
+COPY --from=build /venv /venv
+# Libmagic is required at runtime by python-magic
+RUN apk update && apk add sudo libmagic shadow dumb-init;
 COPY . /app/
 WORKDIR /app
-RUN doas chown -R icd:icd /app
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["/app/init.sh"]
