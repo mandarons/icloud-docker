@@ -17,5 +17,7 @@ COPY --from=build /venv /venv
 RUN apk update && apk add sudo libmagic shadow dumb-init
 COPY . /app/
 WORKDIR /app
+ENV PATH="/venv/bin/:$PATH"
+ENV PYTHONPATH="/app:${PYTHONPATH}"
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["/app/init.sh"]
