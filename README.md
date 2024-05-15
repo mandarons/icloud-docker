@@ -52,14 +52,14 @@ services:
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/app/session_data"
+docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/app/session_data"
 ```
 
 For China server users, Please add `--region=china` as follows:
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/app/session_data"
+docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/app/session_data"
 ```
 
 Follow the steps to authenticate.
@@ -164,4 +164,3 @@ As mentioned in [USAGE.md](https://github.com/mandarons/icloud-drive-docker/blob
 [github-sponsors-badge]: https://img.shields.io/github/sponsors/mandarons
 [discord]: https://discord.gg/33TuzKFE
 [discord-badge]: https://img.shields.io/discord/871555550444408883
-

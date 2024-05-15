@@ -9,7 +9,7 @@ from src.email_message import EmailMessage as Message
 
 MESSAGE_BODY = """Two-step authentication for iCloud Drive, Photos (Docker) is required.
                 Please login to your server and authenticate. Please run -
-                `docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username>
+                `docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username>
                 --session-directory=/app/session_data"`."""
 
 
@@ -137,6 +137,7 @@ def build_message(email, to_email):
     message.subject = "icloud-docker: Two step authentication required"
     message.body = """Two-step authentication for iCloud Drive, Photos (Docker) is required.
 Please login to your server and authenticate. Please run -
-`docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/app/session_data"`."""
+`docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username>
+--session-directory=/app/session_data"`."""
 
     return message
