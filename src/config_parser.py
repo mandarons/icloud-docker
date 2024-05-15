@@ -3,6 +3,8 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 
+from icloudpy.services.photos import PhotoAsset
+
 from src import (
     DEFAULT_DRIVE_DESTINATION,
     DEFAULT_PHOTOS_DESTINATION,
@@ -286,7 +288,7 @@ def get_photos_filters(config):
         "file_sizes": ["original"],
         "extensions": None,
     }
-    valid_file_sizes = ["original", "medium", "thumb"]
+    valid_file_sizes = list(PhotoAsset.PHOTO_VERSION_LOOKUP.keys())
     config_path = ["photos", "filters"]
 
     # Check for filters
