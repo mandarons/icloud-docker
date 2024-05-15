@@ -63,7 +63,7 @@
     <p id="t9" class="pln"><span class="n"><a href="#t9">9</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t10" class="run"><span class="n"><a href="#t10">10</a></span><span class="t"><span class="nam">MESSAGE_BODY</span> <span class="op">=</span> <span class="str">"""Two-step authentication for iCloud Drive, Photos (Docker) is required.</span>&nbsp;</span><span class="r"></span></p>
     <p id="t11" class="pln"><span class="n"><a href="#t11">11</a></span><span class="t"><span class="str">                Please login to your server and authenticate. Please run -</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t12" class="pln"><span class="n"><a href="#t12">12</a></span><span class="t"><span class="str">                `docker exec -it icloud /bin/sh -c "icloud --username=&lt;icloud-username></span>&nbsp;</span><span class="r"></span></p>
+    <p id="t12" class="pln"><span class="n"><a href="#t12">12</a></span><span class="t"><span class="str">                `docker exec -it --user=icd icloud /bin/sh -c "icloud --username=&lt;icloud-username></span>&nbsp;</span><span class="r"></span></p>
     <p id="t13" class="pln"><span class="n"><a href="#t13">13</a></span><span class="t"><span class="str">                --session-directory=/app/session_data"`."""</span>&nbsp;</span><span class="r"></span></p>
     <p id="t14" class="pln"><span class="n"><a href="#t14">14</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p id="t15" class="pln"><span class="n"><a href="#t15">15</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -191,15 +191,16 @@
     <p id="t137" class="run"><span class="n"><a href="#t137">137</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">subject</span> <span class="op">=</span> <span class="str">"icloud-docker: Two step authentication required"</span>&nbsp;</span><span class="r"></span></p>
     <p id="t138" class="run"><span class="n"><a href="#t138">138</a></span><span class="t">    <span class="nam">message</span><span class="op">.</span><span class="nam">body</span> <span class="op">=</span> <span class="str">"""Two-step authentication for iCloud Drive, Photos (Docker) is required.</span>&nbsp;</span><span class="r"></span></p>
     <p id="t139" class="pln"><span class="n"><a href="#t139">139</a></span><span class="t"><span class="str">Please login to your server and authenticate. Please run -</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t140" class="pln"><span class="n"><a href="#t140">140</a></span><span class="t"><span class="str">`docker exec -it icloud /bin/sh -c "icloud --username=&lt;icloud-username> --session-directory=/app/session_data"`."""</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t141" class="pln"><span class="n"><a href="#t141">141</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p id="t142" class="run"><span class="n"><a href="#t142">142</a></span><span class="t">    <span class="key">return</span> <span class="nam">message</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t140" class="pln"><span class="n"><a href="#t140">140</a></span><span class="t"><span class="str">`docker exec -it --user=icd icloud /bin/sh -c "icloud --username=&lt;icloud-username></span>&nbsp;</span><span class="r"></span></p>
+    <p id="t141" class="pln"><span class="n"><a href="#t141">141</a></span><span class="t"><span class="str">--session-directory=/app/session_data"`."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t142" class="pln"><span class="n"><a href="#t142">142</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p id="t143" class="run"><span class="n"><a href="#t143">143</a></span><span class="t">    <span class="key">return</span> <span class="nam">message</span>&nbsp;</span><span class="r"></span></p>
 </div>
 <div id="footer">
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2024-05-15 04:45 +0000
+            created at 2024-05-15 13:52 +0000
         </p>
     </div>
 </div>
