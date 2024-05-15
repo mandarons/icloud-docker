@@ -1,0 +1,11 @@
+[38;5;226m2024-05-15 04:45:32,868 :: WARNING :: root :: config_parser.py :: 404 :: Warning: bot_token is not found in app > telegram > bot_token.[0m
+[38;5;226m2024-05-15 04:45:32,868 :: WARNING :: root :: config_parser.py :: 417 :: Warning: chat_id is not found in app > telegram > chat_id.[0m
+[38;5;226m2024-05-15 04:45:32,868 :: WARNING :: root :: notify.py :: 36 :: Not sending 2FA notification because Telegram is not configured.[0m
+[38;5;226m2024-05-15 04:45:32,868 :: WARNING :: root :: config_parser.py :: 431 :: Warning: webhook_url is not found in app > discord > webhook_url.[0m
+[38;5;226m2024-05-15 04:45:32,868 :: WARNING :: root :: config_parser.py :: 445 :: Warning: username is not found in app > discord > username.[0m
+[38;5;226m2024-05-15 04:45:32,868 :: WARNING :: root :: notify.py :: 81 :: Not sending 2FA notification because Discord is not configured.[0m
+[38;5;226m2024-05-15 04:45:32,868 :: WARNING :: root :: config_parser.py :: 175 :: Warning: host is not found in app > smtp > host[0m
+[38;5;226m2024-05-15 04:45:32,869 :: WARNING :: root :: config_parser.py :: 188 :: Warning: port is not found in app > smtp > port[0m
+[38;5;226m2024-05-15 04:45:32,869 :: WARNING :: root :: config_parser.py :: 201 :: Warning: no_tls is not found in app > smtp > no_tls[0m
+[38;5;226m2024-05-15 04:45:32,869 :: WARNING :: root :: config_parser.py :: 162 :: Warning: password is not found in app > smtp > password[0m
+[38;5;226m2024-05-15 04:45:32,869 :: WARNING :: root :: notify.py :: 127 :: Not sending 2FA notification because SMTP is not configured[0m

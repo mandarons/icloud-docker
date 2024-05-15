@@ -1,0 +1,6 @@
+ERROR    root:notify.py:50 Failed to send telegram notification. Response: {"ok":false,"error_code":404,"description":"Not Found"}
+WARNING  root:config_parser.py:431 Warning: webhook_url is not found in app > discord > webhook_url.
+WARNING  root:config_parser.py:445 Warning: username is not found in app > discord > username.
+WARNING  root:notify.py:81 Not sending 2FA notification because Discord is not configured.
+WARNING  root:config_parser.py:201 Warning: no_tls is not found in app > smtp > no_tls
+ERROR    root:notify.py:125 Failed to send email: .
