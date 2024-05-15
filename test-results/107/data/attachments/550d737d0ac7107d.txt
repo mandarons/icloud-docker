@@ -1,0 +1,3 @@
+[38;5;226m2024-05-15 13:52:03,502 :: WARNING :: root :: config_parser.py :: 431 :: Warning: webhook_url is not found in app > discord > webhook_url.[0m
+[38;5;226m2024-05-15 13:52:03,502 :: WARNING :: root :: config_parser.py :: 445 :: Warning: username is not found in app > discord > username.[0m
+[38;5;226m2024-05-15 13:52:03,502 :: WARNING :: root :: notify.py :: 81 :: Not sending 2FA notification because Discord is not configured.[0m

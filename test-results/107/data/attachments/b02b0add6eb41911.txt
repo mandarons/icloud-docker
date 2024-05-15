@@ -1,0 +1,30 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2024-05-15 13:52:06,193 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2024-05-15 13:52:06,196 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2024-05-15 13:52:06,196 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2024-05-15 13:52:06,197 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;21m2024-05-15 13:52:06,200 :: DEBUG :: root :: config_parser.py :: 211 :: Checking drive destination ...[0m
+[38;21m2024-05-15 13:52:06,200 :: DEBUG :: root :: config_parser.py :: 113 :: Checking root destination ...[0m
+[38;21m2024-05-15 13:52:06,200 :: DEBUG :: root :: config_parser.py :: 239 :: Removing obsolete files and folders ...[0m
+[38;21m2024-05-15 13:52:06,202 :: DEBUG :: root :: sync_drive.py :: 95 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Numbers ...[0m
+[38;21m2024-05-15 13:52:06,203 :: DEBUG :: root :: sync_drive.py :: 95 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Pages ...[0m
+[38;21m2024-05-15 13:52:06,204 :: DEBUG :: root :: sync_drive.py :: 95 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Preview ...[0m
+[38;21m2024-05-15 13:52:06,205 :: DEBUG :: root :: sync_drive.py :: 95 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/icloudpy/Test ...[0m
+[38;21m2024-05-15 13:52:06,206 :: DEBUG :: root :: sync_drive.py :: 95 :: Skipping the unwanted folder /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/unwanted ...[0m
+[38;21m2024-05-15 13:52:06,209 :: DEBUG :: root :: sync_drive.py :: 153 :: File /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/This is a title.md does not exist locally.[0m
+[38;5;39m2024-05-15 13:52:06,209 :: INFO :: root :: sync_drive.py :: 201 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/This is a title.md ...[0m
+[38;21m2024-05-15 13:52:06,210 :: DEBUG :: root :: sync_drive.py :: 128 :: Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band does not exist locally.[0m
+[38;5;39m2024-05-15 13:52:06,210 :: INFO :: root :: sync_drive.py :: 201 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band ...[0m
+[38;5;39m2024-05-15 13:52:06,211 :: INFO :: root :: sync_drive.py :: 164 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample[0m
+[38;5;39m2024-05-15 13:52:06,216 :: INFO :: root :: sync_drive.py :: 185 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band.zip.[0m
+[38;21m2024-05-15 13:52:06,218 :: DEBUG :: root :: sync_drive.py :: 128 :: Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band does not exist locally.[0m
+[38;5;39m2024-05-15 13:52:06,218 :: INFO :: root :: sync_drive.py :: 201 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band ...[0m
+[38;5;39m2024-05-15 13:52:06,219 :: INFO :: root :: sync_drive.py :: 174 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.gz to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample[0m
+[38;5;39m2024-05-15 13:52:06,221 :: INFO :: root :: sync_drive.py :: 164 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample[0m
+[38;5;39m2024-05-15 13:52:06,225 :: INFO :: root :: sync_drive.py :: 185 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.zip.[0m
+[38;5;39m2024-05-15 13:52:06,225 :: INFO :: root :: sync_drive.py :: 185 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.gz.[0m
+[38;21m2024-05-15 13:52:06,226 :: DEBUG :: root :: sync_drive.py :: 128 :: Package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf does not exist locally.[0m
+[38;5;39m2024-05-15 13:52:06,226 :: INFO :: root :: sync_drive.py :: 201 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf ...[0m
+[38;5;39m2024-05-15 13:52:06,227 :: INFO :: root :: sync_drive.py :: 164 :: Unpacking /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf.zip to /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample[0m
+[38;5;39m2024-05-15 13:52:06,230 :: INFO :: root :: sync_drive.py :: 185 :: Successfully unpacked the package /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf.zip.[0m
+[38;5;39m2024-05-15 13:52:06,231 :: INFO :: root :: sync_drive.py :: 253 :: Removing /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf ...[0m
