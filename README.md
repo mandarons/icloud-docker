@@ -162,5 +162,5 @@ As mentioned in [USAGE.md](https://github.com/mandarons/icloud-drive-docker/blob
 
 [github-sponsors]: https://github.com/sponsors/mandarons
 [github-sponsors-badge]: https://img.shields.io/github/sponsors/mandarons
-[discord]: https://discord.gg/33TuzKFE
+[discord]: https://discord.gg/fyMGBvNW
 [discord-badge]: https://img.shields.io/discord/871555550444408883
