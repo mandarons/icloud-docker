@@ -11,6 +11,38 @@ from icloudpy import exceptions
 
 from src import LOGGER, config_parser
 
+original_alt_filetype_to_extension = {
+    "public.png": "png",
+    "public.jpeg": "jpeg",
+    "public.heic": "heic",
+    "public.image": "HEIC",
+    "com.sony.arw-raw-image": "arw",
+    "org.webmproject.webp": "webp",
+    "com.compuserve.gif": "gif",
+    "com.adobe.raw-image": "dng",
+    "public.tiff": "tiff",
+    "public.jpeg-2000": "jp2",
+    "com.truevision.tga-image": "tga",
+    "com.sgi.sgi-image": "sgi",
+    "com.adobe.photoshop-image": "psd",
+    "public.pbm": "pbm",
+    "public.heif": "heif",
+    "com.microsoft.bmp": "bmp",
+    "com.fuji.raw-image": "raf",
+    "com.canon.cr2-raw-image": "cr2",
+    "com.panasonic.rw2-raw-image": "rw2",
+    "com.nikon.nrw-raw-image": "nrw",
+    "com.pentax.raw-image": "pef",
+    "com.nikon.raw-image": "nef",
+    "com.olympus.raw-image": "orf",
+    "com.adobe.pdf": "pdf",
+    "com.canon.cr3-raw-image": "cr3",
+    "com.olympus.or-raw-image": "orf",
+    "public.mpo-image": "mpo",
+    "com.dji.mimo.pano.jpeg": "jpg",
+    "public.avif": "avif",
+    "com.canon.crw-raw-image": "crw",
+}
 
 def photo_wanted(photo, extensions):
     """Check if photo is wanted based on extension."""
@@ -25,7 +57,7 @@ def photo_wanted(photo, extensions):
 def generate_file_name(photo, file_size, destination_path, folder_format):
     """Generate full path to file."""
     filename = photo.filename
-    name, extension = filename.rsplit(".", 1) if "." in filename else [filename, ""]
+    name, extension = get_name_and_extension(photo, file_size)
     file_path = os.path.join(destination_path, filename)
     file_size_path = os.path.join(
         destination_path,
@@ -60,6 +92,16 @@ def generate_file_name(photo, file_size, destination_path, folder_format):
     if os.path.isfile(file_size_id_path):
         os.rename(file_size_id_path, file_size_id_path_norm)
     return file_size_id_path_norm
+
+
+def get_name_and_extension(photo, file_size):
+    filename = photo.filename
+    name, extension = filename.rsplit(".", 1) if "." in filename else [filename, ""]
+    if file_size == "original_alt" and file_size in photo.versions:
+        extension = original_alt_filetype_to_extension[
+            photo.versions[file_size]["type"]
+        ]
+    return name, extension
 
 
 def photo_exists(photo, file_size, local_path):
