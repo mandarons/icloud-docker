@@ -98,9 +98,12 @@ def get_name_and_extension(photo, file_size):
     filename = photo.filename
     name, extension = filename.rsplit(".", 1) if "." in filename else [filename, ""]
     if file_size == "original_alt" and file_size in photo.versions:
-        extension = original_alt_filetype_to_extension[
-            photo.versions[file_size]["type"]
-        ]
+        filetype = photo.versions[file_size]["type"]
+        if filetype in original_alt_filetype_to_extension:
+            extension = original_alt_filetype_to_extension[filetype]
+        else:
+            LOGGER.debug(f"Unknown filetype {filetype} for "
+                         f"original_alt version of {filename}")
     return name, extension
 
 
