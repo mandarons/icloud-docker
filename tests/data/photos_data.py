@@ -399,22 +399,48 @@ DATA = {
                                 },
                                 "type": "ASSETID",
                             },
+                            "resOriginalWidth": {"value": 3100, "type": "INT64"},
+                            "resOriginalFingerprint": {
+                                "value": "YN1v8eGiHYYZ/aKUkMuGtSf0P1BN",
+                                "type": "STRING",
+                            },
+                            "resOriginalFileType": {
+                                "value": "public.jpeg",
+                                "type": "STRING",
+                            },
+                            "resOriginalHeight": {"value": 2398, "type": "INT64"},
+                            "resOriginalAltRes": {
+                                "value": {
+                                    "fileChecksum": "YN1v8eGiHYYZ/aKUkMuGtSf0P1BN",
+                                    "size": 2194253,
+                                    "wrappingKey": "Y40xDPUr6DmxfeoSqxaQ7A==",
+                                    "referenceChecksum": "AXKVYPcDa+9Mjvnap0ZS+p2Z24V3",
+                                    # pylint: disable=C0321
+                                    "downloadURL": "https://cvws.icloud-content.com/B/YN1v8eGiHYYZ_aKUkMuGtSf0P1BNAXKVYPcDa-9Mjvnap0ZS-p2Z24V3/${f}?o=Ame-Q1e_1nWqIn7YG7VfVZk-XAs8bVdcHo-owaNRmfPn&v=1&x=3&a=CAogwS503Q9EkCdnzvD-kLG0VNwrlEmARONCS-hADMtqg1QSbRCckq2nty8YnO-IqbcvIgEAUgT0P1BNWgSZ24V3aiYLdjzdjGLXPtKfjwtH_PG0ralgbDDBOIftNXxyRxdhzz8OuZztNnImb65YPlo1qUOy4i7tW1pcyAZcjqS8kYfxPQD6SKIAKNk3dUid7mE&e=1629757781&fl=&r=4d5c62f6-c81b-4e60-a785-4139aad087a7-1&k=Y40xDPUr6DmxfeoSqxaQ7A&ckc=com.apple.photos.cloud&ckz=PrimarySync&y=1&p=104&s=X91oiOo0Avp6TR4d27MGupd_cqY",  # noqa: E501
+                                },
+                                "type": "ASSETID",
+                            },
+                            "resOriginalAltWidth": {"value": 3100, "type": "INT64"},
+                            "resOriginalAltFingerprint": {
+                                "value": "YN1v8eGiHYYZ/aKUkMuGtSf0P1BN",
+                                "type": "STRING",
+                            },
+                            "resOriginalAltFileType": {
+                                "value": "public.jpeg",
+                                "type": "STRING",
+                            },
+                            "resOriginalAltHeight": {"value": 2398, "type": "INT64"},
                             "resJPEGMedFileType": {
                                 "value": "public.jpeg",
                                 "type": "STRING",
                             },
                             "resJPEGThumbHeight": {"value": 365, "type": "INT64"},
                             "resJPEGThumbWidth": {"value": 472, "type": "INT64"},
-                            "resOriginalWidth": {"value": 3100, "type": "INT64"},
                             "resJPEGThumbFileType": {
                                 "value": "public.jpeg",
                                 "type": "STRING",
                             },
                             "dataClassType": {"value": 1, "type": "INT64"},
-                            "resOriginalFingerprint": {
-                                "value": "YN1v8eGiHYYZ/aKUkMuGtSf0P1BN",
-                                "type": "STRING",
-                            },
                             "resJPEGMedWidth": {"value": 2016, "type": "INT64"},
                             "resJPEGThumbRes": {
                                 "value": {
@@ -427,11 +453,6 @@ DATA = {
                                 },
                                 "type": "ASSETID",
                             },
-                            "resOriginalFileType": {
-                                "value": "public.jpeg",
-                                "type": "STRING",
-                            },
-                            "resOriginalHeight": {"value": 2398, "type": "INT64"},
                             "resJPEGMedFingerprint": {
                                 "value": "EeGlt2PppPTgd0Q7mp8GenIugSh7",
                                 "type": "STRING",
@@ -2541,6 +2562,17 @@ DATA = {
                                 },
                                 "type": "ASSETID",
                             },
+                            "resOriginalAltRes": {
+                                "value": {
+                                    "fileChecksum": "YN1v8eGiHYYZ/aKUkMuGtSf0P1BN",
+                                    "size": 2194253,
+                                    "wrappingKey": "Y40xDPUr6DmxfeoSqxaQ7A==",
+                                    "referenceChecksum": "AXKVYPcDa+9Mjvnap0ZS+p2Z24V3",
+                                    # pylint: disable=C0321
+                                    "downloadURL": "https://cvws.icloud-content.com/B/AY4eS1ezj9pmMHzfVzwC2CLmBwZOAXKLBx985QzfCKCGyN0wbGs6SuTf/${f}?o=AsBiWhNj_AjH-3vh0riCjYfhRtBfd-mUS6PQhxj4zYTH&v=1&x=3&a=CAogEeo3WZxkrjW9vg53X0JbMLiadhXSjhuENTh402ga9sISbRDdod2wuDEY3f64srgxIgEAUgTmBwZNWgQ6SuTfaiZ-CDCZGCdwB5-2MeuQ6hLpY6mmSYhtwgliGihERuDLhb89zqlO4HImWLHBIgl_7lBgvs7t6Ur5Vu_UAGoIQvIv1UEPwakPbNcGSCVnR5E&e=1698765356&fl=&r=1c7a694a-6450-4be0-85be-b8da170ce390-1&k=TF9BsVkUpEEdK0QpxQupmA&ckc=com.apple.photos.cloud&ckz=SharedSync-9DD9B767-9F30-4D6F-B658-F17DBA16D107&y=1&p=104&s=3nnkdl_tJa2baG_ccWB6PwXdlUM",  # noqa: E501
+                                },
+                                "type": "ASSETID",
+                            },
                             "resJPEGMedFileType": {
                                 "value": "public.jpeg",
                                 "type": "STRING",
@@ -2548,12 +2580,17 @@ DATA = {
                             "resJPEGThumbHeight": {"value": 480, "type": "INT64"},
                             "resJPEGThumbWidth": {"value": 360, "type": "INT64"},
                             "resOriginalWidth": {"value": 4032, "type": "INT64"},
+                            "resOriginalAltWidth": {"value": 4032, "type": "INT64"},
                             "resJPEGThumbFileType": {
                                 "value": "public.jpeg",
                                 "type": "STRING",
                             },
                             "dataClassType": {"value": 1, "type": "INT64"},
                             "resOriginalFingerprint": {
+                                "value": "YN1v8eGiHYYZ/aKUkMuGtSf0P1BN",
+                                "type": "STRING",
+                            },
+                            "resOriginalAltFingerprint": {
                                 "value": "YN1v8eGiHYYZ/aKUkMuGtSf0P1BN",
                                 "type": "STRING",
                             },
@@ -2573,7 +2610,12 @@ DATA = {
                                 "value": "public.heic",
                                 "type": "STRING",
                             },
+                            "resOriginalAltFileType": {
+                                "value": "public.heic",
+                                "type": "STRING",
+                            },
                             "resOriginalHeight": {"value": 3024, "type": "INT64"},
+                            "resOriginalAltHeight": {"value": 3024, "type": "INT64"},
                             "resJPEGMedFingerprint": {
                                 "value": "EeGlt2PppPTgd0Q7mp8GenIugSh7",
                                 "type": "STRING",

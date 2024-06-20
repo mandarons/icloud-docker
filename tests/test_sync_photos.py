@@ -5,6 +5,7 @@ import glob
 import os
 import shutil
 import unittest
+from io import StringIO
 from unittest.mock import patch
 
 import icloudpy
@@ -702,3 +703,45 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(os.path.isdir(album_0_path))
         self.assertTrue(os.path.isdir(album_1_path))
         self.assertTrue(os.path.isdir(album_2_path))
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_get_name_and_extension(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+    ):
+        """Test for successful original_alt photo size download."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["filters"]["file_sizes"] = ["original_alt"]
+        mock_read_config.return_value = config
+        # Sync original photos
+        self.assertIsNone(
+            sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        )
+        album_0_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][0]
+        )
+        album_1_path = os.path.join(
+            self.destination_path, config["photos"]["filters"]["albums"][1]
+        )
+        self.assertTrue(os.path.isdir(album_0_path))
+        self.assertTrue(os.path.isdir(album_1_path))
+
+    @patch(target="sys.stderr", new_callable=StringIO)
+    def test_get_name_and_extension_warning(self, mock_stdout):
+        """Test warning generation for invalid original_alt extension."""
+
+        class MockPhoto:
+            filename = "mock_filename.xed"
+            versions = {"original_alt": {"type": "invalid"}}
+
+        name, extension = sync_photos.get_name_and_extension(
+            photo=MockPhoto(), file_size="original_alt"
+        )
+        self.assertEqual(name, "mock_filename")
+        self.assertEqual(extension, "xed")
