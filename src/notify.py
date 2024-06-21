@@ -7,13 +7,8 @@ import requests
 from src import LOGGER, config_parser
 from src.email_message import EmailMessage as Message
 
-MESSAGE_BODY = """Two-step authentication for iCloud Drive, Photos (Docker) is required.
-                Please login to your server and authenticate. Please run -
-                `docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username>
-                --session-directory=/app/session_data"`."""
 
-
-def notify_telegram(config, last_send=None, dry_run=False):
+def notify_telegram(config, message, last_send=None, dry_run=False):
     """Send telegram notification."""
     sent_on = None
     bot_token = config_parser.get_telegram_bot_token(config=config)
@@ -29,7 +24,7 @@ def notify_telegram(config, last_send=None, dry_run=False):
             if not post_message_to_telegram(
                 bot_token,
                 chat_id,
-                MESSAGE_BODY,
+                message,
             ):
                 sent_on = None
     else:
@@ -51,18 +46,18 @@ def post_message_to_telegram(bot_token, chat_id, message):
     return False
 
 
-def post_message_to_discord(webhook_url, username):
+def post_message_to_discord(webhook_url, username, message):
     """Post message to discord webhook."""
-    data = {"username": username, "content": MESSAGE_BODY}
+    data = {"username": username, "content": message}
     response = requests.post(webhook_url, data=data, timeout=10)
     if response.status_code == 204:
         return True
     # Log error message
-    LOGGER.error(f"Failed to send telegram notification. Response: {response.text}")
+    LOGGER.error(f"Failed to send Discord notification. Response: {response.text}")
     return False
 
 
-def notify_discord(config, last_send=None, dry_run=False):
+def notify_discord(config, message, last_send=None, dry_run=False):
     """Send discord notification."""
     sent_on = None
     webhook_url = config_parser.get_discord_webhook_url(config=config)
@@ -75,7 +70,7 @@ def notify_discord(config, last_send=None, dry_run=False):
         sent_on = datetime.datetime.now()
         if not dry_run:
             # Post message to discord webhook using API
-            if not post_message_to_discord(webhook_url, username):
+            if not post_message_to_discord(webhook_url, username, message):
                 sent_on = None
     else:
         LOGGER.warning(
@@ -84,11 +79,18 @@ def notify_discord(config, last_send=None, dry_run=False):
     return sent_on
 
 
-def send(config, last_send=None, dry_run=False):
+def send(config, username, last_send=None, dry_run=False):
     """Send notifications."""
     sent_on = None
-    notify_telegram(config=config, last_send=last_send, dry_run=dry_run)
-    notify_discord(config=config, last_send=last_send, dry_run=dry_run)
+    message = f"""Two-step authentication for iCloud Drive, Photos (Docker) is required.
+                Please login to your server and authenticate. Please run -
+                `docker exec -it --user=icd icloud /bin/sh -c
+                "icloud --session-directory=/app/session_data --username={username}"`."""
+    subject = f"icloud-docker: Two step authentication is required for {username}"
+    notify_telegram(
+        config=config, message=message, last_send=last_send, dry_run=dry_run
+    )
+    notify_discord(config=config, message=message, last_send=last_send, dry_run=dry_run)
     email = config_parser.get_smtp_email(config=config)
     to_email = config_parser.get_smtp_to_email(config=config)
     host = config_parser.get_smtp_host(config=config)
@@ -116,7 +118,7 @@ def send(config, last_send=None, dry_run=False):
                     else:
                         smtp.login(email, password)
 
-                msg = build_message(email, to_email)
+                msg = build_message(email, to_email, message, subject)
 
                 smtp.sendmail(from_addr=email, to_addrs=to_email, msg=msg.as_string())
                 smtp.quit()
@@ -129,15 +131,12 @@ def send(config, last_send=None, dry_run=False):
     return sent_on
 
 
-def build_message(email, to_email):
+def build_message(email, to_email, message, subject):
     """Create email message."""
-    message = Message(to=to_email)
-    message.sender = "icloud-docker <" + email + ">"
-    message.date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
-    message.subject = "icloud-docker: Two step authentication required"
-    message.body = """Two-step authentication for iCloud Drive, Photos (Docker) is required.
-Please login to your server and authenticate. Please run -
-`docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username>
---session-directory=/app/session_data"`."""
+    msg = Message(to=to_email)
+    msg.sender = "icloud-docker <" + email + ">"
+    msg.date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+    msg.subject = subject
+    msg.body = message
 
-    return message
+    return msg

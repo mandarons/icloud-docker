@@ -104,7 +104,9 @@ def sync():
                         LOGGER.info("retry_login_interval is < 0, exiting ...")
                         break
                     LOGGER.info(f"Retrying login at {next_sync} ...")
-                    last_send = notify.send(config, last_send)
+                    last_send = notify.send(
+                        config=config, username=username, last_send=last_send
+                    )
                     sleep(sleep_for)
                     continue
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
@@ -116,7 +118,9 @@ def sync():
                     datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
                 ).strftime("%c")
                 LOGGER.info(f"Retrying login at {next_sync} ...")
-                last_send = notify.send(config, last_send)
+                last_send = notify.send(
+                    config=config, username=username, last_send=last_send
+                )
                 sleep(sleep_for)
                 continue
 
