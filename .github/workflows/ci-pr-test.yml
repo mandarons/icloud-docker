@@ -60,7 +60,7 @@ jobs:
       #       uses: mxschmitt/action-tmate@v3
       - name: Test with pytest
         run: |
-          pylint src/ tests/ && pytest
+          mkdir /config /icloud pylint src/ tests/ && pytest
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
