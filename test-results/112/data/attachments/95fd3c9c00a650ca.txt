@@ -1,0 +1,12 @@
+Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
+[38;21m2024-06-23 20:11:01,182 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2024-06-23 20:11:01,182 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2024-06-23 20:11:01,183 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2024-06-23 20:11:01,183 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;21m2024-06-23 20:11:01,185 :: DEBUG :: root :: config_parser.py :: 113 :: Checking root destination ...[0m
+[38;21m2024-06-23 20:11:01,186 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2024-06-23 20:11:01,186 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
+[38;21m2024-06-23 20:11:01,186 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2024-06-23 20:11:01,186 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
+[38;5;226m2024-06-23 20:11:01,186 :: WARNING :: root :: sync.py :: 93 :: Nothing to sync. Please add drive: and/or photos: section in config.yaml file.[0m
+[38;5;39m2024-06-23 20:11:01,187 :: INFO :: root :: sync.py :: 152 :: Resyncing at Sun Jun 23 20:11:01 2024 ...[0m
