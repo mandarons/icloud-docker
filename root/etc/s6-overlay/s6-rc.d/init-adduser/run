@@ -1,0 +1,29 @@
+#!/usr/bin/with-contenv bash
+# shellcheck shell=bash
+
+PUID=${PUID:-911}
+PGID=${PGID:-911}
+
+groupmod -o -g "$PGID" abc
+usermod -o -u "$PUID" abc
+
+echo "
+====================================================
+To support this project, please consider sponsoring.
+https://github.com/sponsors/mandarons
+https://www.buymeacoffee.com/mandarons
+
+User UID:    $(id -u abc)
+User GID:    $(id -g abc)
+====================================================
+"
+
+
+if [[ -f /build_version ]]; then
+    cat /build_version
+fi
+
+
+lsiown abc:abc /app
+lsiown abc:abc /config
+lsiown abc:abc /defaults

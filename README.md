@@ -22,7 +22,7 @@ Primary use case of iCloud-docker is to periodically sync wanted or all of your 
 ### Installation using Docker Hub
 
 ```
-docker run --name icloud -v ${PWD}/icloud:/app/icloud -v ${PWD}/config.yaml:/app/config.yaml -e ENV_ICLOUD_PASSWORD=<icloud_password> -v ${PWD}/session_data:/app/session_data mandarons/icloud-drive
+docker run --name icloud -v ${PWD}/icloud:/icloud -v ${PWD}/config/config.yaml:/config/config.yaml -e ENV_ICLOUD_PASSWORD=<icloud_password> -v ${PWD}/session_data:/config/session_data mandarons/icloud-drive
 ```
 
 ### Installation using docker-compose
@@ -36,30 +36,29 @@ services:
       - PUID=<insert the output of `id -u $user`>
       - GUID=<insert the output of `id -g $user`>
     env_file:
-      - .env.icloud #should contain ENV_ICLOUD_PASSWORD=<password>, ENV_CONFIG_FILE_PATH=<absolute path in container to config.yaml>
+      - .env.icloud #should contain ENV_ICLOUD_PASSWORD=<password>
     container_name: icloud
     restart: unless-stopped
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      # To override /app/config.yaml path in container, specify environment variable ENV_CONFIG_FILE_PATH=<absolute path in container to config.yaml>
-      - ${PWD}/icloud/config.yaml:/app/config.yaml
-      - ${PWD}/icloud/data:/app/icloud
-      - ${PWD}/session_data:/app/session_data
+      - ${PWD}/config/config.yaml:/config/config.yaml
+      - ${PWD}/icloud:/icloud
+      - ${PWD}/config/session_data:/config/session_data
 ```
 
 ### Authentication (required after container creation or authentication expiration)
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/app/session_data"
+docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/config/session_data"
 ```
 
 For China server users, Please add `--region=china` as follows:
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/app/session_data"
+docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/config/session_data"
 ```
 
 Follow the steps to authenticate.
@@ -72,14 +71,14 @@ app:
     # level - debug, info (default), warning or error
     level: "info"
     # log filename icloud.log (default)
-    filename: "icloud.log"
+    filename: "/config/icloud.log"
   credentials:
     # iCloud drive username
     username: "please@replace.me"
     # Retry login interval - default is 10 minutes, specifying -1 will retry login only once and exit
     retry_login_interval: 600
   # Drive destination
-  root: "icloud"
+  root: "/icloud"
   discord:
   # webhook_url: <your server webhook URL here>
   # username: icloud-docker #or any other name you prefer

@@ -60,7 +60,7 @@ jobs:
           pip install -r requirements-test.txt
       - name: Test with pytest
         run: |
-          pytest
+          sudo mkdir /config /icloud && sudo chown -R $(id -u) /config /icloud && pytest
       - name: Upload coverage artifacts
         uses: actions/upload-artifact@v3
         if: ${{ success() }}
@@ -227,6 +227,6 @@ jobs:
         name: Move cache
         run: |
           rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache     
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}

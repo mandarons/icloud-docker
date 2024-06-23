@@ -2,15 +2,15 @@ app:
   logger:
     # level - debug, info (default), warning or error
     level: "info"
-    # log filename icloud.log (default)
-    filename: "icloud.log"
+    # log filename icloud.log
+    filename: "/config/icloud.log"
   credentials:
     # iCloud drive username
     username: "please@replace.me"
     # Retry login interval - default is 10 minutes
     retry_login_interval: 600
   # Drive destination
-  root: "icloud"
+  root: "/icloud"
   discord:
   # webhook_url: <your server webhook URL here>
   # username: icloud-docker #or any other name you prefer

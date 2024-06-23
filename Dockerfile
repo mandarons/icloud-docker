@@ -1,23 +1,52 @@
-FROM python:3.10-alpine3.19 AS build
-RUN apk update && apk add git gcc musl-dev python3-dev libffi-dev openssl-dev cargo
-COPY requirements.txt .
-RUN python -m venv /venv
-ENV PATH="/venv/bin/:$PATH"
-RUN pip install -U pip
-RUN pip install -r requirements.txt
-FROM python:3.10-alpine3.19
+# syntax=docker/dockerfile:1
+
+FROM ghcr.io/linuxserver/baseimage-alpine:3.19
+
+# set version label
 ARG APP_VERSION=dev
 ARG NEW_INSTALLATION_ENDPOINT=dev
 ARG NEW_HEARTBEAT_ENDPOINT=dev
 ENV NEW_INSTALLATION_ENDPOINT=$NEW_INSTALLATION_ENDPOINT
 ENV NEW_HEARTBEAT_ENDPOINT=$NEW_HEARTBEAT_ENDPOINT
 ENV APP_VERSION=$APP_VERSION
-COPY --from=build /venv /venv
-# Libmagic is required at runtime by python-magic
+LABEL maintainer="mandarons"
+
+ENV HOME="/app"
+COPY requirements.txt .
+RUN \
+  echo "**** install build packages ****" && \
+  apk add --no-cache --virtual=build-dependencies \
+    git \
+    gcc \
+    musl-dev \
+    python3-dev \
+    libffi-dev \
+    openssl-dev \
+    sudo libmagic shadow dumb-init \
+    cargo && \
+  echo "**** install packages ****" && \
+  apk add --no-cache \
+    python3 && \
+  echo "**** install icloud app ****" && \
+  python3 -m venv /lsiopy && \
+  pip install -U --no-cache-dir \
+    pip \
+    wheel && \
+  pip install -U --no-cache-dir -r requirements.txt && \
+  echo "**** cleanup ****" && \
+  apk del --purge \
+    build-dependencies && \
+  rm -rf \
+    /tmp/* \
+    ${HOME}/.cache \
+    ${HOME}/.cargo
+
+# add local files
 RUN apk update && apk add sudo libmagic shadow dumb-init
+COPY root/ /
 COPY . /app/
 WORKDIR /app
-ENV PATH="/venv/bin/:$PATH"
-ENV PYTHONPATH="/app:${PYTHONPATH}"
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["/app/init.sh"]
+
+# ports and volumes
+EXPOSE 8000
+VOLUME /app
