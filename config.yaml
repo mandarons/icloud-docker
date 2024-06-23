@@ -3,7 +3,7 @@ app:
     # level - debug, info (default), warning or error
     level: "info"
     # log filename icloud.log (default)
-    filename: "icloud.log"
+    filename: "/config/icloud.log"
   credentials:
     # iCloud drive username
     username: "please@replace.me"

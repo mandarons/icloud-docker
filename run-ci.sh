@@ -6,7 +6,7 @@ if [ -f icloud.log ]; then rm -f icloud.log; fi
 echo "Linting ..." &&
     pylint src/ tests/ &&
     echo "Testing ..." &&
-    pytest &&
+    ENV_CONFIG_FILE_PATH=./tests/data/test_config.yaml pytest &&
     echo "Reporting ..." &&
     allure generate --clean &&
     echo "Done."
