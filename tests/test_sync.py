@@ -59,7 +59,7 @@ class TestSync(unittest.TestCase):
         if ENV_ICLOUD_PASSWORD_KEY in os.environ:
             del os.environ[ENV_ICLOUD_PASSWORD_KEY]
         self.assertIsNone(sync.sync())
-        self.assertTrue(os.path.isdir("./session_data"))
+        self.assertTrue(os.path.isdir("/config/session_data"))
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
