@@ -4,8 +4,10 @@ import smtplib
 
 import requests
 
-from src import LOGGER, config_parser
+from src import config_parser, get_logger
 from src.email_message import EmailMessage as Message
+
+LOGGER = get_logger()
 
 
 def notify_telegram(config, message, last_send=None, dry_run=False):

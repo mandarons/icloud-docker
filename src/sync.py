@@ -11,14 +11,16 @@ from src import (
     DEFAULT_COOKIE_DIRECTORY,
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
-    LOGGER,
     config_parser,
+    get_logger,
     notify,
     read_config,
     sync_drive,
     sync_photos,
 )
 from src.usage import alive
+
+LOGGER = get_logger()
 
 
 def get_api_instance(
@@ -53,6 +55,7 @@ def sync():
     drive_sync_interval = 0
     photos_sync_interval = 0
     sleep_for = 10
+
     while True:
         config = read_config(
             config_path=os.environ.get(

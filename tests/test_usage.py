@@ -16,6 +16,9 @@ class TestUsage(unittest.TestCase):
         """Set up test."""
         self.new_installation_data = dict(usage.NEW_INSTALLATION_DATA)
         self.config = read_config(config_path=tests.CONFIG_PATH)
+        file_path = usage.init_cache(config=self.config)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
         return super().setUp()
 
     def tearDown(self) -> None:

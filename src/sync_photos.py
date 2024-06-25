@@ -9,8 +9,9 @@ from pathlib import Path
 
 from icloudpy import exceptions
 
-from src import LOGGER, config_parser
+from src import config_parser, get_logger
 
+LOGGER = get_logger()
 original_alt_filetype_to_extension = {
     "public.png": "png",
     "public.jpeg": "jpeg",
