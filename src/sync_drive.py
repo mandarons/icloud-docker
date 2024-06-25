@@ -13,7 +13,9 @@ from shutil import copyfileobj, rmtree
 import magic
 from icloudpy import exceptions
 
-from src import LOGGER, config_parser
+from src import config_parser, get_logger
+
+LOGGER = get_logger()
 
 
 def wanted_file(filters, ignore, file_path):

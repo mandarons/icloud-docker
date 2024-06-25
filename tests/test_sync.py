@@ -86,7 +86,7 @@ class TestSync(unittest.TestCase):
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
         dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(2 == dir_length)
+        self.assertTrue(1 == dir_length)
         self.assertTrue(
             os.path.isdir(os.path.join(self.root_dir, config["photos"]["destination"]))
         )
@@ -120,7 +120,7 @@ class TestSync(unittest.TestCase):
             os.path.isdir(os.path.join(self.root_dir, config["drive"]["destination"]))
         )
         dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(2 == dir_length)
+        self.assertTrue(1 == dir_length)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(

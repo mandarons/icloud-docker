@@ -2,5 +2,4 @@
 # shellcheck shell=bash
 
 
-exec \
-    s6-setuidgid abc /app/init.sh
+exec s6-setuidgid abc /app/init.sh

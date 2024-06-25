@@ -11,8 +11,10 @@ from src import (
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     DEFAULT_ROOT_DESTINATION,
     DEFAULT_SYNC_INTERVAL_SEC,
-    LOGGER,
+    get_logger,
 )
+
+LOGGER = get_logger()
 
 
 def config_path_to_string(config_path):

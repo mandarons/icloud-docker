@@ -7,7 +7,7 @@ import requests
 
 from src.config_parser import prepare_root_destination
 
-CACHE_FILE_NAME = ".data"
+CACHE_FILE_NAME = "/config/.data"
 NEW_INSTALLATION_ENDPOINT = os.environ.get("NEW_INSTALLATION_ENDPOINT", None)
 NEW_HEARTBEAT_ENDPOINT = os.environ.get("NEW_HEARTBEAT_ENDPOINT", None)
 APP_NAME = "icloud-drive-docker"

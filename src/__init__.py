@@ -31,7 +31,6 @@ def read_config(config_path=DEFAULT_CONFIG_FILE_PATH):
     if not (config_path and os.path.exists(config_path)):
         print(f"Config file not found at {config_path}.")
         return None
-    print(f"Loading config from {config_path} ...")
     with open(file=config_path, encoding="utf-8") as config_file:
         config = YAML().load(config_file)
     config["app"]["credentials"]["username"] = (
