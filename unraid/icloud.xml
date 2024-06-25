@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>icloud</Name>
+  <Repository>mandarons/icloud-drive</Repository>
+  <Registry>https://hub.docker.com/r/mandarons/icloud-drive</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://forums.unraid.net/topic/168782-mandarons-icloud/</Support>
+  <Project>https://github.com/mandarons/icloud-drive-docker</Project>
+  <Overview>Dockerized iCloud Client - make a local copy of your iCloud documents and photos, and keep it automatically up-to-date. </Overview>
+  <Category>Backup: Cloud: Downloaders: HomeAutomation: Tools: Status:Stable</Category>
+  <WebUI/>
+  <TemplateURL>https://raw.githubusercontent.com/mandarons/icloud-drive-docker/main/unraid/icloud.xml</TemplateURL>
+  <Icon>https://help.apple.com/assets/60AD31069883FC55AC222539/60AD310B9883FC55AC22254A/de_DE/712e44cf3701cf5bc9580c9367fa5526.png</Icon>
+  <ExtraParams/>
+  <PostArgs/>
+  <CPUset/>
+  <DateInstalled>1719337818</DateInstalled>
+  <DonateText>To support this project, please consider sponsoring.</DonateText>
+  <DonateLink>https://github.com/sponsors/mandarons</DonateLink>
+  <Requires>To get started,&#xD;
+1. Create 'config' folder and put 'config.yaml' file (sample file available at: https://raw.githubusercontent.com/mandarons/icloud-drive-docker/main/config.yaml)&#xD;
+2. Update the `config/config.yaml` file per your needs&#xD;
+3. Create 'icloud' folder to be used as local copy of your icloud (Drive and Photos)</Requires>
+  <Config Name="Configuration Files" Target="/config" Default="/mnt/user/appdata/icloud/config" Mode="rw" Description="Storage for all the configuration files (e.g. config.yaml, session_data directory etc.)" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/icloud/config</Config>
+  <Config Name="iCloud data storage directory" Target="/icloud" Default="/mnt/user/backup/icloud" Mode="rw" Description="Target location to store your icloud data" Type="Path" Display="always" Required="true" Mask="false">&lt;provide location to icloud backup&gt;</Config>
+  <Config Name="Your iCloud Password" Target="ENV_ICLOUD_PASSWORD" Default="" Mode="" Description="Your icloud.com password" Type="Variable" Display="always" Required="true" Mask="true">&lt;your icloud.com password&gt;</Config>
+  <Config Name="Path to configuration file in container" Target="ENV_CONFIG_FILE_PATH" Default="/config/config.yaml" Mode="" Description="Path to configuration file in container - DO NOT CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING!" Type="Variable" Display="advanced-hide" Required="true" Mask="false">/config/config.yaml</Config>
+</Container>
