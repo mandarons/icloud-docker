@@ -22,7 +22,7 @@ Primary use case of iCloud-docker is to periodically sync wanted or all of your 
 ### Installation using Docker Hub
 
 ```
-docker run --name icloud -v ${PWD}/icloud:/icloud -v ${PWD}/config/config.yaml:/config/config.yaml -e ENV_ICLOUD_PASSWORD=<icloud_password> -v ${PWD}/session_data:/config/session_data mandarons/icloud-drive
+docker run --name icloud -v ${PWD}/icloud:/icloud -v ${PWD}/config:/config -e ENV_ICLOUD_PASSWORD=<icloud_password> ENV_CONFIG_FILE_PATH=/config/config.yaml mandarons/icloud-drive
 ```
 
 ### Installation using docker-compose
@@ -36,15 +36,14 @@ services:
       - PUID=<insert the output of `id -u $user`>
       - GUID=<insert the output of `id -g $user`>
     env_file:
-      - .env.icloud #should contain ENV_ICLOUD_PASSWORD=<password>
+      - .env.icloud # Must contain ENV_ICLOUD_PASSWORD=<password> and ENV_CONFIG_PATH=/config/config.yaml
     container_name: icloud
     restart: unless-stopped
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
-      - ${PWD}/config/config.yaml:/config/config.yaml
       - ${PWD}/icloud:/icloud
-      - ${PWD}/config/session_data:/config/session_data
+      - ${PWD}/config:/config # Must contain config.yaml
 ```
 
 ### Authentication (required after container creation or authentication expiration)
