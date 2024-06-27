@@ -50,14 +50,14 @@ services:
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/config/session_data"
+docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/config/session_data"
 ```
 
 For China server users, Please add `--region=china` as follows:
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it --user=icd icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/config/session_data"
+docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/config/session_data"
 ```
 
 Follow the steps to authenticate.
