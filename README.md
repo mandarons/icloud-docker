@@ -34,7 +34,7 @@ services:
     image: mandarons/icloud-drive
     environment:
       - PUID=<insert the output of `id -u $user`>
-      - GUID=<insert the output of `id -g $user`>
+      - PGID=<insert the output of `id -g $user`>
     env_file:
       - .env.icloud # Must contain ENV_ICLOUD_PASSWORD=<password> and ENV_CONFIG_FILE_PATH=/config/config.yaml
     container_name: icloud
