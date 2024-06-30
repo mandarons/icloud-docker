@@ -86,8 +86,8 @@ def send(config, username, last_send=None, dry_run=False):
     sent_on = None
     message = f"""Two-step authentication for iCloud Drive, Photos (Docker) is required.
                 Please login to your server and authenticate. Please run -
-                `docker exec -it --user=icd icloud /bin/sh -c
-                "icloud --session-directory=/app/session_data --username={username}"`."""
+                `docker exec -it icloud /bin/sh -c
+                "icloud --session-directory=/config/session_data --username={username}"`."""
     subject = f"icloud-docker: Two step authentication is required for {username}"
     notify_telegram(
         config=config, message=message, last_send=last_send, dry_run=dry_run
