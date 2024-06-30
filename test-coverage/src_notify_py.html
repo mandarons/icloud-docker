@@ -140,8 +140,8 @@
     <p id="t86" class="run"><span class="n"><a href="#t86">86</a></span><span class="t">    <span class="nam">sent_on</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p id="t87" class="run"><span class="n"><a href="#t87">87</a></span><span class="t">    <span class="nam">message</span> <span class="op">=</span> <span class="str">f"""Two-step authentication for iCloud Drive, Photos (Docker) is required.</span>&nbsp;</span><span class="r"></span></p>
     <p id="t88" class="pln"><span class="n"><a href="#t88">88</a></span><span class="t"><span class="str">                Please login to your server and authenticate. Please run -</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t89" class="pln"><span class="n"><a href="#t89">89</a></span><span class="t"><span class="str">                `docker exec -it --user=icd icloud /bin/sh -c</span>&nbsp;</span><span class="r"></span></p>
-    <p id="t90" class="pln"><span class="n"><a href="#t90">90</a></span><span class="t"><span class="str">                "icloud --session-directory=/app/session_data --username={username}"`."""</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t89" class="pln"><span class="n"><a href="#t89">89</a></span><span class="t"><span class="str">                `docker exec -it icloud /bin/sh -c</span>&nbsp;</span><span class="r"></span></p>
+    <p id="t90" class="pln"><span class="n"><a href="#t90">90</a></span><span class="t"><span class="str">                "icloud --session-directory=/config/session_data --username={username}"`."""</span>&nbsp;</span><span class="r"></span></p>
     <p id="t91" class="run"><span class="n"><a href="#t91">91</a></span><span class="t">    <span class="nam">subject</span> <span class="op">=</span> <span class="str">f"icloud-docker: Two step authentication is required for {username}"</span>&nbsp;</span><span class="r"></span></p>
     <p id="t92" class="run"><span class="n"><a href="#t92">92</a></span><span class="t">    <span class="nam">notify_telegram</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
     <p id="t93" class="pln"><span class="n"><a href="#t93">93</a></span><span class="t">        <span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">message</span><span class="op">=</span><span class="nam">message</span><span class="op">,</span> <span class="nam">last_send</span><span class="op">=</span><span class="nam">last_send</span><span class="op">,</span> <span class="nam">dry_run</span><span class="op">=</span><span class="nam">dry_run</span>&nbsp;</span><span class="r"></span></p>
@@ -201,7 +201,7 @@
     <div class="content">
         <p>
             <a class="nav" href="index.html">&#xab; index</a> &nbsp; &nbsp; <a class="nav" href="https://coverage.readthedocs.io">coverage.py v5.4</a>,
-            created at 2024-06-25 14:17 +0000
+            created at 2024-06-30 16:42 +0000
         </p>
     </div>
 </div>
