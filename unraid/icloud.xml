@@ -24,6 +24,8 @@
 1. Create 'config' folder and put 'config.yaml' file (sample file available at: https://raw.githubusercontent.com/mandarons/icloud-drive-docker/main/config.yaml)&#xD;
 2. Update the `config/config.yaml` file per your needs&#xD;
 3. Create 'icloud' folder to be used as local copy of your icloud (Drive and Photos)</Requires>
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">100</Config>
   <Config Name="Configuration Files" Target="/config" Default="/mnt/user/appdata/icloud/config" Mode="rw" Description="Storage for all the configuration files (e.g. config.yaml, session_data directory etc.)" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/icloud/config</Config>
   <Config Name="iCloud data storage directory" Target="/icloud" Default="/mnt/user/backup/icloud" Mode="rw" Description="Target location to store your icloud data" Type="Path" Display="always" Required="true" Mask="false">&lt;provide location to icloud backup&gt;</Config>
   <Config Name="Your iCloud Password" Target="ENV_ICLOUD_PASSWORD" Default="" Mode="" Description="Your icloud.com password" Type="Variable" Display="always" Required="true" Mask="true">&lt;your icloud.com password&gt;</Config>
