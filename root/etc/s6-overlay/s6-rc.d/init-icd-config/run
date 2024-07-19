@@ -4,7 +4,7 @@
 # create our folders
 mkdir -p \
     /icloud \
-    /config/session
+    /config/session_data
 
 # # default config file
 # cp -n \
