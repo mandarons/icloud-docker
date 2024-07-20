@@ -1,0 +1,3 @@
+[38;5;226m2024-07-20 00:38:14,413 :: WARNING :: root :: config_parser.py :: 406 :: Warning: bot_token is not found in app > telegram > bot_token.[0m
+[38;5;226m2024-07-20 00:38:14,413 :: WARNING :: root :: config_parser.py :: 419 :: Warning: chat_id is not found in app > telegram > chat_id.[0m
+[38;5;226m2024-07-20 00:38:14,413 :: WARNING :: root :: notify.py :: 33 :: Not sending 2FA notification because Telegram is not configured.[0m
