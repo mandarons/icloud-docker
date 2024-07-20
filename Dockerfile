@@ -46,7 +46,3 @@ RUN apk update && apk add sudo libmagic shadow dumb-init
 COPY root/ /
 COPY . /app/
 WORKDIR /app
-
-# ports and volumes
-EXPOSE 8000
-VOLUME /app
