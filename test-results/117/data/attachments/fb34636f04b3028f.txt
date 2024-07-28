@@ -1,0 +1,3 @@
+WARNING  root:config_parser.py:406 Warning: bot_token is not found in app > telegram > bot_token.
+WARNING  root:config_parser.py:419 Warning: chat_id is not found in app > telegram > chat_id.
+INFO     root:notify.py:20 Throttling telegram to once a day
