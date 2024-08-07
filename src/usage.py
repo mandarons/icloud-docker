@@ -1,4 +1,5 @@
 """To record usage of the app."""
+
 import json
 import os
 from datetime import datetime, timedelta
@@ -62,11 +63,7 @@ def record_new_installation(previous_id=None):
 
 def already_installed(cached_data):
     """Check if already installed."""
-    return (
-        "id" in cached_data
-        and "app_version" in cached_data
-        and cached_data["app_version"] == APP_VERSION
-    )
+    return "id" in cached_data and "app_version" in cached_data and cached_data["app_version"] == APP_VERSION
 
 
 def install(cached_data):

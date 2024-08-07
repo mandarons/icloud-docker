@@ -1,4 +1,5 @@
 """Sync photos module."""
+
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 import base64
 import os
@@ -55,10 +56,7 @@ def get_name_and_extension(photo, file_size):
         if filetype in original_alt_filetype_to_extension:
             extension = original_alt_filetype_to_extension[filetype]
         else:
-            LOGGER.warning(
-                f"Unknown filetype {filetype} for "
-                f"original_alt version of {filename}"
-            )
+            LOGGER.warning(f"Unknown filetype {filetype} for original_alt version of {filename}")
     return name, extension
 
 
@@ -79,9 +77,7 @@ def generate_file_name(photo, file_size, destination_path, folder_format):
     file_path = os.path.join(destination_path, filename)
     file_size_path = os.path.join(
         destination_path,
-        f'{"__".join([name, file_size])}'
-        if extension == ""
-        else f'{"__".join([name, file_size])}.{extension}',
+        f'{"__".join([name, file_size])}' if extension == "" else f'{"__".join([name, file_size])}.{extension}',
     )
     file_size_id_path = os.path.join(
         destination_path,
@@ -121,9 +117,7 @@ def photo_exists(photo, file_size, local_path):
             LOGGER.debug(f"No changes detected. Skipping the file {local_path} ...")
             return True
         else:
-            LOGGER.debug(
-                f"Change detected: local_file_size is {local_size} and remote_file_size is {remote_size}."
-            )
+            LOGGER.debug(f"Change detected: local_file_size is {local_size} and remote_file_size is {remote_size}.")
         return False
 
 
@@ -139,7 +133,7 @@ def download_photo(photo, file_size, destination_path):
         local_modified_time = time.mktime(photo.added_date.timetuple())
         os.utime(destination_path, (local_modified_time, local_modified_time))
     except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
-        LOGGER.error(f"Failed to download {destination_path}: {str(e)}")
+        LOGGER.error(f"Failed to download {destination_path}: {e!s}")
         return False
     return True
 
@@ -153,9 +147,7 @@ def process_photo(photo, file_size, destination_path, files, folder_format):
         folder_format=folder_format,
     )
     if file_size not in photo.versions:
-        LOGGER.warning(
-            f"File size {file_size} not found on server. Skipping the photo {photo_path} ..."
-        )
+        LOGGER.warning(f"File size {file_size} not found on server. Skipping the photo {photo_path} ...")
         return False
     if files is not None:
         files.add(photo_path)
@@ -165,9 +157,7 @@ def process_photo(photo, file_size, destination_path, files, folder_format):
     return True
 
 
-def sync_album(
-    album, destination_path, file_sizes, extensions=None, files=None, folder_format=None
-):
+def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
@@ -212,9 +202,7 @@ def sync_photos(config, photos):
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
-    libraries = (
-        filters["libraries"] if filters["libraries"] is not None else photos.libraries
-    )
+    libraries = filters["libraries"] if filters["libraries"] is not None else photos.libraries
     folder_format = config_parser.get_photos_folder_format(config=config)
     for library in libraries:
         if download_all and library == "PrimarySync":
@@ -251,9 +239,7 @@ def sync_photos(config, photos):
                         folder_format=folder_format,
                     )
                 else:
-                    LOGGER.warning(
-                        f"Album {album} not found in {library}. Skipping the album {album} ..."
-                    )
+                    LOGGER.warning(f"Album {album} not found in {library}. Skipping the album {album} ...")
         else:
             sync_album(
                 album=photos.libraries[library].all,

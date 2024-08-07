@@ -5,21 +5,6 @@ repos:
       - id: ruff
         args:
           - --fix
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 23.10.1
-    hooks:
-      - id: black
-        args:
-          - --quiet
-        files: ^((src|tests)/.+)?[^/]+\.py$
-  - repo: https://github.com/codespell-project/codespell
-    rev: v2.2.6
-    hooks:
-      - id: codespell
-        args:
-          - --skip="./.*,*.csv,*.json"
-          - --quiet-level=2
-        exclude: ^tests/data/
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -34,57 +19,6 @@ repos:
     rev: v1.32.0
     hooks:
       - id: yamllint
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v3.0.3
-    hooks:
-      - id: prettier
-  - repo: https://github.com/cdce8p/python-typing-update
-    rev: v0.6.0
-    hooks:
-      # Run `python-typing-update` hook manually from time to time
-      # to update python typing syntax.
-      # Will require manual work, before submitting changes!
-      # pre-commit run --hook-stage manual python-typing-update --all-files
-      - id: python-typing-update
-        stages: [manual]
-        args:
-          - --py311-plus
-          - --force
-          - --keep-updates
-        files: ^(src|tests)/.+\.py$
-
-  - repo: https://github.com/asottile/pyupgrade
-    rev: v3.15.0
-    hooks:
-      - id: pyupgrade
-        args: [--py39-plus]
-  - repo: https://github.com/PyCQA/autoflake
-    rev: v2.2.1
-    hooks:
-      - id: autoflake
-        args:
-          - --in-place
-          - --remove-all-unused-imports
-  - repo: https://github.com/psf/black
-    rev: 23.10.1
-    hooks:
-      - id: black
-        args:
-          - --quiet
-        files: ^((src|tests)/.+)?[^/]+\.py$
-  - repo: https://github.com/PyCQA/flake8
-    rev: 6.1.0
-    hooks:
-      - id: flake8
-        additional_dependencies:
-          - pycodestyle
-          - pyflakes
-          - flake8-docstrings
-          - pydocstyle
-          - flake8-comprehensions
-          - flake8-noqa
-          - mccabe
-        files: ^(src|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
     rev: 1.7.5
     hooks:
@@ -93,25 +27,4 @@ repos:
           - --quiet
           - --format=custom
           - --configfile=tests/bandit.yaml
-        files: ^(src|tests)/.+\.py$
-  - repo: https://github.com/PyCQA/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        args:
-          - --profile=black
-  - repo: local
-    hooks:
-      # - id: mypy
-      #   name: mypy
-      #   entry: mypy
-      #   language: script
-      #   types: [python]
-      #   require_serial: true
-      #   files: ^(src|tests)/.+\.py$
-      - id: pylint
-        name: pylint
-        entry: run-in-env.sh pylint
-        language: script
-        types: [python]
         files: ^(src|tests)/.+\.py$

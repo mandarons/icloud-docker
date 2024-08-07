@@ -1,4 +1,5 @@
 """Root module."""
+
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import logging
@@ -18,9 +19,7 @@ ENV_ICLOUD_PASSWORD_KEY = "ENV_ICLOUD_PASSWORD"
 ENV_CONFIG_FILE_PATH_KEY = "ENV_CONFIG_FILE_PATH"
 DEFAULT_LOGGER_LEVEL = "info"
 DEFAULT_LOG_FILE_NAME = "icloud.log"
-DEFAULT_CONFIG_FILE_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME
-)
+DEFAULT_CONFIG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME)
 DEFAULT_COOKIE_DIRECTORY = "/config/session_data"
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -34,9 +33,7 @@ def read_config(config_path=DEFAULT_CONFIG_FILE_PATH):
     with open(file=config_path, encoding="utf-8") as config_file:
         config = YAML().load(config_file)
     config["app"]["credentials"]["username"] = (
-        config["app"]["credentials"]["username"].strip()
-        if config["app"]["credentials"]["username"] is not None
-        else ""
+        config["app"]["credentials"]["username"].strip() if config["app"]["credentials"]["username"] is not None else ""
     )
     return config
 
@@ -48,14 +45,10 @@ def get_logger_config(config):
         return None
     config_app_logger = config["app"]["logger"]
     logger_config["level"] = (
-        config_app_logger["level"].strip().lower()
-        if "level" in config_app_logger
-        else DEFAULT_LOGGER_LEVEL
+        config_app_logger["level"].strip().lower() if "level" in config_app_logger else DEFAULT_LOGGER_LEVEL
     )
     logger_config["filename"] = (
-        config_app_logger["filename"].strip().lower()
-        if "filename" in config_app_logger
-        else DEFAULT_LOG_FILE_NAME
+        config_app_logger["filename"].strip().lower() if "filename" in config_app_logger else DEFAULT_LOG_FILE_NAME
     )
     return logger_config
 
@@ -117,18 +110,16 @@ def get_logger():
             file_handler = logging.FileHandler(logger_config["filename"])
             file_handler.setFormatter(
                 logging.Formatter(
-                    "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s"
-                )
+                    "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s",
+                ),
             )
             logger.addHandler(file_handler)
-        if not log_handler_exists(
-            logger=logger, handler_type=logging.StreamHandler, stream=sys.stdout
-        ):
+        if not log_handler_exists(logger=logger, handler_type=logging.StreamHandler, stream=sys.stdout):
             console_handler = logging.StreamHandler(sys.stdout)
             console_handler.setFormatter(
                 ColorfulConsoleFormatter(
-                    "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s"
-                )
+                    "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s",
+                ),
             )
             logger.addHandler(console_handler)
     return logger

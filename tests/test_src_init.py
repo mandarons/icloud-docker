@@ -1,4 +1,5 @@
 """Tests for sync module."""
+
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import logging
@@ -25,9 +26,7 @@ class TestSrcInit(unittest.TestCase):
         del config["app"]["logger"]
         mock_read_config.return_value = config
         logger = get_logger()
-        self.assertTrue(
-            len([h for h in logger.handlers if isinstance(h, logging.NullHandler)]) > 0
-        )
+        self.assertTrue(len([h for h in logger.handlers if isinstance(h, logging.NullHandler)]) > 0)
 
     @patch("src.read_config")
     def test_get_logger(self, mock_read_config):

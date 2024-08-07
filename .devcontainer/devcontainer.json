@@ -28,12 +28,7 @@
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
     "files.trimTrailingWhitespace": true,
-    "terminal.integrated.profiles.linux": {
-      "zsh": {
-        "path": "/usr/bin/zsh"
-      }
-    },
-    "terminal.integrated.defaultProfile.linux": "zsh",
+    "terminal.integrated.defaultProfile.linux": "bash",
     "yaml.customTags": [
       "!input scalar",
       "!secret scalar",
@@ -43,7 +38,7 @@
       "!include_dir_merge_named scalar"
     ]
   },
-  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements-test.txt",
+  "postCreateCommand": "uv venv && . .venv/bin/activate && uv pip install -r requirements-test.txt && git config commit.gpgsign true",
   "mounts": [
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached"
   ]

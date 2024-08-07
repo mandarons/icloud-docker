@@ -1,4 +1,5 @@
 """Send an email if the 2FA is expired."""
+
 import datetime
 import smtplib
 
@@ -30,9 +31,7 @@ def notify_telegram(config, message, last_send=None, dry_run=False):
             ):
                 sent_on = None
     else:
-        LOGGER.warning(
-            "Not sending 2FA notification because Telegram is not configured."
-        )
+        LOGGER.warning("Not sending 2FA notification because Telegram is not configured.")
     return sent_on
 
 
@@ -75,9 +74,7 @@ def notify_discord(config, message, last_send=None, dry_run=False):
             if not post_message_to_discord(webhook_url, username, message):
                 sent_on = None
     else:
-        LOGGER.warning(
-            "Not sending 2FA notification because Discord is not configured."
-        )
+        LOGGER.warning("Not sending 2FA notification because Discord is not configured.")
     return sent_on
 
 
@@ -89,9 +86,7 @@ def send(config, username, last_send=None, dry_run=False):
                 `docker exec -it --user=abc icloud /bin/sh -c
                 "icloud --session-directory=/config/session_data --username={username}"`."""
     subject = f"icloud-docker: Two step authentication is required for {username}"
-    notify_telegram(
-        config=config, message=message, last_send=last_send, dry_run=dry_run
-    )
+    notify_telegram(config=config, message=message, last_send=last_send, dry_run=dry_run)
     notify_discord(config=config, message=message, last_send=last_send, dry_run=dry_run)
     email = config_parser.get_smtp_email(config=config)
     to_email = config_parser.get_smtp_to_email(config=config)
@@ -126,7 +121,7 @@ def send(config, username, last_send=None, dry_run=False):
                 smtp.quit()
         except Exception as e:
             sent_on = None
-            LOGGER.error(f"Failed to send email: {str(e)}.")
+            LOGGER.error(f"Failed to send email: {e!s}.")
     else:
         LOGGER.warning("Not sending 2FA notification because SMTP is not configured")
 

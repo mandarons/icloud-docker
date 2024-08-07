@@ -1,4 +1,5 @@
 """Sync drive module."""
+
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import gzip
@@ -47,16 +48,8 @@ def wanted_folder(filters, ignore, root, folder_path):
         # Something to filter
     folder_path = Path(folder_path)
     for folder in filters:
-        child_path = Path(
-            os.path.join(
-                os.path.abspath(root), str(folder).removeprefix("/").removesuffix("/")
-            )
-        )
-        if (
-            folder_path in child_path.parents
-            or child_path in folder_path.parents
-            or folder_path == child_path
-        ):
+        child_path = Path(os.path.join(os.path.abspath(root), str(folder).removeprefix("/").removesuffix("/")))
+        if folder_path in child_path.parents or child_path in folder_path.parents or folder_path == child_path:
             return True
     return False
 
@@ -75,11 +68,7 @@ def wanted_parent_folder(filters, ignore, root, folder_path):
         return True
     folder_path = Path(folder_path)
     for folder in filters:
-        child_path = Path(
-            os.path.join(
-                os.path.abspath(root), folder.removeprefix("/").removesuffix("/")
-            )
-        )
+        child_path = Path(os.path.join(os.path.abspath(root), folder.removeprefix("/").removesuffix("/")))
         if child_path in folder_path.parents or folder_path == child_path:
             return True
     return False
@@ -91,9 +80,7 @@ def process_folder(item, destination_path, filters, ignore, root):
         return None
     new_directory = os.path.join(destination_path, item.name)
     new_directory_norm = unicodedata.normalize("NFC", new_directory)
-    if not wanted_folder(
-        filters=filters, ignore=ignore, folder_path=new_directory_norm, root=root
-    ):
+    if not wanted_folder(filters=filters, ignore=ignore, folder_path=new_directory_norm, root=root):
         LOGGER.debug(f"Skipping the unwanted folder {new_directory} ...")
         return None
     os.makedirs(new_directory_norm, exist_ok=True)
@@ -105,25 +92,16 @@ def package_exists(item, local_package_path):
     if item and local_package_path and os.path.isdir(local_package_path):
         local_package_modified_time = int(os.path.getmtime(local_package_path))
         remote_package_modified_time = int(item.date_modified.timestamp())
-        local_package_size = sum(
-            f.stat().st_size
-            for f in Path(local_package_path).glob("**/*")
-            if f.is_file()
-        )
+        local_package_size = sum(f.stat().st_size for f in Path(local_package_path).glob("**/*") if f.is_file())
         remote_package_size = item.size
-        if (
-            local_package_modified_time == remote_package_modified_time
-            and local_package_size == remote_package_size
-        ):
-            LOGGER.debug(
-                f"No changes detected. Skipping the package {local_package_path} ..."
-            )
+        if local_package_modified_time == remote_package_modified_time and local_package_size == remote_package_size:
+            LOGGER.debug(f"No changes detected. Skipping the package {local_package_path} ...")
             return True
         else:
             LOGGER.info(
                 f"Changes detected: local_modified_time is {local_package_modified_time}, "
                 + f"remote_modified_time is {remote_package_modified_time}, "
-                + f"local_package_size is {local_package_size} and remote_package_size is {remote_package_size}."
+                + f"local_package_size is {local_package_size} and remote_package_size is {remote_package_size}.",
             )
             rmtree(local_package_path)
     else:
@@ -149,7 +127,7 @@ def file_exists(item, local_file):
             LOGGER.debug(
                 f"Changes detected: local_modified_time is {local_file_modified_time}, "
                 + f"remote_modified_time is {remote_file_modified_time}, "
-                + f"local_file_size is {local_file_size} and remote_file_size is {remote_file_size}."
+                + f"local_file_size is {local_file_size} and remote_file_size is {remote_file_size}.",
             )
     else:
         LOGGER.debug(f"File {local_file} does not exist locally.")
@@ -160,7 +138,7 @@ def process_package(local_file):
     """Process the package."""
     archive_file = local_file
     magic_object = magic.Magic(mime=True)
-    if "application/zip" == magic_object.from_file(filename=local_file):
+    if magic_object.from_file(filename=local_file) == "application/zip":
         archive_file += ".zip"
         os.rename(local_file, archive_file)
         LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(archive_file)}")
@@ -170,7 +148,7 @@ def process_package(local_file):
             os.rename(local_file, normalized_path)
             local_file = normalized_path
         os.remove(archive_file)
-    elif "application/gzip" == magic_object.from_file(filename=local_file):
+    elif magic_object.from_file(filename=local_file) == "application/gzip":
         archive_file += ".gz"
         os.rename(local_file, archive_file)
         LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(local_file)}")
@@ -181,7 +159,7 @@ def process_package(local_file):
         process_package(local_file=local_file)
     else:
         LOGGER.error(
-            f"Unhandled file type - cannot unpack the package {magic_object.from_file(filename=archive_file)}."
+            f"Unhandled file type - cannot unpack the package {magic_object.from_file(filename=archive_file)}.",
         )
         return False
     LOGGER.info(f"Successfully unpacked the package {archive_file}.")
@@ -211,7 +189,7 @@ def download_file(item, local_file):
         item_modified_time = time.mktime(item.date_modified.timetuple())
         os.utime(local_file, (item_modified_time, item_modified_time))
     except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
-        LOGGER.error(f"Failed to download {local_file}: {str(e)}")
+        LOGGER.error(f"Failed to download {local_file}: {e!s}")
         return False
     return local_file
 
@@ -281,9 +259,7 @@ def sync_directory(
                 new_folder = process_folder(
                     item=item,
                     destination_path=destination_path,
-                    filters=filters["folders"]
-                    if filters and "folders" in filters
-                    else None,
+                    filters=filters["folders"] if filters and "folders" in filters else None,
                     ignore=ignore,
                     root=root,
                 )
@@ -300,16 +276,14 @@ def sync_directory(
                             top=False,
                             filters=filters,
                             ignore=ignore,
-                        )
+                        ),
                     )
                 except Exception:
                     # Continue execution to next item, without crashing the app
                     pass
             elif item.type == "file":
                 if wanted_parent_folder(
-                    filters=filters["folders"]
-                    if filters and "folders" in filters
-                    else None,
+                    filters=filters["folders"] if filters and "folders" in filters else None,
                     ignore=ignore,
                     root=root,
                     folder_path=destination_path,
@@ -318,9 +292,7 @@ def sync_directory(
                         process_file(
                             item=item,
                             destination_path=destination_path,
-                            filters=filters["file_extensions"]
-                            if filters and "file_extensions" in filters
-                            else None,
+                            filters=filters["file_extensions"] if filters and "file_extensions" in filters else None,
                             ignore=ignore,
                             files=files,
                         )
@@ -341,11 +313,7 @@ def sync_drive(config, drive):
         root=destination_path,
         items=drive.dir(),
         top=True,
-        filters=config["drive"]["filters"]
-        if "drive" in config and "filters" in config["drive"]
-        else None,
-        ignore=config["drive"]["ignore"]
-        if "drive" in config and "ignore" in config["drive"]
-        else None,
+        filters=config["drive"]["filters"] if "drive" in config and "filters" in config["drive"] else None,
+        ignore=config["drive"]["ignore"] if "drive" in config and "ignore" in config["drive"] else None,
         remove=config_parser.get_drive_remove_obsolete(config=config),
     )
