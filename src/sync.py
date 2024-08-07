@@ -100,12 +100,12 @@ def sync():
                     LOGGER.error("Error: 2FA is required. Please log in.")
                     # Retry again
                     sleep_for = config_parser.get_retry_login_interval(config=config)
-                    next_sync = (
-                        datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
-                    ).strftime("%c")
                     if sleep_for < 0:
                         LOGGER.info("retry_login_interval is < 0, exiting ...")
                         break
+                    next_sync = (
+                        datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
+                    ).strftime("%c")
                     LOGGER.info(f"Retrying login at {next_sync} ...")
                     last_send = notify.send(
                         config=config, username=username, last_send=last_send
@@ -117,6 +117,9 @@ def sync():
                     "Password is not stored in keyring. Please save the password in keyring."
                 )
                 sleep_for = config_parser.get_retry_login_interval(config=config)
+                if sleep_for < 0:
+                    LOGGER.info("retry_login_interval is < 0, exiting ...")
+                    break
                 next_sync = (
                     datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
                 ).strftime("%c")
