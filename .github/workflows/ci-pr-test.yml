@@ -56,8 +56,8 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements-test.txt
-           - name: Setup tmate session
-            uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Test with pytest
         run: |
           sudo mkdir /config /icloud && sudo chown -R $(id -u) /config /icloud && pylint src/ tests/ && pytest
