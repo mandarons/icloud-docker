@@ -22,13 +22,12 @@ Primary use case of iCloud-docker is to periodically sync wanted or all of your 
 ### Installation using Docker Hub
 
 ```
-docker run --name icloud -v ${PWD}/icloud:/icloud -v ${PWD}/config:/config -e ENV_ICLOUD_PASSWORD=<icloud_password> ENV_CONFIG_FILE_PATH=/config/config.yaml mandarons/icloud-drive
+docker run --name icloud -v ${PWD}/icloud:/icloud -v ${PWD}/config:/config -e ENV_CONFIG_FILE_PATH=/config/config.yaml mandarons/icloud-drive
 ```
 
 ### Installation using docker-compose
 
 ```yaml
-version: "3.4"
 services:
   icloud:
     image: mandarons/icloud-drive
@@ -36,7 +35,7 @@ services:
       - PUID=<insert the output of `id -u $user`>
       - PGID=<insert the output of `id -g $user`>
     env_file:
-      - .env.icloud # Must contain ENV_ICLOUD_PASSWORD=<password> and ENV_CONFIG_FILE_PATH=/config/config.yaml
+      - .env.icloud # Must contain ENV_CONFIG_FILE_PATH=/config/config.yaml and optionally, ENV_ICLOUD_PASSWORD=<password>
     container_name: icloud
     restart: unless-stopped
     volumes:
@@ -50,14 +49,14 @@ services:
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/config/session_data"
+docker exec -it --user=abc icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/config/session_data"
 ```
 
 For China server users, Please add `--region=china` as follows:
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/config/session_data"
+docker exec -it --user=abc icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/config/session_data"
 ```
 
 Follow the steps to authenticate.
