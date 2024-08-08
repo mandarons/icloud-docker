@@ -56,11 +56,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements-test.txt
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
       - name: Test with pytest
         run: |
           sudo mkdir /config /icloud && sudo chown -R $(id -u):$(id -g) /config /icloud && pylint src/ tests/ && pytest
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
