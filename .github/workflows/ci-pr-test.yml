@@ -58,7 +58,7 @@ jobs:
           pip install -r requirements-test.txt
       - name: Test with pytest
         run: |
-          sudo mkdir /config /icloud && sudo chown -R $(id -u):$(id -g) /config /icloud && pylint src/ tests/ && pytest
+          sudo mkdir /config /icloud && sudo chown -R $(id -u):$(id -g) /config /icloud && pylint src/ tests/ && ENV_CONFIG_FILE_PATH=./tests/data/test_config.yaml pytest
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
       - name: Generate Allure Report
