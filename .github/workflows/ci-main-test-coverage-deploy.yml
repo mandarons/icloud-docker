@@ -70,6 +70,7 @@ jobs:
           name: coverage-output
           path: htmlcov
           retention-days: 1
+          overwrite: true
       - name: Checkout gh-pages
         uses: actions/checkout@v4
         if: always()
