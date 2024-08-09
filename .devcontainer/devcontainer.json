@@ -43,9 +43,11 @@
       }
     }
   },
-
+  "remoteUser": "vscode",
   "postCreateCommand": "uv venv && . .venv/bin/activate && uv pip install -r requirements-test.txt && git config commit.gpgsign true",
   "mounts": [
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.cache,target=/home/vscode/.cache,type=bind,consistency=cached",
+    "source=${localWorkspaceFolder}/.vscode-server,target=/home/vscode/.vscode-server,type=bind,consistency=cached"
   ]
 }
