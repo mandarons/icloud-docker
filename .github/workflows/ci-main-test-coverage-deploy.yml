@@ -63,14 +63,6 @@ jobs:
           sudo mkdir /config /icloud &&
           sudo chown -R $(id -u):$(id -g) /config /icloud &&
           ENV_CONFIG_FILE_PATH=./tests/data/test_config.yaml pytest
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        if: ${{ success() }}
-        with:
-          name: coverage-output
-          path: htmlcov
-          retention-days: 1
-          overwrite: true
       - name: Checkout gh-pages
         uses: actions/checkout@v4
         if: always()
@@ -104,6 +96,7 @@ jobs:
           name: coverage-output
           path: htmlcov
           retention-days: 1
+          overwrite: true
       - name: Upload badges artifacts
         uses: actions/upload-artifact@v4
         with:
