@@ -3886,7 +3886,7 @@ class ICloudPySessionMock(base.ICloudPySession):
         if "com.apple.photos.cloud" in url:
             if url.endswith("zones/list"):
                 return ResponseMock(ZONES_LIST_WORKING)
-            if "query?remapEnums=True&getCurrentSyncToken=True" in url:
+            if url.endswith("remapEnums=True&getCurrentSyncToken=True"):
                 if data.get("query").get("recordType") == "CheckIndexingState":
                     return ResponseMock(
                         photos_data.DATA[

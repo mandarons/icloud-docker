@@ -18,13 +18,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python 3.10
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
       - name: Cache pip dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: cache-dependencies
         with:
           path: ~/.cache/pip
@@ -41,13 +41,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python 3.10
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: "3.10"
       - name: Restore pip cache dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements*.txt') }}
@@ -56,11 +56,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r requirements-test.txt
-      #      - name: Setup tmate session
-      #       uses: mxschmitt/action-tmate@v3
       - name: Test with pytest
         run: |
-          sudo mkdir /config /icloud && sudo chown -R $(id -u) /config /icloud && pylint src/ tests/ && pytest
+          sudo mkdir /config /icloud && sudo chown -R $(id -u):$(id -g) /config /icloud && pylint src/ tests/ && ENV_CONFIG_FILE_PATH=./tests/data/test_config.yaml pytest
+      # - name: Setup tmate session
+      #   uses: mxschmitt/action-tmate@v3
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
@@ -70,13 +70,13 @@ jobs:
           keep_reports: 100
       - name: Upload tests artifacts
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tests-output
           path: allure-history
           retention-days: 1
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: ${{ success() }}
         with:
           name: coverage-output
