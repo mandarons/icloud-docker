@@ -28,6 +28,6 @@
   <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">100</Config>
   <Config Name="Configuration Files" Target="/config" Default="/mnt/user/appdata/icloud/config" Mode="rw" Description="Storage for all the configuration files (e.g. config.yaml, session_data directory etc.)" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/icloud/config</Config>
   <Config Name="iCloud data storage directory" Target="/icloud" Default="/mnt/user/backup/icloud" Mode="rw" Description="Target location to store your icloud data" Type="Path" Display="always" Required="true" Mask="false">&lt;provide location to icloud backup&gt;</Config>
-  <Config Name="Your iCloud Password" Target="ENV_ICLOUD_PASSWORD" Default="" Mode="" Description="Your icloud.com password" Type="Variable" Display="always" Required="true" Mask="true">&lt;your icloud.com password&gt;</Config>
+  <Config Name="Your iCloud Password" Target="ENV_ICLOUD_PASSWORD" Default="" Mode="" Description="Your icloud.com password" Type="Variable" Display="always" Required="false" Mask="true">&lt;your icloud.com password&gt;</Config>
   <Config Name="Path to configuration file in container" Target="ENV_CONFIG_FILE_PATH" Default="/config/config.yaml" Mode="" Description="Path to configuration file in container - DO NOT CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING!" Type="Variable" Display="advanced-hide" Required="true" Mask="false">/config/config.yaml</Config>
 </Container>
