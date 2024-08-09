@@ -1,4 +1,5 @@
 """Test for notify.py file."""
+
 import datetime
 import unittest
 from unittest.mock import patch
@@ -28,7 +29,7 @@ class TestNotify(unittest.TestCase):
                     "password": "password",
                 },
                 "telegram": {"bot_token": "bot_token", "chat_id": "chat_id"},
-            }
+            },
         }
         self.message_body = "message body"
 
@@ -48,16 +49,12 @@ class TestNotify(unittest.TestCase):
 
     def test_dry_run_send(self):
         """Test for send returns the datetime of the request."""
-        self.assertIsInstance(
-            notify.send(self.config, None, dry_run=True), datetime.datetime
-        )
+        self.assertIsInstance(notify.send(self.config, None, dry_run=True), datetime.datetime)
 
     def test_build_message(self):
         """Test for building a valid email."""
         subject = "icloud-docker: Two step authentication required"
-        message = (
-            "Two-step authentication for iCloud Drive, Photos (Docker) is required."
-        )
+        message = "Two-step authentication for iCloud Drive, Photos (Docker) is required."
 
         msg = notify.build_message(
             email=self.config["app"]["smtp"]["email"],
@@ -143,11 +140,7 @@ class TestNotify(unittest.TestCase):
 
     def test_notify_telegram_success(self):
         """Test for successful notification."""
-        config = {
-            "app": {
-                "telegram": {"bot_token": "your-bot-token", "chat_id": "your-chat-id"}
-            }
-        }
+        config = {"app": {"telegram": {"bot_token": "your-bot-token", "chat_id": "your-chat-id"}}}
 
         with patch("src.notify.post_message_to_telegram") as post_message_mock:
             notify_telegram(config, self.message_body, None, False)
@@ -161,11 +154,7 @@ class TestNotify(unittest.TestCase):
 
     def test_notify_telegram_fail(self):
         """Test for failed notification."""
-        config = {
-            "app": {
-                "telegram": {"bot_token": "your-bot-token", "chat_id": "your-chat-id"}
-            }
-        }
+        config = {"app": {"telegram": {"bot_token": "your-bot-token", "chat_id": "your-chat-id"}}}
 
         with patch("src.notify.post_message_to_telegram") as post_message_mock:
             post_message_mock.return_value = False
@@ -180,9 +169,7 @@ class TestNotify(unittest.TestCase):
 
     def test_notify_telegram_throttling(self):
         """Test for throttled notification."""
-        config = {
-            "telegram": {"bot_token": "your-bot-token", "chat_id": "your-chat-id"}
-        }
+        config = {"telegram": {"bot_token": "your-bot-token", "chat_id": "your-chat-id"}}
         last_send = datetime.datetime.now() - datetime.timedelta(hours=2)
         dry_run = False
 
@@ -194,9 +181,7 @@ class TestNotify(unittest.TestCase):
 
     def test_notify_telegram_dry_run(self):
         """Test for dry run mode."""
-        config = {
-            "telegram": {"bot_token": "your-bot-token", "chat_id": "your-chat-id"}
-        }
+        config = {"telegram": {"bot_token": "your-bot-token", "chat_id": "your-chat-id"}}
         last_send = datetime.datetime.now()
         dry_run = True
 
@@ -246,9 +231,7 @@ class TestNotify(unittest.TestCase):
 
     def test_notify_discord_success(self):
         """Test for successful notification."""
-        config = {
-            "app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}
-        }
+        config = {"app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}}
 
         with patch("src.notify.post_message_to_discord") as post_message_mock:
             notify_discord(config, self.message_body, None, False)
@@ -263,9 +246,7 @@ class TestNotify(unittest.TestCase):
 
     def test_notify_discord_fail(self):
         """Test for failed notification."""
-        config = {
-            "app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}
-        }
+        config = {"app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}}
 
         with patch("src.notify.post_message_to_discord") as post_message_mock:
             post_message_mock.return_value = False
@@ -280,9 +261,7 @@ class TestNotify(unittest.TestCase):
 
     def test_notify_discord_throttling(self):
         """Test for throttled notification."""
-        config = {
-            "app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}
-        }
+        config = {"app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}}
         last_send = datetime.datetime.now() - datetime.timedelta(hours=2)
         dry_run = False
 
@@ -294,9 +273,7 @@ class TestNotify(unittest.TestCase):
 
     def test_notify_discord_dry_run(self):
         """Test for dry run mode."""
-        config = {
-            "app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}
-        }
+        config = {"app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}}
         last_send = datetime.datetime.now()
         dry_run = True
 

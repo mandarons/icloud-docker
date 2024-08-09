@@ -1,4 +1,5 @@
 """Tests module."""
+
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
@@ -18,9 +19,7 @@ PHOTOS_DIR = os.path.join(TEMP_DIR, "icloud", "photos")
 
 def update_config(data):
     """Update config test config path."""
-    return YAML().dump(
-        data=data, stream=open(file=CONFIG_PATH, mode="w", encoding="utf-8")
-    )
+    return YAML().dump(data=data, stream=open(file=CONFIG_PATH, mode="w", encoding="utf-8"))
 
 
 def mocked_usage_post(*args, **kwargs):

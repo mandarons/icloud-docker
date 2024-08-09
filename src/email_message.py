@@ -1,4 +1,5 @@
 """Email message module."""
+
 import time
 import uuid
 from email.mime.text import MIMEText
@@ -13,17 +14,15 @@ class EmailMessage:
         for item in kwargs.items():
             params[item[0]] = item[1]
 
-        self.to = params.get("to", None)
-        self.rto = params.get("rto", None)
-        self.cc = params.get("cc", None)
-        self.bcc = params.get("bcc", None)
-        self.sender = params.get("from", None)
+        self.to = params.get("to")
+        self.rto = params.get("rto")
+        self.cc = params.get("cc")
+        self.bcc = params.get("bcc")
+        self.sender = params.get("from")
         self.subject = params.get("subject", "")
-        self.body = params.get("body", None)
-        self.html = params.get("html", None)
-        self.date = params.get(
-            "date", time.strftime("%a, %d %b %Y %H:%M:%S %z", time.gmtime())
-        )
+        self.body = params.get("body")
+        self.html = params.get("html")
+        self.date = params.get("date", time.strftime("%a, %d %b %Y %H:%M:%S %z", time.gmtime()))
         self.charset = params.get("charset", "us-ascii")
         self.headers = params.get("headers", {})
 

@@ -1,4 +1,5 @@
 """Tests for usage.py file."""
+
 import datetime
 import os
 import unittest
@@ -70,9 +71,7 @@ class TestUsage(unittest.TestCase):
     @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_post_new_installation_error(self, mock_post):
         """Test for post failure."""
-        actual = usage.post_new_installation(
-            data=dict(self.new_installation_data), endpoint="Invalid"
-        )
+        actual = usage.post_new_installation(data=dict(self.new_installation_data), endpoint="Invalid")
         self.assertIsNone(actual)
 
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -124,9 +123,7 @@ class TestUsage(unittest.TestCase):
         file_path = usage.init_cache(config=self.config)
         cached_data = usage.load_cache(file_path=file_path)
         fresh = usage.install(cached_data=cached_data)
-        actual = usage.post_new_heartbeat(
-            data={"installationId": fresh["id"], "data": None}
-        )
+        actual = usage.post_new_heartbeat(data={"installationId": fresh["id"], "data": None})
         self.assertTrue(actual)
 
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -135,9 +132,7 @@ class TestUsage(unittest.TestCase):
         file_path = usage.init_cache(config=self.config)
         cached_data = usage.load_cache(file_path=file_path)
         fresh = usage.install(cached_data=cached_data)
-        actual = usage.post_new_heartbeat(
-            data={"installationId": fresh["id"], "data": None}, endpoint="invalid"
-        )
+        actual = usage.post_new_heartbeat(data={"installationId": fresh["id"], "data": None}, endpoint="invalid")
         self.assertFalse(actual)
 
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -147,9 +142,7 @@ class TestUsage(unittest.TestCase):
         cached_data = usage.load_cache(file_path=file_path)
         fresh = usage.install(cached_data=cached_data)
         mock_post.side_effect = Exception("Error occurred.")
-        actual = usage.post_new_heartbeat(
-            data={"installationId": fresh["id"], "data": None}
-        )
+        actual = usage.post_new_heartbeat(data={"installationId": fresh["id"], "data": None})
         self.assertFalse(actual)
 
     @patch("requests.post", side_effect=tests.mocked_usage_post)

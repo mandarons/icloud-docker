@@ -1,4 +1,5 @@
 """Fixtures for tests."""
+
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import json
@@ -80,7 +81,7 @@ ZONES_LIST_WORKING = {
             "isEligibleForZoneShare": True,
             "isEligibleForHierarchicalShare": False,
         },
-    ]
+    ],
 }
 
 LOGIN_WORKING = {
@@ -213,19 +214,13 @@ LOGIN_WORKING = {
     "pcsEnabled": True,
     "configBag": {
         "urls": {
-            "accountCreateUI": "https://appleid.apple.com/widget/account/?widgetKey="
-            + WIDGET_KEY
-            + "#!create",
-            "accountLoginUI": "https://idmsa.apple.com/appleauth/auth/signin?widgetKey="
-            + WIDGET_KEY,
+            "accountCreateUI": "https://appleid.apple.com/widget/account/?widgetKey=" + WIDGET_KEY + "#!create",
+            "accountLoginUI": "https://idmsa.apple.com/appleauth/auth/signin?widgetKey=" + WIDGET_KEY,
             "accountLogin": "https://setup.icloud.com/setup/ws/1/accountLogin",
-            "accountRepairUI": "https://appleid.apple.com/widget/account/?widgetKey="
-            + WIDGET_KEY
-            + "#!repair",
+            "accountRepairUI": "https://appleid.apple.com/widget/account/?widgetKey=" + WIDGET_KEY + "#!repair",
             "downloadICloudTerms": "https://setup.icloud.com/setup/ws/1/downloadLiteTerms",
             "repairDone": "https://setup.icloud.com/setup/ws/1/repairDone",
-            "accountAuthorizeUI": "https://idmsa.apple.com/appleauth/auth/authorize/signin?client_id="
-            + WIDGET_KEY,
+            "accountAuthorizeUI": "https://idmsa.apple.com/appleauth/auth/authorize/signin?client_id=" + WIDGET_KEY,
             "vettingUrlForEmail": "https://id.apple.com/IDMSEmailVetting/vetShareEmail",
             "accountCreate": "https://setup.icloud.com/setup/ws/1/createLiteAccount",
             "getICloudTerms": "https://setup.icloud.com/setup/ws/1/getTerms",
@@ -406,19 +401,13 @@ LOGIN_2FA = {
     "pcsEnabled": True,
     "configBag": {
         "urls": {
-            "accountCreateUI": "https://appleid.apple.com/widget/account/?widgetKey="
-            + WIDGET_KEY
-            + "#!create",
-            "accountLoginUI": "https://idmsa.apple.com/appleauth/auth/signin?widgetKey="
-            + WIDGET_KEY,
+            "accountCreateUI": "https://appleid.apple.com/widget/account/?widgetKey=" + WIDGET_KEY + "#!create",
+            "accountLoginUI": "https://idmsa.apple.com/appleauth/auth/signin?widgetKey=" + WIDGET_KEY,
             "accountLogin": "https://setup.icloud.com/setup/ws/1/accountLogin",
-            "accountRepairUI": "https://appleid.apple.com/widget/account/?widgetKey="
-            + WIDGET_KEY
-            + "#!repair",
+            "accountRepairUI": "https://appleid.apple.com/widget/account/?widgetKey=" + WIDGET_KEY + "#!repair",
             "downloadICloudTerms": "https://setup.icloud.com/setup/ws/1/downloadLiteTerms",
             "repairDone": "https://setup.icloud.com/setup/ws/1/repairDone",
-            "accountAuthorizeUI": "https://idmsa.apple.com/appleauth/auth/authorize/signin?client_id="
-            + WIDGET_KEY,
+            "accountAuthorizeUI": "https://idmsa.apple.com/appleauth/auth/authorize/signin?client_id=" + WIDGET_KEY,
             "vettingUrlForEmail": "https://id.apple.com/IDMSEmailVetting/vetShareEmail",
             "accountCreate": "https://setup.icloud.com/setup/ws/1/createLiteAccount",
             "getICloudTerms": "https://setup.icloud.com/setup/ws/1/getTerms",
@@ -555,7 +544,7 @@ FMI_FAMILY_WORKING = {
         "webPrefs": {
             "id": "web_prefs",
             "selectedDeviceId": "iPhone4,1",
-        }
+        },
     },
     "content": [
         {
@@ -2719,20 +2708,18 @@ DRIVE_ROOT_WORKING = [
                                 "type": "FILE",
                             },
                         ],
-                    }
+                    },
                 ],
                 "numberOfItems": 1,
                 "status": "OK",
             },
         ],
         "numberOfItems": 5,
-    }
+    },
 ]
 
 # App specific folder (Keynote, Numbers, Pages, Preview ...) type=APP_LIBRARY
-DRIVE_ROOT_INVALID = [
-    {"drivewsid": "FOLDER::com.apple.CloudDocs::documents", "status": "ID_INVALID"}
-]
+DRIVE_ROOT_INVALID = [{"drivewsid": "FOLDER::com.apple.CloudDocs::documents", "status": "ID_INVALID"}]
 
 DRIVE_FOLDER_WORKING = [
     {
@@ -2762,7 +2749,7 @@ DRIVE_FOLDER_WORKING = [
                 "shareCount": 0,
                 "shareAliasCount": 0,
                 "directChildrenCount": 2,
-            }
+            },
         ],
         "numberOfItems": 1,
     },
@@ -3280,9 +3267,9 @@ DRIVE_FOLDER_WORKING = [
                         "size": 14,
                         "etag": "4ioq::4eu3",
                         "type": "FILE",
-                    }
+                    },
                 ],
-            }
+            },
         ],
         "numberOfItems": 1,
         "status": "OK",
@@ -3319,7 +3306,7 @@ DRIVE_SUBFOLDER_WORKING = [
                         "Alternatives",
                         "000",
                         "WindowImage.jpg",
-                    )
+                    ),
                 ),
                 "etag": "2k::2j",
                 "extension": "pdf",
@@ -3343,7 +3330,7 @@ DRIVE_SUBFOLDER_WORKING = [
                         "Alternatives",
                         "000",
                         "WindowImage.jpg",
-                    )
+                    ),
                 ),
                 "etag": "32::2x",
                 "extension": "pdf",
@@ -3353,7 +3340,7 @@ DRIVE_SUBFOLDER_WORKING = [
             },
         ],
         "numberOfItems": 2,
-    }
+    },
 ]
 
 DRIVE_SUBFOLDER_UNWANTED_WORKING = [
@@ -3372,7 +3359,7 @@ DRIVE_SUBFOLDER_UNWANTED_WORKING = [
         "directChildrenCount": 0,
         "items": [],
         "numberOfItems": 0,
-    }
+    },
 ]
 
 DRIVE_PACKAGE_SPECIAL_CHARS_WORKING = {
@@ -3693,7 +3680,7 @@ PHOTOS_GET_CURRENT_SYNC_TOKEN_WORKING = {
                 "ownerRecordName": "_fvhhqlzef1uvsgxnrw119mylkpjut1a0",
                 "zoneType": "REGULAR_CUSTOM_ZONE",
             },
-        }
+        },
     ],
     "syncToken": "AQAAAAAAArKjf//////////fSxWSKv5JfZASQT7N0a1m",
 }
@@ -3757,10 +3744,7 @@ class ICloudPySessionMock(base.ICloudPySession):
 
         if self.service.auth_endpoint in url:
             if "signin" in url and method == "POST":
-                if (
-                    data.get("accountName") not in VALID_USERS
-                    or data.get("password") != VALID_PASSWORD
-                ):
+                if data.get("accountName") not in VALID_USERS or data.get("password") != VALID_PASSWORD:
                     self._raise_error(None, "Unknown reason")
                 if data.get("accountName") == REQUIRES_2FA_USER:
                     self.service.session_data["session_token"] = REQUIRES_2FA_TOKEN
@@ -3788,31 +3772,19 @@ class ICloudPySessionMock(base.ICloudPySession):
             return ResponseMock(ACCOUNT_STORAGE_WORKING)
 
         # Drive
-        if (
-            "retrieveItemDetailsInFolders" in url
-            and method == "POST"
-            and data[0].get("drivewsid")
-        ):
+        if "retrieveItemDetailsInFolders" in url and method == "POST" and data[0].get("drivewsid"):
             if data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::root":
                 return ResponseMock(DRIVE_ROOT_WORKING)
             if data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::documents":
                 return ResponseMock(DRIVE_ROOT_INVALID)
             if (
-                data[0].get("drivewsid")
-                == "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05B"
-                or data[0].get("drivewsid")
-                == "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05D"
+                data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05B"
+                or data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05D"
             ):
                 return ResponseMock(DRIVE_FOLDER_WORKING)
-            if (
-                data[0].get("drivewsid")
-                == "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF"
-            ):
+            if data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::D5AA0425-E84F-4501-AF5D-60F1D92648CF":
                 return ResponseMock(DRIVE_SUBFOLDER_WORKING)
-            if (
-                data[0].get("drivewsid")
-                == "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05C"
-            ):
+            if data[0].get("drivewsid") == "FOLDER::com.apple.CloudDocs::1C7F1760-D940-480F-8C4F-005824A4E05C":
                 return ResponseMock(DRIVE_SUBFOLDER_UNWANTED_WORKING)
         # Drive download
         if "com.apple.CloudDocs/download/by_id" in url and method == "GET":
@@ -3854,9 +3826,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                     {},
                     url="/packageDownload?",
                     raw=open(
-                        os.path.join(
-                            os.path.dirname(__file__), "Fotoksiążka-Wzór.xmcf.zip"
-                        ),
+                        os.path.join(os.path.dirname(__file__), "Fotoksiążka-Wzór.xmcf.zip"),
                         "rb",
                     ),
                 )
@@ -3889,44 +3859,23 @@ class ICloudPySessionMock(base.ICloudPySession):
             if url.endswith("remapEnums=True&getCurrentSyncToken=True"):
                 if data.get("query").get("recordType") == "CheckIndexingState":
                     return ResponseMock(
-                        photos_data.DATA[
-                            "query?remapEnums=True&getCurrentSyncToken=True"
-                        ][0]["response"]
+                        photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][0]["response"],
                     )
-                if (
-                    data.get("query").get("recordType")
-                    == "CPLAssetAndMasterHiddenByAssetDate"
-                ):
+                if data.get("query").get("recordType") == "CPLAssetAndMasterHiddenByAssetDate":
                     return ResponseMock(
-                        photos_data.DATA[
-                            "query?remapEnums=True&getCurrentSyncToken=True"
-                        ][5]["response"]
+                        photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
                     )
-                if (
-                    data.get("query").get("recordType")
-                    == "CPLAssetAndMasterDeletedByExpungedDate"
-                ):
+                if data.get("query").get("recordType") == "CPLAssetAndMasterDeletedByExpungedDate":
                     return ResponseMock(
-                        photos_data.DATA[
-                            "query?remapEnums=True&getCurrentSyncToken=True"
-                        ][5]["response"]
+                        photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
                     )
-                if (
-                    data.get("query").get("recordType")
-                    == "CPLBurstStackAssetAndMasterByAssetDate"
-                ):
+                if data.get("query").get("recordType") == "CPLBurstStackAssetAndMasterByAssetDate":
                     return ResponseMock(
-                        photos_data.DATA[
-                            "query?remapEnums=True&getCurrentSyncToken=True"
-                        ][5]["response"]
+                        photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
                     )
 
-                if data.get("query").get("recordType") in (
-                    "CPLAssetAndMasterInSmartAlbumByAssetDate"
-                ):
-                    if "filterBy" in data["query"] and data.get("query").get(
-                        "filterBy"
-                    )[2]["fieldValue"]["value"] in (
+                if data.get("query").get("recordType") in ("CPLAssetAndMasterInSmartAlbumByAssetDate"):
+                    if "filterBy" in data["query"] and data.get("query").get("filterBy")[2]["fieldValue"]["value"] in (
                         "TIMELAPSE",
                         "LIVE",
                         "VIDEO",
@@ -3937,19 +3886,14 @@ class ICloudPySessionMock(base.ICloudPySession):
                         "PANORAMA",
                     ):
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][5]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
                         )
                     if (
                         "filterBy" in data["query"]
-                        and data.get("query").get("filterBy")[2]["fieldValue"]["value"]
-                        == "VIDEO"
+                        and data.get("query").get("filterBy")[2]["fieldValue"]["value"] == "VIDEO"
                     ):
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][5]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
                         )
                 if data.get("query").get("recordType") == "CPLAlbumByPositionLive":
                     if (
@@ -3958,9 +3902,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                         == "E4RT4FB7-4A35-4958-1D42-5769E66BE407"
                     ):
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][4]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][4]["response"],
                         )
 
                     if (
@@ -3969,9 +3911,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                         == "CB3DB78F-D683-42D5-A340-A5DECC7397F6"
                     ):
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][5]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][5]["response"],
                         )
                     if (
                         "filterBy" in data["query"]
@@ -3979,9 +3919,7 @@ class ICloudPySessionMock(base.ICloudPySession):
                         == "E803E065-D8A4-4398-DE23-23F8FD0886EB"
                     ):
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][6]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][6]["response"],
                         )
                     if (
                         "filterBy" in data["query"]
@@ -3989,89 +3927,58 @@ class ICloudPySessionMock(base.ICloudPySession):
                         == "E803E065-D8A4-4398-DE23-23F8FD0886EC"
                     ):
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][7]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][7]["response"],
                         )
                     if (
                         "zoneID" in data
-                        and data.get("zoneID").get("zoneName")
-                        == "SharedSync-9DD9B767-9F30-4D6F-B658-F17DBA16D107"
+                        and data.get("zoneID").get("zoneName") == "SharedSync-9DD9B767-9F30-4D6F-B658-F17DBA16D107"
                     ):
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][8]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][8]["response"],
                         )
 
                     return ResponseMock(
-                        photos_data.DATA[
-                            "query?remapEnums=True&getCurrentSyncToken=True"
-                        ][1]["response"]
+                        photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][1]["response"],
                     )
-                if (
-                    data.get("query").get("recordType")
-                    == "CPLAssetAndMasterByAddedDate"
-                ):
+                if data.get("query").get("recordType") == "CPLAssetAndMasterByAddedDate":
                     if data.get("query").get("filterBy")[0]["fieldValue"]["value"] == 0:
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][9]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][9]["response"],
                         )
                     return ResponseMock(
-                        photos_data.DATA[
-                            "query?remapEnums=True&getCurrentSyncToken=True"
-                        ][8]["response"]
+                        photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][8]["response"],
                     )
-                if (
-                    data.get("query").get("recordType")
-                    == "CPLContainerRelationLiveByAssetDate"
-                ):
+                if data.get("query").get("recordType") == "CPLContainerRelationLiveByAssetDate":
                     if data.get("query").get("filterBy")[0]["fieldValue"]["value"] == 0:
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][2]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][2]["response"],
                         )
                     if data.get("query").get("filterBy")[0]["fieldValue"]["value"] == 7:
                         return ResponseMock(
-                            photos_data.DATA[
-                                "query?remapEnums=True&getCurrentSyncToken=True"
-                            ][3]["response"]
+                            photos_data.DATA["query?remapEnums=True&getCurrentSyncToken=True"][3]["response"],
                         )
             if "query/batch?remapEnums=True&getCurrentSyncToken=True" in url:
                 return ResponseMock(
-                    photos_data.DATA[
-                        "query/batch?remapEnums=True&getCurrentSyncToken=True"
-                    ][0]["response"]
+                    photos_data.DATA["query/batch?remapEnums=True&getCurrentSyncToken=True"][0]["response"],
                 )
         # Photos download
         if (
             # IMG_3327.JPG
-            "https://cvws.icloud-content.com/B/ARKzBUr-DdmTaP_SAVglTurWtsmrAb5Vyk36t2jwuON7WSxvon_DvGtK"
-            in url
+            "https://cvws.icloud-content.com/B/ARKzBUr-DdmTaP_SAVglTurWtsmrAb5Vyk36t2jwuON7WSxvon_DvGtK" in url
             # IMG_3322.JPG
-            or "https://cvws.icloud-content.com/B/ASTSuc7S58IPmVCJIUslbeCRjsnoASIoOBi88potAS0gE8tfnojuSlrb"
-            in url
+            or "https://cvws.icloud-content.com/B/ASTSuc7S58IPmVCJIUslbeCRjsnoASIoOBi88potAS0gE8tfnojuSlrb" in url
             # IMG_3306.JPG
-            or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvnATqG89bMsXhtmMRMw009uhyJc_Kh"
-            in url
+            or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvnATqG89bMsXhtmMRMw009uhyJc_Kh" in url
             # IMG_3148.JPG
-            or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt+jP6UsV4fBZHATi6BbOzDuHl6RONNFCub9eqZqSm"
-            in url
+            or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt+jP6UsV4fBZHATi6BbOzDuHl6RONNFCub9eqZqSm" in url
             # no-extension
-            or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt+jP6UsV4fBZIATi6BbOzDuHl6RONNFCub9eqZqSn"
-            in url
+            or "https://cvws.icloud-content.com/B/ARZd_GzpY62XRtXt+jP6UsV4fBZIATi6BbOzDuHl6RONNFCub9eqZqSn" in url
             # IMG_3328.JPG
-            or "https://cvws.icloud-content.com/B/EeGlt2PppPTgd0Q7mp8GenIugSh7AQYmx-DRYXnMs0tkDZ3rorp4IB99"
-            in url
+            or "https://cvws.icloud-content.com/B/EeGlt2PppPTgd0Q7mp8GenIugSh7AQYmx-DRYXnMs0tkDZ3rorp4IB99" in url
             # IMG_3148.JPG another device
-            or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvoATqG89bMsXhtmMRMw009uhyJc_Kh"
-            in url
+            or "https://cvws.icloud-content.com/B/ATTRy6p-Q3U1HqcF6BUKrrOMnjvoATqG89bMsXhtmMRMw009uhyJc_Kh" in url
             # IMG_5513.HEIC Shared Library
-            or "https://cvws.icloud-content.com/B/AQDN6auXvelQyb_btBqkNNjA97E2AZ_h3_ZBuSDV7J1SfMKpllmP-FGN"
-            in url
+            or "https://cvws.icloud-content.com/B/AQDN6auXvelQyb_btBqkNNjA97E2AZ_h3_ZBuSDV7J1SfMKpllmP-FGN" in url
         ):
             return ResponseMock(
                 {},
@@ -4079,61 +3986,43 @@ class ICloudPySessionMock(base.ICloudPySession):
             )
         if (
             # IMG_3327.JPG
-            "https://cvws.icloud-content.com/B/AUvKU8j-Z5pfqGI_fe-9tibuqfVRAd0I2qxdsqlGuSLlqtTBgoKndHE_"
-            in url
+            "https://cvws.icloud-content.com/B/AUvKU8j-Z5pfqGI_fe-9tibuqfVRAd0I2qxdsqlGuSLlqtTBgoKndHE_" in url
             # IMG_3322.JPG
-            or "https://cvws.icloud-content.com/B/AUxVFT2yVsQ5739tmU5c1497duFDAdkoZP1534bwlULpwCdn2fd44LAt"
-            in url
+            or "https://cvws.icloud-content.com/B/AUxVFT2yVsQ5739tmU5c1497duFDAdkoZP1534bwlULpwCdn2fd44LAt" in url
             # IMG_3306.JPG
-            or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvVAVLSGMHt-PAQ9_krqqfXATNX57d5"
-            in url
+            or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvVAVLSGMHt-PAQ9_krqqfXATNX57d5" in url
             # IMG_3148.JPG
-            or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXgAdUIDFzHC2rVOvwTz0jPi_tKihnb"
-            in url
+            or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXgAdUIDFzHC2rVOvwTz0jPi_tKihnb" in url
             # no-extension
-            or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXiAdUIDFzHC2rVOvwTz0jPi_tKihnn"
-            in url
+            or "https://cvws.icloud-content.com/B/AVx3_VKkbWPdNbWw68mrWzSuemXiAdUIDFzHC2rVOvwTz0jPi_tKihnn" in url
             # IMG_3328.JPG
-            or "https://cvws.icloud-content.com/B/YN1v8eGiHYYZ_aKUkMuGtSf0P1BNAXKVYPcDa-9Mjvnap0ZS-p2Z24V3"
-            in url
+            or "https://cvws.icloud-content.com/B/YN1v8eGiHYYZ_aKUkMuGtSf0P1BNAXKVYPcDa-9Mjvnap0ZS-p2Z24V3" in url
             # IMG_3148.JPG another device
-            or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvWAVLSGMHt-PAQ9_krqqfXATNX57d5"
-            in url
+            or "https://cvws.icloud-content.com/B/Ab_8kUAhnGzSxnl9yWvh8JKBpOvWAVLSGMHt-PAQ9_krqqfXATNX57d5" in url
             # IMG_5513.HEIC Shared Library
-            or "https://cvws.icloud-content.com/B/AY4eS1ezj9pmMHzfVzwC2CLmBwZOAXKLBx985QzfCKCGyN0wbGs6SuTf"
-            in url
+            or "https://cvws.icloud-content.com/B/AY4eS1ezj9pmMHzfVzwC2CLmBwZOAXKLBx985QzfCKCGyN0wbGs6SuTf" in url
         ):
             return ResponseMock(
                 {},
-                raw=open(
-                    os.path.join(os.path.dirname(__file__), "original.jpeg"), "rb"
-                ),
+                raw=open(os.path.join(os.path.dirname(__file__), "original.jpeg"), "rb"),
             )
         if (
             # IMG_3327.JPG
-            "https://cvws.icloud-content.com/B/ASy6f_leU1-xkR1aPmQyvYmwHUpEARHOzkI3sbX3SZDmNQgttNJ9DqQa"
-            in url
+            "https://cvws.icloud-content.com/B/ASy6f_leU1-xkR1aPmQyvYmwHUpEARHOzkI3sbX3SZDmNQgttNJ9DqQa" in url
             # IMG_3322.JPG
-            or "https://cvws.icloud-content.com/B/ASPVZ_Pft6gIN2VEA_oUbqQzh6WyAXd258pYF6LLhmADLoZAumNqI-8M"
-            in url
+            or "https://cvws.icloud-content.com/B/ASPVZ_Pft6gIN2VEA_oUbqQzh6WyAXd258pYF6LLhmADLoZAumNqI-8M" in url
             # IMG_3306.JPG
-            or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY9AV2Zh7WygJu74eNWVuuMT4lM8qme"
-            in url
+            or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY9AV2Zh7WygJu74eNWVuuMT4lM8qme" in url
             # IMG_3148.JPG
-            or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMYARtMrcvA8cbMefPDnmwSWQwe-mBd"
-            in url
+            or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMYARtMrcvA8cbMefPDnmwSWQwe-mBd" in url
             # no-extension
-            or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMZARtMrcvA8cbMefPDnmwSWQwe-mBe"
-            in url
+            or "https://cvws.icloud-content.com/B/ARpHiouI3Ib_ziuZYTCiSikohvMZARtMrcvA8cbMefPDnmwSWQwe-mBe" in url
             # IMG_3328.JPG
-            or "https://cvws.icloud-content.com/B/DmK0xzSiAUSFrAsYYAvby7QHrMDeAR5TiM9Qko4rHwmoDH1BgNRVZpF4"
-            in url
+            or "https://cvws.icloud-content.com/B/DmK0xzSiAUSFrAsYYAvby7QHrMDeAR5TiM9Qko4rHwmoDH1BgNRVZpF4" in url
             # IMG_3148.JPG another device
-            or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY0AV2Zh7WygJu74eNWVuuMT4lM8qme"
-            in url
+            or "https://cvws.icloud-content.com/B/AQNND5zpteAXnnBP2BmDd0ropjY0AV2Zh7WygJu74eNWVuuMT4lM8qme" in url
             # IMG_5513.HEIC Shared Library
-            or "https://cvws.icloud-content.com/B/Aa_QVPVEM9bvm5Owy3GRFNyqbKuXAbgec55EhUFp9db5znXM3Xz-nq1X"
-            in url
+            or "https://cvws.icloud-content.com/B/Aa_QVPVEM9bvm5Owy3GRFNyqbKuXAbgec55EhUFp9db5znXM3Xz-nq1X" in url
         ):
             return ResponseMock(
                 {},

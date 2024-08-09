@@ -1,4 +1,5 @@
 """Tests for config_parser.py file."""
+
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
@@ -33,9 +34,7 @@ class TestConfigParser(unittest.TestCase):
     def test_read_config_env_config_path(self):
         """Test for ENV_CONFIG_FILE_PATH."""
         os.environ[ENV_CONFIG_FILE_PATH_KEY] = tests.ENV_CONFIG_PATH
-        config = read_config(
-            config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, tests.CONFIG_PATH)
-        )
+        config = read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, tests.CONFIG_PATH))
         self.assertEqual(
             config["app"]["logger"]["filename"],
             "config_loaded_using_env_config_path.log",
@@ -131,9 +130,7 @@ class TestConfigParser(unittest.TestCase):
         # Given destination
         actual = config_parser.prepare_drive_destination(config=config)
         self.assertEqual(
-            os.path.abspath(
-                os.path.join(config["app"]["root"], config["drive"]["destination"])
-            ),
+            os.path.abspath(os.path.join(config["app"]["root"], config["drive"]["destination"])),
             actual,
         )
         self.assertTrue(os.path.exists(actual))
@@ -151,7 +148,7 @@ class TestConfigParser(unittest.TestCase):
                 os.path.join(
                     DEFAULT_ROOT_DESTINATION,
                     DEFAULT_DRIVE_DESTINATION,
-                )
+                ),
             ),
             actual,
         )
@@ -167,7 +164,7 @@ class TestConfigParser(unittest.TestCase):
                 os.path.join(
                     DEFAULT_ROOT_DESTINATION,
                     DEFAULT_DRIVE_DESTINATION,
-                )
+                ),
             ),
             actual,
         )
@@ -224,9 +221,7 @@ class TestConfigParser(unittest.TestCase):
     def test_get_smtp_email(self):
         """Given email."""
         config = {"app": {"smtp": {"email": "user@test.com"}}}
-        self.assertEqual(
-            config["app"]["smtp"]["email"], config_parser.get_smtp_email(config=config)
-        )
+        self.assertEqual(config["app"]["smtp"]["email"], config_parser.get_smtp_email(config=config))
 
     def test_get_smtp_username(self):
         """If present, get smtp username else None."""
@@ -246,9 +241,7 @@ class TestConfigParser(unittest.TestCase):
     def test_get_smtp_to_email(self):
         """Given email."""
         config = {"app": {"smtp": {"to": "receiver@test.com"}}}
-        self.assertEqual(
-            config["app"]["smtp"]["to"], config_parser.get_smtp_to_email(config=config)
-        )
+        self.assertEqual(config["app"]["smtp"]["to"], config_parser.get_smtp_to_email(config=config))
 
     def test_get_smtp_to_email_default(self):
         """Given email."""
@@ -265,9 +258,7 @@ class TestConfigParser(unittest.TestCase):
     def test_get_smtp_host(self):
         """Given host."""
         config = {"app": {"smtp": {"host": "smtp.test.com"}}}
-        self.assertEqual(
-            config["app"]["smtp"]["host"], config_parser.get_smtp_host(config=config)
-        )
+        self.assertEqual(config["app"]["smtp"]["host"], config_parser.get_smtp_host(config=config))
 
     def test_smtp_host_none_config(self):
         """Test for None config."""
@@ -276,9 +267,7 @@ class TestConfigParser(unittest.TestCase):
     def test_get_smtp_port(self):
         """Test for Given port."""
         config = {"app": {"smtp": {"port": 587}}}
-        self.assertEqual(
-            config["app"]["smtp"]["port"], config_parser.get_smtp_port(config=config)
-        )
+        self.assertEqual(config["app"]["smtp"]["port"], config_parser.get_smtp_port(config=config))
 
     def test_smtp_port_none_config(self):
         """Test for None config."""
@@ -302,9 +291,7 @@ class TestConfigParser(unittest.TestCase):
         # Given destination
         actual = config_parser.prepare_photos_destination(config=config)
         self.assertEqual(
-            os.path.abspath(
-                os.path.join(config["app"]["root"], config["photos"]["destination"])
-            ),
+            os.path.abspath(os.path.join(config["app"]["root"], config["photos"]["destination"])),
             actual,
         )
         self.assertTrue(os.path.exists(actual))
@@ -322,7 +309,7 @@ class TestConfigParser(unittest.TestCase):
                 os.path.join(
                     DEFAULT_ROOT_DESTINATION,
                     DEFAULT_PHOTOS_DESTINATION,
-                )
+                ),
             ),
             actual,
         )
@@ -338,7 +325,7 @@ class TestConfigParser(unittest.TestCase):
                 os.path.join(
                     DEFAULT_ROOT_DESTINATION,
                     DEFAULT_PHOTOS_DESTINATION,
-                )
+                ),
             ),
             actual,
         )
@@ -449,9 +436,7 @@ class TestConfigParser(unittest.TestCase):
         """Photos > library is missing in config."""
         config = read_config(config_path=tests.CONFIG_PATH)
         del config["photos"]["filters"]["libraries"]
-        self.assertEqual(
-            config_parser.get_photos_filters(config=config)["libraries"], None
-        )
+        self.assertEqual(config_parser.get_photos_filters(config=config)["libraries"], None)
 
     def test_get_photos_filters_libraries_specified(self):
         """Photos > library is specified as shared."""

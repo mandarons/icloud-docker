@@ -1,4 +1,5 @@
 """Tests for sync.py file."""
+
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
@@ -32,18 +33,14 @@ class TestSync(unittest.TestCase):
         self.root_dir = tests.TEMP_DIR
         self.config["app"]["root"] = self.root_dir
         os.makedirs(tests.TEMP_DIR, exist_ok=True)
-        self.service = data.ICloudPyServiceMock(
-            data.AUTHENTICATED_USER, data.VALID_PASSWORD
-        )
+        self.service = data.ICloudPyServiceMock(data.AUTHENTICATED_USER, data.VALID_PASSWORD)
 
     def tearDown(self) -> None:
         """Remove temp directories."""
         self.remove_temp()
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -64,9 +61,7 @@ class TestSync(unittest.TestCase):
         self.assertTrue(os.path.isdir("/config/session_data"))
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -88,15 +83,11 @@ class TestSync(unittest.TestCase):
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
         dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(1 == dir_length)
-        self.assertTrue(
-            os.path.isdir(os.path.join(self.root_dir, config["photos"]["destination"]))
-        )
+        self.assertTrue(dir_length == 1)
+        self.assertTrue(os.path.isdir(os.path.join(self.root_dir, config["photos"]["destination"])))
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -118,16 +109,12 @@ class TestSync(unittest.TestCase):
         self.remove_temp()
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
-        self.assertTrue(
-            os.path.isdir(os.path.join(self.root_dir, config["drive"]["destination"]))
-        )
+        self.assertTrue(os.path.isdir(os.path.join(self.root_dir, config["drive"]["destination"])))
         dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(1 == dir_length)
+        self.assertTrue(dir_length == 1)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -154,9 +141,7 @@ class TestSync(unittest.TestCase):
 
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -188,9 +173,7 @@ class TestSync(unittest.TestCase):
 
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -221,11 +204,10 @@ class TestSync(unittest.TestCase):
                     [
                         e
                         for e in captured[1]
-                        if "Password is not stored in keyring. Please save the password in keyring."
-                        in e
-                    ]
+                        if "Password is not stored in keyring. Please save the password in keyring." in e
+                    ],
                 )
-                > 0
+                > 0,
             )
 
     @patch("src.sync.sleep")
@@ -254,22 +236,11 @@ class TestSync(unittest.TestCase):
             with patch.dict(os.environ, {ENV_ICLOUD_PASSWORD_KEY: data.VALID_PASSWORD}):
                 with self.assertRaises(Exception):
                     sync.sync()
-                self.assertTrue(
-                    len(
-                        [
-                            e
-                            for e in captured[1]
-                            if "Error: 2FA is required. Please log in." in e
-                        ]
-                    )
-                    > 0
-                )
+                self.assertTrue(len([e for e in captured[1] if "Error: 2FA is required. Please log in." in e]) > 0)
 
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -298,9 +269,7 @@ class TestSync(unittest.TestCase):
     @patch(target="sys.stdout", new_callable=StringIO)
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -353,9 +322,7 @@ class TestSync(unittest.TestCase):
         if ENV_ICLOUD_PASSWORD_KEY in os.environ:
             del os.environ[ENV_ICLOUD_PASSWORD_KEY]
 
-        actual = sync.get_api_instance(
-            username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD
-        )
+        actual = sync.get_api_instance(username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD)
         self.assertNotIn(".com.cn", actual.home_endpoint)
         self.assertNotIn(".com.cn", actual.setup_endpoint)
 
@@ -371,17 +338,13 @@ class TestSync(unittest.TestCase):
         if ENV_ICLOUD_PASSWORD_KEY in os.environ:
             del os.environ[ENV_ICLOUD_PASSWORD_KEY]
 
-        actual = sync.get_api_instance(
-            username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD
-        )
+        actual = sync.get_api_instance(username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD)
         self.assertNotIn(".com.cn", actual.home_endpoint)
         self.assertNotIn(".com.cn", actual.setup_endpoint)
 
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -409,25 +372,14 @@ class TestSync(unittest.TestCase):
             sync.sync()
         self.assertTrue(len(captured.records) > 1)
         self.assertTrue(len([e for e in captured[1] if "2FA is required" in e]) > 0)
-        self.assertTrue(
-            len(
-                [
-                    e
-                    for e in captured[1]
-                    if "retry_login_interval is < 0, exiting ..." in e
-                ]
-            )
-            > 0
-        )
+        self.assertTrue(len([e for e in captured[1] if "retry_login_interval is < 0, exiting ..." in e]) > 0)
 
     @patch("src.sync.sleep")
     @patch(
         target="keyring.get_password",
         side_effect=exceptions.ICloudPyNoStoredPasswordAvailableException,
     )
-    @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
-    )
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -454,17 +406,5 @@ class TestSync(unittest.TestCase):
             ]
             sync.sync()
         self.assertTrue(len(captured.records) > 1)
-        self.assertTrue(
-            len([e for e in captured[1] if "Password is not stored in keyring." in e])
-            > 0
-        )
-        self.assertTrue(
-            len(
-                [
-                    e
-                    for e in captured[1]
-                    if "retry_login_interval is < 0, exiting ..." in e
-                ]
-            )
-            > 0
-        )
+        self.assertTrue(len([e for e in captured[1] if "Password is not stored in keyring." in e]) > 0)
+        self.assertTrue(len([e for e in captured[1] if "retry_login_interval is < 0, exiting ..." in e]) > 0)
