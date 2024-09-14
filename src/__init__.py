@@ -98,7 +98,7 @@ class ColorfulConsoleFormatter(logging.Formatter):
 def get_logger():
     """Return logger."""
     logger = logging.getLogger()
-    logger_config = get_logger_config(config=read_config())
+    logger_config = get_logger_config(config=read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)))
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
         logger.setLevel(level=level_name)
