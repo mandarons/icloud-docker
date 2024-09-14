@@ -19,7 +19,7 @@ ENV_ICLOUD_PASSWORD_KEY = "ENV_ICLOUD_PASSWORD"
 ENV_CONFIG_FILE_PATH_KEY = "ENV_CONFIG_FILE_PATH"
 DEFAULT_LOGGER_LEVEL = "info"
 DEFAULT_LOG_FILE_NAME = "icloud.log"
-DEFAULT_CONFIG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME)
+DEFAULT_CONFIG_FILE_PATH = os.path.join('/config', DEFAULT_CONFIG_FILE_NAME)
 DEFAULT_COOKIE_DIRECTORY = "/config/session_data"
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
