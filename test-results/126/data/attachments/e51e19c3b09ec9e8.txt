@@ -1,0 +1,2 @@
+[38;21m2024-09-14 18:22:20,941 :: DEBUG :: root :: config_parser.py :: 230 :: Removing obsolete files and folders ...[0m
+[38;5;226m2024-09-14 18:22:20,941 :: WARNING :: root :: config_parser.py :: 224 :: Warning: remove_obsolete is not found in drive > remove_obsolete. Not removing the obsolete files and folders.[0m
