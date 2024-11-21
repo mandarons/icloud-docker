@@ -78,13 +78,16 @@ def notify_discord(config, message, last_send=None, dry_run=False):
     return sent_on
 
 
-def send(config, username, last_send=None, dry_run=False):
+def send(config, username, last_send=None, dry_run=False, region="global"):
     """Send notifications."""
     sent_on = None
+    region_opt = ""
+    if region != "global":
+        region_opt = f"--region={region} "
     message = f"""Two-step authentication for iCloud Drive, Photos (Docker) is required.
                 Please login to your server and authenticate. Please run -
                 `docker exec -it --user=abc icloud /bin/sh -c
-                "icloud --session-directory=/config/session_data --username={username}"`."""
+                "icloud --session-directory=/config/session_data {region_opt}--username={username}"`."""
     subject = f"icloud-docker: Two step authentication is required for {username}"
     notify_telegram(config=config, message=message, last_send=last_send, dry_run=dry_run)
     notify_discord(config=config, message=message, last_send=last_send, dry_run=dry_run)
