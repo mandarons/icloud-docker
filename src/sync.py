@@ -63,12 +63,12 @@ def sync():
         username = config_parser.get_username(config=config)
         if username:
             try:
+                server_region = config_parser.get_region(config=config)
                 if ENV_ICLOUD_PASSWORD_KEY in os.environ:
                     password = os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
                     utils.store_password_in_keyring(username=username, password=password)
                 else:
                     password = utils.get_password_from_keyring(username=username)
-                server_region = config_parser.get_region(config=config)
                 api = get_api_instance(username=username, password=password, server_region=server_region)
                 if not api.requires_2sa:
                     if "drive" in config and enable_sync_drive:
