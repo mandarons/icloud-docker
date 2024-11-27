@@ -127,6 +127,16 @@ class TestNotify(unittest.TestCase):
                 "Subject: icloud-docker: Two step authentication is required",
                 instance.sendmail.mock_calls[0][2]["msg"],
             )
+            self.assertNotIn("--region=", instance.sendmail.mock_calls[0][2]["msg"])
+
+    def test_send_with_region(self):
+        """Test for email send with region."""
+        username = "username@icloud.com"
+        with patch("smtplib.SMTP") as smtp:
+            notify.send(self.config, username, region="some_region")
+
+            instance = smtp.return_value
+            self.assertIn("--region=some_region", instance.sendmail.mock_calls[0][2]["msg"])
 
     def test_send_fail(self):
         """Test for failed send."""

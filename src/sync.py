@@ -36,7 +36,7 @@ def get_api_instance(
             apple_id=username,
             password=password,
             cookie_directory=cookie_directory,
-            auth_endpoint="https://www.icloud.com.cn",
+            home_endpoint="https://www.icloud.com.cn",
             setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
         )
         if server_region == "china"
@@ -63,12 +63,12 @@ def sync():
         username = config_parser.get_username(config=config)
         if username:
             try:
+                server_region = config_parser.get_region(config=config)
                 if ENV_ICLOUD_PASSWORD_KEY in os.environ:
                     password = os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
                     utils.store_password_in_keyring(username=username, password=password)
                 else:
                     password = utils.get_password_from_keyring(username=username)
-                server_region = config_parser.get_region(config=config)
                 api = get_api_instance(username=username, password=password, server_region=server_region)
                 if not api.requires_2sa:
                     if "drive" in config and enable_sync_drive:
@@ -92,7 +92,7 @@ def sync():
                         break
                     next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
                     LOGGER.info(f"Retrying login at {next_sync} ...")
-                    last_send = notify.send(config=config, username=username, last_send=last_send)
+                    last_send = notify.send(config=config, username=username, last_send=last_send, region=server_region)
                     sleep(sleep_for)
                     continue
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
@@ -103,7 +103,7 @@ def sync():
                     break
                 next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
                 LOGGER.info(f"Retrying login at {next_sync} ...")
-                last_send = notify.send(config=config, username=username, last_send=last_send)
+                last_send = notify.send(config=config, username=username, last_send=last_send, region=server_region)
                 sleep(sleep_for)
                 continue
 
