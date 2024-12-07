@@ -55,6 +55,16 @@ CLIENT_ID = "client_id"
 # Data
 AUTH_OK = {"authType": "hsa2"}
 
+SRP_INIT_OK = {
+    "iteration": 20433,
+    "salt": "0samK84bcBmkVsswOpZbZg==",
+    "protocol": "s2k",
+    "b": "STVHcWTN9YOYn4IgtIJ6UPdPbvzvL+zza/l+6yUHUtdEyxwzpB78y8wqZ8QWSbVqjBcpl32iEA4T3nYp0LWZ5hD3r3yIJFloXvX0kpBJkr\
+        +Nh8EfHuW1V50A8riH6VWyuJ8m3JmOO7/xkNgP7je8GMpt/5f/7qE3AOj73e3JR0fzQ7IopdU0tlyVX0tD7T6wCyHS52GJWDdq1I2bgzurIK2\
+        /ZjR/Hwzd/67oFQPtKQgjrSRaKo5MJEfDP7C9wOlXsZqbb7igX6PeZRWrfl+iQFaA/FVeWSngB07ja3wOryY9GsYO06ELGOaQ+MpsT7mouqrGT\
+        fOJ0OMh9EgrkJEM6w==",
+    "c": "e-1be-8746c235-b41c-11ef-bd17-c780acb4fe15:PRN",
+}
 ZONES_LIST_WORKING = {
     "zones": [
         {
@@ -3744,8 +3754,10 @@ class ICloudPySessionMock(base.ICloudPySession):
 
         if self.service.auth_endpoint in url:
             if "signin" in url and method == "POST":
-                if data.get("accountName") not in VALID_USERS or data.get("password") != VALID_PASSWORD:
+                if data.get("accountName") not in VALID_USERS:
                     self._raise_error(None, "Unknown reason")
+                if url.endswith("/init"):
+                    return ResponseMock(SRP_INIT_OK)
                 if data.get("accountName") == REQUIRES_2FA_USER:
                     self.service.session_data["session_token"] = REQUIRES_2FA_TOKEN
                     return ResponseMock(AUTH_OK)
