@@ -32,8 +32,8 @@ jobs:
           fi
           TAGS="${DOCKER_IMAGE}:${VERSION},${DOCKER_IMAGE}:latest"
           echo "${TAGS}"
-          echo "name=tags::${TAGS}" >> $GITHUB_OUTPUT
-          echo "name=version::${VERSION}" >> $GITHUB_OUTPUT
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
       - name: Cache Docker layers
         uses: actions/cache@v4
         with:
