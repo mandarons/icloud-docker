@@ -1,0 +1,7 @@
+[38;21m2024-12-13 20:01:46,708 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2024-12-13 20:01:46,708 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2024-12-13 20:01:46,709 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2024-12-13 20:01:46,717 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;5;39m2024-12-13 20:01:46,718 :: INFO :: root :: sync_drive.py :: 181 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Scanned document 1.pdf ...[0m
+[38;21m2024-12-13 20:01:46,718 :: DEBUG :: root :: sync_drive.py :: 124 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Scanned document 1.pdf ...[0m
+[38;5;39m2024-12-13 20:01:46,718 :: INFO :: root :: sync_drive.py :: 181 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Scanned document 1.pdf ...[0m
