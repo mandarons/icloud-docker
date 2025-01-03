@@ -1,6 +1,6 @@
 -r requirements.txt
 allure-pytest==2.13.5
-coverage==7.6.9
+coverage==7.6.10
 pytest==8.3.4
 pytest-cov==6.0.0
 # pylint==2.9.3
