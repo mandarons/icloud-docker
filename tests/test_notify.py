@@ -12,6 +12,7 @@ from src.notify import (
     notify_pushover,
     post_message_to_discord,
     post_message_to_telegram,
+    post_message_to_pushover,
 )
 
 
