@@ -9,6 +9,7 @@ from src.email_message import EmailMessage as Message
 from src.notify import (
     notify_discord,
     notify_telegram,
+    notify_pushover,
     post_message_to_discord,
     post_message_to_telegram,
 )
