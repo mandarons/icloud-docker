@@ -285,9 +285,9 @@ def get_photos_filters(config):
     # Parse libraries
     config_path.append("libraries")
     if (
-            not traverse_config_path(config=config, config_path=config_path)
-            or not get_config_value(config=config, config_path=config_path)
-            or len(get_config_value(config=config, config_path=config_path)) == 0
+        not traverse_config_path(config=config, config_path=config_path)
+        or not get_config_value(config=config, config_path=config_path)
+        or len(get_config_value(config=config, config_path=config_path)) == 0
     ):
         LOGGER.warning(f"{config_path_to_string(config_path=config_path)} not found. Downloading all libraries ...")
     else:
@@ -296,9 +296,9 @@ def get_photos_filters(config):
     # Parse albums
     config_path[2] = "albums"
     if (
-            not traverse_config_path(config=config, config_path=config_path)
-            or not get_config_value(config=config, config_path=config_path)
-            or len(get_config_value(config=config, config_path=config_path)) == 0
+        not traverse_config_path(config=config, config_path=config_path)
+        or not get_config_value(config=config, config_path=config_path)
+        or len(get_config_value(config=config, config_path=config_path)) == 0
     ):
         LOGGER.warning(f"{config_path_to_string(config_path=config_path)} not found. Downloading all albums ...")
     else:
@@ -317,7 +317,7 @@ def get_photos_filters(config):
                 LOGGER.warning(
                     f"Skipping the invalid file size {file_size}, "
                     + f"valid file sizes are {','.join(valid_file_sizes)}.",
-                    )
+                )
                 file_sizes.remove(file_size)
                 if len(file_sizes) == 0:
                     file_sizes = ["original"]
@@ -326,9 +326,9 @@ def get_photos_filters(config):
     # Parse extensions
     config_path[2] = "extensions"
     if (
-            not traverse_config_path(config=config, config_path=config_path)
-            or not get_config_value(config=config, config_path=config_path)
-            or len(get_config_value(config=config, config_path=config_path)) == 0
+        not traverse_config_path(config=config, config_path=config_path)
+        or not get_config_value(config=config, config_path=config_path)
+        or len(get_config_value(config=config, config_path=config_path)) == 0
     ):
         LOGGER.warning(f"{config_path_to_string(config_path=config_path)} not found. Downloading all extensions ...")
     else:
