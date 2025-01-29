@@ -17,6 +17,9 @@ app:
   telegram:
   # bot_token: <your Telegram bot token>
   # chat_id: <your Telegram user or chat ID>
+  pushover:
+  # user_key: <your Pushover user key>
+  # api_token: <your Pushover api token>
   smtp:
   # If you want to receive email notifications about expired/missing 2FA credentials then uncomment
   # email: "sender@test.com"
