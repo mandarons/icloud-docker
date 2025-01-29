@@ -62,7 +62,7 @@ def get_retry_login_interval(config):
         LOGGER.warning(
             f"retry_login_interval not found in {config_path_to_string(config_path=config_path)}."
             + f" Using default {retry_login_interval} seconds ...",
-            )
+        )
     else:
         retry_login_interval = get_config_value(config=config, config_path=config_path)
         LOGGER.info(f"Retrying login every {retry_login_interval} seconds.")
@@ -77,7 +77,7 @@ def get_drive_sync_interval(config):
         LOGGER.warning(
             f"sync_interval is not found in {config_path_to_string(config_path=config_path)}."
             + f" Using default sync_interval: {sync_interval} seconds ...",
-            )
+        )
     else:
         sync_interval = get_config_value(config=config, config_path=config_path)
         LOGGER.info(f"Syncing drive every {sync_interval} seconds.")
@@ -92,7 +92,7 @@ def get_photos_sync_interval(config):
         LOGGER.warning(
             f"sync_interval is not found in {config_path_to_string(config_path=config_path)}."
             + f" Using default sync_interval: {sync_interval} seconds ...",
-            )
+        )
     else:
         sync_interval = get_config_value(config=config, config_path=config_path)
         LOGGER.info(f"Syncing photos every {sync_interval} seconds.")
@@ -118,7 +118,7 @@ def prepare_root_destination(config):
         LOGGER.warning(
             f"Warning: root destination is missing in {config_path_to_string(config_path)}."
             + f" Using default root destination: {root_destination}",
-            )
+        )
     else:
         root_destination = get_config_value(config=config, config_path=config_path)
     root_destination_path = os.path.abspath(root_destination)
@@ -208,7 +208,7 @@ def prepare_drive_destination(config):
         LOGGER.warning(
             f"Warning: destination is missing in {config_path_to_string(config_path)}."
             + f" Using default drive destination: {drive_destination}.",
-            )
+        )
     else:
         drive_destination = get_config_value(config=config, config_path=config_path)
     drive_destination_path = os.path.abspath(os.path.join(prepare_root_destination(config=config), drive_destination))
@@ -224,7 +224,7 @@ def get_drive_remove_obsolete(config):
         LOGGER.warning(
             f"Warning: remove_obsolete is not found in {config_path_to_string(config_path)}."
             + " Not removing the obsolete files and folders.",
-            )
+        )
     else:
         drive_remove_obsolete = get_config_value(config=config, config_path=config_path)
         LOGGER.debug(f"{'R' if drive_remove_obsolete else 'Not R'}emoving obsolete files and folders ...")
@@ -240,7 +240,7 @@ def prepare_photos_destination(config):
         LOGGER.warning(
             f"Warning: destination is missing in {photos_destination}."
             + f" Using default photos destination: {config_path_to_string(config_path)}",
-            )
+        )
     else:
         photos_destination = get_config_value(config=config, config_path=config_path)
     photos_destination_path = os.path.abspath(os.path.join(prepare_root_destination(config=config), photos_destination))
@@ -256,7 +256,7 @@ def get_photos_remove_obsolete(config):
         LOGGER.warning(
             f"Warning: remove_obsolete is not found in {config_path_to_string(config_path)}."
             + " Not removing the obsolete photos.",
-            )
+        )
     else:
         photos_remove_obsolete = get_config_value(config=config, config_path=config_path)
         LOGGER.debug(f"{'R' if photos_remove_obsolete else 'Not R'}emoving obsolete photos ...")
