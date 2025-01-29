@@ -25,9 +25,9 @@ def notify_telegram(config, message, last_send=None, dry_run=False):
         if not dry_run:
             # Post message to telegram bot using API
             if not post_message_to_telegram(
-                    bot_token,
-                    chat_id,
-                    message,
+                bot_token,
+                chat_id,
+                message,
             ):
                 sent_on = None
     else:
@@ -119,7 +119,6 @@ def send(config, username, last_send=None, dry_run=False, region="global"):
     notify_telegram(config=config, message=message, last_send=last_send, dry_run=dry_run)
     notify_discord(config=config, message=message, last_send=last_send, dry_run=dry_run)
     notify_pushover(config=config, message=message, last_send=last_send, dry_run=dry_run)
-
     email = config_parser.get_smtp_email(config=config)
     to_email = config_parser.get_smtp_to_email(config=config)
     host = config_parser.get_smtp_host(config=config)
