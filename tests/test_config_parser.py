@@ -503,7 +503,7 @@ class TestConfigParser(unittest.TestCase):
     def test_get_discord_username_none_config(self):
         """None config."""
         self.assertIsNone(config_parser.get_discord_username(config=None))
-        
+
     def test_get_pushover_user_key(self):
         """Test for getting Pushover user key."""
         config = read_config(config_path=tests.CONFIG_PATH)
@@ -528,4 +528,4 @@ class TestConfigParser(unittest.TestCase):
 
     def test_get_pushover_api_token_none_config(self):
         """None config for Pushover API token."""
-        self.assertIsNone(config_parser.get_pushover_api_token(config=None))       
+        self.assertIsNone(config_parser.get_pushover_api_token(config=None))
