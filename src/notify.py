@@ -90,6 +90,7 @@ def notify_pushover(config, message, last_send=None, dry_run=False):
         sent_on = datetime.datetime.now()
         if not dry_run:
             if not post_message_to_pushover(api_token, user_key, message):
+                LOGGER.info("Send Pushover message")
                 sent_on = None
     else:
         LOGGER.warning("Not sending 2FA notification because Pushover is not configured.")
