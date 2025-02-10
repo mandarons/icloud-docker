@@ -1,0 +1,33 @@
+[38;21m2025-02-10 20:19:44,080 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-02-10 20:19:44,080 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-02-10 20:19:44,080 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-02-10 20:19:44,089 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-02-10 20:19:44,091 :: DEBUG :: root :: config_parser.py :: 204 :: Checking drive destination ...[0m
+[38;21m2025-02-10 20:19:44,091 :: DEBUG :: root :: config_parser.py :: 114 :: Checking root destination ...[0m
+[38;21m2025-02-10 20:19:44,091 :: DEBUG :: root :: config_parser.py :: 230 :: Removing obsolete files and folders ...[0m
+[38;21m2025-02-10 20:19:44,093 :: DEBUG :: root :: sync_drive.py :: 84 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Numbers ...[0m
+[38;21m2025-02-10 20:19:44,093 :: DEBUG :: root :: sync_drive.py :: 84 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Pages ...[0m
+[38;21m2025-02-10 20:19:44,094 :: DEBUG :: root :: sync_drive.py :: 84 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Preview ...[0m
+[38;21m2025-02-10 20:19:44,096 :: DEBUG :: root :: sync_drive.py :: 133 :: File /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/icloudpy/Test/Document scanne 2.pdf does not exist locally.[0m
+[38;5;39m2025-02-10 20:19:44,096 :: INFO :: root :: sync_drive.py :: 181 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/icloudpy/Test/Document scanne 2.pdf ...[0m
+[38;21m2025-02-10 20:19:44,097 :: DEBUG :: root :: sync_drive.py :: 133 :: File /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/icloudpy/Test/Scanned document 1.pdf does not exist locally.[0m
+[38;5;39m2025-02-10 20:19:44,097 :: INFO :: root :: sync_drive.py :: 181 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/icloudpy/Test/Scanned document 1.pdf ...[0m
+[38;21m2025-02-10 20:19:44,098 :: DEBUG :: root :: sync_drive.py :: 84 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/unwanted ...[0m
+[38;21m2025-02-10 20:19:44,100 :: DEBUG :: root :: sync_drive.py :: 133 :: File /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/This is a title.md does not exist locally.[0m
+[38;5;39m2025-02-10 20:19:44,100 :: INFO :: root :: sync_drive.py :: 181 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/This is a title.md ...[0m
+[38;21m2025-02-10 20:19:44,101 :: DEBUG :: root :: sync_drive.py :: 108 :: Package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band does not exist locally.[0m
+[38;5;39m2025-02-10 20:19:44,101 :: INFO :: root :: sync_drive.py :: 181 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band ...[0m
+[38;5;39m2025-02-10 20:19:44,103 :: INFO :: root :: sync_drive.py :: 144 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample[0m
+[38;5;39m2025-02-10 20:19:44,106 :: INFO :: root :: sync_drive.py :: 165 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Project.band.zip.[0m
+[38;21m2025-02-10 20:19:44,108 :: DEBUG :: root :: sync_drive.py :: 108 :: Package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band does not exist locally.[0m
+[38;5;39m2025-02-10 20:19:44,108 :: INFO :: root :: sync_drive.py :: 181 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band ...[0m
+[38;5;39m2025-02-10 20:19:44,110 :: INFO :: root :: sync_drive.py :: 154 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.gz to /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample[0m
+[38;5;39m2025-02-10 20:19:44,111 :: INFO :: root :: sync_drive.py :: 144 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample[0m
+[38;5;39m2025-02-10 20:19:44,114 :: INFO :: root :: sync_drive.py :: 165 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.zip.[0m
+[38;5;39m2025-02-10 20:19:44,115 :: INFO :: root :: sync_drive.py :: 165 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band.gz.[0m
+[38;21m2025-02-10 20:19:44,116 :: DEBUG :: root :: sync_drive.py :: 108 :: Package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf does not exist locally.[0m
+[38;5;39m2025-02-10 20:19:44,116 :: INFO :: root :: sync_drive.py :: 181 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf ...[0m
+[38;5;39m2025-02-10 20:19:44,117 :: INFO :: root :: sync_drive.py :: 144 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample[0m
+[38;5;39m2025-02-10 20:19:44,120 :: INFO :: root :: sync_drive.py :: 165 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf.zip.[0m
+[38;5;39m2025-02-10 20:19:44,121 :: INFO :: root :: sync_drive.py :: 233 :: Removing /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf ...[0m
+[38;5;39m2025-02-10 20:19:44,123 :: INFO :: root :: sync_drive.py :: 233 :: Removing /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Obsidian/Sample/ms.band ...[0m
