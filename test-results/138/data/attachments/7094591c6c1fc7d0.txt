@@ -1,0 +1,3 @@
+[38;5;226m2025-02-11 16:30:17,961 :: WARNING :: root :: config_parser.py :: 419 :: Warning: user_key is not found in app > pushover > user_key.[0m
+[38;5;226m2025-02-11 16:30:17,961 :: WARNING :: root :: config_parser.py :: 430 :: Warning: api_token is not found in app > pushover > api_token.[0m
+[38;5;226m2025-02-11 16:30:17,961 :: WARNING :: root :: notify.py :: 95 :: Not sending 2FA notification because Pushover is not configured.[0m
