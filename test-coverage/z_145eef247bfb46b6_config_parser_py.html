@@ -54,8 +54,8 @@
             </div>
         </aside>
         <h2>
-            <span class="text">228 statements &nbsp;</span>
-            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">228<span class="text"> run</span></button>
+            <span class="text">242 statements &nbsp;</span>
+            <button type="button" class="run button_toggle_run" value="run" data-shortcut="r" title="Toggle lines run">242<span class="text"> run</span></button>
             <button type="button" class="mis show_mis button_toggle_mis" value="mis" data-shortcut="m" title="Toggle lines missing">0<span class="text"> missing</span></button>
             <button type="button" class="exc show_exc button_toggle_exc" value="exc" data-shortcut="x" title="Toggle lines excluded">0<span class="text"> excluded</span></button>
         </h2>
@@ -65,7 +65,7 @@
             <a id="nextFileLink" class="nav" href="z_145eef247bfb46b6_email_message_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.11">coverage.py v7.6.11</a>,
-            created at 2025-02-10 20:19 +0000
+            created at 2025-02-11 16:30 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -491,6 +491,28 @@
     <p class="pln"><span class="n"><a id="t409" href="#t409">409</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t410" href="#t410">410</a></span><span class="t">        <span class="nam">username</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t411" href="#t411">411</a></span><span class="t">    <span class="key">return</span> <span class="nam">username</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t412" href="#t412">412</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t413" href="#t413">413</a></span><span class="t"><span class="com"># Get pushover user key</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t414" href="#t414">414</a></span><span class="t"><span class="key">def</span> <span class="nam">get_pushover_user_key</span><span class="op">(</span><span class="nam">config</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t415" href="#t415">415</a></span><span class="t">    <span class="str">"""Return Pushover user key from config."""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t416" href="#t416">416</a></span><span class="t">    <span class="nam">user_key</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t417" href="#t417">417</a></span><span class="t">    <span class="nam">config_path</span> <span class="op">=</span> <span class="op">[</span><span class="str">"app"</span><span class="op">,</span> <span class="str">"pushover"</span><span class="op">,</span> <span class="str">"user_key"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t418" href="#t418">418</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">traverse_config_path</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t419" href="#t419">419</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">f"Warning: user_key is not found in {config_path_to_string(config_path)}."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t420" href="#t420">420</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t421" href="#t421">421</a></span><span class="t">        <span class="nam">user_key</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t422" href="#t422">422</a></span><span class="t">    <span class="key">return</span> <span class="nam">user_key</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t423" href="#t423">423</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t424" href="#t424">424</a></span><span class="t"><span class="com"># Get pushover api token</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t425" href="#t425">425</a></span><span class="t"><span class="key">def</span> <span class="nam">get_pushover_api_token</span><span class="op">(</span><span class="nam">config</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t426" href="#t426">426</a></span><span class="t">    <span class="str">"""Return Pushover API token from config."""</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t427" href="#t427">427</a></span><span class="t">    <span class="nam">api_token</span> <span class="op">=</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t428" href="#t428">428</a></span><span class="t">    <span class="nam">config_path</span> <span class="op">=</span> <span class="op">[</span><span class="str">"app"</span><span class="op">,</span> <span class="str">"pushover"</span><span class="op">,</span> <span class="str">"api_token"</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t429" href="#t429">429</a></span><span class="t">    <span class="key">if</span> <span class="key">not</span> <span class="nam">traverse_config_path</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t430" href="#t430">430</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">warning</span><span class="op">(</span><span class="str">f"Warning: api_token is not found in {config_path_to_string(config_path)}."</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="pln"><span class="n"><a id="t431" href="#t431">431</a></span><span class="t">    <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t432" href="#t432">432</a></span><span class="t">        <span class="nam">api_token</span> <span class="op">=</span> <span class="nam">get_config_value</span><span class="op">(</span><span class="nam">config</span><span class="op">=</span><span class="nam">config</span><span class="op">,</span> <span class="nam">config_path</span><span class="op">=</span><span class="nam">config_path</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t433" href="#t433">433</a></span><span class="t">    <span class="key">return</span> <span class="nam">api_token</span>&nbsp;</span><span class="r"></span></p>
 </main>
 <footer>
     <div class="content">
@@ -500,7 +522,7 @@
             <a class="nav" href="z_145eef247bfb46b6_email_message_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
             <a class="nav" href="https://coverage.readthedocs.io/en/7.6.11">coverage.py v7.6.11</a>,
-            created at 2025-02-10 20:19 +0000
+            created at 2025-02-11 16:30 +0000
         </p>
     </div>
 </footer>
