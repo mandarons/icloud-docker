@@ -503,3 +503,29 @@ class TestConfigParser(unittest.TestCase):
     def test_get_discord_username_none_config(self):
         """None config."""
         self.assertIsNone(config_parser.get_discord_username(config=None))
+
+    def test_get_pushover_user_key(self):
+        """Test for getting Pushover user key."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["pushover"] = {"user_key": "pushover_user_key"}
+        self.assertEqual(
+            config["app"]["pushover"]["user_key"],
+            config_parser.get_pushover_user_key(config=config),
+        )
+
+    def test_get_pushover_user_key_none_config(self):
+        """None config for Pushover user key."""
+        self.assertIsNone(config_parser.get_pushover_user_key(config=None))
+
+    def test_get_pushover_api_token(self):
+        """Test for getting Pushover API token."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["pushover"] = {"api_token": "pushover_api_token"}
+        self.assertEqual(
+            config["app"]["pushover"]["api_token"],
+            config_parser.get_pushover_api_token(config=config),
+        )
+
+    def test_get_pushover_api_token_none_config(self):
+        """None config for Pushover API token."""
+        self.assertIsNone(config_parser.get_pushover_api_token(config=None))

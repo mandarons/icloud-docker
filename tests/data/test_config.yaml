@@ -14,6 +14,9 @@ app:
   discord:
   # webhook_url: <server webhook>
   # username: icloud-docker
+  pushover:
+  # user_key: <your Pushover user key>
+  # api_token: <your Pushover api token>
   smtp:
   # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
   # email: sender@test.com

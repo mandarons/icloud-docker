@@ -77,6 +77,33 @@ def notify_discord(config, message, last_send=None, dry_run=False):
         LOGGER.warning("Not sending 2FA notification because Discord is not configured.")
     return sent_on
 
+def notify_pushover(config, message, last_send=None, dry_run=False):
+    """Send Pushover notification."""
+    sent_on = None
+    user_key = config_parser.get_pushover_user_key(config=config)
+    api_token = config_parser.get_pushover_api_token(config=config)
+
+    if last_send and last_send > datetime.datetime.now() - datetime.timedelta(hours=24):
+        LOGGER.info("Throttling Pushover to once a day")
+        sent_on = last_send
+    elif user_key and api_token:
+        sent_on = datetime.datetime.now()
+        if not dry_run:
+            if not post_message_to_pushover(api_token, user_key, message):
+                sent_on = None
+    else:
+        LOGGER.warning("Not sending 2FA notification because Pushover is not configured.")
+    return sent_on
+
+def post_message_to_pushover(api_token, user_key, message):
+    """Post message to Pushover API."""
+    url = "https://api.pushover.net/1/messages.json"
+    data = {"token": api_token, "user": user_key, "message": message}
+    response = requests.post(url, data=data, timeout=10)
+    if response.status_code == 200:
+        return True
+    LOGGER.error(f"Failed to send Pushover notification. Response: {response.text}")
+    return False
 
 def send(config, username, last_send=None, dry_run=False, region="global"):
     """Send notifications."""
@@ -91,6 +118,7 @@ def send(config, username, last_send=None, dry_run=False, region="global"):
     subject = f"icloud-docker: Two step authentication is required for {username}"
     notify_telegram(config=config, message=message, last_send=last_send, dry_run=dry_run)
     notify_discord(config=config, message=message, last_send=last_send, dry_run=dry_run)
+    notify_pushover(config=config, message=message, last_send=last_send, dry_run=dry_run)
     email = config_parser.get_smtp_email(config=config)
     to_email = config_parser.get_smtp_to_email(config=config)
     host = config_parser.get_smtp_host(config=config)

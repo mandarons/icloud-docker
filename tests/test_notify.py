@@ -8,8 +8,10 @@ from src import config_parser, notify
 from src.email_message import EmailMessage as Message
 from src.notify import (
     notify_discord,
+    notify_pushover,
     notify_telegram,
     post_message_to_discord,
+    post_message_to_pushover,
     post_message_to_telegram,
 )
 
@@ -29,6 +31,7 @@ class TestNotify(unittest.TestCase):
                     "password": "password",
                 },
                 "telegram": {"bot_token": "bot_token", "chat_id": "chat_id"},
+                "pushover": {"user_key": "pushover_user_key", "api_token": "pushover_api_token"},
             },
         }
         self.message_body = "message body"
@@ -330,5 +333,90 @@ class TestNotify(unittest.TestCase):
             post_mock.assert_called_once_with(
                 "webhook_url",
                 data={"content": message, "username": "username"},
+                timeout=10,
+            )
+
+    def test_notify_pushover_success(self):
+        """Test for successful Pushover notification."""
+        with patch("src.notify.post_message_to_pushover") as post_message_mock:
+            notify_pushover(self.config, self.message_body, None, False)
+
+            # Verify that post_message_to_pushover is called with the correct arguments
+            post_message_mock.assert_called_once_with(
+                self.config["app"]["pushover"]["api_token"],
+                self.config["app"]["pushover"]["user_key"],
+                self.message_body,
+            )
+
+    def test_notify_pushover_fail(self):
+        """Test for failed Pushover notification."""
+        with patch("src.notify.post_message_to_pushover") as post_message_mock:
+            post_message_mock.return_value = False
+            notify_pushover(self.config, self.message_body, None, False)
+
+            # Verify that post_message_to_pushover is called with the correct arguments
+            post_message_mock.assert_called_once_with(
+                self.config["app"]["pushover"]["api_token"],
+                self.config["app"]["pushover"]["user_key"],
+                self.message_body,
+            )
+
+    def test_notify_pushover_throttling(self):
+        """Test for throttled Pushover notification."""
+        last_send = datetime.datetime.now() - datetime.timedelta(hours=2)
+        dry_run = False
+
+        with patch("src.notify.post_message_to_pushover") as post_message_mock:
+            notify_pushover(self.config, self.message_body, last_send, dry_run)
+
+            # Verify that post_message_to_pushover is not called when throttled
+            post_message_mock.assert_not_called()
+
+    def test_notify_pushover_dry_run(self):
+        """Test for dry run mode in Pushover notification."""
+        last_send = datetime.datetime.now()
+        dry_run = True
+
+        with patch("src.notify.post_message_to_pushover") as post_message_mock:
+            notify_pushover(self.config, self.message_body, last_send, dry_run)
+
+            # Verify that post_message_to_pushover is not called in dry run mode
+            post_message_mock.assert_not_called()
+
+    def test_notify_pushover_no_config(self):
+        """Test for missing Pushover configuration."""
+        config = {}
+        last_send = None
+        dry_run = False
+
+        with patch("src.notify.post_message_to_pushover") as post_message_mock:
+            notify_pushover(config, self.message_body, last_send, dry_run)
+
+            # Verify that post_message_to_pushover is not called when Pushover configuration is missing
+            post_message_mock.assert_not_called()
+
+    def test_post_message_to_pushover(self):
+        """Test for successful post to Pushover."""
+        with patch("requests.post") as post_mock:
+            post_mock.return_value.status_code = 200
+            post_message_to_pushover("pushover_api_token", "pushover_user_key", "message")
+
+            # Verify that post is called with the correct arguments
+            post_mock.assert_called_once_with(
+                "https://api.pushover.net/1/messages.json",
+                data={"token": "pushover_api_token", "user": "pushover_user_key", "message": "message"},
+                timeout=10,
+            )
+
+    def test_post_message_to_pushover_fail(self):
+        """Test for failed post to Pushover."""
+        with patch("requests.post") as post_mock:
+            post_mock.return_value.status_code = 400
+            post_message_to_pushover("pushover_api_token", "pushover_user_key", "message")
+
+            # Verify that post is called with the correct arguments
+            post_mock.assert_called_once_with(
+                "https://api.pushover.net/1/messages.json",
+                data={"token": "pushover_api_token", "user": "pushover_user_key", "message": "message"},
                 timeout=10,
             )

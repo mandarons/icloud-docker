@@ -409,3 +409,25 @@ def get_discord_username(config):
     else:
         username = get_config_value(config=config, config_path=config_path)
     return username
+
+# Get pushover user key
+def get_pushover_user_key(config):
+    """Return Pushover user key from config."""
+    user_key = None
+    config_path = ["app", "pushover", "user_key"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(f"Warning: user_key is not found in {config_path_to_string(config_path)}.")
+    else:
+        user_key = get_config_value(config=config, config_path=config_path)
+    return user_key
+
+# Get pushover api token
+def get_pushover_api_token(config):
+    """Return Pushover API token from config."""
+    api_token = None
+    config_path = ["app", "pushover", "api_token"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        LOGGER.warning(f"Warning: api_token is not found in {config_path_to_string(config_path)}.")
+    else:
+        api_token = get_config_value(config=config, config_path=config_path)
+    return api_token
