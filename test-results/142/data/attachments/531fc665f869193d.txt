@@ -1,0 +1,6 @@
+[38;21m2025-03-17 19:08:20,512 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-03-17 19:08:20,513 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-03-17 19:08:20,513 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-03-17 19:08:20,522 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-03-17 19:08:20,523 :: DEBUG :: root :: sync_drive.py :: 28 :: Skipping the unwanted file /dir1/README.md[0m
+[38;21m2025-03-17 19:08:20,524 :: DEBUG :: root :: sync_drive.py :: 28 :: Skipping the unwanted file /.git/index[0m
