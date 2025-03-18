@@ -34,6 +34,7 @@ app:
 
 drive:
   destination: "./drive"
+  # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: true
   sync_interval: -1
   ignore:
@@ -62,6 +63,7 @@ drive:
       - xmcf
 photos:
   destination: photos
+  # Remove local photos that are not present on server (i.e. photos delete on server)
   remove_obsolete: false
   sync_interval: -1
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
