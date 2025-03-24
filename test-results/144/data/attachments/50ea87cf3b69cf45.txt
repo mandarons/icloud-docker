@@ -1,0 +1,1 @@
+[38;5;226m2025-03-24 19:45:46,166 :: WARNING :: root :: config_parser.py :: 62 :: retry_login_interval not found in app > credentials > retry_login_interval. Using default 600 seconds ...[0m
