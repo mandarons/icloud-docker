@@ -2,7 +2,7 @@
 allure-pytest==2.13.5
 coverage==7.8.0
 pytest==8.3.5
-pytest-cov==6.0.0
+pytest-cov==6.1.1
 # pylint==2.9.3
 ruff
 ipython
