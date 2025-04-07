@@ -1,0 +1,4 @@
+[38;5;226m2025-04-07 19:20:49,178 :: WARNING :: root :: config_parser.py :: 396 :: Warning: webhook_url is not found in app > discord > webhook_url.[0m
+[38;5;226m2025-04-07 19:20:49,178 :: WARNING :: root :: config_parser.py :: 408 :: Warning: username is not found in app > discord > username.[0m
+[38;5;226m2025-04-07 19:20:49,178 :: WARNING :: root :: notify.py :: 77 :: Not sending 2FA notification because Discord is not configured.[0m
+[38;5;226m2025-04-07 19:20:49,178 :: WARNING :: root :: config_parser.py :: 196 :: Warning: no_tls is not found in app > smtp > no_tls[0m
