@@ -77,13 +77,13 @@ def generate_file_name(photo, file_size, destination_path, folder_format):
     file_path = os.path.join(destination_path, filename)
     file_size_path = os.path.join(
         destination_path,
-        f'{"__".join([name, file_size])}' if extension == "" else f'{"__".join([name, file_size])}.{extension}',
+        f"{'__'.join([name, file_size])}" if extension == "" else f"{'__'.join([name, file_size])}.{extension}",
     )
     file_size_id_path = os.path.join(
         destination_path,
-        f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}'
+        f"{'__'.join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}"
         if extension == ""
-        else f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
+        else f"{'__'.join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}",
     )
 
     if folder_format is not None:
@@ -91,9 +91,9 @@ def generate_file_name(photo, file_size, destination_path, folder_format):
         file_size_id_path = os.path.join(
             destination_path,
             folder,
-            f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}'
+            f"{'__'.join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}"
             if extension == ""
-            else f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
+            else f"{'__'.join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}",
         )
         os.makedirs(os.path.join(destination_path, folder), exist_ok=True)
 
@@ -138,8 +138,8 @@ def download_photo(photo, file_size, destination_path):
     return True
 
 
-def process_photo(photo, file_size, destination_path, files, folder_format):
-    """Process photo details."""
+def process_photo(photo, file_size, destination_path, files, folder_format, all_photos_path=None):
+    """Process photo details, with optional hardlinking from all_photos_path."""
     photo_path = generate_file_name(
         photo=photo,
         file_size=file_size,
@@ -151,14 +151,37 @@ def process_photo(photo, file_size, destination_path, files, folder_format):
         return False
     if files is not None:
         files.add(photo_path)
+    # If all_photos_path is set and this is not the all_photos_path, try to hardlink
+    if all_photos_path and os.path.exists(all_photos_path):
+        try:
+            if not os.path.samefile(destination_path, all_photos_path):
+                all_photos_file = generate_file_name(
+                    photo=photo,
+                    file_size=file_size,
+                    destination_path=all_photos_path,
+                    folder_format=folder_format,
+                )
+                if os.path.isfile(all_photos_file):
+                    try:
+                        if os.path.exists(photo_path):
+                            os.remove(photo_path)
+                        os.link(all_photos_file, photo_path)
+                        LOGGER.info(f"Hardlinked {photo_path} -> {all_photos_file}")
+                        return True
+                    except Exception as e:
+                        LOGGER.warning(f"Failed to hardlink {photo_path} to {all_photos_file}: {e}")
+        except Exception as e:
+            LOGGER.warning(f"Failed to compare directories for hardlinking: {e}")
     if photo_exists(photo, file_size, photo_path):
         return False
     download_photo(photo, file_size, photo_path)
     return True
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None):
-    """Sync given album."""
+def sync_album(
+    album, destination_path, file_sizes, extensions=None, files=None, folder_format=None, all_photos_path=None
+):
+    """Sync given album, with optional hardlinking from all_photos_path."""
     if album is None or destination_path is None or file_sizes is None:
         return None
     os.makedirs(unicodedata.normalize("NFC", destination_path), exist_ok=True)
@@ -166,7 +189,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
     for photo in album:
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
-                process_photo(photo, file_size, destination_path, files, folder_format)
+                process_photo(photo, file_size, destination_path, files, folder_format, all_photos_path=all_photos_path)
         else:
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
     for subalbum in album.subalbums:
@@ -177,6 +200,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
             extensions,
             files,
             folder_format,
+            all_photos_path=all_photos_path,
         )
     return True
 
@@ -197,15 +221,26 @@ def remove_obsolete(destination_path, files):
 
 
 def sync_photos(config, photos):
-    """Sync all photos."""
+    """Sync all photos with deduplication via hard links."""
     destination_path = config_parser.prepare_photos_destination(config=config)
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
     libraries = filters["libraries"] if filters["libraries"] is not None else photos.libraries
     folder_format = config_parser.get_photos_folder_format(config=config)
+    all_photos_dir = os.path.join(destination_path, "all")
     for library in libraries:
         if download_all and library == "PrimarySync":
+            # Always sync 'All Photos' first
+            sync_album(
+                album=photos.libraries[library].all,
+                destination_path=all_photos_dir,
+                file_sizes=filters["file_sizes"],
+                extensions=filters["extensions"],
+                files=files,
+                folder_format=folder_format,
+                all_photos_path=None,  # No hardlinking for 'All Photos' itself
+            )
             for album in photos.libraries[library].albums.keys():
                 if filters["albums"] and album in iter(filters["albums"]):
                     continue
@@ -216,6 +251,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    all_photos_path=all_photos_dir,
                 )
         elif filters["albums"] and library == "PrimarySync":
             for album in iter(filters["albums"]):
@@ -226,6 +262,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    all_photos_path=all_photos_dir,
                 )
         elif filters["albums"]:
             for album in iter(filters["albums"]):
@@ -237,17 +274,19 @@ def sync_photos(config, photos):
                         extensions=filters["extensions"],
                         files=files,
                         folder_format=folder_format,
+                        all_photos_path=all_photos_dir,
                     )
                 else:
                     LOGGER.warning(f"Album {album} not found in {library}. Skipping the album {album} ...")
         else:
             sync_album(
                 album=photos.libraries[library].all,
-                destination_path=os.path.join(destination_path, "all"),
+                destination_path=all_photos_dir,
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
                 files=files,
                 folder_format=folder_format,
+                all_photos_path=None,
             )
 
     if config_parser.get_photos_remove_obsolete(config=config):
