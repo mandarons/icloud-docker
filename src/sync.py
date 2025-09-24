@@ -127,12 +127,13 @@ def sync():
             enable_sync_photos = True
         next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
         LOGGER.info(f"Resyncing at {next_sync} ...")
-        if (
-            config_parser.get_drive_sync_interval(config=config) < 0
-            if "drive" in config
-            else True and config_parser.get_photos_sync_interval(config=config) < 0
-            if "photos" in config
-            else True
-        ):
+
+        # Check if we should exit (oneshot mode)
+        # Exit when ALL configured sync intervals are -1
+        should_exit_drive = ("drive" not in config) or (config_parser.get_drive_sync_interval(config=config) < 0)
+        should_exit_photos = ("photos" not in config) or (config_parser.get_photos_sync_interval(config=config) < 0)
+
+        if should_exit_drive and should_exit_photos:
+            LOGGER.info("All configured sync intervals are negative, exiting oneshot mode...")
             break
         sleep(sleep_for)
