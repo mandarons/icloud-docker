@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM ghcr.io/linuxserver/baseimage-alpine:3.19
+FROM alpine:3.19
 
 # set version label
 ARG APP_VERSION=dev
@@ -11,9 +11,15 @@ ENV NEW_HEARTBEAT_ENDPOINT=$NEW_HEARTBEAT_ENDPOINT
 ENV APP_VERSION=$APP_VERSION
 LABEL maintainer="mandarons"
 
+# Set environment variables
 ENV HOME="/app"
+ENV PUID=911
+ENV PGID=911
+
 COPY requirements.txt .
 RUN \
+  echo "**** update package repository ****" && \
+  apk update && \
   echo "**** install build packages ****" && \
   apk add --no-cache --virtual=build-dependencies \
     git \
@@ -22,17 +28,25 @@ RUN \
     python3-dev \
     libffi-dev \
     openssl-dev \
-    sudo libmagic shadow dumb-init \
     cargo && \
   echo "**** install packages ****" && \
   apk add --no-cache \
-    python3 && \
+    python3 \
+    py3-pip \
+    sudo \
+    libmagic \
+    shadow \
+    dumb-init \
+    su-exec && \
+  echo "**** create user ****" && \
+  addgroup -g 911 abc && \
+  adduser -D -u 911 -G abc abc && \
   echo "**** install icloud app ****" && \
-  python3 -m venv /lsiopy && \
-  pip install -U --no-cache-dir \
+  python3 -m venv /venv && \
+  /venv/bin/pip install -U --no-cache-dir \
     pip \
     wheel && \
-  pip install -U --no-cache-dir -r requirements.txt && \
+  /venv/bin/pip install -U --no-cache-dir -r requirements.txt && \
   echo "**** cleanup ****" && \
   apk del --purge \
     build-dependencies && \
@@ -42,7 +56,17 @@ RUN \
     ${HOME}/.cargo
 
 # add local files
-RUN apk update && apk add sudo libmagic shadow dumb-init
-COPY root/ /
 COPY . /app/
 WORKDIR /app
+
+# Create necessary directories
+RUN mkdir -p /icloud /config/session_data && \
+    chown -R abc:abc /app /config /icloud
+
+# Create entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+EXPOSE 80
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+CMD ["/usr/local/bin/docker-entrypoint.sh"]

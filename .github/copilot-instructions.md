@@ -43,8 +43,8 @@ This is a containerized iCloud sync client that downloads files/photos from iClo
 - **Temp directory cleanup**: All tests use `setUp()/tearDown()` pattern for `tests.TEMP_DIR`
 
 ### Docker Development
-- **Base image**: `ghcr.io/linuxserver/baseimage-alpine:3.19` with S6 overlay
-- **Service management**: Main app runs via `root/etc/s6-overlay/s6-rc.d/svc-icd/run`
+- **Base image**: `alpine:3.19` with dumb-init for process management
+- **Service management**: Main app runs via custom `docker-entrypoint.sh` script
 - **Debug container**: Use `Dockerfile-debug` for development with additional tools
 
 ## Critical Implementation Details
@@ -78,7 +78,7 @@ This is a containerized iCloud sync client that downloads files/photos from iClo
 
 ## External Dependencies
 - **iCloudPy**: Core iCloud API client (`from icloudpy import ICloudPyService`)
-- **S6 overlay**: Process supervision in Docker container
+- **dumb-init**: Process supervision in Docker container
 - **ruamel.yaml**: YAML parsing with comment preservation
 - **magic**: File type detection for drive sync
 
