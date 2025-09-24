@@ -93,20 +93,6 @@ jobs:
       - name: Check Out Repo
         uses: actions/checkout@v4
       
-      - name: Prepare PR tag
-        id: prep
-        run: |
-          PR_NUMBER=$(echo ${{ github.event.number }})
-          if [ -z "$PR_NUMBER" ]; then
-            # Fallback for workflow_dispatch or other cases
-            PR_NUMBER=$(echo "${{ github.ref }}" | sed 's/.*\///')
-          fi
-          TAGS="mandarons/icloud-drive:pr-${PR_NUMBER}"
-          echo "PR Number: $PR_NUMBER"
-          echo "Docker Tags: $TAGS"
-          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
-          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
-      
       - name: Cache Docker layers
         uses: actions/cache@v4
         with:
@@ -121,6 +107,20 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      
+      - name: Prepare PR tag
+        id: prep
+        run: |
+          PR_NUMBER=$(echo ${{ github.event.number }})
+          if [ -z "$PR_NUMBER" ]; then
+            # Fallback for workflow_dispatch or other cases
+            PR_NUMBER=$(echo "${{ github.ref }}" | sed 's/.*\///')
+          fi
+          TAGS="mandarons/icloud-drive:pr-${PR_NUMBER}"
+          echo "PR Number: $PR_NUMBER"
+          echo "Docker Tags: $TAGS"
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
       
       - name: Set up Docker QEMU
         uses: docker/setup-qemu-action@v3
