@@ -89,9 +89,29 @@ jobs:
   build-and-push-docker:
     needs: test
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v4
+      
+      - name: Prepare PR tag
+        id: prep
+        run: |
+          PR_NUMBER=$(echo ${{ github.event.number }})
+          if [ -z "$PR_NUMBER" ]; then
+            # Fallback for workflow_dispatch or other cases
+            PR_NUMBER=$(echo "${{ github.ref }}" | sed 's/.*\///')
+          fi
+          # Use lowercase repository name for GHCR
+          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          TAGS="ghcr.io/${REPO_NAME}:pr-${PR_NUMBER}"
+          echo "PR Number: $PR_NUMBER"
+          echo "Repository: $REPO_NAME"
+          echo "Docker Tags: $TAGS"
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
       
       - name: Cache Docker layers
         uses: actions/cache@v4
@@ -108,20 +128,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      
-      - name: Prepare PR tag
-        id: prep
-        run: |
-          PR_NUMBER=$(echo ${{ github.event.number }})
-          if [ -z "$PR_NUMBER" ]; then
-            # Fallback for workflow_dispatch or other cases
-            PR_NUMBER=$(echo "${{ github.ref }}" | sed 's/.*\///')
-          fi
-          TAGS="ghcr.io/${{ github.repository_owner }}/icloud-drive:pr-${PR_NUMBER}"
-          echo "PR Number: $PR_NUMBER"
-          echo "Docker Tags: $TAGS"
-          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
-          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
       
       - name: Set up Docker QEMU
         uses: docker/setup-qemu-action@v3
@@ -167,12 +173,12 @@ jobs:
               
               The Docker image for this PR has been built and pushed to GitHub Container Registry:
               
-              **Image Tag:** \`ghcr.io/${{ github.repository_owner }}/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}\`
+              **Image Tag:** \`${{ steps.prep.outputs.tags }}\`
               
               **Usage:**
               \`\`\`bash
-              docker pull ghcr.io/${{ github.repository_owner }}/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}
-              docker run --name icloud-pr-test -v \${PWD}/icloud:/icloud -v \${PWD}/config:/config -e ENV_CONFIG_FILE_PATH=/config/config.yaml ghcr.io/${{ github.repository_owner }}/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}
+              docker pull ${{ steps.prep.outputs.tags }}
+              docker run --name icloud-pr-test -v \${PWD}/icloud:/icloud -v \${PWD}/config:/config -e ENV_CONFIG_FILE_PATH=/config/config.yaml ${{ steps.prep.outputs.tags }}
               \`\`\`
               
               **Build Info:**
