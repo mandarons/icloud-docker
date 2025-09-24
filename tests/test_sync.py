@@ -408,3 +408,130 @@ class TestSync(unittest.TestCase):
         self.assertTrue(len(captured.records) > 1)
         self.assertTrue(len([e for e in captured[1] if "Password is not stored in keyring." in e]) > 0)
         self.assertTrue(len([e for e in captured[1] if "retry_login_interval is < 0, exiting ..." in e]) > 0)
+
+    @patch("src.sync.sync_drive")
+    @patch("src.sync.sync_photos")
+    @patch("src.sync.sleep")
+    @patch("src.usage.alive")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_sync_oneshot_mode_both_negative(
+        self,
+        mock_usage_post,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_alive,
+        mock_sleep,
+        mock_sync_photos,
+        mock_sync_drive,
+    ):
+        """Test oneshot mode when both drive and photos sync_interval are -1."""
+        config = self.config.copy()
+        config["drive"]["sync_interval"] = -1
+        config["photos"]["sync_interval"] = -1
+        mock_read_config.return_value = config
+        mock_sync_drive.sync_drive.return_value = None
+        mock_sync_photos.sync_photos.return_value = None
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+
+        with self.assertLogs() as captured:
+            sync.sync()
+
+        # Verify the container exits with oneshot message
+        self.assertTrue(len(captured.records) > 1)
+        self.assertTrue(
+            len([e for e in captured[1] if "All configured sync intervals are negative, exiting oneshot mode..." in e])
+            > 0,
+        )
+        # Verify sleep is never called (container exits immediately after sync)
+        mock_sleep.assert_not_called()
+
+    @patch("src.sync.sync_drive")
+    @patch("src.sync.sync_photos")
+    @patch("src.sync.sleep")
+    @patch("src.usage.alive")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_sync_oneshot_mode_drive_only(
+        self,
+        mock_usage_post,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_alive,
+        mock_sleep,
+        mock_sync_photos,
+        mock_sync_drive,
+    ):
+        """Test oneshot mode when only drive is configured with sync_interval -1."""
+        config = self.config.copy()
+        config["drive"]["sync_interval"] = -1
+        del config["photos"]  # Only drive configured
+        mock_read_config.return_value = config
+        mock_sync_drive.sync_drive.return_value = None
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+
+        with self.assertLogs() as captured:
+            sync.sync()
+
+        # Verify the container exits with oneshot message
+        self.assertTrue(len(captured.records) > 1)
+        self.assertTrue(
+            len([e for e in captured[1] if "All configured sync intervals are negative, exiting oneshot mode..." in e])
+            > 0,
+        )
+        # Verify sleep is never called
+        mock_sleep.assert_not_called()
+
+    @patch("src.sync.sync_drive")
+    @patch("src.sync.sync_photos")
+    @patch("src.sync.sleep")
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_sync_mixed_intervals_should_not_exit(
+        self,
+        mock_usage_post,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+        mock_sleep,
+        mock_sync_photos,
+        mock_sync_drive,
+    ):
+        """Test that container does NOT exit when only one sync_interval is -1."""
+        config = self.config.copy()
+        config["drive"]["sync_interval"] = -1  # Oneshot
+        config["photos"]["sync_interval"] = 300  # Regular interval
+        mock_read_config.return_value = config
+        mock_sync_drive.sync_drive.return_value = None
+        mock_sync_photos.sync_photos.return_value = None
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+
+        # Mock sleep to raise exception after first call to break the loop
+        mock_sleep.side_effect = [Exception("Break loop")]
+
+        with self.assertRaises(Exception):
+            with self.assertLogs() as captured:
+                sync.sync()
+
+        # Verify it does NOT exit with oneshot message
+        oneshot_messages = [e for e in captured[1] if "All configured sync intervals are negative, exiting oneshot mode..." in e]
+        self.assertEqual(len(oneshot_messages), 0)
+        # Verify sleep was called (indicating the loop continued)
+        mock_sleep.assert_called_once()
