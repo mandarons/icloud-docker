@@ -604,3 +604,59 @@ class TestSyncPhotos(unittest.TestCase):
         name, extension = sync_photos.get_name_and_extension(photo=MockPhoto(), file_size="original_alt")
         self.assertEqual(name, "mock_filename")
         self.assertEqual(extension, "xed")
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_hardlinks(self, mock_read_config, mock_service, mock_get_username, mock_get_password):
+        """Test for successful hard link creation for duplicate photos."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["filters"]["libraries"] = ["PrimarySync"]
+        config["photos"]["all_albums"] = True
+        config["photos"]["use_hardlinks"] = True
+        # Remove album filters to sync all albums
+        config["photos"]["filters"]["albums"] = None
+        mock_read_config.return_value = config
+        
+        # Sync photos with hard links enabled
+        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        
+        # Check if "All Photos" directory exists
+        all_photos_path = os.path.join(self.destination_path, "All Photos")
+        self.assertTrue(os.path.isdir(all_photos_path))
+        
+        # Check if other album directories exist
+        album_1_path = os.path.join(self.destination_path, "album-1")
+        album_2_path = os.path.join(self.destination_path, "album 2")
+        self.assertTrue(os.path.isdir(album_1_path))
+        self.assertTrue(os.path.isdir(album_2_path))
+        
+        # Find a file that should be duplicated across albums
+        import glob
+        duplicate_files = glob.glob(f"{self.destination_path}/**/IMG_3328*original*", recursive=True)
+        self.assertGreater(len(duplicate_files), 1, "Should have duplicate files across albums")
+        
+        # Check that all duplicate files have the same inode (hard linked)
+        inodes = set()
+        link_counts = set()
+        for file_path in duplicate_files:
+            file_stat = os.stat(file_path)
+            inodes.add(file_stat.st_ino)
+            link_counts.add(file_stat.st_nlink)
+        
+        # All files should have the same inode (hard linked)
+        self.assertEqual(len(inodes), 1, "All duplicate files should share the same inode")
+        
+        # All files should have the same link count
+        self.assertEqual(len(link_counts), 1, "All duplicate files should have the same link count")
+        
+        # Link count should equal the number of duplicate files
+        expected_link_count = len(duplicate_files)
+        actual_link_count = list(link_counts)[0]
+        self.assertEqual(actual_link_count, expected_link_count, 
+                        f"Link count should be {expected_link_count}, got {actual_link_count}")
+        
+        LOGGER.info(f"Hard link test passed: {len(duplicate_files)} files share 1 inode, saving storage space")
