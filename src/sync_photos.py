@@ -124,6 +124,20 @@ def photo_exists(photo, file_size, local_path):
         return False
 
 
+def create_hardlink(source_path, destination_path):
+    """Create a hard link from source to destination."""
+    try:
+        # Ensure destination directory exists
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+        # Create hard link
+        os.link(source_path, destination_path)
+        LOGGER.info(f"Created hard link: {destination_path} -> {source_path}")
+        return True
+    except (OSError, FileNotFoundError) as e:
+        LOGGER.warning(f"Failed to create hard link {destination_path}: {e!s}")
+        return False
+
+
 def download_photo(photo, file_size, destination_path):
     """Download photo from server."""
     if not (photo and file_size and destination_path):
@@ -141,7 +155,7 @@ def download_photo(photo, file_size, destination_path):
     return True
 
 
-def process_photo(photo, file_size, destination_path, files, folder_format):
+def process_photo(photo, file_size, destination_path, files, folder_format, hardlink_registry=None):
     """Process photo details."""
     photo_path = generate_file_name(
         photo=photo,
@@ -156,11 +170,29 @@ def process_photo(photo, file_size, destination_path, files, folder_format):
         files.add(photo_path)
     if photo_exists(photo, file_size, photo_path):
         return False
-    download_photo(photo, file_size, photo_path)
-    return True
+    
+    # Check if hard links are enabled and photo already exists elsewhere
+    if hardlink_registry is not None:
+        photo_key = f"{photo.id}_{file_size}"
+        if photo_key in hardlink_registry:
+            existing_path = hardlink_registry[photo_key]
+            if create_hardlink(existing_path, photo_path):
+                return True
+            else:
+                # Fallback to download if hard link creation fails
+                LOGGER.warning(f"Hard link creation failed, downloading {photo_path} instead")
+    
+    # Download the photo and register it for future hard links
+    if download_photo(photo, file_size, photo_path):
+        if hardlink_registry is not None:
+            photo_key = f"{photo.id}_{file_size}"
+            hardlink_registry[photo_key] = photo_path
+        return True
+    
+    return False
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None):
+def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None, hardlink_registry=None):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
@@ -169,7 +201,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
     for photo in album:
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
-                process_photo(photo, file_size, destination_path, files, folder_format)
+                process_photo(photo, file_size, destination_path, files, folder_format, hardlink_registry)
         else:
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
     for subalbum in album.subalbums:
@@ -180,6 +212,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
             extensions,
             files,
             folder_format,
+            hardlink_registry,
         )
     return True
 
@@ -205,11 +238,35 @@ def sync_photos(config, photos):
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
+    use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)
     libraries = filters["libraries"] if filters["libraries"] is not None else photos.libraries
     folder_format = config_parser.get_photos_folder_format(config=config)
+    
+    # Initialize hard link registry if hard links are enabled
+    hardlink_registry = {} if use_hardlinks else None
+    
+    # If hard links are enabled and all albums are downloaded, ensure "All Photos" is synced first
+    if use_hardlinks and download_all:
+        for library in libraries:
+            if library == "PrimarySync" and "All Photos" in photos.libraries[library].albums:
+                LOGGER.info("Syncing 'All Photos' album first for hard link reference...")
+                sync_album(
+                    album=photos.libraries[library].albums["All Photos"],
+                    destination_path=os.path.join(destination_path, "All Photos"),
+                    file_sizes=filters["file_sizes"],
+                    extensions=filters["extensions"],
+                    files=files,
+                    folder_format=folder_format,
+                    hardlink_registry=hardlink_registry,
+                )
+                break
+    
     for library in libraries:
         if download_all and library == "PrimarySync":
             for album in photos.libraries[library].albums.keys():
+                # Skip All Photos if we already synced it first
+                if use_hardlinks and album == "All Photos":
+                    continue
                 if filters["albums"] and album in iter(filters["albums"]):
                     continue
                 sync_album(
@@ -219,6 +276,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    hardlink_registry=hardlink_registry,
                 )
         elif filters["albums"] and library == "PrimarySync":
             for album in iter(filters["albums"]):
@@ -229,6 +287,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    hardlink_registry=hardlink_registry,
                 )
         elif filters["albums"]:
             for album in iter(filters["albums"]):
@@ -240,6 +299,7 @@ def sync_photos(config, photos):
                         extensions=filters["extensions"],
                         files=files,
                         folder_format=folder_format,
+                        hardlink_registry=hardlink_registry,
                     )
                 else:
                     LOGGER.warning(f"Album {album} not found in {library}. Skipping the album {album} ...")
@@ -251,6 +311,7 @@ def sync_photos(config, photos):
                 extensions=filters["extensions"],
                 files=files,
                 folder_format=folder_format,
+                hardlink_registry=hardlink_registry,
             )
 
     if config_parser.get_photos_remove_obsolete(config=config):
