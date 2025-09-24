@@ -664,7 +664,7 @@ class TestSyncPhotos(unittest.TestCase):
     def test_create_hardlink_failure(self):
         """Test create_hardlink function when it fails."""
         from src.sync_photos import create_hardlink
-        
+
         # Test with invalid source path (should fail)
         result = create_hardlink("/nonexistent/source.jpg", "/tmp/dest.jpg")
         self.assertFalse(result)
@@ -672,48 +672,48 @@ class TestSyncPhotos(unittest.TestCase):
     def test_process_photo_hardlink_creation_failure(self):
         """Test process_photo when hard link creation fails but download succeeds."""
         from src.sync_photos import process_photo
-        
+
         class MockPhoto:
             filename = "test_photo.jpg"
             id = "test_id"
             versions = {"original": {"size": 1000}}
-        
+
         # Create hardlink registry with an invalid source path to force hardlink failure
         hardlink_registry = {"test_id_original": "/nonexistent/source.jpg"}
-        
+
         files = set()
-        
+
         # This should fail to create hardlink but succeed in download
-        with patch('src.sync_photos.download_photo', return_value=True):
+        with patch("src.sync_photos.download_photo", return_value=True):
             result = process_photo(
                 photo=MockPhoto(),
-                file_size="original", 
+                file_size="original",
                 destination_path=self.destination_path,
                 files=files,
                 folder_format=None,
-                hardlink_registry=hardlink_registry
+                hardlink_registry=hardlink_registry,
             )
             self.assertTrue(result)  # Should succeed via download fallback
 
     def test_process_photo_download_failure(self):
         """Test process_photo when download_photo fails."""
         from src.sync_photos import process_photo
-        
+
         class MockPhoto:
-            filename = "test_photo.jpg" 
+            filename = "test_photo.jpg"
             id = "test_id"
             versions = {"original": {"size": 1000}}
-        
+
         files = set()
-        
+
         # Mock download_photo to return False (failure)
-        with patch('src.sync_photos.download_photo', return_value=False):
+        with patch("src.sync_photos.download_photo", return_value=False):
             result = process_photo(
                 photo=MockPhoto(),
                 file_size="original",
-                destination_path=self.destination_path, 
+                destination_path=self.destination_path,
                 files=files,
                 folder_format=None,
-                hardlink_registry=None
+                hardlink_registry=None,
             )
             self.assertFalse(result)  # Should return False when download fails
