@@ -85,3 +85,98 @@ jobs:
           name: coverage-output
           path: htmlcov
           retention-days: 1
+
+  build-and-push-docker:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v4
+      
+      - name: Prepare PR tag
+        id: prep
+        run: |
+          PR_NUMBER=$(echo ${{ github.event.number }})
+          if [ -z "$PR_NUMBER" ]; then
+            # Fallback for workflow_dispatch or other cases
+            PR_NUMBER=$(echo "${{ github.ref }}" | sed 's/.*\///')
+          fi
+          TAGS="mandarons/icloud-drive:pr-${PR_NUMBER}"
+          echo "PR Number: $PR_NUMBER"
+          echo "Docker Tags: $TAGS"
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+      
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-pr-${{ steps.prep.outputs.pr_number }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-pr-${{ steps.prep.outputs.pr_number }}-
+            ${{ runner.os }}-buildx-
+      
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+      
+      - name: Set up Docker QEMU
+        uses: docker/setup-qemu-action@v3
+      
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./
+          file: ./Dockerfile
+          build-args: |
+            NEW_INSTALLATION_ENDPOINT=${{ secrets.NEW_INSTALLATION_ENDPOINT }}
+            NEW_HEARTBEAT_ENDPOINT=${{ secrets.NEW_HEARTBEAT_ENDPOINT }}
+            APP_VERSION=pr-${{ steps.prep.outputs.pr_number }}
+          push: true
+          platforms: linux/arm64, linux/amd64
+          tags: ${{ steps.prep.outputs.tags }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+      
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+      
+      - name: Comment PR with Docker image info
+        uses: actions/github-script@v7
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🐳 **Docker Image Built Successfully!**
+              
+              The Docker image for this PR has been built and pushed to Docker Hub:
+              
+              **Image Tag:** \`mandarons/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}\`
+              
+              **Usage:**
+              \`\`\`bash
+              docker pull mandarons/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}
+              docker run --name icloud-pr-test -v \${PWD}/icloud:/icloud -v \${PWD}/config:/config -e ENV_CONFIG_FILE_PATH=/config/config.yaml mandarons/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}
+              \`\`\`
+              
+              **Build Info:**
+              - Platforms: linux/arm64, linux/amd64
+              - Image Digest: ${{ steps.docker_build.outputs.digest }}
+              - Built from commit: ${{ github.sha }}
+              `
+            })
