@@ -170,7 +170,7 @@ def process_photo(photo, file_size, destination_path, files, folder_format, hard
         files.add(photo_path)
     if photo_exists(photo, file_size, photo_path):
         return False
-    
+
     # Check if hard links are enabled and photo already exists elsewhere
     if hardlink_registry is not None:
         photo_key = f"{photo.id}_{file_size}"
@@ -181,14 +181,14 @@ def process_photo(photo, file_size, destination_path, files, folder_format, hard
             else:
                 # Fallback to download if hard link creation fails
                 LOGGER.warning(f"Hard link creation failed, downloading {photo_path} instead")
-    
+
     # Download the photo and register it for future hard links
     if download_photo(photo, file_size, photo_path):
         if hardlink_registry is not None:
             photo_key = f"{photo.id}_{file_size}"
             hardlink_registry[photo_key] = photo_path
         return True
-    
+
     return False
 
 
@@ -241,10 +241,10 @@ def sync_photos(config, photos):
     use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)
     libraries = filters["libraries"] if filters["libraries"] is not None else photos.libraries
     folder_format = config_parser.get_photos_folder_format(config=config)
-    
+
     # Initialize hard link registry if hard links are enabled
     hardlink_registry = {} if use_hardlinks else None
-    
+
     # If hard links are enabled and all albums are downloaded, ensure "All Photos" is synced first
     if use_hardlinks and download_all:
         for library in libraries:
@@ -260,7 +260,7 @@ def sync_photos(config, photos):
                     hardlink_registry=hardlink_registry,
                 )
                 break
-    
+
     for library in libraries:
         if download_all and library == "PrimarySync":
             for album in photos.libraries[library].albums.keys():
