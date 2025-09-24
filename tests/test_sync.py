@@ -435,8 +435,8 @@ class TestSync(unittest.TestCase):
         config["drive"]["sync_interval"] = -1
         config["photos"]["sync_interval"] = -1
         mock_read_config.return_value = config
-        mock_sync_drive.sync_drive.return_value = None
-        mock_sync_photos.sync_photos.return_value = None
+        mock_sync_drive.return_value = None
+        mock_sync_photos.return_value = None
         if ENV_ICLOUD_PASSWORD_KEY in os.environ:
             del os.environ[ENV_ICLOUD_PASSWORD_KEY]
 
