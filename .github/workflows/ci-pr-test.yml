@@ -102,14 +102,12 @@ jobs:
             ${{ runner.os }}-buildx-pr-${{ steps.prep.outputs.pr_number }}-
             ${{ runner.os }}-buildx-
       
-      - name: Login to Docker Hub
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-#          username: ${{ secrets.DOCKER_HUB_USERNAME }}
-#          password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
       
       - name: Prepare PR tag
         id: prep
@@ -119,7 +117,7 @@ jobs:
             # Fallback for workflow_dispatch or other cases
             PR_NUMBER=$(echo "${{ github.ref }}" | sed 's/.*\///')
           fi
-          TAGS="mandarons/icloud-drive:pr-${PR_NUMBER}"
+          TAGS="ghcr.io/${{ github.repository_owner }}/icloud-drive:pr-${PR_NUMBER}"
           echo "PR Number: $PR_NUMBER"
           echo "Docker Tags: $TAGS"
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
@@ -167,14 +165,14 @@ jobs:
               repo: context.repo.repo,
               body: `🐳 **Docker Image Built Successfully!**
               
-              The Docker image for this PR has been built and pushed to Docker Hub:
+              The Docker image for this PR has been built and pushed to GitHub Container Registry:
               
-              **Image Tag:** \`mandarons/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}\`
+              **Image Tag:** \`ghcr.io/${{ github.repository_owner }}/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}\`
               
               **Usage:**
               \`\`\`bash
-              docker pull mandarons/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}
-              docker run --name icloud-pr-test -v \${PWD}/icloud:/icloud -v \${PWD}/config:/config -e ENV_CONFIG_FILE_PATH=/config/config.yaml mandarons/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}
+              docker pull ghcr.io/${{ github.repository_owner }}/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}
+              docker run --name icloud-pr-test -v \${PWD}/icloud:/icloud -v \${PWD}/config:/config -e ENV_CONFIG_FILE_PATH=/config/config.yaml ghcr.io/${{ github.repository_owner }}/icloud-drive:pr-${{ steps.prep.outputs.pr_number }}
               \`\`\`
               
               **Build Info:**
