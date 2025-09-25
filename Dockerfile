@@ -69,5 +69,5 @@ COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
-ENTRYPOINT ["/usr/bin/dumb-init", "--"]
+# ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/usr/local/bin/docker-entrypoint.sh"]
