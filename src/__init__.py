@@ -100,7 +100,7 @@ def configure_icloudpy_logging():
     logger_config = get_logger_config(config=read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)))
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
-        
+
         # Configure icloudpy loggers to use the same level and enable propagation
         icloudpy_loggers = [
             logging.getLogger("icloudpy"),
