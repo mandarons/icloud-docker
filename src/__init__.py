@@ -102,6 +102,17 @@ def get_logger():
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
         logger.setLevel(level=level_name)
+
+        # Configure icloudpy loggers to use the same level
+        icloudpy_loggers = [
+            logging.getLogger("icloudpy"),
+            logging.getLogger("icloudpy.base"),
+            logging.getLogger("icloudpy.services"),
+            logging.getLogger("icloudpy.services.photos"),
+        ]
+        for icloudpy_logger in icloudpy_loggers:
+            icloudpy_logger.setLevel(level=level_name)
+
         if not log_handler_exists(
             logger=logger,
             handler_type=logging.FileHandler,
