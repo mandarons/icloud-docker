@@ -16,19 +16,10 @@ ENV HOME="/app"
 ENV PUID=911
 ENV PGID=911
 
-COPY requirements.txt .
+# Install system dependencies and create user first for better caching
 RUN \
   echo "**** update package repository ****" && \
   apk update && \
-  echo "**** install build packages ****" && \
-  apk add --no-cache --virtual=build-dependencies \
-    git \
-    gcc \
-    musl-dev \
-    python3-dev \
-    libffi-dev \
-    openssl-dev \
-    cargo && \
   echo "**** install packages ****" && \
   apk add --no-cache \
     python3 \
@@ -40,7 +31,20 @@ RUN \
     su-exec && \
   echo "**** create user ****" && \
   addgroup -g 911 abc && \
-  adduser -D -u 911 -G abc abc && \
+  adduser -D -u 911 -G abc abc
+
+# Install build dependencies and Python packages
+COPY requirements.txt .
+RUN \
+  echo "**** install build packages ****" && \
+  apk add --no-cache --virtual=build-dependencies \
+    git \
+    gcc \
+    musl-dev \
+    python3-dev \
+    libffi-dev \
+    openssl-dev \
+    cargo && \
   echo "**** install icloud app ****" && \
   python3 -m venv /venv && \
   /venv/bin/pip install -U --no-cache-dir \
@@ -52,8 +56,9 @@ RUN \
     build-dependencies && \
   rm -rf \
     /tmp/* \
-    ${HOME}/.cache \
-    ${HOME}/.cargo
+    /root/.cache \
+    /root/.cargo && \
+  rm requirements.txt
 
 # add local files
 COPY . /app/
