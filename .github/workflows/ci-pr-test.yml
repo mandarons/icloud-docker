@@ -92,6 +92,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      pull-requests: write
     steps:
       - name: Check Out Repo
         uses: actions/checkout@v4
