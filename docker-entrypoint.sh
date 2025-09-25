@@ -34,4 +34,4 @@ chown -R abc:abc /app /config /icloud
 
 # Execute the main application as abc user
 echo "Starting iCloud Docker application..."
-exec su-exec abc:abc /app/init.sh
+exec su-exec abc /app/init.sh

@@ -89,7 +89,7 @@ class TestDockerEntrypoint(unittest.TestCase):
             content = f.read()
 
         # Check for su-exec execution
-        self.assertIn("exec su-exec abc:abc /app/init.sh", content)
+        self.assertIn("exec su-exec abc /app/init.sh", content)
 
     def test_entrypoint_build_version_check(self):
         """Test that the script checks for build version file."""
