@@ -27,10 +27,10 @@ if [ -f /build_version ]; then
 fi
 
 # Create necessary directories
-mkdir -p /icloud /config/session_data
+mkdir -p /icloud /config/session_data /home/abc
 
 # Set ownership if not already correct
-for dir in /app /config /icloud; do
+for dir in /app /config /icloud /home/abc; do
     if [ "$(stat -c %u:%g "$dir" 2>/dev/null)" != "$(id -u abc):$(id -g abc)" ]; then
         echo "Setting ownership for $dir"
         chown -R abc:abc "$dir"

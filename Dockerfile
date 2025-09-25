@@ -29,7 +29,7 @@ RUN \
     su-exec && \
   echo "**** create user ****" && \
   addgroup -g 911 abc && \
-  adduser -D -u 911 -G abc abc
+  adduser -D -u 911 -G abc -h /home/abc -s /bin/sh abc
 
 # Install build dependencies and Python packages
 COPY requirements.txt .
