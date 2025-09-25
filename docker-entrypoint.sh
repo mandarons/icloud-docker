@@ -39,4 +39,4 @@ done
 
 # Execute the main application as abc user
 echo "Starting iCloud Docker application..."
-exec su-exec abc /app/init.sh
+su-exec abc:abc /app/init.sh
