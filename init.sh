@@ -1,3 +1,3 @@
 #!/bin/sh
 
-cd /app && export PYTHONPATH=/app && export PATH=/venv/bin:$PATH && python ./src/main.py
+cd /app && export PYTHONPATH=/app && python ./src/main.py

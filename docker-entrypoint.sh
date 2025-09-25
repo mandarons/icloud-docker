@@ -29,8 +29,13 @@ fi
 # Create necessary directories
 mkdir -p /icloud /config/session_data
 
-# Set ownership
-chown -R abc:abc /app /config /icloud
+# Set ownership if not already correct
+for dir in /app /config /icloud; do
+    if [ "$(stat -c %u:%g "$dir" 2>/dev/null)" != "$(id -u abc):$(id -g abc)" ]; then
+        echo "Setting ownership for $dir"
+        chown -R abc:abc "$dir"
+    fi
+done
 
 # Execute the main application as abc user
 echo "Starting iCloud Docker application..."
