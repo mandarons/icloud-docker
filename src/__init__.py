@@ -113,6 +113,10 @@ def get_logger():
         for icloudpy_logger in icloudpy_loggers:
             icloudpy_logger.setLevel(level=level_name)
 
+        # Create handlers once and add them to both root and icloudpy loggers
+        file_handler = None
+        console_handler = None
+
         if not log_handler_exists(
             logger=logger,
             handler_type=logging.FileHandler,
@@ -125,6 +129,7 @@ def get_logger():
                 ),
             )
             logger.addHandler(file_handler)
+
         if not log_handler_exists(logger=logger, handler_type=logging.StreamHandler, stream=sys.stdout):
             console_handler = logging.StreamHandler(sys.stdout)
             console_handler.setFormatter(
@@ -133,6 +138,39 @@ def get_logger():
                 ),
             )
             logger.addHandler(console_handler)
+
+        # Add the same handlers to icloudpy loggers if they were created
+        for icloudpy_logger in icloudpy_loggers:
+            if file_handler and not log_handler_exists(
+                logger=icloudpy_logger,
+                handler_type=logging.FileHandler,
+                filename=logger_config["filename"],
+            ):
+                # Create separate handler instances to avoid conflicts
+                icloudpy_file_handler = logging.FileHandler(logger_config["filename"])
+                icloudpy_file_handler.setFormatter(
+                    logging.Formatter(
+                        "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s",
+                    ),
+                )
+                icloudpy_logger.addHandler(icloudpy_file_handler)
+
+            if console_handler and not log_handler_exists(
+                logger=icloudpy_logger,
+                handler_type=logging.StreamHandler,
+                stream=sys.stdout,
+            ):
+                # Create separate handler instances to avoid conflicts
+                icloudpy_console_handler = logging.StreamHandler(sys.stdout)
+                icloudpy_console_handler.setFormatter(
+                    ColorfulConsoleFormatter(
+                        "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s",
+                    ),
+                )
+                icloudpy_logger.addHandler(icloudpy_console_handler)
+
+            # Disable propagation to avoid duplicate log messages
+            icloudpy_logger.propagate = False
     return logger
 
 
