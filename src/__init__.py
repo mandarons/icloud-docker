@@ -95,15 +95,13 @@ class ColorfulConsoleFormatter(logging.Formatter):
         return formatter.format(record)
 
 
-def get_logger():
-    """Return logger."""
-    logger = logging.getLogger()
+def configure_icloudpy_logging():
+    """Configure icloudpy logging to match app logging level."""
     logger_config = get_logger_config(config=read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)))
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
-        logger.setLevel(level=level_name)
-
-        # Configure icloudpy loggers to use the same level
+        
+        # Configure icloudpy loggers to use the same level and enable propagation
         icloudpy_loggers = [
             logging.getLogger("icloudpy"),
             logging.getLogger("icloudpy.base"),
@@ -112,8 +110,21 @@ def get_logger():
         ]
         for icloudpy_logger in icloudpy_loggers:
             icloudpy_logger.setLevel(level=level_name)
+            # Enable propagation so messages go to root logger handlers
+            icloudpy_logger.propagate = True
+            # Remove any existing handlers to avoid duplicates
+            icloudpy_logger.handlers.clear()
 
-        # Create handlers once and add them to both root and icloudpy loggers
+
+def get_logger():
+    """Return logger."""
+    logger = logging.getLogger()
+    logger_config = get_logger_config(config=read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)))
+    if logger_config:
+        level_name = logging.getLevelName(level=logger_config["level"].upper())
+        logger.setLevel(level=level_name)
+
+        # Create handlers once and add them to root logger
         file_handler = None
         console_handler = None
 
@@ -139,38 +150,19 @@ def get_logger():
             )
             logger.addHandler(console_handler)
 
-        # Add the same handlers to icloudpy loggers if they were created
+        # Configure icloudpy loggers to use the same level and enable propagation
+        icloudpy_loggers = [
+            logging.getLogger("icloudpy"),
+            logging.getLogger("icloudpy.base"),
+            logging.getLogger("icloudpy.services"),
+            logging.getLogger("icloudpy.services.photos"),
+        ]
         for icloudpy_logger in icloudpy_loggers:
-            if file_handler and not log_handler_exists(
-                logger=icloudpy_logger,
-                handler_type=logging.FileHandler,
-                filename=logger_config["filename"],
-            ):
-                # Create separate handler instances to avoid conflicts
-                icloudpy_file_handler = logging.FileHandler(logger_config["filename"])
-                icloudpy_file_handler.setFormatter(
-                    logging.Formatter(
-                        "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s",
-                    ),
-                )
-                icloudpy_logger.addHandler(icloudpy_file_handler)
-
-            if console_handler and not log_handler_exists(
-                logger=icloudpy_logger,
-                handler_type=logging.StreamHandler,
-                stream=sys.stdout,
-            ):
-                # Create separate handler instances to avoid conflicts
-                icloudpy_console_handler = logging.StreamHandler(sys.stdout)
-                icloudpy_console_handler.setFormatter(
-                    ColorfulConsoleFormatter(
-                        "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s",
-                    ),
-                )
-                icloudpy_logger.addHandler(icloudpy_console_handler)
-
-            # Disable propagation to avoid duplicate log messages
-            icloudpy_logger.propagate = False
+            icloudpy_logger.setLevel(level=level_name)
+            # Enable propagation so messages go to root logger handlers
+            icloudpy_logger.propagate = True
+            # Remove any existing handlers to avoid duplicates
+            icloudpy_logger.handlers.clear()
     return logger
 
 
