@@ -174,6 +174,91 @@ photos:
 
 **_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
 
+## Setup Guides
+
+### UGREEN NAS Setup
+
+This guide helps you set up iCloud sync on a UGREEN NAS system using Docker.
+
+#### Prerequisites
+- UGREEN NAS with Docker support
+- Docker App installed on your UGREEN NAS
+- iCloud account credentials
+
+#### Step-by-Step Setup
+
+1. **Create folder structure in your UGREEN userspace**
+   
+   Create the following directory structure in your UGREEN user directory:
+   ```
+   /Cloud-Drives/
+   ├── Google-Drive
+   ├── iCloud
+   │   ├── Data
+   │   ├── Config
+   │   │   └── config.yaml (see step 2)
+   │   └── keyring
+   └── OneDrive
+   ```
+
+2. **Create config file**
+   - Copy the sample configuration from this README
+   - Make your adjustments to the `config.yaml` 
+   - Place it into the `Config` folder you created above
+
+3. **Create Project in UGREEN Docker App**
+   - Open the UGREEN Docker App
+   - Name: `icloud-<icloud_username>` (replace `<icloud_username>` with your actual username)
+   - Use the following Docker Compose configuration:
+
+   ```yaml
+   services:
+     icloud-<icloud_username>:
+       image: mandarons/icloud-drive
+       environment:
+         - PUID=<shown above the compose editor>
+         - PGID=<shown above the compose editor>
+         - ENV_CONFIG_FILE_PATH=/config/config.yaml
+       container_name: icloud-<icloud_username>
+       restart: unless-stopped
+       volumes:
+         - /etc/timezone:/etc/timezone:ro
+         - /etc/localtime:/etc/localtime:ro
+         - /home/<ugreen_username>/Cloud-Drives/iCloud/Data:/icloud
+         - /home/<ugreen_username>/Cloud-Drives/iCloud/Config:/config
+         - /home/<ugreen_username>/Cloud-Drives/iCloud/keyring:/home/abc/.local # Optional: Persist keyring for credentials (no password re-entry on container recreation)
+   ```
+   
+   Replace `<ugreen_username>` with your UGREEN system username.
+
+4. **Build and start the container**
+   - Save the Docker Compose configuration
+   - Build and start the container using the Docker App
+
+5. **Log into your Apple Account**
+   - In the UGREEN Docker App, switch to "Containers"
+   - Click on your container name `icloud-<icloud_username>`
+   - Switch to the "Terminal" tab
+   - Click on "Add"
+   - Input the command `bin/sh`
+   - Run the icloud command:
+     ```bash
+     su-exec abc icloud --username=<icloud_username> --session-directory=/config/session_data
+     ```
+   - Follow the authentication prompts to complete 2FA if required
+
+6. **Restart the container**
+   - Restart the container from the Docker App to ensure everything is working correctly
+
+#### Multiple Account Setup
+
+To set up multiple iCloud accounts, repeat these steps for each UGREEN user and Apple account combination. Each account should have its own separate folder structure and Docker container.
+
+#### Notes
+- This setup provides an iCloud backup solution on UGREEN NAS until official support is available in the UGREEN Cloud Drives App
+- The same approach can be adapted for other cloud services like Google Drive and OneDrive
+- Make sure to use unique container names for each iCloud account to avoid conflicts
+
 ## Usage Policy
 
 As mentioned in [USAGE.md](https://github.com/mandarons/icloud-docker/blob/main/USAGE.md)
