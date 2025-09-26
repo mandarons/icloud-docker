@@ -640,7 +640,7 @@ class TestSyncPhotos(unittest.TestCase):
                 import datetime
 
                 self.filename = "test_photo.jpg"
-                self.versions = {"original": {"type": "jpeg"}}
+                self.versions = {"original": {"type": "jpeg", "size": 1000}}  # Add size field
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 
@@ -670,7 +670,7 @@ class TestSyncPhotos(unittest.TestCase):
                 import datetime
 
                 self.filename = "test_photo.jpg"
-                self.versions = {"original": {"type": "jpeg"}}  # Only has original, not nonexistent_size
+                self.versions = {"original": {"type": "jpeg", "size": 1000}}  # Only has original, not nonexistent_size
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 
@@ -696,7 +696,7 @@ class TestSyncPhotos(unittest.TestCase):
                 import datetime
 
                 self.filename = "test_photo.jpg"
-                self.versions = {"original": {"type": "jpeg"}}
+                self.versions = {"original": {"type": "jpeg", "size": 1000}}  # Add size field
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 
@@ -711,7 +711,7 @@ class TestSyncPhotos(unittest.TestCase):
         )
         os.makedirs(os.path.dirname(photo_path), exist_ok=True)
         with open(photo_path, "wb") as f:
-            f.write(b"A" * 1000)  # Write some content to match photo size
+            f.write(b"A" * 1000)  # Write same content size as mock
 
         # Set modification time to match photo
         local_modified_time = time.mktime(photo.added_date.timetuple())
@@ -736,7 +736,7 @@ class TestSyncPhotos(unittest.TestCase):
                 import datetime
 
                 self.filename = "test_photo.jpg"
-                self.versions = {"original": {"type": "jpeg"}}
+                self.versions = {"original": {"type": "jpeg", "size": 1000}}  # Add size field
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 

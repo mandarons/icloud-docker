@@ -1267,9 +1267,9 @@ class TestSyncDrive(unittest.TestCase):
         local_file_path = os.path.join(self.destination_path, "Scanned document 1.pdf")
         os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
 
-        # Create file with same size as the item to trigger file_exists check
+        # Create file with same size as the item to trigger file_exists check (197334 bytes from mock data)
         with open(local_file_path, "wb") as f:
-            f.write(b"A" * 1000)  # Write some content to match file size
+            f.write(b"A" * 197334)  # Match the size from the mock data
 
         # Set the modification time to match the item
         item_modified_time = time.mktime(self.file_item.date_modified.timetuple())
