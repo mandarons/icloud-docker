@@ -1,5 +1,27 @@
 # syntax=docker/dockerfile:1
 
+# Build stage
+FROM python:3.10-alpine3.22 AS builder
+
+# Install build dependencies
+COPY requirements.txt .
+RUN \
+  echo "**** install build packages ****" && \
+  apk add --no-cache --virtual=build-dependencies \
+    git \
+    gcc \
+    musl-dev \
+    python3-dev \
+    libffi-dev \
+    openssl-dev \
+    cargo && \
+  echo "**** install icloud app ****" && \
+  pip install -U --no-cache-dir \
+    pip \
+    wheel && \
+  pip install -U --no-cache-dir -r requirements.txt
+
+# Runtime stage
 FROM python:3.10-alpine3.22
 
 # set version label
@@ -16,58 +38,30 @@ ENV HOME="/app"
 ENV PUID=911
 ENV PGID=911
 
-# Install system dependencies and create user first for better caching
+# Install runtime dependencies and create user
 RUN \
   echo "**** update package repository ****" && \
   apk update && \
-  echo "**** install packages ****" && \
+  echo "**** install runtime packages ****" && \
   apk add --no-cache \
-    sudo \
     libmagic \
     shadow \
-    dumb-init \
     su-exec && \
   echo "**** create user ****" && \
   addgroup -g 911 abc && \
   adduser -D -u 911 -G abc -h /home/abc -s /bin/sh abc
 
-# Install build dependencies and Python packages
-COPY requirements.txt .
-RUN \
-  echo "**** install build packages ****" && \
-  apk add --no-cache --virtual=build-dependencies \
-    git \
-    gcc \
-    musl-dev \
-    python3-dev \
-    libffi-dev \
-    openssl-dev \
-    cargo && \
-  echo "**** install icloud app ****" && \
-  pip install -U --no-cache-dir \
-    pip \
-    wheel && \
-  pip install -U --no-cache-dir -r requirements.txt && \
-  echo "**** cleanup ****" && \
-  apk del --purge \
-    build-dependencies && \
-  rm -rf \
-    /tmp/* \
-    /root/.cache \
-    /root/.cargo && \
-  rm requirements.txt
+# Copy Python packages from builder stage
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 
 # add local files
 COPY . /app/
 WORKDIR /app
-
-# Create necessary directories
-RUN mkdir -p /icloud /config/session_data
 
 # Create entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 80
-# ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["/usr/local/bin/docker-entrypoint.sh"]
