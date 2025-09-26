@@ -11,6 +11,11 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "/icloud"
+  # Maximum number of parallel download threads for both drive and photos
+  # auto: automatically set based on CPU cores (default, max 8)
+  # integer: specific number of threads (max 16)
+  # max_threads: auto
+  # max_threads: 4
   discord:
   # webhook_url: <your server webhook URL here>
   # username: icloud-docker #or any other name you prefer
@@ -39,9 +44,6 @@ drive:
   # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: false
   sync_interval: 300
-  # Maximum number of parallel download threads (default: number of CPU cores, max 8)
-  # Set to 1 to disable parallel downloads and use sequential downloads
-  # max_threads: 4
   filters:
     # File filters to be included in syncing iCloud drive content
     folders:
@@ -59,9 +61,6 @@ photos:
   # Remove local photos that are not present on server (i.e. photos delete on server)
   remove_obsolete: false
   sync_interval: 500
-  # Maximum number of parallel download threads (default: number of CPU cores, max 8)
-  # Set to 1 to disable parallel downloads and use sequential downloads
-  # max_threads: 4
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   # folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
   filters:

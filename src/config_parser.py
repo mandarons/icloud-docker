@@ -235,27 +235,43 @@ def get_drive_remove_obsolete(config):
     return drive_remove_obsolete
 
 
-def get_drive_max_threads(config):
-    """Return drive max threads from config."""
+def get_app_max_threads(config):
+    """Return app-level max threads from config with support for 'auto' value."""
     import multiprocessing
     default_max_threads = min(multiprocessing.cpu_count(), 8)
     max_threads = default_max_threads
-    config_path = ["drive", "max_threads"]
+    config_path = ["app", "max_threads"]
+    
     if not traverse_config_path(config=config, config_path=config_path):
         LOGGER.debug(
             f"max_threads is not found in {config_path_to_string(config_path=config_path)}."
-            + f" Using default max_threads: {max_threads} ...",
+            + f" Using default max_threads: {max_threads} (auto) ...",
         )
     else:
-        max_threads = get_config_value(config=config, config_path=config_path)
-        # Validate the value
-        if not isinstance(max_threads, int) or max_threads < 1:
-            LOGGER.warning(f"Invalid max_threads value: {max_threads}. Using default: {default_max_threads}")
+        max_threads_config = get_config_value(config=config, config_path=config_path)
+        
+        # Handle "auto" value
+        if isinstance(max_threads_config, str) and max_threads_config.lower() == "auto":
             max_threads = default_max_threads
+            LOGGER.info(f"Using automatic thread count: {max_threads} threads (based on CPU cores).")
+        elif isinstance(max_threads_config, int) and max_threads_config >= 1:
+            max_threads = min(max_threads_config, 16)  # Cap at 16 to avoid overwhelming servers
+            LOGGER.info(f"Using configured max_threads: {max_threads}.")
         else:
-            max_threads = min(max_threads, 16)  # Cap at 16 to avoid overwhelming servers
-            LOGGER.info(f"Using {max_threads} threads for drive downloads.")
+            LOGGER.warning(f"Invalid max_threads value: {max_threads_config}. Using default: {default_max_threads}")
+            max_threads = default_max_threads
+    
     return max_threads
+
+
+def get_drive_max_threads(config):
+    """Return drive max threads from config (now uses app-level configuration)."""
+    return get_app_max_threads(config)
+
+
+def get_photos_max_threads(config):
+    """Return photos max threads from config (now uses app-level configuration)."""
+    return get_app_max_threads(config)
 
 
 def prepare_photos_destination(config):
@@ -288,29 +304,6 @@ def get_photos_remove_obsolete(config):
         photos_remove_obsolete = get_config_value(config=config, config_path=config_path)
         LOGGER.debug(f"{'R' if photos_remove_obsolete else 'Not R'}emoving obsolete photos ...")
     return photos_remove_obsolete
-
-
-def get_photos_max_threads(config):
-    """Return photos max threads from config."""
-    import multiprocessing
-    default_max_threads = min(multiprocessing.cpu_count(), 8)
-    max_threads = default_max_threads
-    config_path = ["photos", "max_threads"]
-    if not traverse_config_path(config=config, config_path=config_path):
-        LOGGER.debug(
-            f"max_threads is not found in {config_path_to_string(config_path=config_path)}."
-            + f" Using default max_threads: {max_threads} ...",
-        )
-    else:
-        max_threads = get_config_value(config=config, config_path=config_path)
-        # Validate the value
-        if not isinstance(max_threads, int) or max_threads < 1:
-            LOGGER.warning(f"Invalid max_threads value: {max_threads}. Using default: {default_max_threads}")
-            max_threads = default_max_threads
-        else:
-            max_threads = min(max_threads, 16)  # Cap at 16 to avoid overwhelming servers
-            LOGGER.info(f"Using {max_threads} threads for photo downloads.")
-    return max_threads
 
 
 def get_photos_filters(config):

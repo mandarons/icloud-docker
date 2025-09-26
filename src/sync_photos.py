@@ -256,7 +256,6 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
 
             # Process completed downloads
             for future in as_completed(future_to_task):
-                task = future_to_task[future]
                 try:
                     result = future.result()
                     if result:

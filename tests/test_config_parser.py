@@ -530,60 +530,54 @@ class TestConfigParser(unittest.TestCase):
         """None config for Pushover API token."""
         self.assertIsNone(config_parser.get_pushover_api_token(config=None))
 
-    def test_get_drive_max_threads_default(self):
-        """Test for getting drive max threads with default value."""
+    def test_get_app_max_threads_default(self):
+        """Test for getting app max threads with default value."""
         config = read_config(config_path=tests.CONFIG_PATH)
-        max_threads = config_parser.get_drive_max_threads(config=config)
+        max_threads = config_parser.get_app_max_threads(config=config)
         self.assertIsInstance(max_threads, int)
         self.assertGreater(max_threads, 0)
         self.assertLessEqual(max_threads, 8)
 
-    def test_get_drive_max_threads_custom(self):
-        """Test for getting drive max threads with custom value."""
+    def test_get_app_max_threads_auto(self):
+        """Test for getting app max threads with 'auto' value."""
         config = read_config(config_path=tests.CONFIG_PATH)
-        config["drive"]["max_threads"] = 4
-        max_threads = config_parser.get_drive_max_threads(config=config)
+        config["app"]["max_threads"] = "auto"
+        max_threads = config_parser.get_app_max_threads(config=config)
+        self.assertIsInstance(max_threads, int)
+        self.assertGreater(max_threads, 0)
+        self.assertLessEqual(max_threads, 8)
+
+    def test_get_app_max_threads_custom(self):
+        """Test for getting app max threads with custom value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["max_threads"] = 4
+        max_threads = config_parser.get_app_max_threads(config=config)
         self.assertEqual(max_threads, 4)
 
-    def test_get_drive_max_threads_invalid(self):
-        """Test for getting drive max threads with invalid value."""
+    def test_get_app_max_threads_invalid(self):
+        """Test for getting app max threads with invalid value."""
         config = read_config(config_path=tests.CONFIG_PATH)
-        config["drive"]["max_threads"] = -1  # Invalid value
-        max_threads = config_parser.get_drive_max_threads(config=config)
+        config["app"]["max_threads"] = -1  # Invalid value
+        max_threads = config_parser.get_app_max_threads(config=config)
         self.assertGreater(max_threads, 0)  # Should use default
 
-    def test_get_drive_max_threads_capped(self):
-        """Test for getting drive max threads with value capped at 16."""
+    def test_get_app_max_threads_capped(self):
+        """Test for getting app max threads with value capped at 16."""
         config = read_config(config_path=tests.CONFIG_PATH)
-        config["drive"]["max_threads"] = 20  # Should be capped at 16
+        config["app"]["max_threads"] = 20  # Should be capped at 16
+        max_threads = config_parser.get_app_max_threads(config=config)
+        self.assertEqual(max_threads, 16)
+
+    def test_get_drive_max_threads_uses_app_config(self):
+        """Test that drive max threads uses app-level configuration."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["max_threads"] = 6
         max_threads = config_parser.get_drive_max_threads(config=config)
-        self.assertEqual(max_threads, 16)
+        self.assertEqual(max_threads, 6)
 
-    def test_get_photos_max_threads_default(self):
-        """Test for getting photos max threads with default value."""
+    def test_get_photos_max_threads_uses_app_config(self):
+        """Test that photos max threads uses app-level configuration."""
         config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["max_threads"] = 5
         max_threads = config_parser.get_photos_max_threads(config=config)
-        self.assertIsInstance(max_threads, int)
-        self.assertGreater(max_threads, 0)
-        self.assertLessEqual(max_threads, 8)
-
-    def test_get_photos_max_threads_custom(self):
-        """Test for getting photos max threads with custom value."""
-        config = read_config(config_path=tests.CONFIG_PATH)
-        config["photos"]["max_threads"] = 3
-        max_threads = config_parser.get_photos_max_threads(config=config)
-        self.assertEqual(max_threads, 3)
-
-    def test_get_photos_max_threads_invalid(self):
-        """Test for getting photos max threads with invalid value."""
-        config = read_config(config_path=tests.CONFIG_PATH)
-        config["photos"]["max_threads"] = "invalid"  # Invalid value
-        max_threads = config_parser.get_photos_max_threads(config=config)
-        self.assertGreater(max_threads, 0)  # Should use default
-
-    def test_get_photos_max_threads_capped(self):
-        """Test for getting photos max threads with value capped at 16."""
-        config = read_config(config_path=tests.CONFIG_PATH)
-        config["photos"]["max_threads"] = 25  # Should be capped at 16
-        max_threads = config_parser.get_photos_max_threads(config=config)
-        self.assertEqual(max_threads, 16)
+        self.assertEqual(max_threads, 5)

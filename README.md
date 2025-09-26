@@ -98,14 +98,16 @@ app:
     # If your email provider doesn't handle TLS
     # no_tls: true
   region: global # For China server users, set this to - china (default: global)
+  # Maximum number of parallel download threads for both drive and photos
+  # auto: automatically set based on CPU cores (default, max 8)
+  # integer: specific number of threads (max 16)
+  # max_threads: auto
+  # max_threads: 4
 drive:
   destination: "drive"
   # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: false
   sync_interval: 300
-  # Maximum number of parallel download threads (default: number of CPU cores, max 8)
-  # Set to 1 to disable parallel downloads and use sequential downloads
-  # max_threads: 4
   filters: # Optional - use it only if you want to download specific folders.
     # File filters to be included in syncing iCloud drive content
     folders:
@@ -127,9 +129,6 @@ photos:
   # Remove local photos that are not present on server (i.e. photos delete on server)
   remove_obsolete: false
   sync_interval: 500
-  # Maximum number of parallel download threads (default: number of CPU cores, max 8)
-  # Set to 1 to disable parallel downloads and use sequential downloads
-  # max_threads: 4
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
   filters:
@@ -162,14 +161,15 @@ This client supports parallel downloads to significantly improve sync performanc
 
 **Key Features:**
 - **Automatic thread scaling**: By default, uses the number of CPU cores (up to 8 threads)
-- **Configurable**: Set custom thread count via `max_threads` configuration
+- **Configurable**: Set custom thread count or use "auto" via `max_threads` configuration
 - **IO-optimized**: Designed for IO-heavy operations typical in file downloads
 - **Thread-safe**: All file operations are protected with locks to ensure data integrity
 
 **Configuration Options:**
+- `max_threads: auto` - Automatic scaling based on CPU cores (default)
 - `max_threads: 4` - Use 4 parallel download threads
 - `max_threads: 1` - Disable parallel downloads (sequential mode)
-- Omit the setting to use automatic scaling based on CPU cores
+- Omit the setting to use automatic scaling
 
 **Performance Impact:**
 - **Large file collections**: Can reduce sync time from hours to minutes

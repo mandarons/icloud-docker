@@ -401,7 +401,6 @@ def sync_directory(
 
                 # Process completed downloads
                 for future in as_completed(future_to_task):
-                    task = future_to_task[future]
                     try:
                         result = future.result()
                         if result:
