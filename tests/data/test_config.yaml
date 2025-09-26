@@ -66,7 +66,8 @@ photos:
   # Remove local photos that are not present on server (i.e. photos delete on server)
   remove_obsolete: false
   sync_interval: -1
-  all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multpile albums creates duplicates on filesystem
+  all_albums: false # Set back to default for existing tests
+  use_hardlinks: false # Set to default for existing tests
   # folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
   filters:
     libraries: # Optional, specify list of libraries to download photos from
