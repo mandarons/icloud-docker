@@ -635,7 +635,7 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertTrue(os.path.isdir(album_2_path))
 
         # Find a file that should be duplicated across albums
-        import glob
+        
         duplicate_files = glob.glob(f"{self.destination_path}/**/IMG_3328*original*", recursive=True)
         self.assertGreater(len(duplicate_files), 1, "Should have duplicate files across albums")
 
