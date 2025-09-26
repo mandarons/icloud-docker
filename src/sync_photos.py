@@ -23,9 +23,11 @@ LOGGER = get_logger()
 _files_lock = Lock()
 
 
-def get_max_threads():
+def get_max_threads(config=None):
     """Get maximum number of threads for parallel downloads."""
-    # Use number of CPU cores, with a reasonable maximum to avoid overwhelming the server
+    if config is not None:
+        return config_parser.get_photos_max_threads(config)
+    # Fallback for when config is not available
     import multiprocessing
     return min(multiprocessing.cpu_count(), 8)
 
@@ -220,7 +222,7 @@ def download_photo_task(download_info):
         return False
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None):
+def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None, config=None):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
@@ -241,7 +243,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
     
     # Execute downloads in parallel
     if download_tasks:
-        max_threads = get_max_threads()
+        max_threads = get_max_threads(config)
         LOGGER.info(f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos...")
         
         successful_downloads = 0
@@ -275,6 +277,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
             extensions,
             files,
             folder_format,
+            config,
         )
     return True
 
@@ -314,6 +317,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    config=config,
                 )
         elif filters["albums"] and library == "PrimarySync":
             for album in iter(filters["albums"]):
@@ -324,6 +328,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    config=config,
                 )
         elif filters["albums"]:
             for album in iter(filters["albums"]):
@@ -335,6 +340,7 @@ def sync_photos(config, photos):
                         extensions=filters["extensions"],
                         files=files,
                         folder_format=folder_format,
+                        config=config,
                     )
                 else:
                     LOGGER.warning(f"Album {album} not found in {library}. Skipping the album {album} ...")
@@ -346,6 +352,7 @@ def sync_photos(config, photos):
                 extensions=filters["extensions"],
                 files=files,
                 folder_format=folder_format,
+                config=config,
             )
 
     if config_parser.get_photos_remove_obsolete(config=config):

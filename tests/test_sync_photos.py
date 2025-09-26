@@ -7,6 +7,7 @@ import os
 import shutil
 import unittest
 from io import StringIO
+from pathlib import Path
 from unittest.mock import patch
 
 import icloudpy
@@ -709,6 +710,7 @@ class TestSyncPhotos(unittest.TestCase):
         mock_get_max_threads.return_value = 2  # Use smaller thread pool for testing
         
         album = self.service.photos.albums["All Photos"]
+        config = read_config(config_path=tests.CONFIG_PATH)
         
         result = sync_photos.sync_album(
             album=album,
@@ -716,7 +718,8 @@ class TestSyncPhotos(unittest.TestCase):
             file_sizes=["original"],
             extensions=None,
             files=set(),
-            folder_format=None
+            folder_format=None,
+            config=config,
         )
         
         self.assertTrue(result)

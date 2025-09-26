@@ -27,9 +27,11 @@ LOGGER = get_logger()
 _files_lock = Lock()
 
 
-def get_max_threads():
+def get_max_threads(config=None):
     """Get maximum number of threads for parallel downloads."""
-    # Use number of CPU cores, with a reasonable maximum to avoid overwhelming the server
+    if config is not None:
+        return config_parser.get_drive_max_threads(config)
+    # Fallback for when config is not available
     import multiprocessing
     return min(multiprocessing.cpu_count(), 8)
 
@@ -326,6 +328,7 @@ def sync_directory(
     filters=None,
     ignore=None,
     remove=False,
+    config=None,
 ):
     """Sync folder."""
     files = set()
@@ -356,6 +359,7 @@ def sync_directory(
                             top=False,
                             filters=filters,
                             ignore=ignore,
+                            config=config,
                         ),
                     )
                 except Exception:
@@ -384,7 +388,7 @@ def sync_directory(
         
         # Second pass: execute downloads in parallel
         if download_tasks:
-            max_threads = get_max_threads()
+            max_threads = get_max_threads(config)
             LOGGER.info(f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...")
             
             successful_downloads = 0
@@ -426,4 +430,5 @@ def sync_drive(config, drive):
         filters=config["drive"]["filters"] if "drive" in config and "filters" in config["drive"] else None,
         ignore=config["drive"]["ignore"] if "drive" in config and "ignore" in config["drive"] else None,
         remove=config_parser.get_drive_remove_obsolete(config=config),
+        config=config,
     )
