@@ -4,6 +4,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 import shutil
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -1147,9 +1148,13 @@ class TestSyncDrive(unittest.TestCase):
 
     def test_execution_continuation_on_icloudpy_exception(self):
         """Test for icloudpy exception."""
-        with patch.object(self.file_item, "open") as mocked_file_method, patch.object(
-            self.folder_item, "dir",
-        ) as mocked_folder_method:
+        with (
+            patch.object(self.file_item, "open") as mocked_file_method,
+            patch.object(
+                self.folder_item,
+                "dir",
+            ) as mocked_folder_method,
+        ):
             mocked_file_method.side_effect = mocked_folder_method.side_effect = ICloudPyAPIResponseException(
                 "Exception occurred.",
             )
@@ -1230,16 +1235,16 @@ class TestSyncDrive(unittest.TestCase):
         files = set()
         download_info = sync_drive.collect_file_for_download(
             item=self.file_item,
-            destination_path=self.destination_path,  
+            destination_path=self.destination_path,
             filters=self.filters["file_extensions"],
             ignore=self.ignore,
-            files=files
+            files=files,
         )
         self.assertIsNotNone(download_info)
-        self.assertEqual(download_info['item'], self.file_item)
-        self.assertTrue(download_info['local_file'].endswith('Scanned document 1.pdf'))
-        self.assertFalse(download_info['is_package'])
-        self.assertIn(download_info['local_file'], files)
+        self.assertEqual(download_info["item"], self.file_item)
+        self.assertTrue(download_info["local_file"].endswith("Scanned document 1.pdf"))
+        self.assertFalse(download_info["is_package"])
+        self.assertIn(download_info["local_file"], files)
 
     def test_collect_file_for_download_unwanted_file(self):
         """Test collecting file for download - unwanted file."""
@@ -1250,7 +1255,7 @@ class TestSyncDrive(unittest.TestCase):
             destination_path=self.destination_path,
             filters=["jpg", "png"],  # This won't match PDF
             ignore=self.ignore,
-            files=files
+            files=files,
         )
         self.assertIsNone(download_info)
         self.assertEqual(len(files), 0)
@@ -1259,23 +1264,23 @@ class TestSyncDrive(unittest.TestCase):
         """Test collecting file for download - file already exists."""
         files = set()
         # Create the local file first
-        local_file_path = os.path.join(self.destination_path, 'Scanned document 1.pdf')
+        local_file_path = os.path.join(self.destination_path, "Scanned document 1.pdf")
         os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
-        
+
         # Create file with same size as the item to trigger file_exists check
-        with open(local_file_path, 'wb') as f:
-            f.write(b'A' * 1000)  # Write some content to match file size
-        
+        with open(local_file_path, "wb") as f:
+            f.write(b"A" * 1000)  # Write some content to match file size
+
         # Set the modification time to match the item
         item_modified_time = time.mktime(self.file_item.date_modified.timetuple())
         os.utime(local_file_path, (item_modified_time, item_modified_time))
-        
+
         download_info = sync_drive.collect_file_for_download(
             item=self.file_item,
             destination_path=self.destination_path,
             filters=self.filters["file_extensions"],
             ignore=self.ignore,
-            files=files
+            files=files,
         )
         self.assertIsNone(download_info)  # Should be None since file exists
 
@@ -1287,23 +1292,23 @@ class TestSyncDrive(unittest.TestCase):
             destination_path=self.destination_path,
             filters=self.filters["file_extensions"],
             ignore=self.ignore,
-            files=files
+            files=files,
         )
         self.assertIsNotNone(download_info)
-        self.assertEqual(download_info['item'], self.package_item)
-        self.assertTrue(download_info['local_file'].endswith('Project.band'))
-        self.assertTrue(download_info['is_package'])
+        self.assertEqual(download_info["item"], self.package_item)
+        self.assertTrue(download_info["local_file"].endswith("Project.band"))
+        self.assertTrue(download_info["is_package"])
 
     def test_download_file_task_success(self):
         """Test successful file download task."""
         files = set()
         download_info = {
-            'item': self.file_item,
-            'local_file': self.local_file_path,
-            'is_package': False,
-            'files': files
+            "item": self.file_item,
+            "local_file": self.local_file_path,
+            "is_package": False,
+            "files": files,
         }
-        
+
         result = sync_drive.download_file_task(download_info)
         self.assertTrue(result)
         self.assertTrue(os.path.exists(self.local_file_path))
@@ -1313,12 +1318,12 @@ class TestSyncDrive(unittest.TestCase):
         files = set()
         # Create invalid download info that will cause failure
         download_info = {
-            'item': None,  # Invalid item
-            'local_file': self.local_file_path,
-            'is_package': False,
-            'files': files
+            "item": None,  # Invalid item
+            "local_file": self.local_file_path,
+            "is_package": False,
+            "files": files,
         }
-        
+
         result = sync_drive.download_file_task(download_info)
         self.assertFalse(result)
 
@@ -1326,16 +1331,16 @@ class TestSyncDrive(unittest.TestCase):
     def test_sync_directory_parallel_downloads(self, mock_get_max_threads):
         """Test sync_directory with parallel downloads."""
         mock_get_max_threads.return_value = 2  # Use smaller thread pool for testing
-        
+
         # Use a folder that contains multiple files
         test_folder = self.drive[self.items[4]]  # Test folder
         test_items = test_folder.dir()
         config = read_config(config_path=tests.CONFIG_PATH)
-        
+
         # Modify filters to include the Test folder
         modified_filters = dict(self.filters)
         modified_filters["folders"] = ["Test"]  # Include Test folder specifically
-        
+
         files = sync_drive.sync_directory(
             drive=test_folder,
             destination_path=self.destination_path,
@@ -1347,7 +1352,7 @@ class TestSyncDrive(unittest.TestCase):
             remove=False,
             config=config,
         )
-        
+
         self.assertIsInstance(files, set)
         # The test might not have files due to filtering, but we can still verify the function works
         mock_get_max_threads.assert_called()
@@ -1356,17 +1361,17 @@ class TestSyncDrive(unittest.TestCase):
         """Test that file set operations are thread-safe."""
         import threading
         import time
-        
+
         files = set()
         results = []
-        
+
         def add_files(start_num, count):
             for i in range(start_num, start_num + count):
-                with sync_drive._files_lock:
+                with sync_drive.files_lock:
                     files.add(f"file_{i}.txt")
                 time.sleep(0.001)  # Small delay to increase chance of race conditions
             results.append(len(files))
-        
+
         # Create multiple threads that add files concurrently
         threads = []
         thread_count = 3
@@ -1375,15 +1380,15 @@ class TestSyncDrive(unittest.TestCase):
             thread = threading.Thread(target=add_files, args=(i * files_per_thread, files_per_thread))
             threads.append(thread)
             thread.start()
-        
+
         # Wait for all threads to complete
         for thread in threads:
             thread.join()
-        
+
         # Verify all files were added correctly
         expected_total = thread_count * files_per_thread
         self.assertEqual(len(files), expected_total)  # 3 threads × 5 files each
-        
+
         # Verify all expected files are present
         for i in range(expected_total):
             self.assertIn(f"file_{i}.txt", files)

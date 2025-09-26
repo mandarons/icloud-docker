@@ -24,7 +24,7 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 # Thread-safe lock for file set operations
-_files_lock = Lock()
+files_lock = Lock()
 
 
 def get_max_threads(config=None):
@@ -33,6 +33,7 @@ def get_max_threads(config=None):
         return config_parser.get_drive_max_threads(config)
     # Fallback for when config is not available
     import multiprocessing
+
     return min(multiprocessing.cpu_count(), 8)
 
 
@@ -247,53 +248,53 @@ def collect_file_for_download(item, destination_path, filters, ignore, files):
     local_file = unicodedata.normalize("NFC", local_file)
     if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
         return None
-    
+
     # Thread-safe file set update
-    with _files_lock:
+    with files_lock:
         files.add(local_file)
-    
+
     item_is_package = is_package(item=item)
     if item_is_package:
         if package_exists(item=item, local_package_path=local_file):
-            with _files_lock:
+            with files_lock:
                 for f in Path(local_file).glob("**/*"):
                     files.add(str(f))
             return None
     elif file_exists(item=item, local_file=local_file):
         return None
-    
+
     # Return download task info
     return {
-        'item': item,
-        'local_file': local_file,
-        'is_package': item_is_package,
-        'files': files
+        "item": item,
+        "local_file": local_file,
+        "is_package": item_is_package,
+        "files": files,
     }
 
 
 def download_file_task(download_info):
     """Download a single file as part of parallel execution."""
-    item = download_info['item']
-    local_file = download_info['local_file']
-    is_package = download_info['is_package']
-    files = download_info['files']
-    
+    item = download_info["item"]
+    local_file = download_info["local_file"]
+    is_package = download_info["is_package"]
+    files = download_info["files"]
+
     LOGGER.debug(f"[Thread] Starting download of {local_file}")
-    
+
     try:
         downloaded_file = download_file(item=item, local_file=local_file)
         if not downloaded_file:
             return False
-            
+
         if is_package:
-            with _files_lock:
+            with files_lock:
                 for f in Path(downloaded_file).glob("**/*"):
                     f = str(f)
                     f_normalized = unicodedata.normalize("NFD", f)
                     if os.path.exists(f):
                         os.rename(f, f_normalized)
                         files.add(f_normalized)
-        
+
         LOGGER.debug(f"[Thread] Completed download of {local_file}")
         return True
     except Exception as e:
@@ -333,7 +334,7 @@ def sync_directory(
     """Sync folder."""
     files = set()
     download_tasks = []
-    
+
     if drive and destination_path and items and root:
         # First pass: collect folders and download tasks
         for i in items:
@@ -385,19 +386,19 @@ def sync_directory(
                     except Exception:
                         # Continue execution to next item, without crashing the app
                         pass
-        
+
         # Second pass: execute downloads in parallel
         if download_tasks:
             max_threads = get_max_threads(config)
             LOGGER.info(f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...")
-            
+
             successful_downloads = 0
             failed_downloads = 0
-            
+
             with ThreadPoolExecutor(max_workers=max_threads) as executor:
                 # Submit all download tasks
                 future_to_task = {executor.submit(download_file_task, task): task for task in download_tasks}
-                
+
                 # Process completed downloads
                 for future in as_completed(future_to_task):
                     task = future_to_task[future]
@@ -410,9 +411,9 @@ def sync_directory(
                     except Exception as e:
                         failed_downloads += 1
                         LOGGER.error(f"Download task failed with exception: {e!s}")
-            
+
             LOGGER.info(f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed")
-        
+
         if top and remove:
             remove_obsolete(destination_path=destination_path, files=files)
     return files

@@ -244,7 +244,7 @@ def get_drive_max_threads(config):
     if not traverse_config_path(config=config, config_path=config_path):
         LOGGER.debug(
             f"max_threads is not found in {config_path_to_string(config_path=config_path)}."
-            + f" Using default max_threads: {max_threads} ..."
+            + f" Using default max_threads: {max_threads} ...",
         )
     else:
         max_threads = get_config_value(config=config, config_path=config_path)
@@ -299,7 +299,7 @@ def get_photos_max_threads(config):
     if not traverse_config_path(config=config, config_path=config_path):
         LOGGER.debug(
             f"max_threads is not found in {config_path_to_string(config_path=config_path)}."
-            + f" Using default max_threads: {max_threads} ..."
+            + f" Using default max_threads: {max_threads} ...",
         )
     else:
         max_threads = get_config_value(config=config, config_path=config_path)

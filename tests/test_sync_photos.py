@@ -64,7 +64,11 @@ class TestSyncPhotos(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_sync_photos_all_albums_filtered(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
     ):
         """Test for successful original photo size download."""
         mock_service = self.service
@@ -84,7 +88,11 @@ class TestSyncPhotos(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_sync_photos_all_albums_not_filtered(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
     ):
         """Test for successful original photo size download."""
         mock_service = self.service
@@ -535,7 +543,11 @@ class TestSyncPhotos(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_photo_download_with_shared_libraries(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
     ):
         """Test for downloading photos from shared libraries."""
         mock_service = self.service
@@ -559,7 +571,11 @@ class TestSyncPhotos(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_sync_photos_all_albums_filtered_missing_primary_sync(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
     ):
         """Test for successful original photo size download."""
         mock_service = self.service
@@ -617,130 +633,137 @@ class TestSyncPhotos(unittest.TestCase):
     def test_collect_photo_for_download_valid_photo(self):
         """Test collecting photo for download - valid photo."""
         files = set()
-        
+
         # Create a mock photo with minimal required attributes
         class MockPhoto:
             def __init__(self):
                 import datetime
+
                 self.filename = "test_photo.jpg"
                 self.versions = {"original": {"type": "jpeg"}}
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
-        
+
         photo = MockPhoto()
-        
+
         download_info = sync_photos.collect_photo_for_download(
             photo=photo,
             file_size="original",
             destination_path=self.destination_path,
             files=files,
-            folder_format=None
+            folder_format=None,
         )
-        
+
         self.assertIsNotNone(download_info)
-        self.assertEqual(download_info['photo'], photo)
-        self.assertEqual(download_info['file_size'], "original")
-        self.assertTrue(download_info['photo_path'].endswith('.jpg'))
+        self.assertEqual(download_info["photo"], photo)
+        self.assertEqual(download_info["file_size"], "original")
+        self.assertTrue(download_info["photo_path"].endswith(".jpg"))
         self.assertGreater(len(files), 0)
 
     def test_collect_photo_for_download_missing_version(self):
         """Test collecting photo for download - missing file size version."""
         files = set()
-        
+
         # Create a mock photo with minimal required attributes
         class MockPhoto:
             def __init__(self):
                 import datetime
+
                 self.filename = "test_photo.jpg"
                 self.versions = {"original": {"type": "jpeg"}}  # Only has original, not nonexistent_size
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
-        
+
         photo = MockPhoto()
-        
+
         download_info = sync_photos.collect_photo_for_download(
             photo=photo,
             file_size="nonexistent_size",  # This size doesn't exist
             destination_path=self.destination_path,
             files=files,
-            folder_format=None
+            folder_format=None,
         )
-        
+
         self.assertIsNone(download_info)
 
     def test_collect_photo_for_download_existing_photo(self):
         """Test collecting photo for download - photo already exists."""
         files = set()
-        
+
         # Create a mock photo with minimal required attributes
         class MockPhoto:
             def __init__(self):
                 import datetime
+
                 self.filename = "test_photo.jpg"
                 self.versions = {"original": {"type": "jpeg"}}
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
-        
+
         photo = MockPhoto()
-        
+
         # Create the photo file first to simulate existing file
         photo_path = sync_photos.generate_file_name(
             photo=photo,
-            file_size="original", 
+            file_size="original",
             destination_path=self.destination_path,
-            folder_format=None
+            folder_format=None,
         )
         os.makedirs(os.path.dirname(photo_path), exist_ok=True)
-        with open(photo_path, 'wb') as f:
-            f.write(b'A' * 1000)  # Write some content to match photo size
-        
+        with open(photo_path, "wb") as f:
+            f.write(b"A" * 1000)  # Write some content to match photo size
+
         # Set modification time to match photo
         local_modified_time = time.mktime(photo.added_date.timetuple())
         os.utime(photo_path, (local_modified_time, local_modified_time))
-        
+
         download_info = sync_photos.collect_photo_for_download(
             photo=photo,
             file_size="original",
             destination_path=self.destination_path,
             files=files,
-            folder_format=None
+            folder_format=None,
         )
-        
+
         self.assertIsNone(download_info)  # Should be None since photo exists
 
     def test_download_photo_task_success(self):
         """Test successful photo download task."""
+
         # Create a mock photo with minimal required attributes and download method
         class MockPhoto:
             def __init__(self):
                 import datetime
+
                 self.filename = "test_photo.jpg"
                 self.versions = {"original": {"type": "jpeg"}}
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
-                
+
             def download(self, file_size):
                 # Return a mock response with raw attribute
                 class MockResponse:
                     def __init__(self):
                         import io
-                        self.raw = io.BytesIO(b'fake photo data')
+
+                        self.raw = io.BytesIO(b"fake photo data")
+
                 return MockResponse()
-        
+
         photo = MockPhoto()
         photo_path = sync_photos.generate_file_name(
             photo=photo,
             file_size="original",
             destination_path=self.destination_path,
-            folder_format=None
+            folder_format=None,
         )
-        
+
         download_info = {
-            'photo': photo,
-            'file_size': "original",
-            'photo_path': photo_path
+            "photo": photo,
+            "file_size": "original",
+            "photo_path": photo_path,
         }
-        
+
         result = sync_photos.download_photo_task(download_info)
         self.assertTrue(result)
         self.assertTrue(os.path.exists(photo_path))
@@ -748,11 +771,11 @@ class TestSyncPhotos(unittest.TestCase):
     def test_download_photo_task_failure(self):
         """Test failed photo download task."""
         download_info = {
-            'photo': None,  # Invalid photo
-            'file_size': "original",
-            'photo_path': "/invalid/path/photo.jpg"
+            "photo": None,  # Invalid photo
+            "file_size": "original",
+            "photo_path": "/invalid/path/photo.jpg",
         }
-        
+
         result = sync_photos.download_photo_task(download_info)
         self.assertFalse(result)
 
@@ -760,10 +783,10 @@ class TestSyncPhotos(unittest.TestCase):
     def test_sync_album_parallel_downloads(self, mock_get_max_threads):
         """Test sync_album with parallel downloads."""
         mock_get_max_threads.return_value = 2  # Use smaller thread pool for testing
-        
+
         album = self.service.photos.albums["All Photos"]
         config = read_config(config_path=tests.CONFIG_PATH)
-        
+
         result = sync_photos.sync_album(
             album=album,
             destination_path=self.destination_path,
@@ -773,10 +796,10 @@ class TestSyncPhotos(unittest.TestCase):
             folder_format=None,
             config=config,
         )
-        
+
         self.assertTrue(result)
         mock_get_max_threads.assert_called()
-        
+
         # Verify some photos were processed
         self.assertTrue(os.path.exists(self.destination_path))
         downloaded_files = list(Path(self.destination_path).glob("**/*.JPG"))
@@ -786,17 +809,17 @@ class TestSyncPhotos(unittest.TestCase):
         """Test that photo file set operations are thread-safe."""
         import threading
         import time
-        
+
         files = set()
         results = []
-        
+
         def add_photo_files(start_num, count):
             for i in range(start_num, start_num + count):
-                with sync_photos._files_lock:
+                with sync_photos.files_lock:
                     files.add(f"photo_{i}.jpg")
                 time.sleep(0.001)  # Small delay to increase chance of race conditions
             results.append(len(files))
-        
+
         # Create multiple threads that add files concurrently
         threads = []
         thread_count = 3
@@ -805,15 +828,15 @@ class TestSyncPhotos(unittest.TestCase):
             thread = threading.Thread(target=add_photo_files, args=(i * files_per_thread, files_per_thread))
             threads.append(thread)
             thread.start()
-        
+
         # Wait for all threads to complete
         for thread in threads:
             thread.join()
-        
+
         # Verify all files were added correctly
         expected_total = thread_count * files_per_thread
         self.assertEqual(len(files), expected_total)  # 3 threads × 5 files each
-        
+
         # Verify all expected files are present
         for i in range(expected_total):
             self.assertIn(f"photo_{i}.jpg", files)
