@@ -1392,3 +1392,94 @@ class TestSyncDrive(unittest.TestCase):
         # Verify all expected files are present
         for i in range(expected_total):
             self.assertIn(f"file_{i}.txt", files)
+
+    def test_collect_file_for_download_invalid_params(self):
+        """Test collect_file_for_download with invalid parameters."""
+        files = set()
+        
+        # Test with None item
+        result = sync_drive.collect_file_for_download(None, self.destination_path, None, None, files)
+        self.assertIsNone(result)
+        
+        # Test with None destination_path
+        result = sync_drive.collect_file_for_download(self.file_item, None, None, None, files)
+        self.assertIsNone(result)
+        
+        # Test with None files
+        result = sync_drive.collect_file_for_download(self.file_item, self.destination_path, None, None, None)
+        self.assertIsNone(result)
+
+    def test_download_file_task_exception(self):
+        """Test download_file_task with exception handling."""
+        # Create a mock download task that will cause an exception
+        download_task = {
+            'item': None,  # This will cause an exception
+            'local_file': '/some/path/file.txt',
+            'is_package': False,
+            'files': set()
+        }
+        
+        result = sync_drive.download_file_task(download_task)
+        self.assertFalse(result)  # Should return False on exception
+
+    def test_parallel_vs_sequential_performance(self):
+        """Test and verify parallel downloads provide performance improvement."""
+        import time
+        from unittest.mock import patch, MagicMock
+        
+        # Create mock download tasks that simulate time-consuming downloads
+        def mock_slow_download(download_task):
+            time.sleep(0.01)  # Simulate 10ms download time
+            return True
+        
+        # Get directory items that we can actually use
+        items = self.drive.dir()
+        config = read_config(config_path=tests.CONFIG_PATH)
+        
+        # Test sequential downloads (max_threads=1)
+        with patch('src.config_parser.get_app_max_threads', return_value=1), \
+             patch('src.sync_drive.download_file_task', side_effect=mock_slow_download):
+            
+            start_time = time.time()
+            files = sync_drive.sync_directory(
+                drive=self.drive,
+                destination_path=self.destination_path,
+                items=items[:3],  # Use actual items from mock data
+                root=self.root,
+                top=True,
+                filters=None,
+                ignore=None,
+                remove=False,
+                config=config,
+            )
+            sequential_time = time.time() - start_time
+        
+        # Test parallel downloads (max_threads=4)
+        with patch('src.config_parser.get_app_max_threads', return_value=4), \
+             patch('src.sync_drive.download_file_task', side_effect=mock_slow_download):
+            
+            start_time = time.time()
+            files = sync_drive.sync_directory(
+                drive=self.drive,
+                destination_path=self.destination_path,
+                items=items[:3],  # Use actual items from mock data
+                root=self.root,
+                top=True,
+                filters=None,
+                ignore=None,
+                remove=False,
+                config=config,
+            )
+            parallel_time = time.time() - start_time
+        
+        # Verify parallel downloads are faster (with some tolerance for test variance)
+        # Parallel should be at least 25% faster than sequential
+        improvement_ratio = sequential_time / parallel_time
+        self.assertGreater(improvement_ratio, 1.25, 
+                          f"Parallel downloads ({parallel_time:.3f}s) should be significantly faster than sequential ({sequential_time:.3f}s)")
+        
+        # Log the performance improvement for verification
+        print(f"\nPerformance Test Results:")
+        print(f"Sequential time: {sequential_time:.3f}s")
+        print(f"Parallel time: {parallel_time:.3f}s") 
+        print(f"Performance improvement: {improvement_ratio:.2f}x faster")
