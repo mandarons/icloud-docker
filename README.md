@@ -170,8 +170,9 @@ This guide helps you set up iCloud sync on a UGREEN NAS system using Docker.
    ├── Google-Drive
    ├── iCloud
    │   ├── Data
-   │   └── Config
-   │       └── config.yaml (see step 2)
+   │   ├── Config
+   │   │   └── config.yaml (see step 2)
+   │   └── keyring
    └── OneDrive
    ```
 
@@ -200,6 +201,7 @@ This guide helps you set up iCloud sync on a UGREEN NAS system using Docker.
          - /etc/localtime:/etc/localtime:ro
          - /home/<ugreen_username>/Cloud-Drives/iCloud/Data:/icloud
          - /home/<ugreen_username>/Cloud-Drives/iCloud/Config:/config
+         - /home/<ugreen_username>/Cloud-Drives/iCloud/keyring:/home/abc/.local # Optional: Persist keyring for credentials (no password re-entry on container recreation)
    ```
    
    Replace `<ugreen_username>` with your UGREEN system username.
@@ -216,7 +218,7 @@ This guide helps you set up iCloud sync on a UGREEN NAS system using Docker.
    - Input the command `bin/sh`
    - Run the icloud command:
      ```bash
-     icloud --username=<icloud_username> --session-directory=/config/session_data
+     su-exec abc icloud --username=<icloud_username> --session-directory=/config/session_data
      ```
    - Follow the authentication prompts to complete 2FA if required
 
