@@ -1261,8 +1261,14 @@ class TestSyncDrive(unittest.TestCase):
         # Create the local file first
         local_file_path = os.path.join(self.destination_path, 'Scanned document 1.pdf')
         os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
-        with open(local_file_path, 'w') as f:
-            f.write('test content')
+        
+        # Create file with same size as the item to trigger file_exists check
+        with open(local_file_path, 'wb') as f:
+            f.write(b'A' * 1000)  # Write some content to match file size
+        
+        # Set the modification time to match the item
+        item_modified_time = time.mktime(self.file_item.date_modified.timetuple())
+        os.utime(local_file_path, (item_modified_time, item_modified_time))
         
         download_info = sync_drive.collect_file_for_download(
             item=self.file_item,
@@ -1363,8 +1369,10 @@ class TestSyncDrive(unittest.TestCase):
         
         # Create multiple threads that add files concurrently
         threads = []
-        for i in range(3):
-            thread = threading.Thread(target=add_files, args=(i * 10, 5))
+        thread_count = 3
+        files_per_thread = 5
+        for i in range(thread_count):
+            thread = threading.Thread(target=add_files, args=(i * files_per_thread, files_per_thread))
             threads.append(thread)
             thread.start()
         
@@ -1373,6 +1381,9 @@ class TestSyncDrive(unittest.TestCase):
             thread.join()
         
         # Verify all files were added correctly
-        self.assertEqual(len(files), 15)  # 3 threads × 5 files each
-        for i in range(15):
+        expected_total = thread_count * files_per_thread
+        self.assertEqual(len(files), expected_total)  # 3 threads × 5 files each
+        
+        # Verify all expected files are present
+        for i in range(expected_total):
             self.assertIn(f"file_{i}.txt", files)
