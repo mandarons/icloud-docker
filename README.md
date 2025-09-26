@@ -125,6 +125,7 @@ photos:
   remove_obsolete: false
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
+  use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.
   folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
   filters:
     # List of libraries to download. If omitted (default), photos from all libraries (own and shared) are downloaded. If included, photos only
@@ -146,6 +147,30 @@ photos:
       # - heic
       # - png
 ```
+
+## Features
+
+### Hard Link Deduplication
+
+When using `all_albums: true`, photos that appear in multiple albums (such as "All Photos", "Videos", and custom albums) would normally be downloaded multiple times, consuming unnecessary storage space.
+
+The `use_hardlinks` feature solves this by:
+
+- **Storage Savings**: Creates hard links instead of duplicate files, potentially saving 50-75% of storage space
+- **Smart Processing**: Syncs "All Photos" album first as the reference source
+- **Automatic Fallback**: Falls back to normal download if hard link creation fails
+- **Cross-Platform**: Works on filesystems that support hard links (Linux, macOS, Windows NTFS)
+
+**Example Configuration:**
+```yaml
+photos:
+  all_albums: true
+  use_hardlinks: true  # Enable hard link deduplication
+```
+
+**Storage Impact Example:**
+- **Without hard links**: Same photo in 3 albums = 3 separate files (3× storage usage)
+- **With hard links**: Same photo in 3 albums = 1 file + 2 hard links (1× storage usage)
 
 **_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
 
