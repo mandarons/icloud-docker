@@ -43,20 +43,21 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - ${PWD}/icloud:/icloud
       - ${PWD}/config:/config # Must contain config.yaml
+      - ${PWD}/keyring:/home/abc/.local # Optional: Persist keyring for credentials (no password re-entry on container recreation)
 ```
 
 ### Authentication (required after container creation or authentication expiration)
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it --user=abc icloud /bin/sh -c "icloud --username=<icloud-username> --session-directory=/config/session_data"
+docker exec -it icloud /bin/sh -c "su-exec abc icloud --username=<icloud-username> --session-directory=/config/session_data"
 ```
 
-For China server users, Please add `--region=china` as follows:
+For China server users, please add `--region=china` as follows:
 
 ```
 # Login manually if ENV_ICLOUD_PASSWORD is not specified and/or 2FA is required
-docker exec -it --user=abc icloud /bin/sh -c "icloud --username=<icloud-username> --region=china --session-directory=/config/session_data"
+docker exec -it icloud /bin/sh -c "su-exec abc icloud --username=<icloud-username> --region=china --session-directory=/config/session_data"
 ```
 
 Follow the steps to authenticate.

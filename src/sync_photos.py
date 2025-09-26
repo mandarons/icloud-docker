@@ -10,7 +10,10 @@ from pathlib import Path
 
 from icloudpy import exceptions
 
-from src import config_parser, get_logger
+from src import config_parser, configure_icloudpy_logging, get_logger
+
+# Configure icloudpy logging immediately after import
+configure_icloudpy_logging()
 
 LOGGER = get_logger()
 original_alt_filetype_to_extension = {

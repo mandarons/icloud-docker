@@ -12,8 +12,12 @@ from src import (
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     DEFAULT_ROOT_DESTINATION,
     DEFAULT_SYNC_INTERVAL_SEC,
+    configure_icloudpy_logging,
     get_logger,
 )
+
+# Configure icloudpy logging immediately after import
+configure_icloudpy_logging()
 
 LOGGER = get_logger()
 

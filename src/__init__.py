@@ -95,6 +95,27 @@ class ColorfulConsoleFormatter(logging.Formatter):
         return formatter.format(record)
 
 
+def configure_icloudpy_logging():
+    """Configure icloudpy logging to match app logging level."""
+    logger_config = get_logger_config(config=read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)))
+    if logger_config:
+        level_name = logging.getLevelName(level=logger_config["level"].upper())
+
+        # Configure icloudpy loggers to use the same level and enable propagation
+        icloudpy_loggers = [
+            logging.getLogger("icloudpy"),
+            logging.getLogger("icloudpy.base"),
+            logging.getLogger("icloudpy.services"),
+            logging.getLogger("icloudpy.services.photos"),
+        ]
+        for icloudpy_logger in icloudpy_loggers:
+            icloudpy_logger.setLevel(level=level_name)
+            # Enable propagation so messages go to root logger handlers
+            icloudpy_logger.propagate = True
+            # Remove any existing handlers to avoid duplicates
+            icloudpy_logger.handlers.clear()
+
+
 def get_logger():
     """Return logger."""
     logger = logging.getLogger()
@@ -102,6 +123,11 @@ def get_logger():
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
         logger.setLevel(level=level_name)
+
+        # Create handlers once and add them to root logger
+        file_handler = None
+        console_handler = None
+
         if not log_handler_exists(
             logger=logger,
             handler_type=logging.FileHandler,
@@ -114,6 +140,7 @@ def get_logger():
                 ),
             )
             logger.addHandler(file_handler)
+
         if not log_handler_exists(logger=logger, handler_type=logging.StreamHandler, stream=sys.stdout):
             console_handler = logging.StreamHandler(sys.stdout)
             console_handler.setFormatter(
@@ -122,6 +149,20 @@ def get_logger():
                 ),
             )
             logger.addHandler(console_handler)
+
+        # Configure icloudpy loggers to use the same level and enable propagation
+        icloudpy_loggers = [
+            logging.getLogger("icloudpy"),
+            logging.getLogger("icloudpy.base"),
+            logging.getLogger("icloudpy.services"),
+            logging.getLogger("icloudpy.services.photos"),
+        ]
+        for icloudpy_logger in icloudpy_loggers:
+            icloudpy_logger.setLevel(level=level_name)
+            # Enable propagation so messages go to root logger handlers
+            icloudpy_logger.propagate = True
+            # Remove any existing handlers to avoid duplicates
+            icloudpy_logger.handlers.clear()
     return logger
 
 

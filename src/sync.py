@@ -13,6 +13,7 @@ from src import (
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
     config_parser,
+    configure_icloudpy_logging,
     get_logger,
     notify,
     read_config,
@@ -20,6 +21,9 @@ from src import (
     sync_photos,
 )
 from src.usage import alive
+
+# Configure icloudpy logging immediately after import
+configure_icloudpy_logging()
 
 LOGGER = get_logger()
 
