@@ -6,7 +6,9 @@ import os
 import shutil
 import time
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from threading import Lock
 
 from icloudpy import exceptions
 
@@ -16,6 +18,18 @@ from src import config_parser, configure_icloudpy_logging, get_logger
 configure_icloudpy_logging()
 
 LOGGER = get_logger()
+
+# Thread-safe lock for file set operations
+_files_lock = Lock()
+
+
+def get_max_threads():
+    """Get maximum number of threads for parallel downloads."""
+    # Use number of CPU cores, with a reasonable maximum to avoid overwhelming the server
+    import multiprocessing
+    return min(multiprocessing.cpu_count(), 8)
+
+
 original_alt_filetype_to_extension = {
     "public.png": "png",
     "public.jpeg": "jpeg",
@@ -160,18 +174,99 @@ def process_photo(photo, file_size, destination_path, files, folder_format):
     return True
 
 
+def collect_photo_for_download(photo, file_size, destination_path, files, folder_format):
+    """Collect photo info for parallel download without immediately downloading."""
+    photo_path = generate_file_name(
+        photo=photo,
+        file_size=file_size,
+        destination_path=destination_path,
+        folder_format=folder_format,
+    )
+    if file_size not in photo.versions:
+        LOGGER.warning(f"File size {file_size} not found on server. Skipping the photo {photo_path} ...")
+        return None
+    
+    # Thread-safe file set update
+    if files is not None:
+        with _files_lock:
+            files.add(photo_path)
+    
+    if photo_exists(photo, file_size, photo_path):
+        return None
+    
+    # Return download task info
+    return {
+        'photo': photo,
+        'file_size': file_size,
+        'photo_path': photo_path
+    }
+
+
+def download_photo_task(download_info):
+    """Download a single photo as part of parallel execution."""
+    photo = download_info['photo']
+    file_size = download_info['file_size']
+    photo_path = download_info['photo_path']
+    
+    LOGGER.debug(f"[Thread] Starting download of {photo_path}")
+    
+    try:
+        result = download_photo(photo, file_size, photo_path)
+        if result:
+            LOGGER.debug(f"[Thread] Completed download of {photo_path}")
+        return result
+    except Exception as e:
+        LOGGER.error(f"[Thread] Failed to download {photo_path}: {e!s}")
+        return False
+
+
 def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
     os.makedirs(unicodedata.normalize("NFC", destination_path), exist_ok=True)
     LOGGER.info(f"Syncing {album.title}")
+    
+    download_tasks = []
+    
+    # First pass: collect download tasks
     for photo in album:
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
-                process_photo(photo, file_size, destination_path, files, folder_format)
+                download_info = collect_photo_for_download(photo, file_size, destination_path, files, folder_format)
+                if download_info:
+                    download_tasks.append(download_info)
         else:
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
+    
+    # Execute downloads in parallel
+    if download_tasks:
+        max_threads = get_max_threads()
+        LOGGER.info(f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos...")
+        
+        successful_downloads = 0
+        failed_downloads = 0
+        
+        with ThreadPoolExecutor(max_workers=max_threads) as executor:
+            # Submit all download tasks
+            future_to_task = {executor.submit(download_photo_task, task): task for task in download_tasks}
+            
+            # Process completed downloads
+            for future in as_completed(future_to_task):
+                task = future_to_task[future]
+                try:
+                    result = future.result()
+                    if result:
+                        successful_downloads += 1
+                    else:
+                        failed_downloads += 1
+                except Exception as e:
+                    failed_downloads += 1
+                    LOGGER.error(f"Photo download task failed with exception: {e!s}")
+        
+        LOGGER.info(f"Parallel photo downloads completed: {successful_downloads} successful, {failed_downloads} failed")
+    
+    # Process subalbums recursively
     for subalbum in album.subalbums:
         sync_album(
             album.subalbums[subalbum],

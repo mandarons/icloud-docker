@@ -1217,3 +1217,156 @@ class TestSyncDrive(unittest.TestCase):
                 if f.is_file()
             ),
         )
+
+    def test_get_max_threads(self):
+        """Test that get_max_threads returns reasonable values."""
+        max_threads = sync_drive.get_max_threads()
+        self.assertIsInstance(max_threads, int)
+        self.assertGreater(max_threads, 0)
+        self.assertLessEqual(max_threads, 8)
+
+    def test_collect_file_for_download_valid_file(self):
+        """Test collecting file for download - valid file."""
+        files = set()
+        download_info = sync_drive.collect_file_for_download(
+            item=self.file_item,
+            destination_path=self.destination_path,  
+            filters=self.filters["file_extensions"],
+            ignore=self.ignore,
+            files=files
+        )
+        self.assertIsNotNone(download_info)
+        self.assertEqual(download_info['item'], self.file_item)
+        self.assertTrue(download_info['local_file'].endswith('Scanned document 1.pdf'))
+        self.assertFalse(download_info['is_package'])
+        self.assertIn(download_info['local_file'], files)
+
+    def test_collect_file_for_download_unwanted_file(self):
+        """Test collecting file for download - unwanted file."""
+        files = set()
+        # Use filter that doesn't match the PDF extension
+        download_info = sync_drive.collect_file_for_download(
+            item=self.file_item,
+            destination_path=self.destination_path,
+            filters=["jpg", "png"],  # This won't match PDF
+            ignore=self.ignore,
+            files=files
+        )
+        self.assertIsNone(download_info)
+        self.assertEqual(len(files), 0)
+
+    def test_collect_file_for_download_existing_file(self):
+        """Test collecting file for download - file already exists."""
+        files = set()
+        # Create the local file first
+        local_file_path = os.path.join(self.destination_path, 'Scanned document 1.pdf')
+        os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+        with open(local_file_path, 'w') as f:
+            f.write('test content')
+        
+        download_info = sync_drive.collect_file_for_download(
+            item=self.file_item,
+            destination_path=self.destination_path,
+            filters=self.filters["file_extensions"],
+            ignore=self.ignore,
+            files=files
+        )
+        self.assertIsNone(download_info)  # Should be None since file exists
+
+    def test_collect_file_for_download_package(self):
+        """Test collecting file for download - package file."""
+        files = set()
+        download_info = sync_drive.collect_file_for_download(
+            item=self.package_item,
+            destination_path=self.destination_path,
+            filters=self.filters["file_extensions"],
+            ignore=self.ignore,
+            files=files
+        )
+        self.assertIsNotNone(download_info)
+        self.assertEqual(download_info['item'], self.package_item)
+        self.assertTrue(download_info['local_file'].endswith('Project.band'))
+        self.assertTrue(download_info['is_package'])
+
+    def test_download_file_task_success(self):
+        """Test successful file download task."""
+        files = set()
+        download_info = {
+            'item': self.file_item,
+            'local_file': self.local_file_path,
+            'is_package': False,
+            'files': files
+        }
+        
+        result = sync_drive.download_file_task(download_info)
+        self.assertTrue(result)
+        self.assertTrue(os.path.exists(self.local_file_path))
+
+    def test_download_file_task_failure(self):
+        """Test failed file download task."""
+        files = set()
+        # Create invalid download info that will cause failure
+        download_info = {
+            'item': None,  # Invalid item
+            'local_file': self.local_file_path,
+            'is_package': False,
+            'files': files
+        }
+        
+        result = sync_drive.download_file_task(download_info)
+        self.assertFalse(result)
+
+    @patch("src.sync_drive.get_max_threads")
+    def test_sync_directory_parallel_downloads(self, mock_get_max_threads):
+        """Test sync_directory with parallel downloads."""
+        mock_get_max_threads.return_value = 2  # Use smaller thread pool for testing
+        
+        # Use a folder that contains multiple files
+        test_folder = self.drive[self.items[4]]  # Test folder
+        test_items = test_folder.dir()
+        
+        files = sync_drive.sync_directory(
+            drive=test_folder,
+            destination_path=self.destination_path,
+            items=test_items,
+            root=self.root,
+            top=True,
+            filters=self.filters,
+            ignore=self.ignore,
+            remove=False
+        )
+        
+        self.assertIsInstance(files, set)
+        self.assertGreater(len(files), 0)
+        mock_get_max_threads.assert_called()
+
+    def test_thread_safe_file_operations(self):
+        """Test that file set operations are thread-safe."""
+        import threading
+        import time
+        
+        files = set()
+        results = []
+        
+        def add_files(start_num, count):
+            for i in range(start_num, start_num + count):
+                with sync_drive._files_lock:
+                    files.add(f"file_{i}.txt")
+                time.sleep(0.001)  # Small delay to increase chance of race conditions
+            results.append(len(files))
+        
+        # Create multiple threads that add files concurrently
+        threads = []
+        for i in range(3):
+            thread = threading.Thread(target=add_files, args=(i * 10, 5))
+            threads.append(thread)
+            thread.start()
+        
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+        
+        # Verify all files were added correctly
+        self.assertEqual(len(files), 15)  # 3 threads × 5 files each
+        for i in range(15):
+            self.assertIn(f"file_{i}.txt", files)

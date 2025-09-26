@@ -604,3 +604,156 @@ class TestSyncPhotos(unittest.TestCase):
         name, extension = sync_photos.get_name_and_extension(photo=MockPhoto(), file_size="original_alt")
         self.assertEqual(name, "mock_filename")
         self.assertEqual(extension, "xed")
+
+    def test_get_max_threads_photos(self):
+        """Test that get_max_threads returns reasonable values for photos."""
+        max_threads = sync_photos.get_max_threads()
+        self.assertIsInstance(max_threads, int)
+        self.assertGreater(max_threads, 0)
+        self.assertLessEqual(max_threads, 8)
+
+    def test_collect_photo_for_download_valid_photo(self):
+        """Test collecting photo for download - valid photo."""
+        files = set()
+        photo = self.photos[0]
+        
+        download_info = sync_photos.collect_photo_for_download(
+            photo=photo,
+            file_size="original",
+            destination_path=self.destination_path,
+            files=files,
+            folder_format=None
+        )
+        
+        self.assertIsNotNone(download_info)
+        self.assertEqual(download_info['photo'], photo)
+        self.assertEqual(download_info['file_size'], "original")
+        self.assertTrue(download_info['photo_path'].endswith('.JPG'))
+        self.assertGreater(len(files), 0)
+
+    def test_collect_photo_for_download_missing_version(self):
+        """Test collecting photo for download - missing file size version."""
+        files = set()
+        photo = self.photos[0]
+        
+        download_info = sync_photos.collect_photo_for_download(
+            photo=photo,
+            file_size="nonexistent_size",  # This size doesn't exist
+            destination_path=self.destination_path,
+            files=files,
+            folder_format=None
+        )
+        
+        self.assertIsNone(download_info)
+
+    def test_collect_photo_for_download_existing_photo(self):
+        """Test collecting photo for download - photo already exists."""
+        files = set()
+        photo = self.photos[0]
+        
+        # Create the photo file first to simulate existing file
+        photo_path = sync_photos.generate_file_name(
+            photo=photo,
+            file_size="original", 
+            destination_path=self.destination_path,
+            folder_format=None
+        )
+        os.makedirs(os.path.dirname(photo_path), exist_ok=True)
+        with open(photo_path, 'w') as f:
+            f.write('existing photo')
+        
+        download_info = sync_photos.collect_photo_for_download(
+            photo=photo,
+            file_size="original",
+            destination_path=self.destination_path,
+            files=files,
+            folder_format=None
+        )
+        
+        self.assertIsNone(download_info)  # Should be None since photo exists
+
+    def test_download_photo_task_success(self):
+        """Test successful photo download task."""
+        photo = self.photos[0]
+        photo_path = sync_photos.generate_file_name(
+            photo=photo,
+            file_size="original",
+            destination_path=self.destination_path,
+            folder_format=None
+        )
+        
+        download_info = {
+            'photo': photo,
+            'file_size': "original",
+            'photo_path': photo_path
+        }
+        
+        result = sync_photos.download_photo_task(download_info)
+        self.assertTrue(result)
+        self.assertTrue(os.path.exists(photo_path))
+
+    def test_download_photo_task_failure(self):
+        """Test failed photo download task."""
+        download_info = {
+            'photo': None,  # Invalid photo
+            'file_size': "original",
+            'photo_path': "/invalid/path/photo.jpg"
+        }
+        
+        result = sync_photos.download_photo_task(download_info)
+        self.assertFalse(result)
+
+    @patch("src.sync_photos.get_max_threads")
+    def test_sync_album_parallel_downloads(self, mock_get_max_threads):
+        """Test sync_album with parallel downloads."""
+        mock_get_max_threads.return_value = 2  # Use smaller thread pool for testing
+        
+        album = self.service.photos.albums["All Photos"]
+        
+        result = sync_photos.sync_album(
+            album=album,
+            destination_path=self.destination_path,
+            file_sizes=["original"],
+            extensions=None,
+            files=set(),
+            folder_format=None
+        )
+        
+        self.assertTrue(result)
+        mock_get_max_threads.assert_called()
+        
+        # Verify some photos were processed
+        self.assertTrue(os.path.exists(self.destination_path))
+        downloaded_files = list(Path(self.destination_path).glob("**/*.JPG"))
+        self.assertGreater(len(downloaded_files), 0)
+
+    def test_thread_safe_photo_file_operations(self):
+        """Test that photo file set operations are thread-safe."""
+        import threading
+        import time
+        
+        files = set()
+        results = []
+        
+        def add_photo_files(start_num, count):
+            for i in range(start_num, start_num + count):
+                with sync_photos._files_lock:
+                    files.add(f"photo_{i}.jpg")
+                time.sleep(0.001)  # Small delay to increase chance of race conditions
+            results.append(len(files))
+        
+        # Create multiple threads that add files concurrently
+        threads = []
+        for i in range(3):
+            thread = threading.Thread(target=add_photo_files, args=(i * 10, 5))
+            threads.append(thread)
+            thread.start()
+        
+        # Wait for all threads to complete
+        for thread in threads:
+            thread.join()
+        
+        # Verify all files were added correctly
+        self.assertEqual(len(files), 15)  # 3 threads × 5 files each
+        for i in range(15):
+            self.assertIn(f"photo_{i}.jpg", files)
