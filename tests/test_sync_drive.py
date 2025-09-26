@@ -1396,15 +1396,15 @@ class TestSyncDrive(unittest.TestCase):
     def test_collect_file_for_download_invalid_params(self):
         """Test collect_file_for_download with invalid parameters."""
         files = set()
-        
+
         # Test with None item
         result = sync_drive.collect_file_for_download(None, self.destination_path, None, None, files)
         self.assertIsNone(result)
-        
+
         # Test with None destination_path
         result = sync_drive.collect_file_for_download(self.file_item, None, None, None, files)
         self.assertIsNone(result)
-        
+
         # Test with None files
         result = sync_drive.collect_file_for_download(self.file_item, self.destination_path, None, None, None)
         self.assertIsNone(result)
@@ -1413,35 +1413,36 @@ class TestSyncDrive(unittest.TestCase):
         """Test download_file_task with exception handling."""
         # Create a mock download task that will cause an exception
         download_task = {
-            'item': None,  # This will cause an exception
-            'local_file': '/some/path/file.txt',
-            'is_package': False,
-            'files': set()
+            "item": None,  # This will cause an exception
+            "local_file": "/some/path/file.txt",
+            "is_package": False,
+            "files": set(),
         }
-        
+
         result = sync_drive.download_file_task(download_task)
         self.assertFalse(result)  # Should return False on exception
 
     def test_parallel_vs_sequential_performance(self):
         """Test and verify parallel downloads provide performance improvement."""
         import time
-        from unittest.mock import patch, MagicMock
-        
+        from unittest.mock import patch
+
         # Create mock download tasks that simulate time-consuming downloads
         def mock_slow_download(download_task):
             time.sleep(0.01)  # Simulate 10ms download time
             return True
-        
+
         # Get directory items that we can actually use
         items = self.drive.dir()
         config = read_config(config_path=tests.CONFIG_PATH)
-        
+
         # Test sequential downloads (max_threads=1)
-        with patch('src.config_parser.get_app_max_threads', return_value=1), \
-             patch('src.sync_drive.download_file_task', side_effect=mock_slow_download):
-            
+        with (
+            patch("src.config_parser.get_app_max_threads", return_value=1),
+            patch("src.sync_drive.download_file_task", side_effect=mock_slow_download),
+        ):
             start_time = time.time()
-            files = sync_drive.sync_directory(
+            sync_drive.sync_directory(
                 drive=self.drive,
                 destination_path=self.destination_path,
                 items=items[:3],  # Use actual items from mock data
@@ -1453,13 +1454,14 @@ class TestSyncDrive(unittest.TestCase):
                 config=config,
             )
             sequential_time = time.time() - start_time
-        
+
         # Test parallel downloads (max_threads=4)
-        with patch('src.config_parser.get_app_max_threads', return_value=4), \
-             patch('src.sync_drive.download_file_task', side_effect=mock_slow_download):
-            
+        with (
+            patch("src.config_parser.get_app_max_threads", return_value=4),
+            patch("src.sync_drive.download_file_task", side_effect=mock_slow_download),
+        ):
             start_time = time.time()
-            files = sync_drive.sync_directory(
+            sync_drive.sync_directory(
                 drive=self.drive,
                 destination_path=self.destination_path,
                 items=items[:3],  # Use actual items from mock data
@@ -1471,15 +1473,101 @@ class TestSyncDrive(unittest.TestCase):
                 config=config,
             )
             parallel_time = time.time() - start_time
-        
+
         # Verify parallel downloads are faster (with some tolerance for test variance)
         # Parallel should be at least 25% faster than sequential
         improvement_ratio = sequential_time / parallel_time
-        self.assertGreater(improvement_ratio, 1.25, 
-                          f"Parallel downloads ({parallel_time:.3f}s) should be significantly faster than sequential ({sequential_time:.3f}s)")
-        
+        self.assertGreater(
+            improvement_ratio,
+            1.25,
+            f"Parallel downloads ({parallel_time:.3f}s) should be significantly faster than sequential ({sequential_time:.3f}s)",
+        )
+
         # Log the performance improvement for verification
-        print(f"\nPerformance Test Results:")
+        print("\nPerformance Test Results:")
         print(f"Sequential time: {sequential_time:.3f}s")
-        print(f"Parallel time: {parallel_time:.3f}s") 
+        print(f"Parallel time: {parallel_time:.3f}s")
         print(f"Performance improvement: {improvement_ratio:.2f}x faster")
+
+    @patch("src.sync_drive.package_exists")
+    def test_collect_file_for_download_package_exists(self, mock_package_exists):
+        """Test collect_file_for_download when package already exists locally."""
+        files = set()
+
+        # Mock package_exists to return True so we can test the lines 259-262
+        mock_package_exists.return_value = True
+
+        # Use the existing package item from test setup
+        package_item = self.package_item
+
+        # Create the local package directory structure using the package name
+        local_package_path = os.path.join(self.destination_path, self.package_name)
+        os.makedirs(local_package_path, exist_ok=True)
+
+        # Create some files inside the package to simulate existing package content
+        test_file_path = os.path.join(local_package_path, "test_file.txt")
+        subdir_path = os.path.join(local_package_path, "subdir")
+        os.makedirs(subdir_path, exist_ok=True)
+        test_file_path2 = os.path.join(subdir_path, "test_file2.txt")
+
+        with open(test_file_path, "w") as f:
+            f.write("test content")
+        with open(test_file_path2, "w") as f:
+            f.write("test content 2")
+
+        download_info = sync_drive.collect_file_for_download(
+            item=package_item,
+            destination_path=self.destination_path,
+            filters=None,
+            ignore=None,
+            files=files,
+        )
+
+        # Should return None since package exists, and files should be added to the set
+        self.assertIsNone(download_info)
+        # Verify that files from the package were added to the set (lines 259-262)
+        self.assertIn(test_file_path, files)
+        self.assertIn(test_file_path2, files)
+
+    @patch("src.sync_drive.download_file")
+    def test_download_file_task_exception_handling(self, mock_download_file):
+        """Test download_file_task when an exception occurs during download."""
+        # Configure mock to raise an exception
+        mock_download_file.side_effect = Exception("Test download error")
+
+        task_info = {
+            "item": self.file_item,
+            "local_file": os.path.join(self.destination_path, "test_file.pdf"),
+            "is_package": False,
+            "files": set(),
+        }
+
+        # Call download_file_task which should catch the exception and return False
+        result = sync_drive.download_file_task(task_info)
+
+        # Should return False due to exception
+        self.assertFalse(result)
+        mock_download_file.assert_called_once()
+
+    @patch("src.sync_drive.download_file_task")
+    def test_parallel_download_future_exception(self, mock_download_task):
+        """Test exception handling in parallel download result processing."""
+        # Configure mock to raise an exception
+        mock_download_task.side_effect = Exception("Test parallel download error")
+
+        # Create some test files
+        os.makedirs(self.destination_path, exist_ok=True)
+
+        # Sync directory which will trigger parallel downloads
+        files = sync_drive.sync_directory(
+            drive=self.drive,
+            destination_path=self.destination_path,
+            items=self.items,
+            root=self.root,
+            config=None,
+            filters=None,
+            ignore=None,
+        )
+
+        # The function should complete despite exceptions
+        self.assertIsInstance(files, set)

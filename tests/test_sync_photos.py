@@ -843,35 +843,39 @@ class TestSyncPhotos(unittest.TestCase):
 
     def test_process_photo_with_none_files(self):
         """Test process_photo function with None files parameter."""
+
         # Create a mock photo with minimal required attributes
         class MockPhoto:
             def __init__(self):
                 import datetime
+
                 self.filename = "test_photo.jpg"
                 self.versions = {"original": {"type": "jpeg", "size": 1000}}
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 
         photo = MockPhoto()
-        
+
         # This tests line 175 (the old process_photo function with files=None)
         result = sync_photos.process_photo(
             photo=photo,
             file_size="original",
             destination_path=self.destination_path,
             files=None,  # This triggers line 175 behavior
-            folder_format=None
+            folder_format=None,
         )
-        
+
         # Should return True even with None files
         self.assertTrue(result)
 
     def test_process_photo_old_function(self):
         """Test the old process_photo function for coverage."""
+
         # Create a mock photo with minimal required attributes
         class MockPhoto:
             def __init__(self):
                 import datetime
+
                 self.filename = "test_photo.jpg"
                 self.versions = {"original": {"type": "jpeg", "size": 1000}}
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
@@ -879,16 +883,16 @@ class TestSyncPhotos(unittest.TestCase):
 
         photo = MockPhoto()
         files = set()
-        
+
         # This tests the old process_photo function (lines 172-177)
         result = sync_photos.process_photo(
             photo=photo,
             file_size="original",
             destination_path=self.destination_path,
             files=files,
-            folder_format=None
+            folder_format=None,
         )
-        
+
         # Should return True and add the photo path to files
         self.assertTrue(result)
         self.assertGreater(len(files), 0)
@@ -897,25 +901,25 @@ class TestSyncPhotos(unittest.TestCase):
         """Test download_photo_task with exception handling."""
         # Create a mock download task that will cause an exception
         download_task = {
-            'photo': None,  # This will cause an exception
-            'file_size': 'original',
-            'photo_path': '/some/path/photo.jpg'
+            "photo": None,  # This will cause an exception
+            "file_size": "original",
+            "photo_path": "/some/path/photo.jpg",
         }
-        
+
         result = sync_photos.download_photo_task(download_task)
         self.assertFalse(result)  # Should return False on exception
 
     def test_sync_album_with_download_exceptions(self):
         """Test sync_album with download tasks that raise exceptions."""
-        from unittest.mock import patch, MagicMock
-        
+        from unittest.mock import patch
+
         # Mock a situation where download_photo_task raises an exception
-        with patch('src.sync_photos.download_photo_task') as mock_download:
+        with patch("src.sync_photos.download_photo_task") as mock_download:
             mock_download.side_effect = RuntimeError("Photo download failed")
-            
+
             album = self.service.photos.albums["All Photos"]
             config = read_config(config_path=tests.CONFIG_PATH)
-            
+
             result = sync_photos.sync_album(
                 album=album,
                 destination_path=self.destination_path,
@@ -925,30 +929,31 @@ class TestSyncPhotos(unittest.TestCase):
                 folder_format=None,
                 config=config,
             )
-            
+
             # Should complete successfully even with exceptions
             self.assertTrue(result)
 
     def test_parallel_vs_sequential_photo_performance(self):
         """Test and verify parallel photo downloads provide performance improvement."""
         import time
-        from unittest.mock import patch, MagicMock
-        
+        from unittest.mock import patch
+
         # Create mock download tasks that simulate time-consuming photo downloads
         def mock_slow_photo_download(download_task):
             time.sleep(0.01)  # Simulate 10ms download time
             return True
-        
+
         # Create a mock album with multiple photos
         album = self.service.photos.albums["All Photos"]
         config = read_config(config_path=tests.CONFIG_PATH)
-        
+
         # Test sequential downloads (max_threads=1)
-        with patch('src.config_parser.get_app_max_threads', return_value=1), \
-             patch('src.sync_photos.download_photo_task', side_effect=mock_slow_photo_download):
-            
+        with (
+            patch("src.config_parser.get_app_max_threads", return_value=1),
+            patch("src.sync_photos.download_photo_task", side_effect=mock_slow_photo_download),
+        ):
             start_time = time.time()
-            result = sync_photos.sync_album(
+            sync_photos.sync_album(
                 album=album,
                 destination_path=self.destination_path,
                 file_sizes=["original"],
@@ -958,13 +963,14 @@ class TestSyncPhotos(unittest.TestCase):
                 config=config,
             )
             sequential_time = time.time() - start_time
-        
+
         # Test parallel downloads (max_threads=4)
-        with patch('src.config_parser.get_app_max_threads', return_value=4), \
-             patch('src.sync_photos.download_photo_task', side_effect=mock_slow_photo_download):
-            
+        with (
+            patch("src.config_parser.get_app_max_threads", return_value=4),
+            patch("src.sync_photos.download_photo_task", side_effect=mock_slow_photo_download),
+        ):
             start_time = time.time()
-            result = sync_photos.sync_album(
+            sync_photos.sync_album(
                 album=album,
                 destination_path=self.destination_path,
                 file_sizes=["original"],
@@ -974,15 +980,121 @@ class TestSyncPhotos(unittest.TestCase):
                 config=config,
             )
             parallel_time = time.time() - start_time
-        
+
         # Verify parallel downloads are faster (with some tolerance for test variance)
         # Parallel should be at least 25% faster than sequential
         improvement_ratio = sequential_time / parallel_time
-        self.assertGreater(improvement_ratio, 1.25, 
-                          f"Parallel photo downloads ({parallel_time:.3f}s) should be significantly faster than sequential ({sequential_time:.3f}s)")
-        
+        self.assertGreater(
+            improvement_ratio,
+            1.25,
+            f"Parallel photo downloads ({parallel_time:.3f}s) should be significantly faster than sequential ({sequential_time:.3f}s)",
+        )
+
         # Log the performance improvement for verification
-        print(f"\nPhoto Performance Test Results:")
+        print("\nPhoto Performance Test Results:")
         print(f"Sequential time: {sequential_time:.3f}s")
-        print(f"Parallel time: {parallel_time:.3f}s") 
+        print(f"Parallel time: {parallel_time:.3f}s")
         print(f"Performance improvement: {improvement_ratio:.2f}x faster")
+
+    @patch("src.sync_photos.download_photo")
+    @patch("src.sync_photos.photo_exists")
+    def test_process_photo_success_path(self, mock_photo_exists, mock_download_photo):
+        """Test process_photo successful execution to cover line 175."""
+        # Configure mocks: photo doesn't exist, download succeeds and doesn't raise exception
+        mock_photo_exists.return_value = False
+        mock_download_photo.return_value = None  # download_photo returns None on success
+
+        # Create a mock photo with minimal required attributes
+        class MockPhoto:
+            def __init__(self):
+                import datetime
+
+                self.filename = "test_photo.jpg"
+                self.versions = {"original": {"type": "jpeg", "size": "1000"}}
+                self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+                self.id = "test_photo_id"
+
+        photo = MockPhoto()
+        files = set()
+
+        # Call process_photo which should return True (line 175)
+        result = sync_photos.process_photo(
+            photo=photo,
+            file_size="original",
+            destination_path=self.destination_path,
+            files=files,
+            folder_format=None,
+        )
+
+        # Should return True for successful processing (line 177)
+        self.assertTrue(result)
+        mock_download_photo.assert_called_once()
+        # Verify that the photo was added to files set (line 172-173)
+        self.assertEqual(len(files), 1)
+
+    @patch("src.sync_photos.photo_exists")
+    def test_process_photo_photo_exists(self, mock_photo_exists):
+        """Test process_photo when photo already exists to cover line 175."""
+        # Configure mock: photo already exists (return True)
+        mock_photo_exists.return_value = True
+
+        # Create a mock photo with minimal required attributes
+        class MockPhoto:
+            def __init__(self):
+                import datetime
+
+                self.filename = "test_photo.jpg"
+                self.versions = {"original": {"type": "jpeg", "size": "1000"}}
+                self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+                self.id = "test_photo_id"
+
+        photo = MockPhoto()
+        files = set()
+
+        # Call process_photo which should return False (line 175)
+        result = sync_photos.process_photo(
+            photo=photo,
+            file_size="original",
+            destination_path=self.destination_path,
+            files=files,
+            folder_format=None,
+        )
+
+        # Should return False since photo exists (line 175)
+        self.assertFalse(result)
+        mock_photo_exists.assert_called_once()
+        # Verify that the photo was still added to files set (line 172-173)
+        self.assertEqual(len(files), 1)
+
+    @patch("src.sync_photos.download_photo")
+    def test_download_photo_task_exception_handling(self, mock_download_photo):
+        """Test download_photo_task exception handling to cover lines 221-223."""
+        # Configure mock to raise an exception
+        mock_download_photo.side_effect = Exception("Test photo download error")
+
+        # Create a mock photo with minimal required attributes
+        class MockPhoto:
+            def __init__(self):
+                import datetime
+
+                self.filename = "test_photo.jpg"
+                self.versions = {"original": {"type": "jpeg", "size": "1000"}}
+                self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+                self.id = "test_photo_id"
+
+        photo = MockPhoto()
+        photo_path = os.path.join(self.destination_path, "test_photo.jpg")
+
+        task_info = {
+            "photo": photo,
+            "file_size": "original",
+            "photo_path": photo_path,
+            "files": set(),
+        }
+
+        # Call download_photo_task which should catch the exception and return False
+        result = sync_photos.download_photo_task(task_info)
+
+        # Should return False due to exception
+        self.assertFalse(result)
+        mock_download_photo.assert_called_once()
