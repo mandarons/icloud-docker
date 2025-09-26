@@ -255,16 +255,18 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
             future_to_task = {executor.submit(download_photo_task, task): task for task in download_tasks}
 
             # Process completed downloads
-            for future in as_completed(future_to_task):
+            def process_photo_result(future):
                 try:
                     result = future.result()
-                    if result:
-                        successful_downloads += 1
-                    else:
-                        failed_downloads += 1
+                    return 1 if result else 0, 0  # successful, failed
                 except Exception as e:
-                    failed_downloads += 1
                     LOGGER.error(f"Photo download task failed with exception: {e!s}")
+                    return 0, 1  # successful, failed
+
+            for future in as_completed(future_to_task):
+                success, failure = process_photo_result(future)
+                successful_downloads += success
+                failed_downloads += failure
 
         LOGGER.info(f"Parallel photo downloads completed: {successful_downloads} successful, {failed_downloads} failed")
 

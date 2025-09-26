@@ -241,7 +241,7 @@ def get_app_max_threads(config):
     default_max_threads = min(multiprocessing.cpu_count(), 8)
     max_threads = default_max_threads
     config_path = ["app", "max_threads"]
-    
+
     if not traverse_config_path(config=config, config_path=config_path):
         LOGGER.debug(
             f"max_threads is not found in {config_path_to_string(config_path=config_path)}."
@@ -249,7 +249,7 @@ def get_app_max_threads(config):
         )
     else:
         max_threads_config = get_config_value(config=config, config_path=config_path)
-        
+
         # Handle "auto" value
         if isinstance(max_threads_config, str) and max_threads_config.lower() == "auto":
             max_threads = default_max_threads
@@ -260,7 +260,7 @@ def get_app_max_threads(config):
         else:
             LOGGER.warning(f"Invalid max_threads value: {max_threads_config}. Using default: {default_max_threads}")
             max_threads = default_max_threads
-    
+
     return max_threads
 
 
