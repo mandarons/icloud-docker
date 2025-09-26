@@ -1,0 +1,3 @@
+WARNING  root:config_parser.py:377 Warning: bot_token is not found in app > telegram > bot_token.
+WARNING  root:config_parser.py:388 Warning: chat_id is not found in app > telegram > chat_id.
+WARNING  root:notify.py:34 Not sending 2FA notification because Telegram is not configured.

@@ -1,0 +1,4 @@
+WARNING  root:config_parser.py:400 Warning: webhook_url is not found in app > discord > webhook_url.
+WARNING  root:config_parser.py:412 Warning: username is not found in app > discord > username.
+WARNING  root:notify.py:77 Not sending 2FA notification because Discord is not configured.
+WARNING  root:config_parser.py:200 Warning: no_tls is not found in app > smtp > no_tls

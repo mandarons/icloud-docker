@@ -1,0 +1,14 @@
+WARNING  root:config_parser.py:377 Warning: bot_token is not found in app > telegram > bot_token.
+WARNING  root:config_parser.py:388 Warning: chat_id is not found in app > telegram > chat_id.
+WARNING  root:notify.py:34 Not sending 2FA notification because Telegram is not configured.
+WARNING  root:config_parser.py:400 Warning: webhook_url is not found in app > discord > webhook_url.
+WARNING  root:config_parser.py:412 Warning: username is not found in app > discord > username.
+WARNING  root:notify.py:77 Not sending 2FA notification because Discord is not configured.
+WARNING  root:config_parser.py:423 Warning: user_key is not found in app > pushover > user_key.
+WARNING  root:config_parser.py:434 Warning: api_token is not found in app > pushover > api_token.
+WARNING  root:notify.py:96 Not sending 2FA notification because Pushover is not configured.
+WARNING  root:config_parser.py:178 Warning: host is not found in app > smtp > host
+WARNING  root:config_parser.py:189 Warning: port is not found in app > smtp > port
+WARNING  root:config_parser.py:200 Warning: no_tls is not found in app > smtp > no_tls
+WARNING  root:config_parser.py:167 Warning: password is not found in app > smtp > password
+WARNING  root:notify.py:159 Not sending 2FA notification because SMTP is not configured

@@ -1,0 +1,32 @@
+DEBUG    icloudpy.base:base.py:240 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:247 Session file does not exist
+DEBUG    icloudpy.base:base.py:313 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:417 Authentication completed successfully
+DEBUG    root:config_parser.py:240 Checking photos destination ...
+DEBUG    root:config_parser.py:118 Checking root destination ...
+INFO     root:config_parser.py:112 Syncing all albums.
+INFO     root:sync_photos.py:168 Syncing album 2
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo no-extension.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3148.JPG.
+INFO     root:sync_photos.py:168 Syncing album-1-1
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo no-extension.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3148.JPG.
+INFO     root:sync_photos.py:168 Syncing album-1
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo no-extension.
+DEBUG    root:sync_photos.py:174 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:config_parser.py:266 Not Removing obsolete photos ...
