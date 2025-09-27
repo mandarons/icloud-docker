@@ -2,6 +2,7 @@
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import multiprocessing
 import os
 
 from icloudpy.services.photos import PhotoAsset
@@ -237,7 +238,6 @@ def get_drive_remove_obsolete(config):
 
 def get_app_max_threads(config):
     """Return app-level max threads from config with support for 'auto' value."""
-    import multiprocessing
     default_max_threads = min(multiprocessing.cpu_count(), 8)
     max_threads = default_max_threads
     config_path = ["app", "max_threads"]
@@ -453,6 +453,7 @@ def get_discord_username(config):
         username = get_config_value(config=config, config_path=config_path)
     return username
 
+
 # Get pushover user key
 def get_pushover_user_key(config):
     """Return Pushover user key from config."""
@@ -463,6 +464,7 @@ def get_pushover_user_key(config):
     else:
         user_key = get_config_value(config=config, config_path=config_path)
     return user_key
+
 
 # Get pushover api token
 def get_pushover_api_token(config):
