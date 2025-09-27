@@ -529,3 +529,43 @@ class TestConfigParser(unittest.TestCase):
     def test_get_pushover_api_token_none_config(self):
         """None config for Pushover API token."""
         self.assertIsNone(config_parser.get_pushover_api_token(config=None))
+
+    def test_get_app_max_threads_default(self):
+        """Test for getting app max threads with default value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        max_threads = config_parser.get_app_max_threads(config=config)
+        self.assertIsInstance(max_threads, int)
+        self.assertGreater(max_threads, 0)
+        self.assertLessEqual(max_threads, 8)
+
+    def test_get_app_max_threads_auto(self):
+        """Test for getting app max threads with 'auto' value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["max_threads"] = "auto"
+        max_threads = config_parser.get_app_max_threads(config=config)
+        self.assertIsInstance(max_threads, int)
+        self.assertGreater(max_threads, 0)
+        self.assertLessEqual(max_threads, 8)
+
+    def test_get_app_max_threads_custom(self):
+        """Test for getting app max threads with custom value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["max_threads"] = 4
+        max_threads = config_parser.get_app_max_threads(config=config)
+        self.assertEqual(max_threads, 4)
+
+    def test_get_app_max_threads_invalid(self):
+        """Test for getting app max threads with invalid value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["max_threads"] = -1  # Invalid value
+        max_threads = config_parser.get_app_max_threads(config=config)
+        self.assertGreater(max_threads, 0)  # Should use default
+
+    def test_get_app_max_threads_capped(self):
+        """Test for getting app max threads with value capped at 16."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["max_threads"] = 20  # Should be capped at 16
+        max_threads = config_parser.get_app_max_threads(config=config)
+        self.assertEqual(max_threads, 16)
+
+
