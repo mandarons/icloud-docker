@@ -817,8 +817,9 @@ class TestSyncPhotos(unittest.TestCase):
             for i in range(start_num, start_num + count):
                 with sync_photos.files_lock:
                     files.add(f"photo_{i}.jpg")
+                    # Capture the length inside the lock for thread safety
+                    results.append(len(files))
                 time.sleep(0.001)  # Small delay to increase chance of race conditions
-            results.append(len(files))
 
         # Create multiple threads that add files concurrently
         threads = []
