@@ -625,7 +625,8 @@ class TestSyncPhotos(unittest.TestCase):
 
     def test_get_max_threads_photos(self):
         """Test that get_max_threads returns reasonable values for photos."""
-        max_threads = sync_photos.get_max_threads()
+        config = read_config(config_path=tests.CONFIG_PATH)
+        max_threads = sync_photos.get_max_threads(config)
         self.assertIsInstance(max_threads, int)
         self.assertGreater(max_threads, 0)
         self.assertLessEqual(max_threads, 8)

@@ -264,14 +264,7 @@ def get_app_max_threads(config):
     return max_threads
 
 
-def get_drive_max_threads(config):
-    """Return drive max threads from config (now uses app-level configuration)."""
-    return get_app_max_threads(config)
 
-
-def get_photos_max_threads(config):
-    """Return photos max threads from config (now uses app-level configuration)."""
-    return get_app_max_threads(config)
 
 
 def prepare_photos_destination(config):

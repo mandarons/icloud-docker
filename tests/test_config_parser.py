@@ -568,16 +568,4 @@ class TestConfigParser(unittest.TestCase):
         max_threads = config_parser.get_app_max_threads(config=config)
         self.assertEqual(max_threads, 16)
 
-    def test_get_drive_max_threads_uses_app_config(self):
-        """Test that drive max threads uses app-level configuration."""
-        config = read_config(config_path=tests.CONFIG_PATH)
-        config["app"]["max_threads"] = 6
-        max_threads = config_parser.get_drive_max_threads(config=config)
-        self.assertEqual(max_threads, 6)
 
-    def test_get_photos_max_threads_uses_app_config(self):
-        """Test that photos max threads uses app-level configuration."""
-        config = read_config(config_path=tests.CONFIG_PATH)
-        config["app"]["max_threads"] = 5
-        max_threads = config_parser.get_photos_max_threads(config=config)
-        self.assertEqual(max_threads, 5)

@@ -27,14 +27,9 @@ LOGGER = get_logger()
 files_lock = Lock()
 
 
-def get_max_threads(config=None):
+def get_max_threads(config):
     """Get maximum number of threads for parallel downloads."""
-    if config is not None:
-        return config_parser.get_drive_max_threads(config)
-    # Fallback for when config is not available
-    import multiprocessing
-
-    return min(multiprocessing.cpu_count(), 8)
+    return config_parser.get_app_max_threads(config)
 
 
 def wanted_file(filters, ignore, file_path):

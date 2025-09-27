@@ -1225,7 +1225,8 @@ class TestSyncDrive(unittest.TestCase):
 
     def test_get_max_threads(self):
         """Test that get_max_threads returns reasonable values."""
-        max_threads = sync_drive.get_max_threads()
+        config = read_config(config_path=tests.CONFIG_PATH)
+        max_threads = sync_drive.get_max_threads(config)
         self.assertIsInstance(max_threads, int)
         self.assertGreater(max_threads, 0)
         self.assertLessEqual(max_threads, 8)
