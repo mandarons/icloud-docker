@@ -6,7 +6,9 @@ import os
 import shutil
 import time
 import unicodedata
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
+from threading import Lock
 
 from icloudpy import exceptions
 
@@ -16,6 +18,16 @@ from src import config_parser, configure_icloudpy_logging, get_logger
 configure_icloudpy_logging()
 
 LOGGER = get_logger()
+
+# Thread-safe lock for file set operations
+files_lock = Lock()
+
+
+def get_max_threads(config):
+    """Get maximum number of threads for parallel downloads."""
+    return config_parser.get_app_max_threads(config)
+
+
 original_alt_filetype_to_extension = {
     "public.png": "png",
     "public.jpeg": "jpeg",
@@ -80,13 +92,13 @@ def generate_file_name(photo, file_size, destination_path, folder_format):
     file_path = os.path.join(destination_path, filename)
     file_size_path = os.path.join(
         destination_path,
-        f'{"__".join([name, file_size])}' if extension == "" else f'{"__".join([name, file_size])}.{extension}',
+        f"{'__'.join([name, file_size])}" if extension == "" else f"{'__'.join([name, file_size])}.{extension}",
     )
     file_size_id_path = os.path.join(
         destination_path,
-        f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}'
+        f"{'__'.join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}"
         if extension == ""
-        else f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
+        else f"{'__'.join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}",
     )
 
     if folder_format is not None:
@@ -94,9 +106,9 @@ def generate_file_name(photo, file_size, destination_path, folder_format):
         file_size_id_path = os.path.join(
             destination_path,
             folder,
-            f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}'
+            f"{'__'.join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}"
             if extension == ""
-            else f'{"__".join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}',
+            else f"{'__'.join([name, file_size, base64.urlsafe_b64encode(photo.id.encode()).decode()])}.{extension}",
         )
         os.makedirs(os.path.join(destination_path, folder), exist_ok=True)
 
@@ -160,18 +172,100 @@ def process_photo(photo, file_size, destination_path, files, folder_format):
     return True
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None):
+def collect_photo_for_download(photo, file_size, destination_path, files, folder_format):
+    """Collect photo info for parallel download without immediately downloading."""
+    photo_path = generate_file_name(
+        photo=photo,
+        file_size=file_size,
+        destination_path=destination_path,
+        folder_format=folder_format,
+    )
+    if file_size not in photo.versions:
+        LOGGER.warning(f"File size {file_size} not found on server. Skipping the photo {photo_path} ...")
+        return None
+
+    # Thread-safe file set update
+    if files is not None:
+        with files_lock:
+            files.add(photo_path)
+
+    if photo_exists(photo, file_size, photo_path):
+        return None
+
+    # Return download task info
+    return {
+        "photo": photo,
+        "file_size": file_size,
+        "photo_path": photo_path,
+    }
+
+
+def download_photo_task(download_info):
+    """Download a single photo as part of parallel execution."""
+    photo = download_info["photo"]
+    file_size = download_info["file_size"]
+    photo_path = download_info["photo_path"]
+
+    LOGGER.debug(f"[Thread] Starting download of {photo_path}")
+
+    try:
+        result = download_photo(photo, file_size, photo_path)
+        if result:
+            LOGGER.debug(f"[Thread] Completed download of {photo_path}")
+        return result
+    except Exception as e:
+        LOGGER.error(f"[Thread] Failed to download {photo_path}: {e!s}")
+        return False
+
+
+def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None, config=None):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
     os.makedirs(unicodedata.normalize("NFC", destination_path), exist_ok=True)
     LOGGER.info(f"Syncing {album.title}")
+
+    download_tasks = []
+
+    # First pass: collect download tasks
     for photo in album:
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
-                process_photo(photo, file_size, destination_path, files, folder_format)
+                download_info = collect_photo_for_download(photo, file_size, destination_path, files, folder_format)
+                if download_info:
+                    download_tasks.append(download_info)
         else:
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
+
+    # Execute downloads in parallel
+    if download_tasks:
+        max_threads = get_max_threads(config)
+        LOGGER.info(f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos...")
+
+        successful_downloads = 0
+        failed_downloads = 0
+
+        with ThreadPoolExecutor(max_workers=max_threads) as executor:
+            # Submit all download tasks
+            future_to_task = {executor.submit(download_photo_task, task): task for task in download_tasks}
+
+            # Process completed downloads
+            def process_photo_result(future):
+                try:
+                    result = future.result()
+                    return 1 if result else 0, 0  # successful, failed
+                except Exception as e:
+                    LOGGER.error(f"Photo download task failed with exception: {e!s}")
+                    return 0, 1  # successful, failed
+
+            for future in as_completed(future_to_task):
+                success, failure = process_photo_result(future)
+                successful_downloads += success
+                failed_downloads += failure
+
+        LOGGER.info(f"Parallel photo downloads completed: {successful_downloads} successful, {failed_downloads} failed")
+
+    # Process subalbums recursively
     for subalbum in album.subalbums:
         sync_album(
             album.subalbums[subalbum],
@@ -180,6 +274,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
             extensions,
             files,
             folder_format,
+            config,
         )
     return True
 
@@ -219,6 +314,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    config=config,
                 )
         elif filters["albums"] and library == "PrimarySync":
             for album in iter(filters["albums"]):
@@ -229,6 +325,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    config=config,
                 )
         elif filters["albums"]:
             for album in iter(filters["albums"]):
@@ -240,6 +337,7 @@ def sync_photos(config, photos):
                         extensions=filters["extensions"],
                         files=files,
                         folder_format=folder_format,
+                        config=config,
                     )
                 else:
                     LOGGER.warning(f"Album {album} not found in {library}. Skipping the album {album} ...")
@@ -251,6 +349,7 @@ def sync_photos(config, photos):
                 extensions=filters["extensions"],
                 files=files,
                 folder_format=folder_format,
+                config=config,
             )
 
     if config_parser.get_photos_remove_obsolete(config=config):
