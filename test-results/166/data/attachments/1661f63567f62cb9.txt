@@ -1,0 +1,3 @@
+WARNING  root:config_parser.py:456 Warning: user_key is not found in app > pushover > user_key.
+WARNING  root:config_parser.py:468 Warning: api_token is not found in app > pushover > api_token.
+WARNING  root:notify.py:96 Not sending 2FA notification because Pushover is not configured.

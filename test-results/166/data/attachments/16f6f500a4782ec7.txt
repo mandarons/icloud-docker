@@ -1,0 +1,6 @@
+DEBUG    icloudpy.base:base.py:240 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:247 Session file does not exist
+DEBUG    icloudpy.base:base.py:313 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:417 Authentication completed successfully
+DEBUG    root:sync_photos.py:209 [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/test_photo.jpg
+ERROR    root:sync_photos.py:217 [Thread] Failed to download /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/test_photo.jpg: Test photo download error

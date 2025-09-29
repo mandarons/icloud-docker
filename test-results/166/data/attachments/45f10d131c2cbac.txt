@@ -1,0 +1,12 @@
+[38;21m2025-09-29 22:06:27,304 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-09-29 22:06:27,305 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-09-29 22:06:27,305 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-09-29 22:06:27,313 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-09-29 22:06:27,315 :: DEBUG :: root :: config_parser.py :: 119 :: Checking root destination ...[0m
+[38;21m2025-09-29 22:06:27,316 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-09-29 22:06:27,316 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-09-29 22:06:27,316 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-09-29 22:06:27,325 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;5;226m2025-09-29 22:06:27,325 :: WARNING :: root :: sync.py :: 89 :: Nothing to sync. Please add drive: and/or photos: section in config.yaml file.[0m
+[38;5;39m2025-09-29 22:06:27,325 :: INFO :: root :: sync.py :: 133 :: Resyncing at Mon Sep 29 22:06:27 2025 ...[0m
+[38;5;39m2025-09-29 22:06:27,325 :: INFO :: root :: sync.py :: 141 :: All configured sync intervals are negative, exiting oneshot mode...[0m
