@@ -2,7 +2,6 @@
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
-import multiprocessing
 import os
 
 from icloudpy.services.photos import PhotoAsset
@@ -247,37 +246,6 @@ def get_drive_remove_obsolete(config):
     return drive_remove_obsolete
 
 
-def get_app_max_threads(config):
-    """Return app-level max threads from config with support for 'auto' value."""
-    default_max_threads = min(multiprocessing.cpu_count(), 8)
-    max_threads = default_max_threads
-    config_path = ["app", "max_threads"]
-
-    if not traverse_config_path(config=config, config_path=config_path):
-        LOGGER.debug(
-            f"max_threads is not found in {config_path_to_string(config_path=config_path)}."
-            + f" Using default max_threads: {max_threads} (auto) ...",
-        )
-    else:
-        max_threads_config = get_config_value(config=config, config_path=config_path)
-
-        # Handle "auto" value
-        if isinstance(max_threads_config, str) and max_threads_config.lower() == "auto":
-            max_threads = default_max_threads
-            LOGGER.info(f"Using automatic thread count: {max_threads} threads (based on CPU cores).")
-        elif isinstance(max_threads_config, int) and max_threads_config >= 1:
-            max_threads = min(max_threads_config, 16)  # Cap at 16 to avoid overwhelming servers
-            LOGGER.info(f"Using configured max_threads: {max_threads}.")
-        else:
-            LOGGER.warning(f"Invalid max_threads value: {max_threads_config}. Using default: {default_max_threads}")
-            max_threads = default_max_threads
-
-    return max_threads
-
-
-
-
-
 def prepare_photos_destination(config):
     """Prepare photos destination path."""
     LOGGER.debug("Checking photos destination ...")
@@ -457,7 +425,6 @@ def get_discord_username(config):
         username = get_config_value(config=config, config_path=config_path)
     return username
 
-
 # Get pushover user key
 def get_pushover_user_key(config):
     """Return Pushover user key from config."""
@@ -468,7 +435,6 @@ def get_pushover_user_key(config):
     else:
         user_key = get_config_value(config=config, config_path=config_path)
     return user_key
-
 
 # Get pushover api token
 def get_pushover_api_token(config):

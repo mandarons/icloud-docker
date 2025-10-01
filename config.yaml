@@ -11,11 +11,6 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "/icloud"
-  # Maximum number of parallel download threads for both drive and photos
-  # auto: automatically set based on CPU cores (default, max 8)
-  # integer: specific number of threads (max 16)
-  # max_threads: auto
-  # max_threads: 4
   discord:
   # webhook_url: <your server webhook URL here>
   # username: icloud-docker #or any other name you prefer
