@@ -143,7 +143,7 @@ def create_hardlink(source_path, destination_path):
         os.makedirs(os.path.dirname(destination_path), exist_ok=True)
         # Create hard link
         os.link(source_path, destination_path)
-        LOGGER.info(f"Created hard link: {destination_path} -> {source_path}")
+        LOGGER.info(f"Created hard link: {destination_path} (linked to existing file: {source_path})")
         return True
     except (OSError, FileNotFoundError) as e:
         LOGGER.warning(f"Failed to create hard link {destination_path}: {e!s}")
@@ -320,7 +320,15 @@ def sync_album(
     # Execute downloads in parallel
     if download_tasks:
         max_threads = get_max_threads(config)
-        LOGGER.info(f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos...")
+
+        # Count hardlink tasks vs download tasks
+        hardlink_tasks = sum(1 for task in download_tasks if task.get("hardlink_source"))
+        download_only_tasks = len(download_tasks) - hardlink_tasks
+
+        if hardlink_tasks > 0:
+            LOGGER.info(f"Starting parallel processing with {max_threads} threads: {hardlink_tasks} hard links, {download_only_tasks} downloads...")
+        else:
+            LOGGER.info(f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos...")
 
         successful_downloads = 0
         failed_downloads = 0
@@ -341,7 +349,7 @@ def sync_album(
                     LOGGER.error(f"Unexpected error during photo download: {e!s}")
                     failed_downloads += 1
 
-        LOGGER.info(f"Photo downloads complete: {successful_downloads} successful, {failed_downloads} failed")
+        LOGGER.info(f"Photo processing complete: {successful_downloads} successful, {failed_downloads} failed")
 
     for subalbum in album.subalbums:
         sync_album(
@@ -400,6 +408,8 @@ def sync_photos(config, photos):
                     hardlink_registry=hardlink_registry,
                     config=config,
                 )
+                if hardlink_registry:
+                    LOGGER.info(f"'All Photos' sync complete. Hard link registry populated with {len(hardlink_registry)} reference files.")
                 break
 
     for library in libraries:
