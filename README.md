@@ -98,6 +98,11 @@ app:
     # If your email provider doesn't handle TLS
     # no_tls: true
   region: global # For China server users, set this to - china (default: global)
+  # Maximum number of parallel download threads for both drive and photos
+  # auto: automatically set based on CPU cores (default, max 8)
+  # integer: specific number of threads (max 16)
+  # max_threads: auto
+  # max_threads: 4
 drive:
   destination: "drive"
   # Remove local files that are not present on server (i.e. files delete on server)
@@ -148,7 +153,31 @@ photos:
       # - png
 ```
 
-## Features
+**_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
+
+## Performance Optimization
+
+### Parallel Downloads
+
+This client supports parallel downloads to significantly improve sync performance, especially for users with large amounts of data. The parallel download feature uses multiple threads to download files simultaneously.
+
+**Key Features:**
+- **Automatic thread scaling**: By default, uses the number of CPU cores (up to 8 threads)
+- **Configurable**: Set custom thread count or use "auto" via `max_threads` configuration
+- **IO-optimized**: Designed for IO-heavy operations typical in file downloads
+- **Thread-safe**: All file operations are protected with locks to ensure data integrity
+
+**Configuration Options:**
+- `max_threads: auto` - Automatic scaling based on CPU cores (default)
+- `max_threads: 4` - Use 4 parallel download threads
+- `max_threads: 1` - Disable parallel downloads (sequential mode)
+- Omit the setting to use automatic scaling
+
+**Performance Impact:**
+- **Large file collections**: Can reduce sync time from hours to minutes
+- **Small file collections**: Minimal impact due to overhead
+- **Network-bound**: Most effective on fast internet connections
+- **Disk-bound**: Benefits systems with fast storage (SSDs)
 
 ### Hard Link Deduplication
 
@@ -172,8 +201,6 @@ photos:
 - **Without hard links**: Same photo in 3 albums = 3 separate files (3× storage usage)
 - **With hard links**: Same photo in 3 albums = 1 file + 2 hard links (1× storage usage)
 
-**_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
-
 ## Setup Guides
 
 ### UGREEN NAS Setup
@@ -188,7 +215,7 @@ This guide helps you set up iCloud sync on a UGREEN NAS system using Docker.
 #### Step-by-Step Setup
 
 1. **Create folder structure in your UGREEN userspace**
-   
+
    Create the following directory structure in your UGREEN user directory:
    ```
    /Cloud-Drives/
@@ -203,7 +230,7 @@ This guide helps you set up iCloud sync on a UGREEN NAS system using Docker.
 
 2. **Create config file**
    - Copy the sample configuration from this README
-   - Make your adjustments to the `config.yaml` 
+   - Make your adjustments to the `config.yaml`
    - Place it into the `Config` folder you created above
 
 3. **Create Project in UGREEN Docker App**
@@ -228,7 +255,7 @@ This guide helps you set up iCloud sync on a UGREEN NAS system using Docker.
          - /home/<ugreen_username>/Cloud-Drives/iCloud/Config:/config
          - /home/<ugreen_username>/Cloud-Drives/iCloud/keyring:/home/abc/.local # Optional: Persist keyring for credentials (no password re-entry on container recreation)
    ```
-   
+
    Replace `<ugreen_username>` with your UGREEN system username.
 
 4. **Build and start the container**

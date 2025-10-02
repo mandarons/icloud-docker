@@ -8,8 +8,10 @@ import re
 import time
 import unicodedata
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path, PurePath
 from shutil import copyfileobj, rmtree
+from threading import Lock
 
 import magic
 from icloudpy import exceptions
@@ -20,6 +22,14 @@ from src import config_parser, configure_icloudpy_logging, get_logger
 configure_icloudpy_logging()
 
 LOGGER = get_logger()
+
+# Thread-safe lock for file set operations
+files_lock = Lock()
+
+
+def get_max_threads(config):
+    """Get maximum number of threads for parallel downloads."""
+    return config_parser.get_app_max_threads(config)
 
 
 def wanted_file(filters, ignore, file_path):
@@ -225,6 +235,68 @@ def process_file(item, destination_path, filters, ignore, files):
     return True
 
 
+def collect_file_for_download(item, destination_path, filters, ignore, files):
+    """Collect file info for parallel download without immediately downloading."""
+    if not (item and destination_path and files is not None):
+        return None
+    local_file = os.path.join(destination_path, item.name)
+    local_file = unicodedata.normalize("NFC", local_file)
+    if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
+        return None
+
+    # Thread-safe file set update
+    with files_lock:
+        files.add(local_file)
+
+    item_is_package = is_package(item=item)
+    if item_is_package:
+        if package_exists(item=item, local_package_path=local_file):
+            with files_lock:
+                for f in Path(local_file).glob("**/*"):
+                    files.add(str(f))
+            return None
+    elif file_exists(item=item, local_file=local_file):
+        return None
+
+    # Return download task info
+    return {
+        "item": item,
+        "local_file": local_file,
+        "is_package": item_is_package,
+        "files": files,
+    }
+
+
+def download_file_task(download_info):
+    """Download a single file as part of parallel execution."""
+    item = download_info["item"]
+    local_file = download_info["local_file"]
+    is_package = download_info["is_package"]
+    files = download_info["files"]
+
+    LOGGER.debug(f"[Thread] Starting download of {local_file}")
+
+    try:
+        downloaded_file = download_file(item=item, local_file=local_file)
+        if not downloaded_file:
+            return False
+
+        if is_package:
+            with files_lock:
+                for f in Path(downloaded_file).glob("**/*"):
+                    f = str(f)
+                    f_normalized = unicodedata.normalize("NFD", f)
+                    if os.path.exists(f):
+                        os.rename(f, f_normalized)
+                        files.add(f_normalized)
+
+        LOGGER.debug(f"[Thread] Completed download of {local_file}")
+        return True
+    except Exception as e:
+        LOGGER.error(f"[Thread] Failed to download {local_file}: {e!s}")
+        return False
+
+
 def remove_obsolete(destination_path, files):
     """Remove local obsolete file."""
     removed_paths = set()
@@ -252,10 +324,14 @@ def sync_directory(
     filters=None,
     ignore=None,
     remove=False,
+    config=None,
 ):
     """Sync folder."""
     files = set()
+    download_tasks = []
+
     if drive and destination_path and items and root:
+        # First pass: collect folders and download tasks
         for i in items:
             item = drive[i]
             if item.type in ("folder", "app_library"):
@@ -279,6 +355,7 @@ def sync_directory(
                             top=False,
                             filters=filters,
                             ignore=ignore,
+                            config=config,
                         ),
                     )
                 except Exception:
@@ -292,16 +369,45 @@ def sync_directory(
                     folder_path=destination_path,
                 ):
                     try:
-                        process_file(
+                        download_info = collect_file_for_download(
                             item=item,
                             destination_path=destination_path,
                             filters=filters["file_extensions"] if filters and "file_extensions" in filters else None,
                             ignore=ignore,
                             files=files,
                         )
+                        if download_info:
+                            download_tasks.append(download_info)
                     except Exception:
                         # Continue execution to next item, without crashing the app
                         pass
+
+        # Second pass: execute downloads in parallel
+        if download_tasks:
+            max_threads = get_max_threads(config)
+            LOGGER.info(f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...")
+
+            successful_downloads = 0
+            failed_downloads = 0
+
+            with ThreadPoolExecutor(max_workers=max_threads) as executor:
+                # Submit all download tasks
+                future_to_task = {executor.submit(download_file_task, task): task for task in download_tasks}
+
+                # Process completed downloads
+                for future in as_completed(future_to_task):
+                    try:
+                        result = future.result()
+                        if result:
+                            successful_downloads += 1
+                        else:
+                            failed_downloads += 1
+                    except Exception as e:  # noqa: PERF203
+                        LOGGER.error(f"Download task failed with exception: {e!s}")
+                        failed_downloads += 1
+
+            LOGGER.info(f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed")
+
         if top and remove:
             remove_obsolete(destination_path=destination_path, files=files)
     return files
@@ -319,4 +425,5 @@ def sync_drive(config, drive):
         filters=config["drive"]["filters"] if "drive" in config and "filters" in config["drive"] else None,
         ignore=config["drive"]["ignore"] if "drive" in config and "ignore" in config["drive"] else None,
         remove=config_parser.get_drive_remove_obsolete(config=config),
+        config=config,
     )
