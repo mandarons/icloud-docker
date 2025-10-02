@@ -1,0 +1,6 @@
+DEBUG    icloudpy.base:base.py:240 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:247 Session file does not exist
+DEBUG    icloudpy.base:base.py:313 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:417 Authentication completed successfully
+INFO     root:sync_photos.py:157 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos ...
+ERROR    root:sync_photos.py:165 Failed to download /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos: ICloudPyAPIResponseException.__init__() missing 1 required positional argument: 'reason'

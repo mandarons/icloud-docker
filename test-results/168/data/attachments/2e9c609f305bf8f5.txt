@@ -1,0 +1,5 @@
+[38;21m2025-10-02 23:29:48,426 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-02 23:29:48,427 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-02 23:29:48,427 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-02 23:29:48,436 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;5;226m2025-10-02 23:29:48,436 :: WARNING :: root :: sync_photos.py :: 216 :: File size nonexistent_size not found on server. Skipping the photo /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/test_photo__nonexistent_size__dGVzdF9waG90b19pZA==.jpg ...[0m

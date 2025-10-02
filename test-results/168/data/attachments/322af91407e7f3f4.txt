@@ -1,0 +1,7 @@
+[38;21m2025-10-02 23:29:46,043 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-02 23:29:46,044 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-02 23:29:46,044 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-02 23:29:46,053 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-10-02 23:29:46,053 :: DEBUG :: root :: sync_drive.py :: 277 :: [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Scanned document 1.pdf[0m
+[38;5;39m2025-10-02 23:29:46,053 :: INFO :: root :: sync_drive.py :: 194 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Scanned document 1.pdf ...[0m
+[38;21m2025-10-02 23:29:46,054 :: DEBUG :: root :: sync_drive.py :: 293 :: [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Scanned document 1.pdf[0m

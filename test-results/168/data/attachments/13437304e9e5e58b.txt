@@ -1,0 +1,15 @@
+DEBUG    icloudpy.base:base.py:240 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:247 Session file does not exist
+DEBUG    icloudpy.base:base.py:313 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:417 Authentication completed successfully
+INFO     root:sync_photos.py:299 Syncing All Photos
+DEBUG    root:config_parser.py:257 max_threads is not found in app > max_threads. Using default max_threads: 4 (auto) ...
+INFO     root:sync_photos.py:333 Starting parallel photo downloads with 4 threads for 7 photos...
+ERROR    root:sync_photos.py:353 Unexpected error during photo download: Photo download failed
+ERROR    root:sync_photos.py:353 Unexpected error during photo download: Photo download failed
+ERROR    root:sync_photos.py:353 Unexpected error during photo download: Photo download failed
+ERROR    root:sync_photos.py:353 Unexpected error during photo download: Photo download failed
+ERROR    root:sync_photos.py:353 Unexpected error during photo download: Photo download failed
+ERROR    root:sync_photos.py:353 Unexpected error during photo download: Photo download failed
+ERROR    root:sync_photos.py:353 Unexpected error during photo download: Photo download failed
+INFO     root:sync_photos.py:356 Photo processing complete: 0 successful, 7 failed
