@@ -326,9 +326,13 @@ def sync_album(
         download_only_tasks = len(download_tasks) - hardlink_tasks
 
         if hardlink_tasks > 0:
-            LOGGER.info(f"Starting parallel processing with {max_threads} threads: {hardlink_tasks} hard links, {download_only_tasks} downloads...")
+            LOGGER.info(
+                f"Starting parallel processing with {max_threads} threads: {hardlink_tasks} hard links, {download_only_tasks} downloads..."
+            )
         else:
-            LOGGER.info(f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos...")
+            LOGGER.info(
+                f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos..."
+            )
 
         successful_downloads = 0
         failed_downloads = 0
@@ -409,7 +413,9 @@ def sync_photos(config, photos):
                     config=config,
                 )
                 if hardlink_registry:
-                    LOGGER.info(f"'All Photos' sync complete. Hard link registry populated with {len(hardlink_registry)} reference files.")
+                    LOGGER.info(
+                        f"'All Photos' sync complete. Hard link registry populated with {len(hardlink_registry)} reference files."
+                    )
                 break
 
     for library in libraries:
