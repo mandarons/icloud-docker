@@ -305,7 +305,12 @@ def sync_album(
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
                 download_info = collect_photo_for_download(
-                    photo, file_size, destination_path, files, folder_format, hardlink_registry
+                    photo,
+                    file_size,
+                    destination_path,
+                    files,
+                    folder_format,
+                    hardlink_registry,
                 )
                 if download_info:
                     download_tasks.append(download_info)
