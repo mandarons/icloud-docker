@@ -1,0 +1,5 @@
+[38;21m2025-10-02 05:39:14,640 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-02 05:39:14,641 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-02 05:39:14,641 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-02 05:39:14,650 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;5;226m2025-10-02 05:39:14,651 :: WARNING :: root :: sync_photos.py :: 195 :: Hard link creation failed, downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/test_photo__original__dGVzdF9waG90b19pZA==.jpg instead[0m

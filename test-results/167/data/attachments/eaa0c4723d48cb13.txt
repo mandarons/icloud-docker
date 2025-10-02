@@ -1,0 +1,8 @@
+[38;21m2025-10-02 05:39:14,941 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-02 05:39:14,941 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-02 05:39:14,942 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-02 05:39:14,951 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;5;39m2025-10-02 05:39:14,971 :: INFO :: root :: sync_photos.py :: 299 :: Syncing All Photos[0m
+[38;21m2025-10-02 05:39:14,973 :: DEBUG :: root :: config_parser.py :: 257 :: max_threads is not found in app > max_threads. Using default max_threads: 4 (auto) ...[0m
+[38;5;39m2025-10-02 05:39:14,973 :: INFO :: root :: sync_photos.py :: 333 :: Starting parallel photo downloads with 4 threads for 7 photos...[0m
+[38;5;39m2025-10-02 05:39:14,974 :: INFO :: root :: sync_photos.py :: 356 :: Photo processing complete: 0 successful, 7 failed[0m
