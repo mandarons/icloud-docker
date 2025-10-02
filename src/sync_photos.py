@@ -337,12 +337,9 @@ def sync_album(
                         successful_downloads += 1
                     else:
                         failed_downloads += 1
-                except (OSError, FileNotFoundError, exceptions.ICloudPyException) as e:
-                    LOGGER.error(f"Error during photo download: {e!s}")
+                except Exception as e:  # noqa: PERF203
+                    LOGGER.error(f"Unexpected error during photo download: {e!s}")
                     failed_downloads += 1
-                except Exception as e:
-                    LOGGER.critical(f"Unexpected error during photo download: {e!s}")
-                    raise
 
         LOGGER.info(f"Photo downloads complete: {successful_downloads} successful, {failed_downloads} failed")
 
