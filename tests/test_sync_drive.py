@@ -1477,7 +1477,12 @@ class TestSyncDrive(unittest.TestCase):
 
         # Verify parallel downloads are faster (with some tolerance for test variance)
         # Parallel should be at least 10% faster than sequential (lenient for CI)
-        improvement_ratio = sequential_time / parallel_time if parallel_time > 0 else 1.0
+        # Protect against division by zero or near-zero parallel_time
+        epsilon = 1e-6
+        if parallel_time < epsilon:
+            improvement_ratio = 1.0
+        else:
+            improvement_ratio = sequential_time / parallel_time
 
         # Log the performance improvement for verification
         print("\nPerformance Test Results:")
