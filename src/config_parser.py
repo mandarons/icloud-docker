@@ -114,6 +114,17 @@ def get_photos_all_albums(config):
     return download_all
 
 
+def get_photos_use_hardlinks(config):
+    """Return flag to use hard links for duplicate photos from config."""
+    use_hardlinks = False
+    config_path = ["photos", "use_hardlinks"]
+    if traverse_config_path(config=config, config_path=config_path):
+        use_hardlinks = get_config_value(config=config, config_path=config_path)
+        if use_hardlinks:
+            LOGGER.info("Using hard links for duplicate photos.")
+    return use_hardlinks
+
+
 def prepare_root_destination(config):
     """Prepare root destination."""
     LOGGER.debug("Checking root destination ...")
@@ -262,9 +273,6 @@ def get_app_max_threads(config):
             max_threads = default_max_threads
 
     return max_threads
-
-
-
 
 
 def prepare_photos_destination(config):

@@ -136,6 +136,20 @@ def photo_exists(photo, file_size, local_path):
         return False
 
 
+def create_hardlink(source_path, destination_path):
+    """Create a hard link from source to destination."""
+    try:
+        # Ensure destination directory exists
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+        # Create hard link
+        os.link(source_path, destination_path)
+        LOGGER.info(f"Created hard link: {destination_path} (linked to existing file: {source_path})")
+        return True
+    except (OSError, FileNotFoundError) as e:
+        LOGGER.warning(f"Failed to create hard link {destination_path}: {e!s}")
+        return False
+
+
 def download_photo(photo, file_size, destination_path):
     """Download photo from server."""
     if not (photo and file_size and destination_path):
@@ -153,8 +167,8 @@ def download_photo(photo, file_size, destination_path):
     return True
 
 
-def process_photo(photo, file_size, destination_path, files, folder_format):
-    """Process photo details."""
+def process_photo(photo, file_size, destination_path, files, folder_format, hardlink_registry=None):
+    """Process photo details (legacy function for backward compatibility)."""
     photo_path = generate_file_name(
         photo=photo,
         file_size=file_size,
@@ -168,11 +182,29 @@ def process_photo(photo, file_size, destination_path, files, folder_format):
         files.add(photo_path)
     if photo_exists(photo, file_size, photo_path):
         return False
-    download_photo(photo, file_size, photo_path)
-    return True
+
+    # Check if hard links are enabled and photo already exists elsewhere
+    if hardlink_registry is not None:
+        photo_key = f"{photo.id}_{file_size}"
+        if photo_key in hardlink_registry:
+            existing_path = hardlink_registry[photo_key]
+            if create_hardlink(existing_path, photo_path):
+                return True
+            else:
+                # Fallback to download if hard link creation fails
+                LOGGER.warning(f"Hard link creation failed, downloading {photo_path} instead")
+
+    # Download the photo and register it for future hard links
+    if download_photo(photo, file_size, photo_path):
+        if hardlink_registry is not None:
+            photo_key = f"{photo.id}_{file_size}"
+            hardlink_registry[photo_key] = photo_path
+        return True
+
+    return False
 
 
-def collect_photo_for_download(photo, file_size, destination_path, files, folder_format):
+def collect_photo_for_download(photo, file_size, destination_path, files, folder_format, hardlink_registry=None):
     """Collect photo info for parallel download without immediately downloading."""
     photo_path = generate_file_name(
         photo=photo,
@@ -192,33 +224,74 @@ def collect_photo_for_download(photo, file_size, destination_path, files, folder
     if photo_exists(photo, file_size, photo_path):
         return None
 
+    # Check if hard links are enabled and photo already exists elsewhere
+    if hardlink_registry is not None:
+        photo_key = f"{photo.id}_{file_size}"
+        if photo_key in hardlink_registry:
+            existing_path = hardlink_registry[photo_key]
+            # Return hardlink task info
+            return {
+                "photo": photo,
+                "file_size": file_size,
+                "photo_path": photo_path,
+                "hardlink_source": existing_path,
+                "hardlink_registry": hardlink_registry,
+            }
+
     # Return download task info
     return {
         "photo": photo,
         "file_size": file_size,
         "photo_path": photo_path,
+        "hardlink_source": None,
+        "hardlink_registry": hardlink_registry,
     }
 
 
 def download_photo_task(download_info):
-    """Download a single photo as part of parallel execution."""
+    """Download a single photo or create hardlink as part of parallel execution."""
     photo = download_info["photo"]
     file_size = download_info["file_size"]
     photo_path = download_info["photo_path"]
+    hardlink_source = download_info.get("hardlink_source")
+    hardlink_registry = download_info.get("hardlink_registry")
 
-    LOGGER.debug(f"[Thread] Starting download of {photo_path}")
+    LOGGER.debug(f"[Thread] Starting processing of {photo_path}")
 
     try:
+        # Try hardlink first if source exists
+        if hardlink_source:
+            if create_hardlink(hardlink_source, photo_path):
+                LOGGER.debug(f"[Thread] Created hardlink for {photo_path}")
+                return True
+            else:
+                # Fallback to download if hard link creation fails
+                LOGGER.warning(f"Hard link creation failed, downloading {photo_path} instead")
+
+        # Download the photo
         result = download_photo(photo, file_size, photo_path)
         if result:
+            # Register for future hard links if enabled
+            if hardlink_registry is not None:
+                photo_key = f"{photo.id}_{file_size}"
+                hardlink_registry[photo_key] = photo_path
             LOGGER.debug(f"[Thread] Completed download of {photo_path}")
         return result
     except Exception as e:
-        LOGGER.error(f"[Thread] Failed to download {photo_path}: {e!s}")
+        LOGGER.error(f"[Thread] Failed to process {photo_path}: {e!s}")
         return False
 
 
-def sync_album(album, destination_path, file_sizes, extensions=None, files=None, folder_format=None, config=None):
+def sync_album(
+    album,
+    destination_path,
+    file_sizes,
+    extensions=None,
+    files=None,
+    folder_format=None,
+    hardlink_registry=None,
+    config=None,
+):
     """Sync given album."""
     if album is None or destination_path is None or file_sizes is None:
         return None
@@ -231,7 +304,14 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
     for photo in album:
         if photo_wanted(photo, extensions):
             for file_size in file_sizes:
-                download_info = collect_photo_for_download(photo, file_size, destination_path, files, folder_format)
+                download_info = collect_photo_for_download(
+                    photo,
+                    file_size,
+                    destination_path,
+                    files,
+                    folder_format,
+                    hardlink_registry,
+                )
                 if download_info:
                     download_tasks.append(download_info)
         else:
@@ -240,7 +320,19 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
     # Execute downloads in parallel
     if download_tasks:
         max_threads = get_max_threads(config)
-        LOGGER.info(f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos...")
+
+        # Count hardlink tasks vs download tasks
+        hardlink_tasks = sum(1 for task in download_tasks if task.get("hardlink_source"))
+        download_only_tasks = len(download_tasks) - hardlink_tasks
+
+        if hardlink_tasks > 0:
+            LOGGER.info(
+                f"Starting parallel processing with {max_threads} threads: {hardlink_tasks} hard links, {download_only_tasks} downloads...",
+            )
+        else:
+            LOGGER.info(
+                f"Starting parallel photo downloads with {max_threads} threads for {len(download_tasks)} photos...",
+            )
 
         successful_downloads = 0
         failed_downloads = 0
@@ -250,22 +342,19 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
             future_to_task = {executor.submit(download_photo_task, task): task for task in download_tasks}
 
             # Process completed downloads
-            def process_photo_result(future):
+            for future in as_completed(future_to_task):
                 try:
                     result = future.result()
-                    return 1 if result else 0, 0  # successful, failed
-                except Exception as e:
-                    LOGGER.error(f"Photo download task failed with exception: {e!s}")
-                    return 0, 1  # successful, failed
+                    if result:
+                        successful_downloads += 1
+                    else:
+                        failed_downloads += 1
+                except Exception as e:  # noqa: PERF203
+                    LOGGER.error(f"Unexpected error during photo download: {e!s}")
+                    failed_downloads += 1
 
-            for future in as_completed(future_to_task):
-                success, failure = process_photo_result(future)
-                successful_downloads += success
-                failed_downloads += failure
+        LOGGER.info(f"Photo processing complete: {successful_downloads} successful, {failed_downloads} failed")
 
-        LOGGER.info(f"Parallel photo downloads completed: {successful_downloads} successful, {failed_downloads} failed")
-
-    # Process subalbums recursively
     for subalbum in album.subalbums:
         sync_album(
             album.subalbums[subalbum],
@@ -274,6 +363,7 @@ def sync_album(album, destination_path, file_sizes, extensions=None, files=None,
             extensions,
             files,
             folder_format,
+            hardlink_registry,
             config,
         )
     return True
@@ -300,11 +390,40 @@ def sync_photos(config, photos):
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
+    use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)
     libraries = filters["libraries"] if filters["libraries"] is not None else photos.libraries
     folder_format = config_parser.get_photos_folder_format(config=config)
+
+    # Initialize hard link registry if hard links are enabled
+    hardlink_registry = {} if use_hardlinks else None
+
+    # If hard links are enabled and all albums are downloaded, ensure "All Photos" is synced first
+    if use_hardlinks and download_all:
+        for library in libraries:
+            if library == "PrimarySync" and "All Photos" in photos.libraries[library].albums:
+                LOGGER.info("Syncing 'All Photos' album first for hard link reference...")
+                sync_album(
+                    album=photos.libraries[library].albums["All Photos"],
+                    destination_path=os.path.join(destination_path, "All Photos"),
+                    file_sizes=filters["file_sizes"],
+                    extensions=filters["extensions"],
+                    files=files,
+                    folder_format=folder_format,
+                    hardlink_registry=hardlink_registry,
+                    config=config,
+                )
+                if hardlink_registry:
+                    LOGGER.info(
+                        f"'All Photos' sync complete. Hard link registry populated with {len(hardlink_registry)} reference files.",
+                    )
+                break
+
     for library in libraries:
         if download_all and library == "PrimarySync":
             for album in photos.libraries[library].albums.keys():
+                # Skip All Photos if we already synced it first
+                if use_hardlinks and album == "All Photos":
+                    continue
                 if filters["albums"] and album in iter(filters["albums"]):
                     continue
                 sync_album(
@@ -314,6 +433,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    hardlink_registry=hardlink_registry,
                     config=config,
                 )
         elif filters["albums"] and library == "PrimarySync":
@@ -325,6 +445,7 @@ def sync_photos(config, photos):
                     extensions=filters["extensions"],
                     files=files,
                     folder_format=folder_format,
+                    hardlink_registry=hardlink_registry,
                     config=config,
                 )
         elif filters["albums"]:
@@ -337,6 +458,7 @@ def sync_photos(config, photos):
                         extensions=filters["extensions"],
                         files=files,
                         folder_format=folder_format,
+                        hardlink_registry=hardlink_registry,
                         config=config,
                     )
                 else:
@@ -349,6 +471,7 @@ def sync_photos(config, photos):
                 extensions=filters["extensions"],
                 files=files,
                 folder_format=folder_format,
+                hardlink_registry=hardlink_registry,
                 config=config,
             )
 

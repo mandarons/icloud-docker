@@ -395,18 +395,16 @@ def sync_directory(
                 future_to_task = {executor.submit(download_file_task, task): task for task in download_tasks}
 
                 # Process completed downloads
-                def process_download_result(future):
+                for future in as_completed(future_to_task):
                     try:
                         result = future.result()
-                        return 1 if result else 0, 0  # successful, failed
-                    except Exception as e:
+                        if result:
+                            successful_downloads += 1
+                        else:
+                            failed_downloads += 1
+                    except Exception as e:  # noqa: PERF203
                         LOGGER.error(f"Download task failed with exception: {e!s}")
-                        return 0, 1  # successful, failed
-
-                for future in as_completed(future_to_task):
-                    success, failure = process_download_result(future)
-                    successful_downloads += success
-                    failed_downloads += failure
+                        failed_downloads += 1
 
             LOGGER.info(f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed")
 
