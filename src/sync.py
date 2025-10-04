@@ -29,12 +29,23 @@ LOGGER = get_logger()
 
 
 def get_api_instance(
-    username,
-    password,
-    cookie_directory=DEFAULT_COOKIE_DIRECTORY,
-    server_region="global",
-):
-    """Get API client instance."""
+    username: str,
+    password: str,
+    cookie_directory: str = DEFAULT_COOKIE_DIRECTORY,
+    server_region: str = "global",
+) -> ICloudPyService:
+    """
+    Create and return an iCloud API client instance.
+
+    Args:
+        username: iCloud username/Apple ID
+        password: iCloud password
+        cookie_directory: Directory to store authentication cookies
+        server_region: Server region ("china" or "global")
+
+    Returns:
+        Configured ICloudPyService instance
+    """
     return (
         ICloudPyService(
             apple_id=username,
@@ -52,104 +63,329 @@ def get_api_instance(
     )
 
 
+class SyncState:
+    """
+    Maintains synchronization state for drive and photos.
+
+    This class encapsulates the countdown timers and sync flags to avoid
+    passing multiple variables between functions.
+    """
+
+    def __init__(self):
+        """Initialize sync state with default values."""
+        self.drive_time_remaining = 0
+        self.photos_time_remaining = 0
+        self.enable_sync_drive = True
+        self.enable_sync_photos = True
+        self.last_send = None
+
+
+def _load_configuration():
+    """
+    Load configuration from file or environment.
+
+    Returns:
+        Configuration dictionary
+    """
+    config_path = os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)
+    return read_config(config_path=config_path)
+
+
+def _extract_sync_intervals(config):
+    """
+    Extract drive and photos sync intervals from configuration.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        tuple: (drive_sync_interval, photos_sync_interval)
+    """
+    drive_sync_interval = 0
+    photos_sync_interval = 0
+
+    if config and "drive" in config:
+        drive_sync_interval = config_parser.get_drive_sync_interval(config=config)
+    if config and "photos" in config:
+        photos_sync_interval = config_parser.get_photos_sync_interval(config=config)
+
+    return drive_sync_interval, photos_sync_interval
+
+
+def _retrieve_password(username: str):
+    """
+    Retrieve password from environment or keyring.
+
+    Args:
+        username: iCloud username
+
+    Returns:
+        Password string or None if not found
+
+    Raises:
+        ICloudPyNoStoredPasswordAvailableException: If password not available
+    """
+    if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+        password = os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
+        utils.store_password_in_keyring(username=username, password=password)
+        return password
+    else:
+        return utils.get_password_from_keyring(username=username)
+
+
+def _authenticate_and_get_api(config, username: str):
+    """
+    Authenticate user and return iCloud API instance.
+
+    Args:
+        config: Configuration dictionary
+        username: iCloud username
+
+    Returns:
+        ICloudPyService instance
+
+    Raises:
+        ICloudPyNoStoredPasswordAvailableException: If password not available
+    """
+    server_region = config_parser.get_region(config=config)
+    password = _retrieve_password(username)
+    return get_api_instance(username=username, password=password, server_region=server_region)
+
+
+def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval: int):
+    """
+    Execute drive synchronization if enabled.
+
+    Args:
+        config: Configuration dictionary
+        api: iCloud API instance
+        sync_state: Current sync state
+        drive_sync_interval: Drive sync interval in seconds
+    """
+    if config and "drive" in config and sync_state.enable_sync_drive:
+        LOGGER.info("Syncing drive...")
+        sync_drive.sync_drive(config=config, drive=api.drive)
+        LOGGER.info("Drive synced")
+        # Reset countdown timer to the configured interval
+        sync_state.drive_time_remaining = drive_sync_interval
+
+
+def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interval: int):
+    """
+    Execute photos synchronization if enabled.
+
+    Args:
+        config: Configuration dictionary
+        api: iCloud API instance
+        sync_state: Current sync state
+        photos_sync_interval: Photos sync interval in seconds
+    """
+    if config and "photos" in config and sync_state.enable_sync_photos:
+        LOGGER.info("Syncing photos...")
+        sync_photos.sync_photos(config=config, photos=api.photos)
+        LOGGER.info("Photos synced")
+        # Reset countdown timer to the configured interval
+        sync_state.photos_time_remaining = photos_sync_interval
+
+
+def _check_services_configured(config):
+    """
+    Check if any sync services are configured.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        bool: True if at least one service is configured
+    """
+
+    return "drive" in config or "photos" in config
+
+
+def _handle_2fa_required(config, username: str, sync_state: SyncState):
+    """
+    Handle 2FA authentication requirement.
+
+    Args:
+        config: Configuration dictionary
+        username: iCloud username
+        sync_state: Current sync state
+
+    Returns:
+        bool: True if should continue (retry), False if should exit
+    """
+    LOGGER.error("Error: 2FA is required. Please log in.")
+    sleep_for = config_parser.get_retry_login_interval(config=config)
+
+    if sleep_for < 0:
+        LOGGER.info("retry_login_interval is < 0, exiting ...")
+        return False
+
+    _log_retry_time(sleep_for)
+    server_region = config_parser.get_region(config=config)
+    sync_state.last_send = notify.send(
+        config=config,
+        username=username,
+        last_send=sync_state.last_send,
+        region=server_region,
+    )
+    sleep(sleep_for)
+    return True
+
+
+def _handle_password_error(config, username: str, sync_state: SyncState):
+    """
+    Handle password not available error.
+
+    Args:
+        config: Configuration dictionary
+        username: iCloud username
+        sync_state: Current sync state
+
+    Returns:
+        bool: True if should continue (retry), False if should exit
+    """
+    LOGGER.error("Password is not stored in keyring. Please save the password in keyring.")
+    sleep_for = config_parser.get_retry_login_interval(config=config)
+
+    if sleep_for < 0:
+        LOGGER.info("retry_login_interval is < 0, exiting ...")
+        return False
+
+    _log_retry_time(sleep_for)
+    server_region = config_parser.get_region(config=config)
+    sync_state.last_send = notify.send(
+        config=config,
+        username=username,
+        last_send=sync_state.last_send,
+        region=server_region,
+    )
+    sleep(sleep_for)
+    return True
+
+
+def _log_retry_time(sleep_for: int):
+    """
+    Log the next retry time.
+
+    Args:
+        sleep_for: Sleep duration in seconds
+    """
+    next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
+    LOGGER.info(f"Retrying login at {next_sync} ...")
+
+
+def _calculate_next_sync_schedule(config, sync_state: SyncState):
+    """
+    Calculate next sync schedule and update sync state.
+
+    This function implements the adaptive scheduling algorithm that determines
+    which service should sync next based on countdown timers.
+
+    Args:
+        config: Configuration dictionary
+        sync_state: Current sync state
+
+    Returns:
+        int: Sleep duration in seconds
+    """
+    has_drive = config and "drive" in config
+    has_photos = config and "photos" in config
+
+    if not has_drive and has_photos:
+        sleep_for = sync_state.photos_time_remaining
+        sync_state.enable_sync_drive = False
+        sync_state.enable_sync_photos = True
+    elif has_drive and not has_photos:
+        sleep_for = sync_state.drive_time_remaining
+        sync_state.enable_sync_drive = True
+        sync_state.enable_sync_photos = False
+    elif has_drive and has_photos and sync_state.drive_time_remaining <= sync_state.photos_time_remaining:
+        sleep_for = sync_state.photos_time_remaining - sync_state.drive_time_remaining
+        sync_state.photos_time_remaining -= sync_state.drive_time_remaining
+        sync_state.enable_sync_drive = True
+        sync_state.enable_sync_photos = False
+    else:
+        sleep_for = sync_state.drive_time_remaining - sync_state.photos_time_remaining
+        sync_state.drive_time_remaining -= sync_state.photos_time_remaining
+        sync_state.enable_sync_drive = False
+        sync_state.enable_sync_photos = True
+
+    return sleep_for
+
+
+def _log_next_sync_time(sleep_for: int):
+    """
+    Log the next scheduled sync time.
+
+    Args:
+        sleep_for: Sleep duration in seconds
+    """
+    next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
+    LOGGER.info(f"Resyncing at {next_sync} ...")
+
+
+def _should_exit_oneshot_mode(config):
+    """
+    Check if should exit in oneshot mode.
+
+    Oneshot mode exits when ALL configured sync intervals are negative.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        bool: True if should exit
+    """
+
+    should_exit_drive = ("drive" not in config) or (config_parser.get_drive_sync_interval(config=config) < 0)
+    should_exit_photos = ("photos" not in config) or (config_parser.get_photos_sync_interval(config=config) < 0)
+
+    return should_exit_drive and should_exit_photos
+
+
 def sync():
-    """Sync data from server."""
-    last_send = None
-    enable_sync_drive = True
-    enable_sync_photos = True
-    # Time remaining until next sync (countdown timers)
-    drive_time_remaining = 0
-    photos_time_remaining = 0
-    sleep_for = 10
+    """
+    Main synchronization loop.
+
+    Orchestrates the entire sync process by delegating specific responsibilities
+    to focused helper functions. This function coordinates the high-level flow
+    while each helper handles a single concern.
+    """
+    sync_state = SyncState()
 
     while True:
-        config = read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH))
+        config = _load_configuration()
         alive(config=config)
 
-        # Get the configured sync intervals
-        drive_sync_interval = 0
-        photos_sync_interval = 0
-        if "drive" in config:
-            drive_sync_interval = config_parser.get_drive_sync_interval(config=config)
-        if "photos" in config:
-            photos_sync_interval = config_parser.get_photos_sync_interval(config=config)
+        drive_sync_interval, photos_sync_interval = _extract_sync_intervals(config)
+        username = config_parser.get_username(config=config) if config else None
 
-        username = config_parser.get_username(config=config)
         if username:
             try:
-                server_region = config_parser.get_region(config=config)
-                if ENV_ICLOUD_PASSWORD_KEY in os.environ:
-                    password = os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
-                    utils.store_password_in_keyring(username=username, password=password)
-                else:
-                    password = utils.get_password_from_keyring(username=username)
-                api = get_api_instance(username=username, password=password, server_region=server_region)
+                api = _authenticate_and_get_api(config, username)
+
                 if not api.requires_2sa:
-                    if "drive" in config and enable_sync_drive:
-                        LOGGER.info("Syncing drive...")
-                        sync_drive.sync_drive(config=config, drive=api.drive)
-                        LOGGER.info("Drive synced")
-                        # Reset countdown timer to the configured interval
-                        drive_time_remaining = drive_sync_interval
-                    if "photos" in config and enable_sync_photos:
-                        LOGGER.info("Syncing photos...")
-                        sync_photos.sync_photos(config=config, photos=api.photos)
-                        LOGGER.info("Photos synced")
-                        # Reset countdown timer to the configured interval
-                        photos_time_remaining = photos_sync_interval
-                    if "drive" not in config and "photos" not in config:
+                    _perform_drive_sync(config, api, sync_state, drive_sync_interval)
+                    _perform_photos_sync(config, api, sync_state, photos_sync_interval)
+
+                    if not _check_services_configured(config):
                         LOGGER.warning("Nothing to sync. Please add drive: and/or photos: section in config.yaml file.")
                 else:
-                    LOGGER.error("Error: 2FA is required. Please log in.")
-                    # Retry again
-                    sleep_for = config_parser.get_retry_login_interval(config=config)
-                    if sleep_for < 0:
-                        LOGGER.info("retry_login_interval is < 0, exiting ...")
+                    if not _handle_2fa_required(config, username, sync_state):
                         break
-                    next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
-                    LOGGER.info(f"Retrying login at {next_sync} ...")
-                    last_send = notify.send(config=config, username=username, last_send=last_send, region=server_region)
-                    sleep(sleep_for)
                     continue
+
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
-                LOGGER.error("Password is not stored in keyring. Please save the password in keyring.")
-                sleep_for = config_parser.get_retry_login_interval(config=config)
-                if sleep_for < 0:
-                    LOGGER.info("retry_login_interval is < 0, exiting ...")
+                if not _handle_password_error(config, username, sync_state):
                     break
-                next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
-                LOGGER.info(f"Retrying login at {next_sync} ...")
-                last_send = notify.send(config=config, username=username, last_send=last_send, region=server_region)
-                sleep(sleep_for)
                 continue
 
-        if "drive" not in config and "photos" in config:
-            sleep_for = photos_time_remaining
-            enable_sync_drive = False
-            enable_sync_photos = True
-        elif "drive" in config and "photos" not in config:
-            sleep_for = drive_time_remaining
-            enable_sync_drive = True
-            enable_sync_photos = False
-        elif "drive" in config and "photos" in config and drive_time_remaining <= photos_time_remaining:
-            sleep_for = photos_time_remaining - drive_time_remaining
-            photos_time_remaining -= drive_time_remaining
-            enable_sync_drive = True
-            enable_sync_photos = False
-        else:
-            sleep_for = drive_time_remaining - photos_time_remaining
-            drive_time_remaining -= photos_time_remaining
-            enable_sync_drive = False
-            enable_sync_photos = True
-        next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
-        LOGGER.info(f"Resyncing at {next_sync} ...")
+        sleep_for = _calculate_next_sync_schedule(config, sync_state)
+        _log_next_sync_time(sleep_for)
 
-        # Check if we should exit (oneshot mode)
-        # Exit when ALL configured sync intervals are -1
-        should_exit_drive = ("drive" not in config) or (config_parser.get_drive_sync_interval(config=config) < 0)
-        should_exit_photos = ("photos" not in config) or (config_parser.get_photos_sync_interval(config=config) < 0)
-
-        if should_exit_drive and should_exit_photos:
+        if _should_exit_oneshot_mode(config):
             LOGGER.info("All configured sync intervals are negative, exiting oneshot mode...")
             break
+
         sleep(sleep_for)
