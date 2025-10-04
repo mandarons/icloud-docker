@@ -780,7 +780,7 @@ class TestSyncPhotos(unittest.TestCase):
         result = sync_photos.download_photo_task(download_info)
         self.assertFalse(result)
 
-    @patch("src.sync_photos.get_max_threads")
+    @patch("src.photo_download_manager.get_max_threads_for_download")
     def test_sync_album_parallel_downloads(self, mock_get_max_threads):
         """Test sync_album with parallel downloads."""
         mock_get_max_threads.return_value = 2  # Use smaller thread pool for testing
@@ -811,12 +811,14 @@ class TestSyncPhotos(unittest.TestCase):
         import threading
         import time
 
+        from src.photo_download_manager import files_lock
+
         files = set()
         results = []
 
         def add_photo_files(start_num, count):
             for i in range(start_num, start_num + count):
-                with sync_photos.files_lock:
+                with files_lock:
                     files.add(f"photo_{i}.jpg")
                     # Capture the length inside the lock for thread safety
                     results.append(len(files))
@@ -843,11 +845,11 @@ class TestSyncPhotos(unittest.TestCase):
         for i in range(expected_total):
             self.assertIn(f"photo_{i}.jpg", files)
 
-    @patch("src.sync_photos.download_photo")
-    def test_process_photo_with_none_files(self, mock_download_photo):
+    @patch("src.photo_download_manager.execute_download_task")
+    @patch("src.photo_download_manager.collect_download_task")
+    def test_process_photo_with_none_files(self, mock_collect_task, mock_execute_task):
         """Test process_photo function with None files parameter."""
-        # Mock download_photo to return True
-        mock_download_photo.return_value = True
+        from src.photo_download_manager import DownloadTaskInfo
 
         # Create a mock photo with minimal required attributes
         class MockPhoto:
@@ -861,6 +863,11 @@ class TestSyncPhotos(unittest.TestCase):
 
         photo = MockPhoto()
 
+        # Mock successful task
+        mock_task = DownloadTaskInfo(photo, "original", "test_path.jpg")
+        mock_collect_task.return_value = mock_task
+        mock_execute_task.return_value = True
+
         # This tests the process_photo function with files=None
         result = sync_photos.process_photo(
             photo=photo,
@@ -873,11 +880,11 @@ class TestSyncPhotos(unittest.TestCase):
         # Should return True even with None files
         self.assertTrue(result)
 
-    @patch("src.sync_photos.download_photo")
-    def test_process_photo_old_function(self, mock_download_photo):
+    @patch("src.photo_download_manager.execute_download_task")
+    @patch("src.photo_download_manager.collect_download_task")
+    def test_process_photo_old_function(self, mock_collect_task, mock_execute_task):
         """Test the old process_photo function for coverage."""
-        # Mock download_photo to return True
-        mock_download_photo.return_value = True
+        from src.photo_download_manager import DownloadTaskInfo
 
         # Create a mock photo with minimal required attributes
         class MockPhoto:
@@ -892,6 +899,11 @@ class TestSyncPhotos(unittest.TestCase):
         photo = MockPhoto()
         files = set()
 
+        # Mock successful task
+        mock_task = DownloadTaskInfo(photo, "original", "test_path.jpg")
+        mock_collect_task.return_value = mock_task
+        mock_execute_task.return_value = True
+
         # This tests the process_photo function
         result = sync_photos.process_photo(
             photo=photo,
@@ -901,9 +913,10 @@ class TestSyncPhotos(unittest.TestCase):
             folder_format=None,
         )
 
-        # Should return True and add the photo path to files
+        # Should return True and the files set should be handled by collect_download_task
         self.assertTrue(result)
-        self.assertGreater(len(files), 0)
+        mock_collect_task.assert_called_once()
+        mock_execute_task.assert_called_once_with(mock_task)
 
     def test_download_photo_task_exception(self):
         """Test download_photo_task with exception handling."""
@@ -921,33 +934,33 @@ class TestSyncPhotos(unittest.TestCase):
         """Test sync_album with download tasks that raise exceptions."""
         from unittest.mock import patch
 
-        # Mock a situation where download_photo_task raises an exception
-        with patch("src.sync_photos.download_photo_task") as mock_download:
-            mock_download.side_effect = RuntimeError("Photo download failed")
+        # Mock a situation where execute_parallel_downloads raises an exception
+        with patch("src.album_sync_orchestrator.execute_parallel_downloads") as mock_execute:
+            mock_execute.side_effect = RuntimeError("Photo download failed")
 
             album = self.service.photos.albums["All Photos"]
             config = read_config(config_path=tests.CONFIG_PATH)
 
-            result = sync_photos.sync_album(
-                album=album,
-                destination_path=self.destination_path,
-                file_sizes=["original"],
-                extensions=None,
-                files=set(),
-                folder_format=None,
-                config=config,
-            )
+            # The exception should be raised since sync_album doesn't handle it
+            with self.assertRaises(RuntimeError):
+                sync_photos.sync_album(
+                    album=album,
+                    destination_path=self.destination_path,
+                    file_sizes=["original"],
+                    extensions=None,
+                    files=set(),
+                    folder_format=None,
+                    config=config,
+                )
 
-            # Should complete successfully even with exceptions
-            self.assertTrue(result)
             # Verify the exception handler was triggered
-            mock_download.assert_called()
+            mock_execute.assert_called()
 
-    @patch("src.sync_photos.download_photo_task")
-    def test_sync_album_download_returns_false(self, mock_download):
+    @patch("src.album_sync_orchestrator.execute_parallel_downloads")
+    def test_sync_album_download_returns_false(self, mock_execute_downloads):
         """Test sync_album when download tasks return False."""
-        # Mock to return False (failed download)
-        mock_download.return_value = False
+        # Mock to return (0, 1) indicating 0 successful, 1 failed
+        mock_execute_downloads.return_value = (0, 1)
 
         album = self.service.photos.albums["All Photos"]
         config = read_config(config_path=tests.CONFIG_PATH)
@@ -964,7 +977,7 @@ class TestSyncPhotos(unittest.TestCase):
 
         # Should complete successfully even when downloads fail
         self.assertTrue(result)
-        mock_download.assert_called()
+        mock_execute_downloads.assert_called()
 
     def test_parallel_vs_sequential_photo_performance(self):
         """Test and verify parallel photo downloads provide performance improvement."""
@@ -1032,15 +1045,13 @@ class TestSyncPhotos(unittest.TestCase):
                 f"Parallel photo downloads ({parallel_time:.3f}s) should not be significantly slower than sequential ({sequential_time:.3f}s)",
             )
 
-    @patch("src.sync_photos.download_photo")
-    @patch("src.sync_photos.photo_exists")
-    def test_process_photo_success_path(self, mock_photo_exists, mock_download_photo):
+    @patch("src.photo_download_manager.execute_download_task")
+    @patch("src.photo_download_manager.collect_download_task")
+    def test_process_photo_success_path(self, mock_collect_task, mock_execute_task):
         """Test process_photo successful execution."""
-        # Configure mocks: photo doesn't exist, download succeeds
-        mock_photo_exists.return_value = False
-        mock_download_photo.return_value = True  # download_photo returns True on success
+        # Configure mocks: collect succeeds, execute succeeds
+        from src.photo_download_manager import DownloadTaskInfo
 
-        # Create a mock photo with minimal required attributes
         class MockPhoto:
             def __init__(self):
                 import datetime
@@ -1053,6 +1064,11 @@ class TestSyncPhotos(unittest.TestCase):
         photo = MockPhoto()
         files = set()
 
+        # Mock collect_download_task to return a task
+        mock_task = DownloadTaskInfo(photo, "original", "test_path.jpg")
+        mock_collect_task.return_value = mock_task
+        mock_execute_task.return_value = True
+
         # Call process_photo which should return True
         result = sync_photos.process_photo(
             photo=photo,
@@ -1064,15 +1080,14 @@ class TestSyncPhotos(unittest.TestCase):
 
         # Should return True for successful processing
         self.assertTrue(result)
-        mock_download_photo.assert_called_once()
-        # Verify that the photo was added to files set
-        self.assertEqual(len(files), 1)
+        mock_collect_task.assert_called_once()
+        mock_execute_task.assert_called_once_with(mock_task)
 
-    @patch("src.sync_photos.photo_exists")
-    def test_process_photo_photo_exists(self, mock_photo_exists):
+    @patch("src.photo_download_manager.collect_download_task")
+    def test_process_photo_photo_exists(self, mock_collect_task):
         """Test process_photo when photo already exists to cover line 175."""
-        # Configure mock: photo already exists (return True)
-        mock_photo_exists.return_value = True
+        # Mock collect_download_task to return None (photo exists)
+        mock_collect_task.return_value = None
 
         # Create a mock photo with minimal required attributes
         class MockPhoto:
@@ -1096,11 +1111,8 @@ class TestSyncPhotos(unittest.TestCase):
             folder_format=None,
         )
 
-        # Should return False since photo exists (line 175)
+        # Should return False since collect_download_task returns None (photo exists)
         self.assertFalse(result)
-        mock_photo_exists.assert_called_once()
-        # Verify that the photo was still added to files set (line 172-173)
-        self.assertEqual(len(files), 1)
 
     @patch("src.sync_photos.download_photo")
     def test_download_photo_task_exception_handling(self, mock_download_photo):
@@ -1331,13 +1343,11 @@ class TestSyncPhotos(unittest.TestCase):
             content = f.read()
             self.assertEqual(content, b"fake photo data")
 
-    @patch("src.sync_photos.download_photo")
-    @patch("src.sync_photos.create_hardlink")
-    def test_process_photo_hardlink_success(self, mock_create_hardlink, mock_download_photo):
+    @patch("src.photo_download_manager.execute_download_task")
+    @patch("src.photo_download_manager.collect_download_task")
+    def test_process_photo_hardlink_success(self, mock_collect_task, mock_execute_task):
         """Test process_photo with successful hardlink creation."""
-        # Mock create_hardlink to return True
-        mock_create_hardlink.return_value = True
-        mock_download_photo.return_value = True
+        from src.photo_download_manager import DownloadTaskInfo
 
         class MockPhoto:
             def __init__(self):
@@ -1359,6 +1369,11 @@ class TestSyncPhotos(unittest.TestCase):
 
         hardlink_registry = {"test_photo_id_original": source_path}
 
+        # Mock task with hardlink source
+        mock_task = DownloadTaskInfo(photo, "original", "test_path.jpg", hardlink_source=source_path)
+        mock_collect_task.return_value = mock_task
+        mock_execute_task.return_value = True
+
         result = sync_photos.process_photo(
             photo=photo,
             file_size="original",
@@ -1370,16 +1385,14 @@ class TestSyncPhotos(unittest.TestCase):
 
         # Should succeed via hardlink
         self.assertTrue(result)
-        mock_create_hardlink.assert_called_once()
-        mock_download_photo.assert_not_called()  # Should not download since hardlink succeeded
+        mock_collect_task.assert_called_once()
+        mock_execute_task.assert_called_once_with(mock_task)
 
-    @patch("src.sync_photos.download_photo")
-    @patch("src.sync_photos.create_hardlink")
-    def test_process_photo_hardlink_failure_fallback(self, mock_create_hardlink, mock_download_photo):
+    @patch("src.photo_download_manager.execute_download_task")
+    @patch("src.photo_download_manager.collect_download_task")
+    def test_process_photo_hardlink_failure_fallback(self, mock_collect_task, mock_execute_task):
         """Test process_photo fallback to download when hardlink fails."""
-        # Mock create_hardlink to return False (failure)
-        mock_create_hardlink.return_value = False
-        mock_download_photo.return_value = True
+        from src.photo_download_manager import DownloadTaskInfo
 
         class MockPhoto:
             def __init__(self):
@@ -1397,6 +1410,11 @@ class TestSyncPhotos(unittest.TestCase):
         source_path = os.path.join(self.destination_path, "source_photo.jpg")
         hardlink_registry = {"test_photo_id_original": source_path}
 
+        # Mock task with hardlink source that will fail but download will succeed
+        mock_task = DownloadTaskInfo(photo, "original", "test_path.jpg", hardlink_source=source_path)
+        mock_collect_task.return_value = mock_task
+        mock_execute_task.return_value = True  # Execute succeeds after hardlink failure
+
         result = sync_photos.process_photo(
             photo=photo,
             file_size="original",
@@ -1408,13 +1426,14 @@ class TestSyncPhotos(unittest.TestCase):
 
         # Should succeed via download fallback
         self.assertTrue(result)
-        mock_create_hardlink.assert_called_once()
-        mock_download_photo.assert_called_once()  # Should download after hardlink failure
+        mock_collect_task.assert_called_once()
+        mock_execute_task.assert_called_once_with(mock_task)
 
-    @patch("src.sync_photos.download_photo")
-    def test_process_photo_with_hardlink_registry_no_existing(self, mock_download_photo):
+    @patch("src.photo_download_manager.execute_download_task")
+    @patch("src.photo_download_manager.collect_download_task")
+    def test_process_photo_with_hardlink_registry_no_existing(self, mock_collect_task, mock_execute_task):
         """Test process_photo with hardlink registry but no existing photo."""
-        mock_download_photo.return_value = True
+        from src.photo_download_manager import DownloadTaskInfo
 
         class MockPhoto:
             def __init__(self):
@@ -1429,6 +1448,11 @@ class TestSyncPhotos(unittest.TestCase):
         files = set()
         hardlink_registry = {}  # Empty registry
 
+        # Mock task with no hardlink source
+        mock_task = DownloadTaskInfo(photo, "original", "test_path.jpg")
+        mock_collect_task.return_value = mock_task
+        mock_execute_task.return_value = True
+
         result = sync_photos.process_photo(
             photo=photo,
             file_size="original",
@@ -1440,14 +1464,16 @@ class TestSyncPhotos(unittest.TestCase):
 
         # Should succeed via download and register the photo
         self.assertTrue(result)
-        mock_download_photo.assert_called_once()
-        # Verify photo was registered
+        mock_collect_task.assert_called_once()
+        mock_execute_task.assert_called_once_with(mock_task)
+        # Verify photo was registered in legacy format
         self.assertIn("test_photo_id_original", hardlink_registry)
 
-    @patch("src.sync_photos.download_photo")
-    def test_process_photo_download_fails(self, mock_download_photo):
+    @patch("src.photo_download_manager.execute_download_task")
+    @patch("src.photo_download_manager.collect_download_task")
+    def test_process_photo_download_fails(self, mock_collect_task, mock_execute_task):
         """Test process_photo when download_photo returns False."""
-        mock_download_photo.return_value = False
+        from src.photo_download_manager import DownloadTaskInfo
 
         class MockPhoto:
             def __init__(self):
@@ -1461,6 +1487,11 @@ class TestSyncPhotos(unittest.TestCase):
         photo = MockPhoto()
         files = set()
 
+        # Mock task that fails to execute
+        mock_task = DownloadTaskInfo(photo, "original", "test_path.jpg")
+        mock_collect_task.return_value = mock_task
+        mock_execute_task.return_value = False  # Download fails
+
         result = sync_photos.process_photo(
             photo=photo,
             file_size="original",
@@ -1472,4 +1503,362 @@ class TestSyncPhotos(unittest.TestCase):
 
         # Should return False when download fails
         self.assertFalse(result)
-        mock_download_photo.assert_called_once()
+        mock_collect_task.assert_called_once()
+        mock_execute_task.assert_called_once_with(mock_task)
+
+    def test_hardlink_registry_clear(self):
+        """Test clearing the hardlink registry."""
+        from src.hardlink_registry import HardlinkRegistry
+
+        registry = HardlinkRegistry()
+        registry.register_photo_path("photo1", "original", "/path/to/photo1.jpg")
+        registry.register_photo_path("photo2", "medium", "/path/to/photo2.jpg")
+
+        # Verify registry has entries
+        self.assertEqual(registry.get_registry_size(), 2)
+
+        # Clear the registry
+        registry.clear()
+
+        # Verify registry is empty
+        self.assertEqual(registry.get_registry_size(), 0)
+
+    def test_legacy_wrapper_functions(self):
+        """Test the legacy wrapper functions for coverage."""
+
+        # Test photo_wanted wrapper
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+
+        photo = MockPhoto()
+        result = sync_photos.photo_wanted(photo, [".jpg", ".png"])
+        self.assertTrue(result)
+
+        # Test generate_file_name wrapper
+        photo.id = "test_id"
+        import datetime
+
+        photo.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+        path = sync_photos.generate_file_name(photo, "original", self.destination_path, None)
+        self.assertIsInstance(path, str)
+        self.assertTrue(path.endswith(".jpg"))
+
+    def test_legacy_photo_exists_wrapper(self):
+        """Test the legacy photo_exists wrapper function."""
+
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+                self.versions = {"original": {"type": "jpeg", "size": 1000}}
+
+        photo = MockPhoto()
+
+        # Mock the underlying function
+        with patch("src.photo_file_utils.check_photo_exists") as mock_check:
+            mock_check.return_value = True
+            result = sync_photos.photo_exists(photo, "original", "/path/to/photo.jpg")
+            self.assertTrue(result)
+            mock_check.assert_called_once()
+
+    def test_legacy_create_hardlink_wrapper(self):
+        """Test the legacy create_hardlink wrapper function."""
+        with patch("src.photo_file_utils.create_hardlink") as mock_create:
+            mock_create.return_value = True
+            result = sync_photos.create_hardlink("/source/path", "/dest/path")
+            self.assertTrue(result)
+            mock_create.assert_called_once_with("/source/path", "/dest/path")
+
+    def test_sync_album_with_hardlink_registry_conversion(self):
+        """Test sync_album with hardlink registry conversion."""
+        album = self.service.photos.albums["All Photos"]
+        config = read_config(config_path=tests.CONFIG_PATH)
+
+        # Create legacy hardlink registry
+        hardlink_registry = {
+            "photo1_original": "/path/to/photo1.jpg",
+            "photo2_medium": "/path/to/photo2.jpg",
+            "invalid_key": "/path/to/invalid.jpg",  # Key without underscore
+        }
+
+        with patch("src.sync_photos.sync_album_photos") as mock_sync:
+            mock_sync.return_value = True
+
+            result = sync_photos.sync_album(
+                album=album,
+                destination_path=self.destination_path,
+                file_sizes=["original"],
+                extensions=None,
+                files=set(),
+                folder_format=None,
+                hardlink_registry=hardlink_registry,
+                config=config,
+            )
+
+            self.assertTrue(result)
+            mock_sync.assert_called_once()
+
+            # Verify the hardlink registry was converted and passed
+            call_args = mock_sync.call_args
+            converted_registry = call_args.kwargs["hardlink_registry"]
+            self.assertIsNotNone(converted_registry)
+
+    def test_sync_album_legacy_registry_update_path(self):
+        """Test sync_album legacy registry update path."""
+        album = self.service.photos.albums["All Photos"]
+        config = read_config(config_path=tests.CONFIG_PATH)
+
+        # Create legacy hardlink registry
+        hardlink_registry = {}
+
+        with patch("src.album_sync_orchestrator.sync_album_photos") as mock_sync:
+            mock_sync.return_value = True
+
+            result = sync_photos.sync_album(
+                album=album,
+                destination_path=self.destination_path,
+                file_sizes=["original"],
+                extensions=None,
+                files=set(),
+                folder_format=None,
+                hardlink_registry=hardlink_registry,
+                config=config,
+            )
+
+            self.assertTrue(result)
+
+    def test_photo_download_manager_edge_cases(self):
+        """Test photo download manager edge cases for coverage."""
+        from src.photo_download_manager import generate_photo_path
+
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+                self.id = "test_id"
+                import datetime
+
+                self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+
+        photo = MockPhoto()
+
+        # Test generate_photo_path with existing file that needs normalization
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Mock os.path.isfile to simulate the normalization case (line 107)
+            with patch("src.photo_download_manager.os.path.isfile") as mock_isfile:
+                mock_isfile.return_value = True
+                with patch("src.photo_download_manager.rename_legacy_file_if_exists") as mock_rename:
+                    path = generate_photo_path(photo, "original", tmpdir, None)
+                    self.assertIsInstance(path, str)
+                    # Verify rename was called for the normalization case
+                    self.assertTrue(mock_rename.called)
+
+    def test_execute_download_task_exception_handling(self):
+        """Test execute_download_task exception handling."""
+        from src.photo_download_manager import DownloadTaskInfo, execute_download_task
+
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+                self.id = "test_id"
+
+        photo = MockPhoto()
+        task_info = DownloadTaskInfo(photo, "original", "/invalid/path/photo.jpg")
+
+        # Mock download_photo_from_server to raise an exception
+        with patch("src.photo_download_manager.download_photo_from_server") as mock_download:
+            mock_download.side_effect = Exception("Download failed")
+
+            result = execute_download_task(task_info)
+            self.assertFalse(result)
+
+    def test_execute_parallel_downloads_empty_tasks(self):
+        """Test execute_parallel_downloads with empty task list."""
+        from src.photo_download_manager import execute_parallel_downloads
+
+        config = {"app": {"max_threads": 4}}
+        successful, failed = execute_parallel_downloads([], config)
+
+        self.assertEqual(successful, 0)
+        self.assertEqual(failed, 0)
+
+    def test_execute_parallel_downloads_exception_handling(self):
+        """Test execute_parallel_downloads with future exceptions."""
+        from concurrent.futures import Future
+
+        from src.photo_download_manager import DownloadTaskInfo, execute_parallel_downloads
+
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+                self.id = "test_id"
+
+        photo = MockPhoto()
+        task_info = DownloadTaskInfo(photo, "original", "/test/path/photo.jpg")
+
+        config = {"app": {"max_threads": 1}}
+
+        # Mock ThreadPoolExecutor to return a future that raises an exception
+        with patch("src.photo_download_manager.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor = mock_executor_class.return_value.__enter__.return_value
+
+            # Create a mock future that raises an exception
+            mock_future = Future()
+            mock_future.set_exception(Exception("Future exception"))
+
+            mock_executor.submit.return_value = mock_future
+
+            successful, failed = execute_parallel_downloads([task_info], config)
+
+            # Should handle the exception and count as failed
+            self.assertEqual(successful, 0)
+            self.assertEqual(failed, 1)
+
+    def test_rename_legacy_file_if_exists(self):
+        """Test rename_legacy_file_if_exists function."""
+        import tempfile
+
+        from src.photo_file_utils import rename_legacy_file_if_exists
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            old_path = os.path.join(tmpdir, "old_file.jpg")
+            new_path = os.path.join(tmpdir, "new_file.jpg")
+
+            # Create the old file
+            with open(old_path, "w") as f:
+                f.write("test content")
+
+            # Rename it
+            rename_legacy_file_if_exists(old_path, new_path)
+
+            # Verify old file is gone and new file exists
+            self.assertFalse(os.path.exists(old_path))
+            self.assertTrue(os.path.exists(new_path))
+
+            # Test with non-existent file (should not raise exception)
+            rename_legacy_file_if_exists("/non/existent/file.jpg", "/another/path.jpg")
+
+    def test_generate_photo_path_different_normalization(self):
+        """Test generate_photo_path with different normalization (line 107)."""
+        from src.photo_download_manager import generate_photo_path
+
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+                self.id = "test_id"
+                import datetime
+
+                self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+
+        photo = MockPhoto()
+
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            # Mock the condition where final_file_path != normalized_path (line 107)
+            with patch("src.photo_download_manager.os.path.isfile") as mock_isfile:
+                mock_isfile.return_value = True
+                with patch("src.photo_download_manager.rename_legacy_file_if_exists") as mock_rename:
+                    # Mock normalize_file_path to return a different path
+                    with patch("src.photo_download_manager.normalize_file_path") as mock_normalize:
+                        mock_normalize.return_value = "/different/path.jpg"
+                        generate_photo_path(photo, "original", tmpdir, None)
+                        # Should have called rename for the normalization case
+                        self.assertTrue(mock_rename.called)
+
+    def test_execute_download_task_hardlink_failure_fallback(self):
+        """Test execute_download_task hardlink failure fallback (line 180)."""
+        from src.hardlink_registry import HardlinkRegistry
+        from src.photo_download_manager import DownloadTaskInfo, execute_download_task
+
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+                self.id = "test_id"
+
+        photo = MockPhoto()
+        registry = HardlinkRegistry()
+        task_info = DownloadTaskInfo(
+            photo,
+            "original",
+            "/test/path.jpg",
+            hardlink_source="/source/path.jpg",
+            hardlink_registry=registry,
+        )
+
+        # Mock hardlink creation to fail, download to succeed
+        with patch("src.photo_download_manager.create_hardlink") as mock_hardlink:
+            mock_hardlink.return_value = False  # Hardlink fails
+            with patch("src.photo_download_manager.download_photo_from_server") as mock_download:
+                mock_download.return_value = True  # Download succeeds
+
+                result = execute_download_task(task_info)
+
+                self.assertTrue(result)
+                mock_hardlink.assert_called_once()
+                mock_download.assert_called_once()
+
+    def test_execute_parallel_downloads_future_exception_detailed(self):
+        """Test execute_parallel_downloads with future exceptions."""
+        from concurrent.futures import Future
+
+        from src.photo_download_manager import DownloadTaskInfo, execute_parallel_downloads
+
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+                self.id = "test_id"
+
+        photo = MockPhoto()
+        task_info = DownloadTaskInfo(photo, "original", "/test/path.jpg")
+
+        config = {"app": {"max_threads": 1}}
+
+        # Mock ThreadPoolExecutor to simulate future exception
+        with patch("src.photo_download_manager.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor = mock_executor_class.return_value.__enter__.return_value
+
+            # Create a future that will raise an exception
+            mock_future = Future()
+            mock_future.set_exception(RuntimeError("Future processing error"))
+
+            mock_executor.submit.return_value = mock_future
+
+            successful, failed = execute_parallel_downloads([task_info], config)
+
+            # Should count the exception as a failure
+            self.assertEqual(successful, 0)
+            self.assertEqual(failed, 1)
+
+    def test_execute_parallel_downloads_future_returns_false(self):
+        """Test execute_parallel_downloads when future.result() returns False (line 241)."""
+        from concurrent.futures import Future
+
+        from src.photo_download_manager import DownloadTaskInfo, execute_parallel_downloads
+
+        class MockPhoto:
+            def __init__(self):
+                self.filename = "test.jpg"
+                self.id = "test_id"
+
+        photo = MockPhoto()
+        task_info = DownloadTaskInfo(photo, "original", "/test/path.jpg")
+
+        config = {"app": {"max_threads": 1}}
+
+        # Mock ThreadPoolExecutor where future.result() returns False
+        with patch("src.photo_download_manager.ThreadPoolExecutor") as mock_executor_class:
+            mock_executor = mock_executor_class.return_value.__enter__.return_value
+
+            # Create a future that returns False (download failed)
+            mock_future = Future()
+            mock_future.set_result(False)
+
+            mock_executor.submit.return_value = mock_future
+
+            successful, failed = execute_parallel_downloads([task_info], config)
+
+            # Should count the False result as a failure (covers line 241)
+            self.assertEqual(successful, 0)
+            self.assertEqual(failed, 1)
