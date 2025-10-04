@@ -1,214 +1,76 @@
-"""Sync drive module."""
+"""Sync drive module.
+
+This module provides the main entry point for iCloud Drive synchronization,
+orchestrating the sync process using specialized utility modules per SRP.
+"""
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
-import gzip
 import os
-import re
-import time
 import unicodedata
-import zipfile
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from pathlib import Path, PurePath
-from shutil import copyfileobj, rmtree
-from threading import Lock
-
-import magic
-from icloudpy import exceptions
+from pathlib import Path
+from typing import Any
 
 from src import config_parser, configure_icloudpy_logging, get_logger
+from src.drive_cleanup import remove_obsolete  # noqa: F401
+from src.drive_file_download import download_file  # noqa: F401
+from src.drive_file_existence import file_exists, is_package, package_exists  # noqa: F401
+from src.drive_filtering import ignored_path, wanted_file, wanted_folder, wanted_parent_folder  # noqa: F401
+from src.drive_folder_processing import process_folder  # noqa: F401
+from src.drive_package_processing import process_package  # noqa: F401
+from src.drive_parallel_download import collect_file_for_download, download_file_task, files_lock  # noqa: F401
+from src.drive_sync_directory import sync_directory
+from src.drive_thread_config import get_max_threads  # noqa: F401
 
 # Configure icloudpy logging immediately after import
 configure_icloudpy_logging()
 
 LOGGER = get_logger()
 
-# Thread-safe lock for file set operations
-files_lock = Lock()
+
+def sync_drive(config: Any, drive: Any) -> set[str]:
+    """Synchronize iCloud Drive to local filesystem.
+
+    This function serves as the main entry point for drive synchronization,
+    preparing the destination and delegating to the sync_directory orchestrator.
+
+    Args:
+        config: Configuration dictionary containing drive settings
+        drive: iCloud drive service instance
+
+    Returns:
+        Set of all synchronized file paths
+    """
+    destination_path = config_parser.prepare_drive_destination(config=config)
+    return sync_directory(
+        drive=drive,
+        destination_path=destination_path,
+        root=destination_path,
+        items=drive.dir(),
+        top=True,
+        filters=config["drive"]["filters"] if "drive" in config and "filters" in config["drive"] else None,
+        ignore=config["drive"]["ignore"] if "drive" in config and "ignore" in config["drive"] else None,
+        remove=config_parser.get_drive_remove_obsolete(config=config),
+        config=config,
+    )
 
 
-def get_max_threads(config):
-    """Get maximum number of threads for parallel downloads."""
-    return config_parser.get_app_max_threads(config)
+def process_file(item: Any, destination_path: str, filters: list[str], ignore: list[str], files: set[str]) -> bool:
+    """Process given item as file (legacy compatibility function).
 
+    This function maintains backward compatibility with existing tests.
+    New code should use the specialized modules directly.
 
-def wanted_file(filters, ignore, file_path):
-    """Check if file is wanted."""
-    if not file_path:
-        return False
-    if ignore:
-        if ignored_path(ignore, file_path):
-            LOGGER.debug(f"Skipping the unwanted file {file_path}")
-            return False
-    if not filters or len(filters) == 0:
-        return True
-    for file_extension in filters:
-        if re.search(f"{file_extension}$", file_path, re.IGNORECASE):
-            return True
-    LOGGER.debug(f"Skipping the unwanted file {file_path}")
-    return False
+    Args:
+        item: iCloud file item to process
+        destination_path: Local destination directory
+        filters: File extension filters
+        ignore: Ignore patterns
+        files: Set to track processed files
 
-
-def wanted_folder(filters, ignore, root, folder_path):
-    """Check if folder is wanted."""
-    if ignore:
-        if ignored_path(ignore, folder_path):
-            return False
-
-    if not filters or not folder_path or not root or len(filters) == 0:
-        # Nothing to filter, return True
-        return True
-        # Something to filter
-    folder_path = Path(folder_path)
-    for folder in filters:
-        child_path = Path(os.path.join(os.path.abspath(root), str(folder).removeprefix("/").removesuffix("/")))
-        if folder_path in child_path.parents or child_path in folder_path.parents or folder_path == child_path:
-            return True
-    return False
-
-
-def ignored_path(ignore_list, path):
-    """Check if path is ignored."""
-    for ignore in ignore_list:
-        if PurePath(path).match(ignore + "*" if ignore.endswith("/") else ignore):
-            return True
-    return False
-
-
-def wanted_parent_folder(filters, ignore, root, folder_path):
-    """Check if parent folder is wanted."""
-    if not filters or not folder_path or not root or len(filters) == 0:
-        return True
-    folder_path = Path(folder_path)
-    for folder in filters:
-        child_path = Path(os.path.join(os.path.abspath(root), folder.removeprefix("/").removesuffix("/")))
-        if child_path in folder_path.parents or folder_path == child_path:
-            return True
-    return False
-
-
-def process_folder(item, destination_path, filters, ignore, root):
-    """Process the given folder."""
-    if not (item and destination_path and root):
-        return None
-    new_directory = os.path.join(destination_path, item.name)
-    new_directory_norm = unicodedata.normalize("NFC", new_directory)
-    if not wanted_folder(filters=filters, ignore=ignore, folder_path=new_directory_norm, root=root):
-        LOGGER.debug(f"Skipping the unwanted folder {new_directory} ...")
-        return None
-    os.makedirs(new_directory_norm, exist_ok=True)
-    return new_directory
-
-
-def package_exists(item, local_package_path):
-    """Check for package existence."""
-    if item and local_package_path and os.path.isdir(local_package_path):
-        local_package_modified_time = int(os.path.getmtime(local_package_path))
-        remote_package_modified_time = int(item.date_modified.timestamp())
-        local_package_size = sum(f.stat().st_size for f in Path(local_package_path).glob("**/*") if f.is_file())
-        remote_package_size = item.size
-        if local_package_modified_time == remote_package_modified_time and local_package_size == remote_package_size:
-            LOGGER.debug(f"No changes detected. Skipping the package {local_package_path} ...")
-            return True
-        else:
-            LOGGER.info(
-                f"Changes detected: local_modified_time is {local_package_modified_time}, "
-                + f"remote_modified_time is {remote_package_modified_time}, "
-                + f"local_package_size is {local_package_size} and remote_package_size is {remote_package_size}.",
-            )
-            rmtree(local_package_path)
-    else:
-        LOGGER.debug(f"Package {local_package_path} does not exist locally.")
-    return False
-
-
-def file_exists(item, local_file):
-    """Check for file existence locally."""
-    if item and local_file and os.path.isfile(local_file):
-        local_file_modified_time = int(os.path.getmtime(local_file))
-        remote_file_modified_time = int(item.date_modified.timestamp())
-        local_file_size = os.path.getsize(local_file)
-        remote_file_size = item.size
-        if local_file_modified_time == remote_file_modified_time and (
-            local_file_size == remote_file_size
-            or (local_file_size == 0 and remote_file_size is None)
-            or (local_file_size is None and remote_file_size == 0)
-        ):
-            LOGGER.debug(f"No changes detected. Skipping the file {local_file} ...")
-            return True
-        else:
-            LOGGER.debug(
-                f"Changes detected: local_modified_time is {local_file_modified_time}, "
-                + f"remote_modified_time is {remote_file_modified_time}, "
-                + f"local_file_size is {local_file_size} and remote_file_size is {remote_file_size}.",
-            )
-    else:
-        LOGGER.debug(f"File {local_file} does not exist locally.")
-    return False
-
-
-def process_package(local_file):
-    """Process the package."""
-    archive_file = local_file
-    magic_object = magic.Magic(mime=True)
-    if magic_object.from_file(filename=local_file) == "application/zip":
-        archive_file += ".zip"
-        os.rename(local_file, archive_file)
-        LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(archive_file)}")
-        zipfile.ZipFile(archive_file).extractall(path=os.path.dirname(archive_file))
-        normalized_path = unicodedata.normalize("NFD", local_file)
-        if normalized_path is not local_file:
-            os.rename(local_file, normalized_path)
-            local_file = normalized_path
-        os.remove(archive_file)
-    elif magic_object.from_file(filename=local_file) == "application/gzip":
-        archive_file += ".gz"
-        os.rename(local_file, archive_file)
-        LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(local_file)}")
-        with gzip.GzipFile(filename=archive_file, mode="rb") as gz_file:
-            with open(file=local_file, mode="wb") as package_file:
-                copyfileobj(gz_file, package_file)
-        os.remove(archive_file)
-        process_package(local_file=local_file)
-    else:
-        LOGGER.error(
-            f"Unhandled file type - cannot unpack the package {magic_object.from_file(filename=archive_file)}.",
-        )
-        return False
-    LOGGER.info(f"Successfully unpacked the package {archive_file}.")
-    return local_file
-
-
-def is_package(item):
-    """Determine if item is a package."""
-    file_is_a_package = False
-    with item.open(stream=True) as response:
-        file_is_a_package = response.url and "/packageDownload?" in response.url
-    return file_is_a_package
-
-
-def download_file(item, local_file):
-    """Download file from server."""
-    if not (item and local_file):
-        return False
-    LOGGER.info(f"Downloading {local_file} ...")
-    try:
-        with item.open(stream=True) as response:
-            with open(local_file, "wb") as file_out:
-                for chunk in response.iter_content(4 * 1024 * 1024):
-                    file_out.write(chunk)
-            if response.url and "/packageDownload?" in response.url:
-                local_file = process_package(local_file=local_file)
-        item_modified_time = time.mktime(item.date_modified.timetuple())
-        os.utime(local_file, (item_modified_time, item_modified_time))
-    except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
-        LOGGER.error(f"Failed to download {local_file}: {e!s}")
-        return False
-    return local_file
-
-
-def process_file(item, destination_path, filters, ignore, files):
-    """Process given item as file."""
+    Returns:
+        True if file was processed successfully, False otherwise
+    """
     if not (item and destination_path and files is not None):
         return False
     local_file = os.path.join(destination_path, item.name)
@@ -225,205 +87,11 @@ def process_file(item, destination_path, filters, ignore, files):
     elif file_exists(item=item, local_file=local_file):
         return False
     local_file = download_file(item=item, local_file=local_file)
-    if item_is_package:
+    if local_file and item_is_package:
         for f in Path(local_file).glob("**/*"):
             f = str(f)
             f_normalized = unicodedata.normalize("NFD", f)
             if os.path.exists(f):
                 os.rename(f, f_normalized)
                 files.add(f_normalized)
-    return True
-
-
-def collect_file_for_download(item, destination_path, filters, ignore, files):
-    """Collect file info for parallel download without immediately downloading."""
-    if not (item and destination_path and files is not None):
-        return None
-    local_file = os.path.join(destination_path, item.name)
-    local_file = unicodedata.normalize("NFC", local_file)
-    if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
-        return None
-
-    # Thread-safe file set update
-    with files_lock:
-        files.add(local_file)
-
-    item_is_package = is_package(item=item)
-    if item_is_package:
-        if package_exists(item=item, local_package_path=local_file):
-            with files_lock:
-                for f in Path(local_file).glob("**/*"):
-                    files.add(str(f))
-            return None
-    elif file_exists(item=item, local_file=local_file):
-        return None
-
-    # Return download task info
-    return {
-        "item": item,
-        "local_file": local_file,
-        "is_package": item_is_package,
-        "files": files,
-    }
-
-
-def download_file_task(download_info):
-    """Download a single file as part of parallel execution."""
-    item = download_info["item"]
-    local_file = download_info["local_file"]
-    is_package = download_info["is_package"]
-    files = download_info["files"]
-
-    LOGGER.debug(f"[Thread] Starting download of {local_file}")
-
-    try:
-        downloaded_file = download_file(item=item, local_file=local_file)
-        if not downloaded_file:
-            return False
-
-        if is_package:
-            with files_lock:
-                for f in Path(downloaded_file).glob("**/*"):
-                    f = str(f)
-                    f_normalized = unicodedata.normalize("NFD", f)
-                    if os.path.exists(f):
-                        os.rename(f, f_normalized)
-                        files.add(f_normalized)
-
-        LOGGER.debug(f"[Thread] Completed download of {local_file}")
-        return True
-    except Exception as e:
-        LOGGER.error(f"[Thread] Failed to download {local_file}: {e!s}")
-        return False
-
-
-def remove_obsolete(destination_path, files):
-    """Remove local obsolete file."""
-    removed_paths = set()
-    if not (destination_path and files is not None):
-        return removed_paths
-    for path in Path(destination_path).rglob("*"):
-        local_file = str(path.absolute())
-        if local_file not in files:
-            LOGGER.info(f"Removing {local_file} ...")
-            if path.is_file():
-                path.unlink(missing_ok=True)
-                removed_paths.add(local_file)
-            elif path.is_dir():
-                rmtree(local_file)
-                removed_paths.add(local_file)
-    return removed_paths
-
-
-def sync_directory(
-    drive,
-    destination_path,
-    items,
-    root,
-    top=True,
-    filters=None,
-    ignore=None,
-    remove=False,
-    config=None,
-):
-    """Sync folder."""
-    files = set()
-    download_tasks = []
-
-    if drive and destination_path and items and root:
-        # First pass: collect folders and download tasks
-        for i in items:
-            item = drive[i]
-            if item.type in ("folder", "app_library"):
-                new_folder = process_folder(
-                    item=item,
-                    destination_path=destination_path,
-                    filters=filters["folders"] if filters and "folders" in filters else None,
-                    ignore=ignore,
-                    root=root,
-                )
-                if not new_folder:
-                    continue
-                try:
-                    files.add(unicodedata.normalize("NFC", new_folder))
-                    files.update(
-                        sync_directory(
-                            drive=item,
-                            destination_path=new_folder,
-                            items=item.dir(),
-                            root=root,
-                            top=False,
-                            filters=filters,
-                            ignore=ignore,
-                            config=config,
-                        ),
-                    )
-                except Exception:
-                    # Continue execution to next item, without crashing the app
-                    pass
-            elif item.type == "file":
-                if wanted_parent_folder(
-                    filters=filters["folders"] if filters and "folders" in filters else None,
-                    ignore=ignore,
-                    root=root,
-                    folder_path=destination_path,
-                ):
-                    try:
-                        download_info = collect_file_for_download(
-                            item=item,
-                            destination_path=destination_path,
-                            filters=filters["file_extensions"] if filters and "file_extensions" in filters else None,
-                            ignore=ignore,
-                            files=files,
-                        )
-                        if download_info:
-                            download_tasks.append(download_info)
-                    except Exception:
-                        # Continue execution to next item, without crashing the app
-                        pass
-
-        # Second pass: execute downloads in parallel
-        if download_tasks:
-            max_threads = get_max_threads(config)
-            LOGGER.info(f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...")
-
-            successful_downloads = 0
-            failed_downloads = 0
-
-            with ThreadPoolExecutor(max_workers=max_threads) as executor:
-                # Submit all download tasks
-                future_to_task = {executor.submit(download_file_task, task): task for task in download_tasks}
-
-                # Process completed downloads
-                for future in as_completed(future_to_task):
-                    try:
-                        result = future.result()
-                        if result:
-                            successful_downloads += 1
-                        else:
-                            failed_downloads += 1
-                    except Exception as e:  # noqa: PERF203
-                        LOGGER.error(f"Download task failed with exception: {e!s}")
-                        failed_downloads += 1
-
-            LOGGER.info(f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed")
-
-        if top and remove:
-            remove_obsolete(destination_path=destination_path, files=files)
-    return files
-
-
-def sync_drive(config, drive):
-    """Sync drive."""
-    destination_path = config_parser.prepare_drive_destination(config=config)
-    return sync_directory(
-        drive=drive,
-        destination_path=destination_path,
-        root=destination_path,
-        items=drive.dir(),
-        top=True,
-        filters=config["drive"]["filters"] if "drive" in config and "filters" in config["drive"] else None,
-        ignore=config["drive"]["ignore"] if "drive" in config and "ignore" in config["drive"] else None,
-        remove=config_parser.get_drive_remove_obsolete(config=config),
-        config=config,
-    )
+    return bool(local_file)

@@ -1498,7 +1498,7 @@ class TestSyncDrive(unittest.TestCase):
                 f"Parallel downloads ({parallel_time:.3f}s) should not be significantly slower than sequential ({sequential_time:.3f}s)",
             )
 
-    @patch("src.sync_drive.package_exists")
+    @patch("src.drive_parallel_download.package_exists")
     def test_collect_file_for_download_package_exists(self, mock_package_exists):
         """Test collect_file_for_download when package already exists locally."""
         files = set()
@@ -1538,7 +1538,7 @@ class TestSyncDrive(unittest.TestCase):
         self.assertIn(test_file_path, files)
         self.assertIn(test_file_path2, files)
 
-    @patch("src.sync_drive.download_file")
+    @patch("src.drive_parallel_download.download_file")
     def test_download_file_task_exception_handling(self, mock_download_file):
         """Test download_file_task when an exception occurs during download."""
         # Configure mock to raise an exception
@@ -1610,3 +1610,100 @@ class TestSyncDrive(unittest.TestCase):
         if mock_download_task.call_count > 0:
             # At least one download was attempted
             self.assertGreater(mock_download_task.call_count, 0)
+
+    def test_download_file_returns_none_on_processing_failure(self):
+        """Test download_file returns None when package processing fails."""
+        import os
+        from unittest.mock import MagicMock
+
+        from src.drive_file_download import download_file
+
+        # Use a package item that will trigger the package processing path
+        local_file = os.path.join(self.destination_path, "test_package.band")
+
+        # Mock the response object to have the packageDownload URL
+        mock_response = MagicMock()
+        mock_response.url = "https://p12-content.icloud.com/packageDownload?foo=bar"
+        mock_response.iter_content.return_value = [b"test data"]
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=None)
+
+        with (
+            patch.object(self.package_item, "open", return_value=mock_response),
+            patch("src.drive_package_processing.process_package", return_value=None),
+        ):
+            result = download_file(self.package_item, local_file)
+            self.assertIsNone(result)
+
+    def test_execute_parallel_downloads_empty_tasks(self):
+        """Test execute_parallel_downloads with empty task list."""
+        from src.drive_parallel_download import execute_parallel_downloads
+
+        result = execute_parallel_downloads([], 4)
+        self.assertEqual(result, (0, 0))
+
+    @patch("src.drive_parallel_download.download_file_task")
+    def test_parallel_download_exception_handling(self, mock_download_task):
+        """Test parallel downloads handles exceptions properly."""
+        from src.drive_parallel_download import execute_parallel_downloads
+
+        # Make the download task raise an exception
+        mock_download_task.side_effect = Exception("Download failed")
+
+        # Create a simple download task
+        download_tasks = [
+            {
+                "item": self.file_item,
+                "destination_path": self.destination_path,
+            },
+        ]
+
+        result = execute_parallel_downloads(download_tasks, 1)
+        self.assertEqual(result, (0, 1))  # 0 successful, 1 failed
+
+    @patch("src.drive_parallel_download.download_file_task")
+    def test_parallel_download_false_result(self, mock_download_task):
+        """Test parallel downloads handles False return values properly."""
+        from src.drive_parallel_download import execute_parallel_downloads
+
+        # Make the download task return False (indicating failure)
+        mock_download_task.return_value = False
+
+        # Create a simple download task
+        download_tasks = [
+            {
+                "item": self.file_item,
+                "destination_path": self.destination_path,
+            },
+        ]
+
+        result = execute_parallel_downloads(download_tasks, 1)
+        self.assertEqual(result, (0, 1))  # 0 successful, 1 failed
+
+    def test_sync_directory_unwanted_parent_folder(self):
+        """Test sync_directory skips files in unwanted parent folders."""
+        from src.drive_sync_directory import _process_file_item
+
+        # Create filters that specify a different folder (making current parent folder unwanted)
+        restrictive_filters = {
+            "folders": ["SomeOtherFolder/SubFolder"],  # Only allow a specific folder path that doesn't match our test
+            "file_extensions": [],
+        }
+
+        files = set()
+        download_tasks = []
+
+        # Call _process_file_item directly with unwanted parent folder conditions
+        _process_file_item(
+            item=self.file_item,
+            destination_path=self.destination_path,
+            filters=restrictive_filters,
+            ignore=self.ignore,
+            root=self.root,
+            files=files,
+            download_tasks=download_tasks,
+        )
+
+        # Should have no download tasks since parent folder is not wanted
+        self.assertEqual(len(download_tasks), 0)
+        self.assertEqual(len(files), 0)
