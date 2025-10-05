@@ -141,7 +141,7 @@ def get_region(config: dict) -> str:
 # =============================================================================
 
 
-def get_sync_interval(config: dict, config_path: list[str], service_name: str) -> int:
+def get_sync_interval(config: dict, config_path: list[str], service_name: str, log_messages: bool = True) -> int:
     """Get sync interval for a service (drive or photos).
 
     Extracted common logic for retrieving sync intervals.
@@ -150,6 +150,7 @@ def get_sync_interval(config: dict, config_path: list[str], service_name: str) -
         config: Configuration dictionary
         config_path: Path to sync_interval config
         service_name: Name of service for logging ("drive" or "photos")
+        log_messages: Whether to log informational messages (default: True)
 
     Returns:
         Sync interval in seconds
@@ -160,41 +161,44 @@ def get_sync_interval(config: dict, config_path: list[str], service_name: str) -
         default=DEFAULT_SYNC_INTERVAL_SEC,
     )
 
-    if sync_interval == DEFAULT_SYNC_INTERVAL_SEC:
-        log_config_not_found_warning(
-            config_path,
-            f"is not found. Using default sync_interval: {sync_interval} seconds ...",
-        )
-    else:
-        log_config_found_info(f"Syncing {service_name} every {sync_interval} seconds.")
+    if log_messages:
+        if sync_interval == DEFAULT_SYNC_INTERVAL_SEC:
+            log_config_not_found_warning(
+                config_path,
+                f"is not found. Using default sync_interval: {sync_interval} seconds ...",
+            )
+        else:
+            log_config_found_info(f"Syncing {service_name} every {sync_interval} seconds.")
 
     return sync_interval
 
 
-def get_drive_sync_interval(config: dict) -> int:
+def get_drive_sync_interval(config: dict, log_messages: bool = True) -> int:
     """Return drive sync interval from config.
 
     Args:
         config: Configuration dictionary
+        log_messages: Whether to log informational messages (default: True)
 
     Returns:
         Drive sync interval in seconds
     """
     config_path = ["drive", "sync_interval"]
-    return get_sync_interval(config=config, config_path=config_path, service_name="drive")
+    return get_sync_interval(config=config, config_path=config_path, service_name="drive", log_messages=log_messages)
 
 
-def get_photos_sync_interval(config: dict) -> int:
+def get_photos_sync_interval(config: dict, log_messages: bool = True) -> int:
     """Return photos sync interval from config.
 
     Args:
         config: Configuration dictionary
+        log_messages: Whether to log informational messages (default: True)
 
     Returns:
         Photos sync interval in seconds
     """
     config_path = ["photos", "sync_interval"]
-    return get_sync_interval(config=config, config_path=config_path, service_name="photos")
+    return get_sync_interval(config=config, config_path=config_path, service_name="photos", log_messages=log_messages)
 
 
 # =============================================================================

@@ -91,12 +91,13 @@ def _load_configuration():
     return read_config(config_path=config_path)
 
 
-def _extract_sync_intervals(config):
+def _extract_sync_intervals(config, log_messages: bool = False):
     """
     Extract drive and photos sync intervals from configuration.
 
     Args:
         config: Configuration dictionary
+        log_messages: Whether to log informational messages (default: False for loop usage)
 
     Returns:
         tuple: (drive_sync_interval, photos_sync_interval)
@@ -105,9 +106,9 @@ def _extract_sync_intervals(config):
     photos_sync_interval = 0
 
     if config and "drive" in config:
-        drive_sync_interval = config_parser.get_drive_sync_interval(config=config)
+        drive_sync_interval = config_parser.get_drive_sync_interval(config=config, log_messages=log_messages)
     if config and "photos" in config:
-        photos_sync_interval = config_parser.get_photos_sync_interval(config=config)
+        photos_sync_interval = config_parser.get_photos_sync_interval(config=config, log_messages=log_messages)
 
     return drive_sync_interval, photos_sync_interval
 
@@ -325,6 +326,19 @@ def _log_next_sync_time(sleep_for: int):
     LOGGER.info(f"Resyncing at {next_sync} ...")
 
 
+def _log_sync_intervals_at_startup(config):
+    """
+    Log sync intervals once at startup.
+
+    Args:
+        config: Configuration dictionary
+    """
+    if config and "drive" in config:
+        config_parser.get_drive_sync_interval(config=config, log_messages=True)
+    if config and "photos" in config:
+        config_parser.get_photos_sync_interval(config=config, log_messages=True)
+
+
 def _should_exit_oneshot_mode(config):
     """
     Check if should exit in oneshot mode.
@@ -338,8 +352,8 @@ def _should_exit_oneshot_mode(config):
         bool: True if should exit
     """
 
-    should_exit_drive = ("drive" not in config) or (config_parser.get_drive_sync_interval(config=config) < 0)
-    should_exit_photos = ("photos" not in config) or (config_parser.get_photos_sync_interval(config=config) < 0)
+    should_exit_drive = ("drive" not in config) or (config_parser.get_drive_sync_interval(config=config, log_messages=False) < 0)
+    should_exit_photos = ("photos" not in config) or (config_parser.get_photos_sync_interval(config=config, log_messages=False) < 0)
 
     return should_exit_drive and should_exit_photos
 
@@ -353,12 +367,18 @@ def sync():
     while each helper handles a single concern.
     """
     sync_state = SyncState()
+    startup_logged = False
 
     while True:
         config = _load_configuration()
         alive(config=config)
 
-        drive_sync_interval, photos_sync_interval = _extract_sync_intervals(config)
+        # Log sync intervals once at startup
+        if not startup_logged:
+            _log_sync_intervals_at_startup(config)
+            startup_logged = True
+
+        drive_sync_interval, photos_sync_interval = _extract_sync_intervals(config, log_messages=False)
         username = config_parser.get_username(config=config) if config else None
 
         if username:
