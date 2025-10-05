@@ -352,8 +352,12 @@ def _should_exit_oneshot_mode(config):
         bool: True if should exit
     """
 
-    should_exit_drive = ("drive" not in config) or (config_parser.get_drive_sync_interval(config=config, log_messages=False) < 0)
-    should_exit_photos = ("photos" not in config) or (config_parser.get_photos_sync_interval(config=config, log_messages=False) < 0)
+    should_exit_drive = ("drive" not in config) or (
+        config_parser.get_drive_sync_interval(config=config, log_messages=False) < 0
+    )
+    should_exit_photos = ("photos" not in config) or (
+        config_parser.get_photos_sync_interval(config=config, log_messages=False) < 0
+    )
 
     return should_exit_drive and should_exit_photos
 

@@ -575,5 +575,3 @@ class TestConfigParser(unittest.TestCase):
         config["app"]["max_threads"] = 20  # Should be capped at 16
         max_threads = config_parser.get_app_max_threads(config=config)
         self.assertEqual(max_threads, 16)
-
-
