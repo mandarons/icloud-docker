@@ -76,6 +76,14 @@ class TestConfigParser(unittest.TestCase):
             config_parser.get_drive_sync_interval(config=None),
         )
 
+    def test_get_drive_sync_interval_silent(self):
+        """Test that silent mode returns same value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertEqual(
+            config_parser.get_drive_sync_interval(config=config, log_messages=True),
+            config_parser.get_drive_sync_interval(config=config, log_messages=False),
+        )
+
     def test_get_retry_login_interval(self):
         """Given interval."""
         config = read_config(config_path=tests.CONFIG_PATH)
