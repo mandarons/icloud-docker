@@ -15,8 +15,11 @@ from src import (
     DEFAULT_SYNC_INTERVAL_SEC,
     ENV_CONFIG_FILE_PATH_KEY,
     config_parser,
+    get_logger,
     read_config,
 )
+
+LOGGER = get_logger()
 
 
 class TestConfigParser(unittest.TestCase):
@@ -83,6 +86,46 @@ class TestConfigParser(unittest.TestCase):
             config_parser.get_drive_sync_interval(config=config, log_messages=True),
             config_parser.get_drive_sync_interval(config=config, log_messages=False),
         )
+
+    def test_get_drive_destination_path_explicit_default(self):
+        """Test that no warning is shown when destination is explicitly set to default value."""
+        # Config with explicit destination matching default
+        config = {"drive": {"destination": DEFAULT_DRIVE_DESTINATION}}
+
+        # Should return the value without logging warning
+        with self.assertLogs(level="WARNING") as log_context:
+            # Add a different warning to ensure assertLogs works
+            LOGGER.warning("Test warning to make assertLogs work")
+            result = config_parser.get_drive_destination_path(config=config)
+
+        # Should return the configured value
+        self.assertEqual(DEFAULT_DRIVE_DESTINATION, result)
+
+        # Should only contain our test warning, not the destination warning
+        warning_messages = [
+            record.getMessage() for record in log_context.records if "destination is missing" in record.getMessage()
+        ]
+        self.assertEqual(len(warning_messages), 0)
+
+    def test_get_photos_destination_path_explicit_default(self):
+        """Test that no warning is shown when photos destination is explicitly set to default value."""
+        # Config with explicit destination matching default
+        config = {"photos": {"destination": DEFAULT_PHOTOS_DESTINATION}}
+
+        # Should return the value without logging warning
+        with self.assertLogs(level="WARNING") as log_context:
+            # Add a different warning to ensure assertLogs works
+            LOGGER.warning("Test warning to make assertLogs work")
+            result = config_parser.get_photos_destination_path(config=config)
+
+        # Should return the configured value
+        self.assertEqual(DEFAULT_PHOTOS_DESTINATION, result)
+
+        # Should only contain our test warning, not the destination warning
+        warning_messages = [
+            record.getMessage() for record in log_context.records if "destination is missing" in record.getMessage()
+        ]
+        self.assertEqual(len(warning_messages), 0)
 
     def test_get_retry_login_interval(self):
         """Given interval."""
