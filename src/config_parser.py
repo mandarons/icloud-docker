@@ -287,7 +287,7 @@ def get_root_destination_path(config: dict) -> str:
         default=DEFAULT_ROOT_DESTINATION,
     )
 
-    if root_destination == DEFAULT_ROOT_DESTINATION:
+    if not traverse_config_path(config=config, config_path=config_path):
         log_config_not_found_warning(
             config_path,
             f"root destination is missing. Using default root destination: {root_destination}",
@@ -331,7 +331,7 @@ def get_drive_destination_path(config: dict) -> str:
         default=DEFAULT_DRIVE_DESTINATION,
     )
 
-    if drive_destination == DEFAULT_DRIVE_DESTINATION:
+    if not traverse_config_path(config=config, config_path=config_path):
         log_config_not_found_warning(
             config_path,
             f"destination is missing. Using default drive destination: {drive_destination}.",
@@ -399,7 +399,7 @@ def get_photos_destination_path(config: dict) -> str:
         default=DEFAULT_PHOTOS_DESTINATION,
     )
 
-    if photos_destination == DEFAULT_PHOTOS_DESTINATION:
+    if not traverse_config_path(config=config, config_path=config_path):
         log_config_not_found_warning(
             config_path,
             f"destination is missing. Using default photos destination: {config_path_to_string(config_path)}",
