@@ -77,7 +77,10 @@ class TestNotify(unittest.TestCase):
     def test_send(self):
         """Test for email send."""
         username = "username@icloud.com"
-        with patch("smtplib.SMTP") as smtp:
+        with patch("smtplib.SMTP") as smtp, \
+             patch("src.notify.post_message_to_telegram"), \
+             patch("src.notify.post_message_to_discord"), \
+             patch("src.notify.post_message_to_pushover"):
             notify.send(self.config, username=username)
 
             instance = smtp.return_value
@@ -105,7 +108,10 @@ class TestNotify(unittest.TestCase):
     def test_send_with_username(self):
         """Test for email send."""
         username = "username@icloud.com"
-        with patch("smtplib.SMTP") as smtp:
+        with patch("smtplib.SMTP") as smtp, \
+             patch("src.notify.post_message_to_telegram"), \
+             patch("src.notify.post_message_to_discord"), \
+             patch("src.notify.post_message_to_pushover"):
             self.config["app"]["smtp"]["username"] = "smtp-username"
             notify.send(self.config, username)
 
@@ -135,7 +141,10 @@ class TestNotify(unittest.TestCase):
     def test_send_with_region(self):
         """Test for email send with region."""
         username = "username@icloud.com"
-        with patch("smtplib.SMTP") as smtp:
+        with patch("smtplib.SMTP") as smtp, \
+             patch("src.notify.post_message_to_telegram"), \
+             patch("src.notify.post_message_to_discord"), \
+             patch("src.notify.post_message_to_pushover"):
             notify.send(self.config, username, region="some_region")
 
             instance = smtp.return_value
@@ -144,8 +153,15 @@ class TestNotify(unittest.TestCase):
     def test_send_fail(self):
         """Test for failed send."""
         username = "username@icloud.com"
-        with patch("smtplib.SMTP") as smtp:
+        with patch("smtplib.SMTP") as smtp, \
+             patch("src.notify.post_message_to_telegram") as telegram_mock, \
+             patch("src.notify.post_message_to_discord") as discord_mock, \
+             patch("src.notify.post_message_to_pushover") as pushover_mock:
             smtp.side_effect = Exception
+            # Make all notification methods return False (failure)
+            telegram_mock.return_value = False
+            discord_mock.return_value = False
+            pushover_mock.return_value = False
 
             # Verify that a failure doesn't return a send_on timestamp
             sent_on = notify.send(self.config, username)
