@@ -1,0 +1,5 @@
+[38;21m2025-10-06 00:39:08,833 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-06 00:39:08,833 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-06 00:39:08,833 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-06 00:39:08,842 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-10-06 00:39:08,843 :: DEBUG :: root :: drive_parallel_download.py :: 95 :: [Thread] Starting download of /some/path/file.txt[0m

@@ -1,0 +1,6 @@
+DEBUG    icloudpy.base:base.py:240 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:247 Session file does not exist
+DEBUG    icloudpy.base:base.py:313 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:417 Authentication completed successfully
+DEBUG    root:photo_download_manager.py:170 [Thread] Starting processing of /invalid/path/photo.jpg
+ERROR    root:photo_download_manager.py:194 [Thread] Failed to process /invalid/path/photo.jpg: Download failed

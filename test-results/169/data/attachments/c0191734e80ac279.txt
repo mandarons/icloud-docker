@@ -1,0 +1,4 @@
+INFO     root:notify.py:94 Throttling telegram to once a day
+INFO     root:notify.py:185 Throttling discord to once a day
+INFO     root:notify.py:250 Throttling Pushover to once a day
+INFO     root:notify.py:283 Throttling email to once a day

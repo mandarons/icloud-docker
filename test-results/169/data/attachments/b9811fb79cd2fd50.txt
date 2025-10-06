@@ -1,0 +1,14 @@
+WARNING  root:config_logging.py:26 app > telegram > bot_token bot_token is not found.
+WARNING  root:config_logging.py:26 app > telegram > chat_id chat_id is not found.
+WARNING  root:notify.py:99 Not sending 2FA notification because Telegram is not configured.
+WARNING  root:config_logging.py:26 app > discord > webhook_url webhook_url is not found.
+WARNING  root:config_logging.py:26 app > discord > username username is not found.
+WARNING  root:notify.py:190 Not sending 2FA notification because Discord is not configured.
+WARNING  root:config_logging.py:26 app > pushover > user_key user_key is not found.
+WARNING  root:config_logging.py:26 app > pushover > api_token api_token is not found.
+WARNING  root:notify.py:255 Not sending 2FA notification because Pushover is not configured.
+WARNING  root:config_logging.py:26 app > smtp > host host is not found.
+WARNING  root:config_logging.py:26 app > smtp > port port is not found.
+WARNING  root:config_logging.py:26 app > smtp > no_tls no_tls is not found.
+WARNING  root:config_logging.py:26 app > smtp > password password is not found.
+WARNING  root:notify.py:288 Not sending 2FA notification because SMTP is not configured

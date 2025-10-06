@@ -1,0 +1,12 @@
+[38;21m2025-10-06 00:39:09,562 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-06 00:39:09,562 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-06 00:39:09,563 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-06 00:39:09,571 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;5;39m2025-10-06 00:39:09,572 :: INFO :: root :: drive_file_download.py :: 40 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band ...[0m
+[38;5;39m2025-10-06 00:39:09,573 :: INFO :: root :: drive_package_processing.py :: 66 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive[0m
+[38;5;39m2025-10-06 00:39:09,577 :: INFO :: root :: drive_package_processing.py :: 76 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band.zip.[0m
+[38;21m2025-10-06 00:39:09,578 :: DEBUG :: root :: drive_file_existence.py :: 77 :: No changes detected. Skipping the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band ...[0m
+[38;5;39m2025-10-06 00:39:09,580 :: INFO :: root :: drive_file_existence.py :: 80 :: Changes detected: local_modified_time is 1759711149, remote_modified_time is 1627845714, local_package_size is 928804 and remote_package_size is 588272.[0m
+[38;5;39m2025-10-06 00:39:09,580 :: INFO :: root :: drive_file_download.py :: 40 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band ...[0m
+[38;5;39m2025-10-06 00:39:09,581 :: INFO :: root :: drive_package_processing.py :: 66 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive[0m
+[38;5;39m2025-10-06 00:39:09,585 :: INFO :: root :: drive_package_processing.py :: 76 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band.zip.[0m
