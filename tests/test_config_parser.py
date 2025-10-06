@@ -618,3 +618,72 @@ class TestConfigParser(unittest.TestCase):
         config["app"]["max_threads"] = 20  # Should be capped at 16
         max_threads = config_parser.get_app_max_threads(config=config)
         self.assertEqual(max_threads, 16)
+
+    def test_get_sync_summary_enabled_default(self):
+        """Test for getting sync summary enabled with default value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertFalse(config_parser.get_sync_summary_enabled(config=config))
+
+    def test_get_sync_summary_enabled_true(self):
+        """Test for getting sync summary enabled when set to True."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"enabled": True}}
+        self.assertTrue(config_parser.get_sync_summary_enabled(config=config))
+
+    def test_get_sync_summary_enabled_false(self):
+        """Test for getting sync summary enabled when set to False."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"enabled": False}}
+        self.assertFalse(config_parser.get_sync_summary_enabled(config=config))
+
+    def test_get_sync_summary_on_success_default(self):
+        """Test for getting sync summary on_success with default value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertTrue(config_parser.get_sync_summary_on_success(config=config))
+
+    def test_get_sync_summary_on_success_true(self):
+        """Test for getting sync summary on_success when set to True."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"on_success": True}}
+        self.assertTrue(config_parser.get_sync_summary_on_success(config=config))
+
+    def test_get_sync_summary_on_success_false(self):
+        """Test for getting sync summary on_success when set to False."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"on_success": False}}
+        self.assertFalse(config_parser.get_sync_summary_on_success(config=config))
+
+    def test_get_sync_summary_on_error_default(self):
+        """Test for getting sync summary on_error with default value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertTrue(config_parser.get_sync_summary_on_error(config=config))
+
+    def test_get_sync_summary_on_error_true(self):
+        """Test for getting sync summary on_error when set to True."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"on_error": True}}
+        self.assertTrue(config_parser.get_sync_summary_on_error(config=config))
+
+    def test_get_sync_summary_on_error_false(self):
+        """Test for getting sync summary on_error when set to False."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"on_error": False}}
+        self.assertFalse(config_parser.get_sync_summary_on_error(config=config))
+
+    def test_get_sync_summary_min_downloads_default(self):
+        """Test for getting sync summary min_downloads with default value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertEqual(config_parser.get_sync_summary_min_downloads(config=config), 1)
+
+    def test_get_sync_summary_min_downloads_custom(self):
+        """Test for getting sync summary min_downloads with custom value."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"min_downloads": 5}}
+        self.assertEqual(config_parser.get_sync_summary_min_downloads(config=config), 5)
+
+    def test_get_sync_summary_min_downloads_zero(self):
+        """Test for getting sync summary min_downloads when set to 0."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"min_downloads": 0}}
+        self.assertEqual(config_parser.get_sync_summary_min_downloads(config=config), 0)
+

@@ -428,3 +428,267 @@ def build_message(email: str, to_email: str, message: str, subject: str) -> Mess
     msg.subject = subject
     msg.body = message
     return msg
+
+
+# =============================================================================
+# Sync Summary Notification Functions
+# =============================================================================
+
+
+def _format_sync_summary_message(summary) -> tuple[str, str]:
+    """
+    Format sync summary as notification message.
+
+    Args:
+        summary: SyncSummary object containing sync statistics
+
+    Returns:
+        Tuple of (message, subject)
+    """
+    from src.sync_stats import format_bytes, format_duration
+
+    has_errors = summary.has_errors()
+    status_emoji = "⚠️" if has_errors else "✅"
+    status_text = "Completed with Errors" if has_errors else "Complete"
+
+    message_lines = [f"{status_emoji} iCloud Sync {status_text}", ""]
+
+    # Drive statistics
+    if summary.drive_stats and summary.drive_stats.has_activity():
+        drive = summary.drive_stats
+        message_lines.append("📁 Drive:")
+        if drive.files_downloaded > 0:
+            size_str = format_bytes(drive.bytes_downloaded)
+            message_lines.append(f"  • Downloaded: {drive.files_downloaded} files ({size_str})")
+        if drive.files_skipped > 0:
+            message_lines.append(f"  • Skipped: {drive.files_skipped} files (up-to-date)")
+        if drive.files_removed > 0:
+            message_lines.append(f"  • Removed: {drive.files_removed} obsolete files")
+        if drive.duration_seconds > 0:
+            duration_str = format_duration(drive.duration_seconds)
+            message_lines.append(f"  • Duration: {duration_str}")
+        if drive.has_errors():
+            message_lines.append(f"  • Errors: {len(drive.errors)} failed")
+        message_lines.append("")
+
+    # Photos statistics
+    if summary.photo_stats and summary.photo_stats.has_activity():
+        photos = summary.photo_stats
+        message_lines.append("📷 Photos:")
+        if photos.photos_downloaded > 0:
+            size_str = format_bytes(photos.bytes_downloaded)
+            message_lines.append(f"  • Downloaded: {photos.photos_downloaded} photos ({size_str})")
+        if photos.photos_hardlinked > 0:
+            message_lines.append(f"  • Hard-linked: {photos.photos_hardlinked} photos")
+        if photos.bytes_saved_by_hardlinks > 0:
+            saved_str = format_bytes(photos.bytes_saved_by_hardlinks)
+            message_lines.append(f"  • Storage saved: {saved_str}")
+        if photos.albums_synced:
+            albums_str = ", ".join(photos.albums_synced[:5])
+            if len(photos.albums_synced) > 5:
+                albums_str += f" (+{len(photos.albums_synced) - 5} more)"
+            message_lines.append(f"  • Albums: {albums_str}")
+        if photos.duration_seconds > 0:
+            duration_str = format_duration(photos.duration_seconds)
+            message_lines.append(f"  • Duration: {duration_str}")
+        if photos.has_errors():
+            message_lines.append(f"  • Errors: {len(photos.errors)} failed")
+        message_lines.append("")
+
+    # Error details if present
+    if has_errors:
+        message_lines.append("Failed items:")
+        all_errors = []
+        if summary.drive_stats:
+            all_errors.extend(summary.drive_stats.errors[:5])  # Limit to first 5
+        if summary.photo_stats:
+            all_errors.extend(summary.photo_stats.errors[:5])  # Limit to first 5
+        message_lines.extend([f"  • {error}" for error in all_errors[:10]])
+        total_errors = 0
+        if summary.drive_stats:
+            total_errors += len(summary.drive_stats.errors)
+        if summary.photo_stats:
+            total_errors += len(summary.photo_stats.errors)
+        if total_errors > 10:
+            message_lines.append(f"  ... and {total_errors - 10} more errors")
+        message_lines.append("")
+
+    message = "\n".join(message_lines)
+    subject = f"icloud-docker: Sync {status_text}"
+    return message, subject
+
+
+def _should_send_sync_summary(config, summary) -> bool:
+    """
+    Determine if sync summary notification should be sent.
+
+    Args:
+        config: Configuration dictionary
+        summary: SyncSummary object
+
+    Returns:
+        True if notification should be sent, False otherwise
+    """
+    # Check if sync summary is enabled
+    if not config_parser.get_sync_summary_enabled(config=config):
+        return False
+
+    # Check if there was any activity
+    if not summary.has_activity():
+        return False
+
+    # Check error/success preferences
+    has_errors = summary.has_errors()
+    on_error = config_parser.get_sync_summary_on_error(config=config)
+    on_success = config_parser.get_sync_summary_on_success(config=config)
+
+    if has_errors and not on_error:
+        return False
+    if not has_errors and not on_success:
+        return False
+
+    # Check minimum downloads threshold
+    min_downloads = config_parser.get_sync_summary_min_downloads(config=config)
+    total_downloads = 0
+    if summary.drive_stats:
+        total_downloads += summary.drive_stats.files_downloaded
+    if summary.photo_stats:
+        total_downloads += summary.photo_stats.photos_downloaded
+
+    if total_downloads < min_downloads:
+        return False
+
+    return True
+
+
+def send_sync_summary(config, summary, dry_run=False):
+    """
+    Send sync summary notification to all configured services.
+
+    Note: Sync summaries are NOT throttled like 2FA notifications,
+    as they provide valuable operational information for each sync.
+
+    Args:
+        config: Configuration dictionary
+        summary: SyncSummary object containing sync statistics
+        dry_run: If True, don't actually send notifications
+
+    Returns:
+        True if at least one notification was sent successfully, False otherwise
+    """
+    if not _should_send_sync_summary(config, summary):
+        LOGGER.debug("Sync summary notification skipped (not enabled or no activity)")
+        return False
+
+    message, subject = _format_sync_summary_message(summary)
+
+    # Send to all notification services (no throttling for sync summaries)
+    telegram_sent = _send_telegram_no_throttle(config, message, dry_run)
+    discord_sent = _send_discord_no_throttle(config, message, dry_run)
+    pushover_sent = _send_pushover_no_throttle(config, message, dry_run)
+    email_sent = _send_email_no_throttle(config, message, subject, dry_run)
+
+    # Return True if any notification was sent successfully
+    any_sent = any([telegram_sent, discord_sent, pushover_sent, email_sent])
+    if any_sent:
+        LOGGER.info("Sync summary notification sent successfully")
+    return any_sent
+
+
+def _send_telegram_no_throttle(config, message: str, dry_run: bool) -> bool:
+    """Send Telegram notification without throttling.
+
+    Args:
+        config: Configuration dictionary
+        message: Message to send
+        dry_run: If True, don't actually send
+
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    bot_token, chat_id, is_configured = _get_telegram_config(config)
+    if not is_configured:
+        return False
+
+    if dry_run:
+        return True
+
+    return post_message_to_telegram(bot_token, chat_id, message)  # type: ignore[arg-type]
+
+
+def _send_discord_no_throttle(config, message: str, dry_run: bool) -> bool:
+    """Send Discord notification without throttling.
+
+    Args:
+        config: Configuration dictionary
+        message: Message to send
+        dry_run: If True, don't actually send
+
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    webhook_url, username, is_configured = _get_discord_config(config)
+    if not is_configured:
+        return False
+
+    if dry_run:
+        return True
+
+    return post_message_to_discord(webhook_url, username, message)  # type: ignore[arg-type]
+
+
+def _send_pushover_no_throttle(config, message: str, dry_run: bool) -> bool:
+    """Send Pushover notification without throttling.
+
+    Args:
+        config: Configuration dictionary
+        message: Message to send
+        dry_run: If True, don't actually send
+
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    user_key, api_token, is_configured = _get_pushover_config(config)
+    if not is_configured:
+        return False
+
+    if dry_run:
+        return True
+
+    return post_message_to_pushover(api_token, user_key, message)  # type: ignore[arg-type]
+
+
+def _send_email_no_throttle(config, message: str, subject: str, dry_run: bool) -> bool:
+    """Send email notification without throttling.
+
+    Args:
+        config: Configuration dictionary
+        message: Message to send
+        subject: Email subject
+        dry_run: If True, don't actually send
+
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    email, to_email, host, port, no_tls, username, password, is_configured = _get_smtp_config(config)
+    if not is_configured:
+        return False
+
+    if dry_run:
+        return True
+
+    try:
+        smtp = _create_smtp_connection(host, port, no_tls)  # type: ignore[arg-type]
+
+        if password:
+            _authenticate_smtp(smtp, email, username, password)  # type: ignore[arg-type]
+
+        recipient = to_email if to_email else email
+        msg = build_message(email, recipient, message, subject)  # type: ignore[arg-type]
+        _send_email_message(smtp, email, recipient, msg)  # type: ignore[arg-type]
+        smtp.quit()
+        return True
+    except Exception as e:
+        LOGGER.error(f"Failed to send sync summary email: {e!s}")
+        return False
+
