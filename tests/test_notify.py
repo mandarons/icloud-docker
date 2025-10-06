@@ -469,6 +469,174 @@ class TestNotify(unittest.TestCase):
         self.assertIn("Failed items:", message)
         self.assertIn("/path/file1.txt", message)
 
+    def test_format_sync_summary_message_with_removed_files(self):
+        """Test formatting message with removed files."""
+        from src.notify import _format_sync_summary_message
+        from src.sync_stats import DriveStats, SyncSummary
+
+        summary = SyncSummary(
+            drive_stats=DriveStats(files_downloaded=5, files_removed=3, bytes_downloaded=1048576, duration_seconds=60),
+        )
+
+        message, subject = _format_sync_summary_message(summary)
+
+        # Check message contains removed files
+        self.assertIn("Removed: 3 obsolete files", message)
+
+    def test_format_sync_summary_message_with_many_albums(self):
+        """Test formatting message with more than 5 albums."""
+        from src.notify import _format_sync_summary_message
+        from src.sync_stats import PhotoStats, SyncSummary
+
+        summary = SyncSummary(
+            photo_stats=PhotoStats(
+                photos_downloaded=10,
+                albums_synced=["Album1", "Album2", "Album3", "Album4", "Album5", "Album6", "Album7"],
+                duration_seconds=120,
+            ),
+        )
+
+        message, subject = _format_sync_summary_message(summary)
+
+        # Check message truncates albums list
+        self.assertIn("Album1, Album2, Album3, Album4, Album5 (+2 more)", message)
+        """Test _send_telegram_no_throttle with successful send."""
+        from src.notify import _send_telegram_no_throttle
+
+        config = {"app": {"telegram": {"bot_token": "bot_token", "chat_id": "chat_id"}}}
+
+        with patch("src.notify.post_message_to_telegram") as mock_post:
+            mock_post.return_value = True
+            result = _send_telegram_no_throttle(config, "test message", dry_run=False)
+            self.assertTrue(result)
+            mock_post.assert_called_once()
+
+    def test_send_telegram_no_throttle_not_configured(self):
+        """Test _send_telegram_no_throttle when not configured."""
+        from src.notify import _send_telegram_no_throttle
+
+        config = {}
+        result = _send_telegram_no_throttle(config, "test message", dry_run=False)
+        self.assertFalse(result)
+
+    def test_send_telegram_no_throttle_dry_run(self):
+        """Test _send_telegram_no_throttle in dry run mode."""
+        from src.notify import _send_telegram_no_throttle
+
+        config = {"app": {"telegram": {"bot_token": "bot_token", "chat_id": "chat_id"}}}
+
+        with patch("src.notify.post_message_to_telegram") as mock_post:
+            result = _send_telegram_no_throttle(config, "test message", dry_run=True)
+            self.assertTrue(result)
+            mock_post.assert_not_called()
+
+    def test_send_discord_no_throttle_success(self):
+        """Test _send_discord_no_throttle with successful send."""
+        from src.notify import _send_discord_no_throttle
+
+        config = {"app": {"discord": {"webhook_url": "webhook_url", "username": "username"}}}
+
+        with patch("src.notify.post_message_to_discord") as mock_post:
+            mock_post.return_value = True
+            result = _send_discord_no_throttle(config, "test message", dry_run=False)
+            self.assertTrue(result)
+            mock_post.assert_called_once()
+
+    def test_send_discord_no_throttle_dry_run(self):
+        """Test _send_discord_no_throttle in dry run mode."""
+        from src.notify import _send_discord_no_throttle
+
+        config = {"app": {"discord": {"webhook_url": "webhook_url", "username": "username"}}}
+
+        with patch("src.notify.post_message_to_discord") as mock_post:
+            result = _send_discord_no_throttle(config, "test message", dry_run=True)
+            self.assertTrue(result)
+            mock_post.assert_not_called()
+
+    def test_send_pushover_no_throttle_success(self):
+        """Test _send_pushover_no_throttle with successful send."""
+        from src.notify import _send_pushover_no_throttle
+
+        config = {"app": {"pushover": {"user_key": "user_key", "api_token": "api_token"}}}
+
+        with patch("src.notify.post_message_to_pushover") as mock_post:
+            mock_post.return_value = True
+            result = _send_pushover_no_throttle(config, "test message", dry_run=False)
+            self.assertTrue(result)
+            mock_post.assert_called_once()
+
+    def test_send_pushover_no_throttle_dry_run(self):
+        """Test _send_pushover_no_throttle in dry run mode."""
+        from src.notify import _send_pushover_no_throttle
+
+        config = {"app": {"pushover": {"user_key": "user_key", "api_token": "api_token"}}}
+
+        with patch("src.notify.post_message_to_pushover") as mock_post:
+            result = _send_pushover_no_throttle(config, "test message", dry_run=True)
+            self.assertTrue(result)
+            mock_post.assert_not_called()
+
+    def test_send_email_no_throttle_success(self):
+        """Test _send_email_no_throttle with successful send."""
+        from src.notify import _send_email_no_throttle
+
+        config = {
+            "app": {
+                "smtp": {
+                    "email": "test@example.com",
+                    "to": "recipient@example.com",
+                    "host": "smtp.example.com",
+                    "port": 587,
+                    "password": "password",
+                },
+            },
+        }
+
+        with patch("smtplib.SMTP") as mock_smtp:
+            result = _send_email_no_throttle(config, "test message", "test subject", dry_run=False)
+            self.assertTrue(result)
+            mock_smtp.assert_called_once()
+
+    def test_send_email_no_throttle_dry_run(self):
+        """Test _send_email_no_throttle in dry run mode."""
+        from src.notify import _send_email_no_throttle
+
+        config = {
+            "app": {
+                "smtp": {
+                    "email": "test@example.com",
+                    "to": "recipient@example.com",
+                    "host": "smtp.example.com",
+                    "port": 587,
+                },
+            },
+        }
+
+        with patch("smtplib.SMTP") as mock_smtp:
+            result = _send_email_no_throttle(config, "test message", "test subject", dry_run=True)
+            self.assertTrue(result)
+            mock_smtp.assert_not_called()
+
+    def test_send_email_no_throttle_exception(self):
+        """Test _send_email_no_throttle with exception."""
+        from src.notify import _send_email_no_throttle
+
+        config = {
+            "app": {
+                "smtp": {
+                    "email": "test@example.com",
+                    "to": "recipient@example.com",
+                    "host": "smtp.example.com",
+                    "port": 587,
+                },
+            },
+        }
+
+        with patch("smtplib.SMTP") as mock_smtp:
+            mock_smtp.side_effect = Exception("Test exception")
+            result = _send_email_no_throttle(config, "test message", "test subject", dry_run=False)
+            self.assertFalse(result)
+
     def test_notify_discord_dry_run(self):
         """Test for dry run mode."""
         config = {"app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}}
@@ -605,3 +773,46 @@ class TestNotify(unittest.TestCase):
                 data={"token": "pushover_api_token", "user": "pushover_user_key", "message": "message"},
                 timeout=10,
             )
+
+    def test_format_sync_summary_message_with_many_errors(self):
+        """Test formatting message with more than 10 errors."""
+        from src.notify import _format_sync_summary_message
+        from src.sync_stats import DriveStats, PhotoStats, SyncSummary
+
+        # Create 15 errors total (8 from drive, 7 from photos)
+        drive_errors = [f"/drive/file{i}.txt (error)" for i in range(8)]
+        photo_errors = [f"/photos/img{i}.jpg (error)" for i in range(7)]
+
+        summary = SyncSummary(
+            drive_stats=DriveStats(files_downloaded=1, errors=drive_errors),
+            photo_stats=PhotoStats(photos_downloaded=1, errors=photo_errors),
+        )
+
+        message, subject = _format_sync_summary_message(summary)
+
+        # Check message shows truncation
+        self.assertIn("... and 5 more errors", message)
+
+    def test_should_send_sync_summary_errors_disabled(self):
+        """Test _should_send_sync_summary when on_error is False."""
+        from src.notify import _should_send_sync_summary
+        from src.sync_stats import DriveStats, SyncSummary
+
+        config = {
+            "app": {
+                "notifications": {
+                    "sync_summary": {
+                        "enabled": True,
+                        "on_success": True,
+                        "on_error": False,  # Errors disabled
+                        "min_downloads": 0,
+                    },
+                },
+            },
+        }
+
+        # Summary with errors
+        summary = SyncSummary(drive_stats=DriveStats(files_downloaded=5, errors=["error1"]))
+
+        result = _should_send_sync_summary(config, summary)
+        self.assertFalse(result)  # Should not send because has errors but on_error is False

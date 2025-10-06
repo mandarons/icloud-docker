@@ -194,24 +194,26 @@ def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval:
         # Calculate statistics
         stats.duration_seconds = time.time() - start_time
 
-        # Count newly downloaded files
-        new_files = files_after - files_before
-        stats.files_downloaded = len(new_files)
+        # Handle case where sync_drive returns None (e.g., in tests)
+        if files_after is not None:
+            # Count newly downloaded files
+            new_files = files_after - files_before
+            stats.files_downloaded = len(new_files)
 
-        # Count skipped files
-        stats.files_skipped = len(files_before & files_after)
+            # Count skipped files
+            stats.files_skipped = len(files_before & files_after)
 
-        # Count removed files
-        if config_parser.get_drive_remove_obsolete(config=config):
-            stats.files_removed = len(files_before - files_after)
+            # Count removed files
+            if config_parser.get_drive_remove_obsolete(config=config):
+                stats.files_removed = len(files_before - files_after)
 
-        # Calculate bytes downloaded
-        try:
-            for file_path in new_files:
-                if os.path.exists(file_path) and os.path.isfile(file_path):
-                    stats.bytes_downloaded += os.path.getsize(file_path)
-        except Exception:
-            pass
+            # Calculate bytes downloaded
+            try:
+                for file_path in new_files:
+                    if os.path.exists(file_path) and os.path.isfile(file_path):
+                        stats.bytes_downloaded += os.path.getsize(file_path)
+            except Exception:
+                pass
 
         # Reset countdown timer to the configured interval
         sync_state.drive_time_remaining = drive_sync_interval
@@ -524,8 +526,12 @@ def sync():
                     summary.sync_end_time = datetime.datetime.now()
 
                     # Send sync summary notification if configured
+                    # Gracefully handle notification failures to not break sync
                     if drive_stats or photos_stats:
-                        notify.send_sync_summary(config=config, summary=summary)
+                        try:
+                            notify.send_sync_summary(config=config, summary=summary)
+                        except Exception as e:
+                            LOGGER.debug(f"Failed to send sync summary notification: {e!s}")
 
                     if not _check_services_configured(config):
                         LOGGER.warning("Nothing to sync. Please add drive: and/or photos: section in config.yaml file.")
