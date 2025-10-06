@@ -284,6 +284,175 @@ class TestNotify(unittest.TestCase):
             # Verify that post_message_to_discord is not called when throttled
             post_message_mock.assert_not_called()
 
+    def test_send_sync_summary_disabled(self):
+        """Test that sync summary is not sent when disabled."""
+        from src.sync_stats import DriveStats, SyncSummary
+
+        config = {"app": {"notifications": {"sync_summary": {"enabled": False}}}}
+        summary = SyncSummary(drive_stats=DriveStats(files_downloaded=5))
+
+        result = notify.send_sync_summary(config, summary)
+        self.assertFalse(result)
+
+    def test_send_sync_summary_no_activity(self):
+        """Test that sync summary is not sent when there's no activity."""
+        from src.sync_stats import SyncSummary
+
+        config = {"app": {"notifications": {"sync_summary": {"enabled": True}}}}
+        summary = SyncSummary()  # No activity
+
+        result = notify.send_sync_summary(config, summary)
+        self.assertFalse(result)
+
+    def test_send_sync_summary_success(self):
+        """Test successful sync summary send."""
+        from src.sync_stats import DriveStats, SyncSummary
+
+        config = {
+            "app": {
+                "notifications": {
+                    "sync_summary": {"enabled": True, "on_success": True, "min_downloads": 1},
+                },
+                "telegram": {"bot_token": "bot_token", "chat_id": "chat_id"},
+            },
+        }
+        summary = SyncSummary(drive_stats=DriveStats(files_downloaded=5, bytes_downloaded=1024000))
+
+        with patch("src.notify.post_message_to_telegram") as post_mock:
+            post_mock.return_value = True
+            result = notify.send_sync_summary(config, summary)
+            self.assertTrue(result)
+            post_mock.assert_called_once()
+
+    def test_send_sync_summary_with_errors(self):
+        """Test sync summary with errors."""
+        from src.sync_stats import DriveStats, PhotoStats, SyncSummary
+
+        config = {
+            "app": {
+                "notifications": {
+                    "sync_summary": {"enabled": True, "on_error": True, "min_downloads": 0},
+                },
+                "telegram": {"bot_token": "bot_token", "chat_id": "chat_id"},
+            },
+        }
+        summary = SyncSummary(
+            drive_stats=DriveStats(files_downloaded=5, errors=["Error 1"]),
+            photo_stats=PhotoStats(photos_downloaded=3, errors=["Error 2"]),
+        )
+
+        with patch("src.notify.post_message_to_telegram") as post_mock:
+            post_mock.return_value = True
+            result = notify.send_sync_summary(config, summary)
+            self.assertTrue(result)
+            post_mock.assert_called_once()
+
+    def test_send_sync_summary_min_downloads_threshold(self):
+        """Test that sync summary respects min_downloads threshold."""
+        from src.sync_stats import DriveStats, SyncSummary
+
+        config = {
+            "app": {
+                "notifications": {
+                    "sync_summary": {"enabled": True, "on_success": True, "min_downloads": 10},
+                },
+            },
+        }
+        # Only 5 downloads, below threshold of 10
+        summary = SyncSummary(drive_stats=DriveStats(files_downloaded=5))
+
+        result = notify.send_sync_summary(config, summary)
+        self.assertFalse(result)
+
+    def test_send_sync_summary_on_success_false(self):
+        """Test that sync summary is not sent on success when on_success is False."""
+        from src.sync_stats import DriveStats, SyncSummary
+
+        config = {
+            "app": {
+                "notifications": {
+                    "sync_summary": {"enabled": True, "on_success": False, "on_error": True, "min_downloads": 1},
+                },
+            },
+        }
+        # Successful sync (no errors)
+        summary = SyncSummary(drive_stats=DriveStats(files_downloaded=5))
+
+        result = notify.send_sync_summary(config, summary)
+        self.assertFalse(result)
+
+    def test_send_sync_summary_dry_run(self):
+        """Test sync summary in dry run mode."""
+        from src.sync_stats import DriveStats, SyncSummary
+
+        config = {
+            "app": {
+                "notifications": {
+                    "sync_summary": {"enabled": True, "on_success": True, "min_downloads": 1},
+                },
+                "telegram": {"bot_token": "bot_token", "chat_id": "chat_id"},
+            },
+        }
+        summary = SyncSummary(drive_stats=DriveStats(files_downloaded=5))
+
+        with patch("src.notify.post_message_to_telegram") as post_mock:
+            result = notify.send_sync_summary(config, summary, dry_run=True)
+            self.assertTrue(result)
+            # In dry run, function should not be called
+            post_mock.assert_not_called()
+
+    def test_format_sync_summary_message(self):
+        """Test formatting of sync summary message."""
+        from src.notify import _format_sync_summary_message
+        from src.sync_stats import DriveStats, PhotoStats, SyncSummary
+
+        summary = SyncSummary(
+            drive_stats=DriveStats(files_downloaded=15, files_skipped=234, bytes_downloaded=2415919104, duration_seconds=272),
+            photo_stats=PhotoStats(
+                photos_downloaded=42,
+                photos_hardlinked=128,
+                bytes_downloaded=1932735283,
+                bytes_saved_by_hardlinks=5798205849,
+                albums_synced=["All Photos", "Favorites", "Family"],
+                duration_seconds=135,
+            ),
+        )
+
+        message, subject = _format_sync_summary_message(summary)
+
+        # Check subject
+        self.assertIn("Sync Complete", subject)
+
+        # Check message contains expected sections
+        self.assertIn("✅", message)
+        self.assertIn("📁 Drive:", message)
+        self.assertIn("Downloaded: 15 files", message)
+        self.assertIn("Skipped: 234 files", message)
+        self.assertIn("📷 Photos:", message)
+        self.assertIn("Downloaded: 42 photos", message)
+        self.assertIn("Hard-linked: 128 photos", message)
+        self.assertIn("Storage saved:", message)
+        self.assertIn("Albums: All Photos, Favorites, Family", message)
+
+    def test_format_sync_summary_message_with_errors(self):
+        """Test formatting of sync summary message with errors."""
+        from src.notify import _format_sync_summary_message
+        from src.sync_stats import DriveStats, SyncSummary
+
+        summary = SyncSummary(
+            drive_stats=DriveStats(files_downloaded=3, errors=["/path/file1.txt (timeout)", "/path/file2.pdf (API error)"]),
+        )
+
+        message, subject = _format_sync_summary_message(summary)
+
+        # Check subject indicates errors
+        self.assertIn("Completed with Errors", subject)
+
+        # Check message contains error indicator
+        self.assertIn("⚠️", message)
+        self.assertIn("Failed items:", message)
+        self.assertIn("/path/file1.txt", message)
+
     def test_notify_discord_dry_run(self):
         """Test for dry run mode."""
         config = {"app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}}

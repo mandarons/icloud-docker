@@ -20,6 +20,7 @@ from src import (
     sync_drive,
     sync_photos,
 )
+from src.sync_stats import SyncSummary
 from src.usage import alive
 
 # Configure icloudpy logging immediately after import
@@ -162,13 +163,59 @@ def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval:
         api: iCloud API instance
         sync_state: Current sync state
         drive_sync_interval: Drive sync interval in seconds
+
+    Returns:
+        DriveStats object if sync was performed, None otherwise
     """
     if config and "drive" in config and sync_state.enable_sync_drive:
+        from src.sync_stats import DriveStats
+        import time
+
+        start_time = time.time()
+        stats = DriveStats()
+
+        destination_path = config_parser.prepare_drive_destination(config=config)
+
+        # Count files before sync
+        files_before = set()
+        if os.path.exists(destination_path):
+            try:
+                for root, _dirs, file_list in os.walk(destination_path):
+                    for file in file_list:
+                        files_before.add(os.path.join(root, file))
+            except Exception:
+                pass
+
         LOGGER.info("Syncing drive...")
-        sync_drive.sync_drive(config=config, drive=api.drive)
+        files_after = sync_drive.sync_drive(config=config, drive=api.drive)
         LOGGER.info("Drive synced")
+
+        # Calculate statistics
+        stats.duration_seconds = time.time() - start_time
+
+        # Count newly downloaded files
+        new_files = files_after - files_before
+        stats.files_downloaded = len(new_files)
+
+        # Count skipped files
+        stats.files_skipped = len(files_before & files_after)
+
+        # Count removed files
+        if config_parser.get_drive_remove_obsolete(config=config):
+            stats.files_removed = len(files_before - files_after)
+
+        # Calculate bytes downloaded
+        try:
+            for file_path in new_files:
+                if os.path.exists(file_path) and os.path.isfile(file_path):
+                    stats.bytes_downloaded += os.path.getsize(file_path)
+        except Exception:
+            pass
+
         # Reset countdown timer to the configured interval
         sync_state.drive_time_remaining = drive_sync_interval
+        return stats
+    return None
 
 
 def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interval: int):
@@ -180,13 +227,85 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         api: iCloud API instance
         sync_state: Current sync state
         photos_sync_interval: Photos sync interval in seconds
+
+    Returns:
+        PhotoStats object if sync was performed, None otherwise
     """
     if config and "photos" in config and sync_state.enable_sync_photos:
+        from src.sync_stats import PhotoStats
+        import time
+
+        start_time = time.time()
+        stats = PhotoStats()
+
+        destination_path = config_parser.prepare_photos_destination(config=config)
+
+        # Count files before sync
+        files_before = set()
+        if os.path.exists(destination_path):
+            try:
+                for root, _dirs, file_list in os.walk(destination_path):
+                    for file in file_list:
+                        files_before.add(os.path.join(root, file))
+            except Exception:
+                pass
+
         LOGGER.info("Syncing photos...")
         sync_photos.sync_photos(config=config, photos=api.photos)
         LOGGER.info("Photos synced")
+
+        # Count files after sync
+        files_after = set()
+        if os.path.exists(destination_path):
+            try:
+                for root, _dirs, file_list in os.walk(destination_path):
+                    for file in file_list:
+                        files_after.add(os.path.join(root, file))
+            except Exception:
+                pass
+
+        # Calculate statistics
+        stats.duration_seconds = time.time() - start_time
+
+        # Count newly downloaded files
+        new_files = files_after - files_before
+        stats.photos_downloaded = len(new_files)
+
+        # Estimate hardlinked photos (approximate)
+        use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)
+        if use_hardlinks:
+            stats.photos_hardlinked = max(0, len(files_after) - len(files_before) - stats.photos_downloaded)
+
+        # Count skipped photos
+        stats.photos_skipped = len(files_before & files_after)
+
+        # Calculate bytes downloaded
+        try:
+            for file_path in new_files:
+                if os.path.exists(file_path) and os.path.isfile(file_path):
+                    stats.bytes_downloaded += os.path.getsize(file_path)
+
+            # Estimate bytes saved by hardlinks
+            if use_hardlinks and stats.photos_hardlinked > 0:
+                for file_path in files_after:
+                    if file_path not in new_files and os.path.isfile(file_path):
+                        stats.bytes_saved_by_hardlinks += os.path.getsize(file_path)
+        except Exception:
+            pass
+
+        # Get list of synced albums (simple approximation based on directories)
+        try:
+            for item in os.listdir(destination_path):
+                item_path = os.path.join(destination_path, item)
+                if os.path.isdir(item_path):
+                    stats.albums_synced.append(item)
+        except Exception:
+            pass
+
         # Reset countdown timer to the configured interval
         sync_state.photos_time_remaining = photos_sync_interval
+        return stats
+    return None
 
 
 def _check_services_configured(config):
@@ -390,8 +509,21 @@ def sync():
                 api = _authenticate_and_get_api(config, username)
 
                 if not api.requires_2sa:
-                    _perform_drive_sync(config, api, sync_state, drive_sync_interval)
-                    _perform_photos_sync(config, api, sync_state, photos_sync_interval)
+                    # Create summary for this sync cycle
+                    summary = SyncSummary()
+
+                    # Perform syncs and collect statistics
+                    drive_stats = _perform_drive_sync(config, api, sync_state, drive_sync_interval)
+                    photos_stats = _perform_photos_sync(config, api, sync_state, photos_sync_interval)
+
+                    # Populate summary with statistics
+                    summary.drive_stats = drive_stats
+                    summary.photo_stats = photos_stats
+                    summary.sync_end_time = datetime.datetime.now()
+
+                    # Send sync summary notification if configured
+                    if drive_stats or photos_stats:
+                        notify.send_sync_summary(config=config, summary=summary)
 
                     if not _check_services_configured(config):
                         LOGGER.warning("Nothing to sync. Please add drive: and/or photos: section in config.yaml file.")

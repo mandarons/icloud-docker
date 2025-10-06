@@ -855,3 +855,76 @@ def get_pushover_api_token(config: dict) -> Optional[str]:
         Pushover API token if configured, None otherwise
     """
     return get_notification_config_value(config, "pushover", "api_token")
+
+
+# =============================================================================
+# Sync Summary Notification Configuration Functions
+# =============================================================================
+
+
+def get_sync_summary_enabled(config: dict) -> bool:
+    """Return whether sync summary notifications are enabled.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if sync summary is enabled, False otherwise (default: False)
+    """
+    config_path = ["app", "notifications", "sync_summary", "enabled"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        return False
+
+    value = get_config_value(config=config, config_path=config_path)
+    return bool(value) if value is not None else False
+
+
+def get_sync_summary_on_success(config: dict) -> bool:
+    """Return whether to send summary on successful syncs.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if should send on success, False otherwise (default: True)
+    """
+    config_path = ["app", "notifications", "sync_summary", "on_success"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        return True  # Default to True if not configured
+
+    value = get_config_value(config=config, config_path=config_path)
+    return bool(value) if value is not None else True
+
+
+def get_sync_summary_on_error(config: dict) -> bool:
+    """Return whether to send summary when errors occur.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if should send on error, False otherwise (default: True)
+    """
+    config_path = ["app", "notifications", "sync_summary", "on_error"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        return True  # Default to True if not configured
+
+    value = get_config_value(config=config, config_path=config_path)
+    return bool(value) if value is not None else True
+
+
+def get_sync_summary_min_downloads(config: dict) -> int:
+    """Return minimum downloads required to trigger notification.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Minimum downloads threshold (default: 1)
+    """
+    config_path = ["app", "notifications", "sync_summary", "min_downloads"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        return 1  # Default to 1 if not configured
+
+    value = get_config_value(config=config, config_path=config_path)
+    return int(value) if value is not None else 1
