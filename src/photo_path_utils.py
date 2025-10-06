@@ -1,4 +1,5 @@
-"""Photo path utili    Extract filename and extension from photo.
+"""Photo path utils
+    Extract filename and extension from photo.
 
     Args:
         photo: Photo object from iCloudPy
@@ -6,7 +7,7 @@
 
     Returns:
         Tuple of (name, extension) where name is filename without extension
-        and extension is the file extensionle.
+        and extension is the file extension.
 
 This module contains utilities for generating photo file paths and managing
 file naming conventions for photo synchronization.
