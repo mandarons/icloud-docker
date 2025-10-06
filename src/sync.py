@@ -168,8 +168,9 @@ def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval:
         DriveStats object if sync was performed, None otherwise
     """
     if config and "drive" in config and sync_state.enable_sync_drive:
-        from src.sync_stats import DriveStats
         import time
+
+        from src.sync_stats import DriveStats
 
         start_time = time.time()
         stats = DriveStats()
@@ -232,8 +233,9 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         PhotoStats object if sync was performed, None otherwise
     """
     if config and "photos" in config and sync_state.enable_sync_photos:
-        from src.sync_stats import PhotoStats
         import time
+
+        from src.sync_stats import PhotoStats
 
         start_time = time.time()
         stats = PhotoStats()
