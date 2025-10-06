@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Demo script to show sync summary notification functionality.
 
@@ -8,11 +7,11 @@ This script demonstrates how the sync summary feature works by:
 3. Showing what notifications would look like
 """
 
-import sys
 import os
+import sys
 
 # Add src directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "src"))
 
 from sync_stats import DriveStats, PhotoStats, SyncSummary, format_bytes, format_duration
 
@@ -97,7 +96,7 @@ def demo_successful_sync():
     print("=" * 80)
     print("DEMO: Successful Sync with Drive and Photos")
     print("=" * 80)
-    
+
     # Create drive statistics
     drive_stats = DriveStats(
         files_downloaded=15,
@@ -106,7 +105,7 @@ def demo_successful_sync():
         bytes_downloaded=2415919104,  # ~2.3 GB
         duration_seconds=272,  # 4m 32s
     )
-    
+
     # Create photo statistics
     photo_stats = PhotoStats(
         photos_downloaded=42,
@@ -116,16 +115,16 @@ def demo_successful_sync():
         albums_synced=["All Photos", "Favorites", "Family"],
         duration_seconds=135,  # 2m 15s
     )
-    
+
     # Create summary
     summary = SyncSummary(
         drive_stats=drive_stats,
         photo_stats=photo_stats,
     )
-    
+
     # Format message
     message, subject = format_sync_summary_message(summary)
-    
+
     print(f"\nSubject: {subject}\n")
     print(message)
     print()
@@ -136,7 +135,7 @@ def demo_sync_with_errors():
     print("=" * 80)
     print("DEMO: Sync with Errors")
     print("=" * 80)
-    
+
     # Create drive statistics with errors
     drive_stats = DriveStats(
         files_downloaded=3,
@@ -147,7 +146,7 @@ def demo_sync_with_errors():
             "/Documents/Large_File.zip (connection reset)",
         ],
     )
-    
+
     # Create photo statistics with errors
     photo_stats = PhotoStats(
         photos_downloaded=10,
@@ -155,16 +154,16 @@ def demo_sync_with_errors():
         duration_seconds=45,
         errors=["/Photos/IMG_1234.heic (File not found)"],
     )
-    
+
     # Create summary
     summary = SyncSummary(
         drive_stats=drive_stats,
         photo_stats=photo_stats,
     )
-    
+
     # Format message
     message, subject = format_sync_summary_message(summary)
-    
+
     print(f"\nSubject: {subject}\n")
     print(message)
     print()
@@ -175,7 +174,7 @@ def demo_drive_only_sync():
     print("=" * 80)
     print("DEMO: Drive-Only Sync")
     print("=" * 80)
-    
+
     # Create drive statistics only
     drive_stats = DriveStats(
         files_downloaded=8,
@@ -183,13 +182,13 @@ def demo_drive_only_sync():
         bytes_downloaded=524288000,  # ~500 MB
         duration_seconds=120,  # 2m
     )
-    
+
     # Create summary
     summary = SyncSummary(drive_stats=drive_stats)
-    
+
     # Format message
     message, subject = format_sync_summary_message(summary)
-    
+
     print(f"\nSubject: {subject}\n")
     print(message)
     print()
@@ -200,7 +199,7 @@ def demo_photos_only_sync_with_hardlinks():
     print("=" * 80)
     print("DEMO: Photos-Only Sync with Hard Links")
     print("=" * 80)
-    
+
     # Create photo statistics with heavy hardlink usage
     photo_stats = PhotoStats(
         photos_downloaded=20,
@@ -210,13 +209,13 @@ def demo_photos_only_sync_with_hardlinks():
         albums_synced=["All Photos", "Favorites", "Family", "Vacation 2023", "Work", "Friends"],
         duration_seconds=180,  # 3m
     )
-    
+
     # Create summary
     summary = SyncSummary(photo_stats=photo_stats)
-    
+
     # Format message
     message, subject = format_sync_summary_message(summary)
-    
+
     print(f"\nSubject: {subject}\n")
     print(message)
     print()
@@ -227,13 +226,13 @@ def demo_formatting_functions():
     print("=" * 80)
     print("DEMO: Formatting Utility Functions")
     print("=" * 80)
-    
+
     print("\nByte Formatting:")
     print(f"  500 bytes = {format_bytes(500)}")
     print(f"  1.5 KB = {format_bytes(1536)}")
     print(f"  2.3 GB = {format_bytes(2415919104)}")
     print(f"  5.4 GB = {format_bytes(5798205849)}")
-    
+
     print("\nDuration Formatting:")
     print(f"  30 seconds = {format_duration(30)}")
     print(f"  90 seconds = {format_duration(90)}")
@@ -246,13 +245,13 @@ if __name__ == "__main__":
     print("\n" + "=" * 80)
     print("iCloud-Docker Sync Summary Notification Demo")
     print("=" * 80 + "\n")
-    
+
     demo_successful_sync()
     demo_sync_with_errors()
     demo_drive_only_sync()
     demo_photos_only_sync_with_hardlinks()
     demo_formatting_functions()
-    
+
     print("=" * 80)
     print("Demo Complete!")
     print("=" * 80)
