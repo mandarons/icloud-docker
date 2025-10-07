@@ -2,6 +2,7 @@
 
 import datetime
 import unittest
+from email import message_from_string
 from unittest.mock import patch
 
 from src import config_parser, notify
@@ -66,13 +67,37 @@ class TestNotify(unittest.TestCase):
             message=message,
         )
         self.assertEqual(msg.to, self.config["app"]["smtp"]["to"])
+        self.assertIsNotNone(msg.sender)
+        assert msg.sender is not None
         self.assertIn(self.config["app"]["smtp"]["email"], msg.sender)
         self.assertIn(subject, msg.subject)
+        self.assertIsNotNone(msg.body)
+        assert msg.body is not None
         self.assertIn(
             message,
             msg.body,
         )
         self.assertIsInstance(msg, Message)
+
+    def test_build_message_with_unicode(self):
+        """Unicode content should automatically switch email charset to UTF-8."""
+        subject = "Sync ✅"
+        message = "✅ Sync completed"
+
+        msg = notify.build_message(
+            email=self.config["app"]["smtp"]["email"],
+            to_email=self.config["app"]["smtp"]["to"],
+            subject=subject,
+            message=message,
+        )
+
+        self.assertEqual(msg.charset, "utf-8")
+        self.assertEqual(msg.body, message)
+
+    def test_contains_non_ascii_handles_none(self):
+        """Helper should treat None as ASCII safe."""
+
+        self.assertFalse(notify._contains_non_ascii(None))  # noqa: SLF001
 
     def test_send(self):
         """Test for email send."""
@@ -106,6 +131,59 @@ class TestNotify(unittest.TestCase):
                 "Subject: icloud-docker: Two step authentication is required",
                 instance.sendmail.mock_calls[0][2]["msg"],
             )
+
+    def test_send_email_no_throttle_handles_unicode(self):
+        """Ensure UTF-8 emails send successfully when body contains emojis."""
+
+        class DummySMTP:
+            def __init__(self) -> None:
+                self.sent_messages = []
+
+            def sendmail(self, from_addr, to_addrs, msg):  # noqa: ANN001
+                self.sent_messages.append((from_addr, to_addrs, msg))
+
+            def quit(self) -> None:
+                return None
+
+        dummy_smtp = DummySMTP()
+
+        with (
+            patch("src.notify._get_smtp_config") as mock_get_config,
+            patch("src.notify._create_smtp_connection", return_value=dummy_smtp),
+            patch("src.notify._authenticate_smtp") as mock_auth,
+        ):
+            mock_get_config.return_value = (
+                self.config["app"]["smtp"]["email"],
+                self.config["app"]["smtp"]["to"],
+                "smtp.test.com",
+                587,
+                False,
+                None,
+                "password",
+                True,
+            )
+
+            result = notify._send_email_no_throttle(  # noqa: SLF001
+                self.config,
+                "✅ Sync completed",
+                "Sync ✅",
+                dry_run=False,
+            )
+
+        self.assertTrue(result)
+        mock_auth.assert_called_once()
+        self.assertEqual(len(dummy_smtp.sent_messages), 1)
+
+        sent_message = dummy_smtp.sent_messages[0][2]
+        parsed = message_from_string(sent_message)
+        payload_raw = parsed.get_payload(decode=True)
+        self.assertIsInstance(payload_raw, (bytes, bytearray))
+        payload_bytes = bytes(payload_raw)
+        charset = parsed.get_content_charset() or "utf-8"
+        payload = payload_bytes.decode(charset)
+
+        self.assertIn("✅", payload)
+        self.assertEqual(parsed.get_content_charset(), "utf-8")
 
     def test_send_with_username(self):
         """Test for email send."""
@@ -432,7 +510,10 @@ class TestNotify(unittest.TestCase):
 
         summary = SyncSummary(
             drive_stats=DriveStats(
-                files_downloaded=15, files_skipped=234, bytes_downloaded=2415919104, duration_seconds=272,
+                files_downloaded=15,
+                files_skipped=234,
+                bytes_downloaded=2415919104,
+                duration_seconds=272,
             ),
             photo_stats=PhotoStats(
                 photos_downloaded=42,
@@ -467,7 +548,8 @@ class TestNotify(unittest.TestCase):
 
         summary = SyncSummary(
             drive_stats=DriveStats(
-                files_downloaded=3, errors=["/path/file1.txt (timeout)", "/path/file2.pdf (API error)"],
+                files_downloaded=3,
+                errors=["/path/file1.txt (timeout)", "/path/file2.pdf (API error)"],
             ),
         )
 
