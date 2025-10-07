@@ -409,6 +409,19 @@ def _send_email_message(smtp: smtplib.SMTP, email: str, to_email: str, message_o
     smtp.sendmail(from_addr=email, to_addrs=to_email, msg=message_obj.as_string())
 
 
+def _contains_non_ascii(text: Optional[str]) -> bool:
+    """Determine if the provided text contains non-ASCII characters."""
+
+    if text is None:
+        return False
+
+    try:
+        text.encode("ascii")
+    except UnicodeEncodeError:
+        return True
+    return False
+
+
 def build_message(email: str, to_email: str, message: str, subject: str) -> Message:
     """
     Create email message with proper headers.
@@ -422,7 +435,10 @@ def build_message(email: str, to_email: str, message: str, subject: str) -> Mess
     Returns:
         Configured email message object
     """
-    msg = Message(to=to_email)
+    requires_utf8 = _contains_non_ascii(message) or _contains_non_ascii(subject)
+    charset = "utf-8" if requires_utf8 else "us-ascii"
+
+    msg = Message(to=to_email, charset=charset)
     msg.sender = "icloud-docker <" + email + ">"
     msg.date = datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
     msg.subject = subject
@@ -691,4 +707,3 @@ def _send_email_no_throttle(config, message: str, subject: str, dry_run: bool) -
     except Exception as e:
         LOGGER.error(f"Failed to send sync summary email: {e!s}")
         return False
-
