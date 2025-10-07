@@ -500,6 +500,7 @@ class TestNotify(unittest.TestCase):
 
         # Check message truncates albums list
         self.assertIn("Album1, Album2, Album3, Album4, Album5 (+2 more)", message)
+    def test_send_telegram_no_throttle_success(self):
         """Test _send_telegram_no_throttle with successful send."""
         from src.notify import _send_telegram_no_throttle
 
