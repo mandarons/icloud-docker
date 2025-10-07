@@ -77,10 +77,12 @@ class TestNotify(unittest.TestCase):
     def test_send(self):
         """Test for email send."""
         username = "username@icloud.com"
-        with patch("smtplib.SMTP") as smtp, \
-             patch("src.notify.post_message_to_telegram"), \
-             patch("src.notify.post_message_to_discord"), \
-             patch("src.notify.post_message_to_pushover"):
+        with (
+            patch("smtplib.SMTP") as smtp,
+            patch("src.notify.post_message_to_telegram"),
+            patch("src.notify.post_message_to_discord"),
+            patch("src.notify.post_message_to_pushover"),
+        ):
             notify.send(self.config, username=username)
 
             instance = smtp.return_value
@@ -108,10 +110,12 @@ class TestNotify(unittest.TestCase):
     def test_send_with_username(self):
         """Test for email send."""
         username = "username@icloud.com"
-        with patch("smtplib.SMTP") as smtp, \
-             patch("src.notify.post_message_to_telegram"), \
-             patch("src.notify.post_message_to_discord"), \
-             patch("src.notify.post_message_to_pushover"):
+        with (
+            patch("smtplib.SMTP") as smtp,
+            patch("src.notify.post_message_to_telegram"),
+            patch("src.notify.post_message_to_discord"),
+            patch("src.notify.post_message_to_pushover"),
+        ):
             self.config["app"]["smtp"]["username"] = "smtp-username"
             notify.send(self.config, username)
 
@@ -141,10 +145,12 @@ class TestNotify(unittest.TestCase):
     def test_send_with_region(self):
         """Test for email send with region."""
         username = "username@icloud.com"
-        with patch("smtplib.SMTP") as smtp, \
-             patch("src.notify.post_message_to_telegram"), \
-             patch("src.notify.post_message_to_discord"), \
-             patch("src.notify.post_message_to_pushover"):
+        with (
+            patch("smtplib.SMTP") as smtp,
+            patch("src.notify.post_message_to_telegram"),
+            patch("src.notify.post_message_to_discord"),
+            patch("src.notify.post_message_to_pushover"),
+        ):
             notify.send(self.config, username, region="some_region")
 
             instance = smtp.return_value
@@ -153,10 +159,12 @@ class TestNotify(unittest.TestCase):
     def test_send_fail(self):
         """Test for failed send."""
         username = "username@icloud.com"
-        with patch("smtplib.SMTP") as smtp, \
-             patch("src.notify.post_message_to_telegram") as telegram_mock, \
-             patch("src.notify.post_message_to_discord") as discord_mock, \
-             patch("src.notify.post_message_to_pushover") as pushover_mock:
+        with (
+            patch("smtplib.SMTP") as smtp,
+            patch("src.notify.post_message_to_telegram") as telegram_mock,
+            patch("src.notify.post_message_to_discord") as discord_mock,
+            patch("src.notify.post_message_to_pushover") as pushover_mock,
+        ):
             smtp.side_effect = Exception
             # Make all notification methods return False (failure)
             telegram_mock.return_value = False
@@ -423,7 +431,9 @@ class TestNotify(unittest.TestCase):
         from src.sync_stats import DriveStats, PhotoStats, SyncSummary
 
         summary = SyncSummary(
-            drive_stats=DriveStats(files_downloaded=15, files_skipped=234, bytes_downloaded=2415919104, duration_seconds=272),
+            drive_stats=DriveStats(
+                files_downloaded=15, files_skipped=234, bytes_downloaded=2415919104, duration_seconds=272,
+            ),
             photo_stats=PhotoStats(
                 photos_downloaded=42,
                 photos_hardlinked=128,
@@ -456,7 +466,9 @@ class TestNotify(unittest.TestCase):
         from src.sync_stats import DriveStats, SyncSummary
 
         summary = SyncSummary(
-            drive_stats=DriveStats(files_downloaded=3, errors=["/path/file1.txt (timeout)", "/path/file2.pdf (API error)"]),
+            drive_stats=DriveStats(
+                files_downloaded=3, errors=["/path/file1.txt (timeout)", "/path/file2.pdf (API error)"],
+            ),
         )
 
         message, subject = _format_sync_summary_message(summary)
@@ -502,7 +514,6 @@ class TestNotify(unittest.TestCase):
         self.assertIn("Album1, Album2, Album3, Album4, Album5 (+2 more)", message)
 
     def test_send_telegram_no_throttle_successful_send(self):
-    def test_send_telegram_no_throttle_success(self):
         """Test _send_telegram_no_throttle with successful send."""
         from src.notify import _send_telegram_no_throttle
 
