@@ -42,6 +42,31 @@ configure_icloudpy_logging()
 
 LOGGER = get_logger()
 
+# Cache for config values to prevent repeated warnings
+_config_warning_cache = set()
+
+
+def _log_config_warning_once(config_path: list, message: str) -> None:
+    """Log a configuration warning only once for the given config path.
+
+    Args:
+        config_path: Configuration path as list
+        message: Warning message to log
+    """
+    config_path_key = config_path_to_string(config_path)
+    if config_path_key not in _config_warning_cache:
+        _config_warning_cache.add(config_path_key)
+        log_config_not_found_warning(config_path, message)
+
+
+def clear_config_warning_cache() -> None:
+    """Clear the configuration warning cache.
+
+    This function is primarily intended for testing purposes to ensure
+    clean test isolation.
+    """
+    _config_warning_cache.clear()
+
 
 # =============================================================================
 # String Processing Functions
@@ -368,7 +393,7 @@ def get_drive_remove_obsolete(config: dict) -> bool:
     drive_remove_obsolete = get_config_value_or_default(config=config, config_path=config_path, default=False)
 
     if not drive_remove_obsolete:
-        log_config_not_found_warning(
+        _log_config_warning_once(
             config_path,
             "remove_obsolete is not found. Not removing the obsolete files and folders.",
         )
@@ -460,24 +485,24 @@ def get_photos_use_hardlinks(config: dict) -> bool:
 
 
 def get_photos_remove_obsolete(config: dict) -> bool:
-    """Return remove obsolete flag for photos from config.
+    """Return photos remove obsolete flag from config.
 
     Args:
         config: Configuration dictionary
 
     Returns:
-        True if obsolete photos should be removed, False otherwise
+        True if obsolete files should be removed, False otherwise
     """
     config_path = ["photos", "remove_obsolete"]
     photos_remove_obsolete = get_config_value_or_default(config=config, config_path=config_path, default=False)
 
     if not photos_remove_obsolete:
-        log_config_not_found_warning(
+        _log_config_warning_once(
             config_path,
-            "remove_obsolete is not found. Not removing the obsolete photos.",
+            "remove_obsolete is not found. Not removing the obsolete files and folders.",
         )
     else:
-        log_config_debug(f"{'R' if photos_remove_obsolete else 'Not R'}emoving obsolete photos ...")
+        log_config_debug(f"{'R' if photos_remove_obsolete else 'Not R'}emoving obsolete files and folders ...")
 
     return photos_remove_obsolete
 
