@@ -1,0 +1,9 @@
+DEBUG    icloudpy.base:base.py:240 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:247 Session file does not exist
+DEBUG    icloudpy.base:base.py:313 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:417 Authentication completed successfully
+DEBUG    root:config_logging.py:44 Checking root destination ...
+INFO     root:config_logging.py:35 Syncing drive every -1 seconds.
+INFO     root:config_logging.py:35 Syncing photos every -1 seconds.
+INFO     root:sync.py:449 Resyncing at Wed Oct  8 21:40:04 2025 ...
+INFO     root:sync.py:567 All configured sync intervals are negative, exiting oneshot mode...

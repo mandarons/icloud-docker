@@ -1,0 +1,6 @@
+[38;21m2025-10-08 21:40:08,497 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-08 21:40:08,497 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-08 21:40:08,498 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-08 21:40:08,506 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;5;39m2025-10-08 21:40:08,507 :: INFO :: root :: photo_file_utils.py :: 81 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos ...[0m
+[38;5;196m2025-10-08 21:40:08,507 :: ERROR :: root :: photo_file_utils.py :: 92 :: Failed to download /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos: ICloudPyAPIResponseException.__init__() missing 1 required positional argument: 'reason'[0m
