@@ -687,6 +687,20 @@ class TestConfigParser(unittest.TestCase):
         config["app"]["notifications"] = {"sync_summary": {"min_downloads": 0}}
         self.assertEqual(config_parser.get_sync_summary_min_downloads(config=config), 0)
 
+    def test_get_sync_summary_min_downloads_none(self):
+        """Test for getting sync summary min_downloads when set to None."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["notifications"] = {"sync_summary": {"min_downloads": None}}
+        self.assertEqual(config_parser.get_sync_summary_min_downloads(config=config), 1)
+
+    def test_get_sync_summary_min_downloads_missing_path(self):
+        """Test for getting sync summary min_downloads when path doesn't exist."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        # Remove notifications section entirely to test missing path
+        if "notifications" in config.get("app", {}):
+            del config["app"]["notifications"]
+        self.assertEqual(config_parser.get_sync_summary_min_downloads(config=config), 1)
+
     def test_warning_cache_drive_remove_obsolete(self):
         """Test that warning cache prevents repeated warnings for drive remove_obsolete."""
         with self.assertLogs(level="WARNING") as log_context:

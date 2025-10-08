@@ -11,6 +11,12 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "./icloud"
+  notifications:
+    sync_summary:
+      enabled: false
+      on_success: true
+      on_error: true
+      min_downloads: 10
   smtp:
   # If you want to recieve email notifications about expired/missing 2FA credentials then uncomment
   # email: sender@test.com

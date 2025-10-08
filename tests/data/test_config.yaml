@@ -11,6 +11,12 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "./icloud"
+  notifications:
+    sync_summary:
+      # enabled: false (commented out to test default behavior)
+      on_success: true
+      on_error: true
+      min_downloads: 1
   discord:
   # webhook_url: <server webhook>
   # username: icloud-docker
