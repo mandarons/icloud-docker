@@ -103,6 +103,18 @@ app:
   # integer: specific number of threads (max 16)
   # max_threads: auto
   # max_threads: 4
+  notifications:
+    # Sync summary notifications - sent after each sync cycle with statistics
+    sync_summary:
+      # Enable/disable sync summary notifications (default: false)
+      enabled: false
+      # Send notifications on successful syncs (default: true when enabled)
+      on_success: true
+      # Send notifications when errors occur during sync (default: true when enabled)
+      on_error: true
+      # Minimum number of downloads required to send notification (default: 1)
+      # Set to 0 to always send notifications regardless of download count
+      min_downloads: 1
 drive:
   destination: "drive"
   # Remove local files that are not present on server (i.e. files delete on server)
@@ -200,6 +212,106 @@ photos:
 **Storage Impact Example:**
 - **Without hard links**: Same photo in 3 albums = 3 separate files (3× storage usage)
 - **With hard links**: Same photo in 3 albums = 1 file + 2 hard links (1× storage usage)
+
+## Notifications
+
+iCloud-docker supports multiple notification channels to keep you informed about sync operations and authentication status.
+
+### 2FA Authentication Alerts
+
+Automatic notifications are sent when your iCloud authentication expires and 2FA is required:
+- **Rate Limited**: Notifications are throttled to once per 24 hours per service to prevent spam
+- **Multi-Channel**: Sent to all configured notification services simultaneously
+- **Critical Priority**: Ensures you're promptly notified when manual authentication is needed
+
+### Sync Summary Notifications
+
+Get detailed reports after each sync cycle with comprehensive statistics:
+
+**Features:**
+- **Comprehensive Statistics**: Download counts, error summaries, sync duration, and storage estimates
+- **Configurable Triggers**: Send on success, errors, or both
+- **Smart Filtering**: Set minimum download thresholds to reduce noise
+- **Multi-Service Support**: Works with Discord, Telegram, Pushover, and Email
+- **No Rate Limiting**: Unlike 2FA alerts, sync summaries are sent for every qualifying sync
+
+**Configuration Options:**
+```yaml
+app:
+  notifications:
+    sync_summary:
+      enabled: true           # Enable sync summary notifications
+      on_success: true        # Send on successful syncs (default: true)
+      on_error: true         # Send when errors occur (default: true)
+      min_downloads: 5       # Minimum downloads to trigger notification (default: 1)
+```
+
+**Example Notification Content:**
+```
+🔄 iCloud Sync Summary
+
+📊 Statistics:
+• Drive: 15 files downloaded, 2.3 GB
+• Photos: 8 photos downloaded, 450 MB
+• Total Duration: 3m 42s
+• Hardlinks Created: 3 (saved 120 MB)
+
+✅ Status: Completed successfully
+⏰ Next sync: Drive in 4m 18s, Photos in 6m 58s
+```
+
+### Supported Notification Services
+
+**Discord**
+- Uses webhook URLs for reliable delivery
+- Supports rich formatting and emojis
+- Ideal for server/team notifications
+
+**Telegram**
+- Requires bot token and chat ID
+- Supports both private messages and group chats
+- Excellent mobile notification support
+
+**Pushover**
+- Dedicated mobile notification service
+- Supports priority levels and custom sounds
+- Great for personal alerts
+
+**Email (SMTP)**
+- Supports TLS and non-TLS configurations
+- UTF-8 support for international characters
+- Automatic charset detection for rich content
+- Configurable sender and recipient addresses
+
+### Configuration Examples
+
+**Multiple Services Setup:**
+```yaml
+app:
+  discord:
+    webhook_url: "https://discord.com/api/webhooks/..."
+    username: "icloud-sync"
+  telegram:
+    bot_token: "1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+    chat_id: "123456789"
+  pushover:
+    user_key: "your-user-key"
+    api_token: "your-app-token"
+  smtp:
+    email: "icloud-sync@yourdomain.com"
+    to: "admin@yourdomain.com"
+    password: "your-app-password"
+    host: "smtp.gmail.com"
+    port: 587
+```
+
+**Notification Best Practices:**
+- **Test Configuration**: Use a sync with few files to verify notifications work
+- **Threshold Tuning**: Set `min_downloads` based on your typical sync patterns
+- **Error Monitoring**: Keep `on_error: true` to catch sync issues early
+- **Service Redundancy**: Configure multiple services for important notifications
+
+For detailed notification setup instructions, troubleshooting, and advanced configuration examples, see [NOTIFICATION_CONFIG.md](NOTIFICATION_CONFIG.md).
 
 ## Setup Guides
 

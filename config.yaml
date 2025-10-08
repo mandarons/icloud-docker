@@ -16,6 +16,18 @@ app:
   # integer: specific number of threads (max 16)
   # max_threads: auto
   # max_threads: 4
+  notifications:
+    # Sync summary notifications - sent after each sync cycle with statistics
+    sync_summary:
+      # Enable/disable sync summary notifications (default: false)
+      enabled: false
+      # Send notifications on successful syncs (default: true when enabled)
+      on_success: true
+      # Send notifications when errors occur during sync (default: true when enabled)
+      on_error: true
+      # Minimum number of downloads required to send notification (default: 1)
+      # Set to 0 to always send notifications regardless of download count
+      min_downloads: 1
   discord:
   # webhook_url: <your server webhook URL here>
   # username: icloud-docker #or any other name you prefer
