@@ -8,7 +8,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 import unicodedata
-from typing import Any, Optional
+from typing import Any
 
 from src import configure_icloudpy_logging, get_logger
 from src.drive_filtering import wanted_folder
@@ -22,10 +22,10 @@ LOGGER = get_logger()
 def process_folder(
     item: Any,
     destination_path: str,
-    filters: Optional[list[str]],
-    ignore: Optional[list[str]],
+    filters: list[str] | None,
+    ignore: list[str] | None,
     root: str,
-) -> Optional[str]:
+) -> str | None:
     """Process a folder item by creating the local directory if wanted.
 
     Args:

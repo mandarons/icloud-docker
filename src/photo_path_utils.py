@@ -18,7 +18,6 @@ ___author___ = "Mandar Patil <mandarons@pm.me>"
 import base64
 import os
 import unicodedata
-from typing import Optional
 
 from src import get_logger
 
@@ -69,7 +68,7 @@ def generate_photo_filename_with_metadata(photo, file_size: str) -> str:
         return f"{'__'.join([name, file_size, photo_id_encoded])}.{extension}"
 
 
-def create_folder_path_if_needed(destination_path: str, folder_format: Optional[str], photo) -> str:
+def create_folder_path_if_needed(destination_path: str, folder_format: str | None, photo) -> str:
     """Create folder path based on folder format and photo creation date.
 
     Args:

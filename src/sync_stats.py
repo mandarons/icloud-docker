@@ -2,7 +2,6 @@
 
 import datetime
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass
@@ -79,10 +78,10 @@ class SyncSummary:
     timing information for the overall sync operation.
     """
 
-    drive_stats: Optional[DriveStats] = None
-    photo_stats: Optional[PhotoStats] = None
+    drive_stats: DriveStats | None = None
+    photo_stats: PhotoStats | None = None
     sync_start_time: datetime.datetime = field(default_factory=datetime.datetime.now)
-    sync_end_time: Optional[datetime.datetime] = None
+    sync_end_time: datetime.datetime | None = None
 
     def has_activity(self) -> bool:
         """Check if there was any sync activity overall.

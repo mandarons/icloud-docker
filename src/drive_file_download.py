@@ -8,7 +8,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 import time
-from typing import Any, Optional
+from typing import Any
 
 from icloudpy import exceptions
 
@@ -21,7 +21,7 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
-def download_file(item: Any, local_file: str) -> Optional[str]:
+def download_file(item: Any, local_file: str) -> str | None:
     """Download a file from iCloud to local filesystem.
 
     This function handles the actual download of files from iCloud, including

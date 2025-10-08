@@ -6,7 +6,7 @@ separated from business logic to follow Single Responsibility Principle.
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
-from typing import Any, Optional
+from typing import Any
 
 
 def config_path_to_string(config_path: list[str]) -> str:
@@ -62,7 +62,7 @@ def get_config_value(config: dict, config_path: list[str]) -> Any:
     return get_config_value(config=config[config_path[0]], config_path=config_path[1:])
 
 
-def get_config_value_or_none(config: dict, config_path: list[str]) -> Optional[Any]:
+def get_config_value_or_none(config: dict, config_path: list[str]) -> Any | None:
     """Safely retrieve config value or return None if path doesn't exist.
 
     Combines path validation and value retrieval for cases where None is acceptable.

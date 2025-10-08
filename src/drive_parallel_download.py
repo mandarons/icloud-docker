@@ -11,7 +11,7 @@ import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
-from typing import Any, Optional
+from typing import Any
 
 from src import configure_icloudpy_logging, get_logger
 from src.drive_file_download import download_file
@@ -30,10 +30,10 @@ files_lock = Lock()
 def collect_file_for_download(
     item: Any,
     destination_path: str,
-    filters: Optional[list[str]],
-    ignore: Optional[list[str]],
+    filters: list[str] | None,
+    ignore: list[str] | None,
     files: set[str],
-) -> Optional[dict[str, Any]]:
+) -> dict[str, Any] | None:
     """Collect file information for parallel download without immediately downloading.
 
     Args:

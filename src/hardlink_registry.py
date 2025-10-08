@@ -6,7 +6,6 @@ during photo synchronization to avoid duplicate downloads.
 
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
-from typing import Optional
 
 from src import get_logger
 
@@ -24,7 +23,7 @@ class HardlinkRegistry:
         """Initialize hardlink registry."""
         self._registry: dict[str, str] = {}
 
-    def get_existing_path(self, photo_id: str, file_size: str) -> Optional[str]:
+    def get_existing_path(self, photo_id: str, file_size: str) -> str | None:
         """Get existing path for photo if it was already downloaded.
 
         Args:
@@ -61,7 +60,7 @@ class HardlinkRegistry:
         self._registry.clear()
 
 
-def create_hardlink_registry(use_hardlinks: bool) -> Optional[HardlinkRegistry]:
+def create_hardlink_registry(use_hardlinks: bool) -> HardlinkRegistry | None:
     """Create hardlink registry if hardlinks are enabled.
 
     Args:
