@@ -6,14 +6,13 @@ during photo synchronization.
 
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
-from typing import Optional
 
 from src import get_logger
 
 LOGGER = get_logger()
 
 
-def is_photo_wanted(photo, extensions: Optional[list[str]]) -> bool:
+def is_photo_wanted(photo, extensions: list[str] | None) -> bool:
     """Check if photo is wanted based on extension filters.
 
     Args:

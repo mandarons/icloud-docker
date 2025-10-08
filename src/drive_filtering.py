@@ -9,7 +9,6 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import os
 import re
 from pathlib import Path, PurePath
-from typing import Optional
 
 from src import configure_icloudpy_logging, get_logger
 
@@ -19,7 +18,7 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
-def wanted_file(filters: Optional[list[str]], ignore: Optional[list[str]], file_path: str) -> bool:
+def wanted_file(filters: list[str] | None, ignore: list[str] | None, file_path: str) -> bool:
     """Check if a file should be synced based on filters and ignore patterns.
 
     Args:
@@ -49,8 +48,8 @@ def wanted_file(filters: Optional[list[str]], ignore: Optional[list[str]], file_
 
 
 def wanted_folder(
-    filters: Optional[list[str]],
-    ignore: Optional[list[str]],
+    filters: list[str] | None,
+    ignore: list[str] | None,
     root: str,
     folder_path: str,
 ) -> bool:
@@ -82,8 +81,8 @@ def wanted_folder(
 
 
 def wanted_parent_folder(
-    filters: Optional[list[str]],
-    ignore: Optional[list[str]],
+    filters: list[str] | None,
+    ignore: list[str] | None,
     root: str,
     folder_path: str,
 ) -> bool:

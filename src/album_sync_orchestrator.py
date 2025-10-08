@@ -7,7 +7,6 @@ that coordinates photo filtering, download collection, and parallel execution.
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
 import os
-from typing import Optional
 
 from src import get_logger
 from src.hardlink_registry import HardlinkRegistry
@@ -25,12 +24,12 @@ def sync_album_photos(
     album,
     destination_path: str,
     file_sizes: list[str],
-    extensions: Optional[list[str]] = None,
-    files: Optional[set[str]] = None,
-    folder_format: Optional[str] = None,
-    hardlink_registry: Optional[HardlinkRegistry] = None,
+    extensions: list[str] | None = None,
+    files: set[str] | None = None,
+    folder_format: str | None = None,
+    hardlink_registry: HardlinkRegistry | None = None,
     config=None,
-) -> Optional[bool]:
+) -> bool | None:
     """Sync photos from given album.
 
     This function orchestrates the synchronization of a single album by:
@@ -94,10 +93,10 @@ def _collect_album_download_tasks(
     album,
     destination_path: str,
     file_sizes: list[str],
-    extensions: Optional[list[str]],
-    files: Optional[set[str]],
-    folder_format: Optional[str],
-    hardlink_registry: Optional[HardlinkRegistry],
+    extensions: list[str] | None,
+    files: set[str] | None,
+    folder_format: str | None,
+    hardlink_registry: HardlinkRegistry | None,
 ) -> list:
     """Collect download tasks for all photos in an album.
 
@@ -138,10 +137,10 @@ def _sync_subalbums(
     album,
     destination_path: str,
     file_sizes: list[str],
-    extensions: Optional[list[str]],
-    files: Optional[set[str]],
-    folder_format: Optional[str],
-    hardlink_registry: Optional[HardlinkRegistry],
+    extensions: list[str] | None,
+    files: set[str] | None,
+    folder_format: str | None,
+    hardlink_registry: HardlinkRegistry | None,
     config,
 ) -> None:
     """Recursively sync all subalbums.

@@ -9,7 +9,6 @@ ___author___ = "Mandar Patil <mandarons@pm.me>"
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
-from typing import Optional
 
 from src import config_parser, get_logger
 from src.hardlink_registry import HardlinkRegistry
@@ -31,8 +30,8 @@ class DownloadTaskInfo:
     """Information about a photo download task."""
 
     def __init__(self, photo, file_size: str, photo_path: str,
-                 hardlink_source: Optional[str] = None,
-                 hardlink_registry: Optional[HardlinkRegistry] = None):
+                 hardlink_source: str | None = None,
+                 hardlink_registry: HardlinkRegistry | None = None):
         """Initialize download task info.
 
         Args:
@@ -62,7 +61,7 @@ def get_max_threads_for_download(config) -> int:
 
 
 def generate_photo_path(photo, file_size: str, destination_path: str,
-                       folder_format: Optional[str]) -> str:
+                       folder_format: str | None) -> str:
     """Generate full file path for photo with legacy file renaming.
 
     This function combines path generation, folder creation, and legacy
@@ -110,8 +109,8 @@ def generate_photo_path(photo, file_size: str, destination_path: str,
 
 
 def collect_download_task(photo, file_size: str, destination_path: str,
-                         files: Optional[set[str]], folder_format: Optional[str],
-                         hardlink_registry: Optional[HardlinkRegistry]) -> Optional[DownloadTaskInfo]:
+                         files: set[str] | None, folder_format: str | None,
+                         hardlink_registry: HardlinkRegistry | None) -> DownloadTaskInfo | None:
     """Collect photo info for parallel download without immediately downloading.
 
     Args:

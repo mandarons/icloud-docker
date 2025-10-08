@@ -2,7 +2,6 @@
 
 import datetime
 import smtplib
-from typing import Optional
 
 import requests
 
@@ -61,7 +60,7 @@ def _get_current_timestamp() -> datetime.datetime:
     return datetime.datetime.now()
 
 
-def _get_telegram_config(config) -> tuple[Optional[str], Optional[str], bool]:
+def _get_telegram_config(config) -> tuple[str | None, str | None, bool]:
     """
     Extract Telegram configuration from config.
 
@@ -131,7 +130,7 @@ def post_message_to_telegram(bot_token: str, chat_id: str, message: str) -> bool
     return False
 
 
-def _get_discord_config(config) -> tuple[Optional[str], Optional[str], bool]:
+def _get_discord_config(config) -> tuple[str | None, str | None, bool]:
     """
     Extract Discord configuration from config.
 
@@ -196,7 +195,7 @@ def notify_discord(config, message, last_send=None, dry_run=False):
     return None
 
 
-def _get_pushover_config(config) -> tuple[Optional[str], Optional[str], bool]:
+def _get_pushover_config(config) -> tuple[str | None, str | None, bool]:
     """
     Extract Pushover configuration from config.
 
@@ -339,7 +338,7 @@ def send(config, username, last_send=None, dry_run=False, region="global"):
 
 def _get_smtp_config(
     config,
-) -> tuple[Optional[str], Optional[str], Optional[str], Optional[int], bool, Optional[str], Optional[str], bool]:
+) -> tuple[str | None, str | None, str | None, int | None, bool, str | None, str | None, bool]:
     """
     Extract SMTP configuration from config.
 
@@ -380,7 +379,7 @@ def _create_smtp_connection(host: str, port: int, no_tls: bool) -> smtplib.SMTP:
     return smtp
 
 
-def _authenticate_smtp(smtp: smtplib.SMTP, email: str, username: Optional[str], password: str) -> None:
+def _authenticate_smtp(smtp: smtplib.SMTP, email: str, username: str | None, password: str) -> None:
     """
     Authenticate SMTP connection.
 
@@ -409,7 +408,7 @@ def _send_email_message(smtp: smtplib.SMTP, email: str, to_email: str, message_o
     smtp.sendmail(from_addr=email, to_addrs=to_email, msg=message_obj.as_string())
 
 
-def _contains_non_ascii(text: Optional[str]) -> bool:
+def _contains_non_ascii(text: str | None) -> bool:
     """Determine if the provided text contains non-ASCII characters."""
 
     if text is None:

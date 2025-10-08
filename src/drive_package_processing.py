@@ -11,7 +11,6 @@ import os
 import unicodedata
 import zipfile
 from shutil import copyfileobj
-from typing import Optional
 
 import magic
 
@@ -23,7 +22,7 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
-def process_package(local_file: str) -> Optional[str]:
+def process_package(local_file: str) -> str | None:
     """Process and extract a downloaded package file.
 
     This function handles different archive types (ZIP, gzip) and extracts them
@@ -77,7 +76,7 @@ def _process_zip_package(local_file: str, archive_file: str) -> str:
     return local_file
 
 
-def _process_gzip_package(local_file: str, archive_file: str) -> Optional[str]:
+def _process_gzip_package(local_file: str, archive_file: str) -> str | None:
     """Process a gzip package file.
 
     Args:

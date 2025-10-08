@@ -8,7 +8,7 @@ and filesystem operations in filesystem_utils.py per SRP.
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import multiprocessing
-from typing import Any, Optional
+from typing import Any
 
 from icloudpy.services.photos import PhotoAsset
 
@@ -73,7 +73,7 @@ def clear_config_warning_cache() -> None:
 # =============================================================================
 
 
-def validate_and_strip_username(username: str, config_path: list[str]) -> Optional[str]:
+def validate_and_strip_username(username: str, config_path: list[str]) -> str | None:
     """Validate and strip username string.
 
     Args:
@@ -95,7 +95,7 @@ def validate_and_strip_username(username: str, config_path: list[str]) -> Option
 # =============================================================================
 
 
-def get_username(config: dict) -> Optional[str]:
+def get_username(config: dict) -> str | None:
     """Get username from config.
 
     Args:
@@ -507,7 +507,7 @@ def get_photos_remove_obsolete(config: dict) -> bool:
     return photos_remove_obsolete
 
 
-def get_photos_folder_format(config: dict) -> Optional[str]:
+def get_photos_folder_format(config: dict) -> str | None:
     """Return filename format or None.
 
     Args:
@@ -555,7 +555,7 @@ def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     return validated_sizes if validated_sizes else ["original"]
 
 
-def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> Optional[list[str]]:
+def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
     """Get libraries filter from photos config.
 
     Args:
@@ -575,7 +575,7 @@ def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> Op
     return libraries
 
 
-def get_photos_albums_filter(config: dict, base_config_path: list[str]) -> Optional[list[str]]:
+def get_photos_albums_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
     """Get albums filter from photos config.
 
     Args:
@@ -615,7 +615,7 @@ def get_photos_file_sizes_filter(config: dict, base_config_path: list[str]) -> l
     return validate_file_sizes(file_sizes)
 
 
-def get_photos_extensions_filter(config: dict, base_config_path: list[str]) -> Optional[list[str]]:
+def get_photos_extensions_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
     """Get extensions filter from photos config.
 
     Args:
@@ -675,7 +675,7 @@ def get_photos_filters(config: dict) -> dict[str, Any]:
 # =============================================================================
 
 
-def get_smtp_config_value(config: dict, key: str, warn_if_missing: bool = True) -> Optional[str]:
+def get_smtp_config_value(config: dict, key: str, warn_if_missing: bool = True) -> str | None:
     """Get SMTP configuration value with optional warning.
 
     Common helper for SMTP config retrieval to reduce duplication.
@@ -697,7 +697,7 @@ def get_smtp_config_value(config: dict, key: str, warn_if_missing: bool = True) 
     return value
 
 
-def get_smtp_email(config: dict) -> Optional[str]:
+def get_smtp_email(config: dict) -> str | None:
     """Return smtp from email from config.
 
     Args:
@@ -709,7 +709,7 @@ def get_smtp_email(config: dict) -> Optional[str]:
     return get_smtp_config_value(config, "email", warn_if_missing=False)
 
 
-def get_smtp_username(config: dict) -> Optional[str]:
+def get_smtp_username(config: dict) -> str | None:
     """Return smtp username from the config, if set.
 
     Args:
@@ -721,7 +721,7 @@ def get_smtp_username(config: dict) -> Optional[str]:
     return get_smtp_config_value(config, "username", warn_if_missing=False)
 
 
-def get_smtp_to_email(config: dict) -> Optional[str]:
+def get_smtp_to_email(config: dict) -> str | None:
     """Return smtp to email from config, defaults to from email.
 
     Args:
@@ -734,7 +734,7 @@ def get_smtp_to_email(config: dict) -> Optional[str]:
     return to_email if to_email else get_smtp_email(config=config)
 
 
-def get_smtp_password(config: dict) -> Optional[str]:
+def get_smtp_password(config: dict) -> str | None:
     """Return smtp password from config.
 
     Args:
@@ -746,7 +746,7 @@ def get_smtp_password(config: dict) -> Optional[str]:
     return get_smtp_config_value(config, "password", warn_if_missing=True)
 
 
-def get_smtp_host(config: dict) -> Optional[str]:
+def get_smtp_host(config: dict) -> str | None:
     """Return smtp host from config.
 
     Args:
@@ -758,7 +758,7 @@ def get_smtp_host(config: dict) -> Optional[str]:
     return get_smtp_config_value(config, "host", warn_if_missing=True)
 
 
-def get_smtp_port(config: dict) -> Optional[int]:
+def get_smtp_port(config: dict) -> int | None:
     """Return smtp port from config.
 
     Args:
@@ -788,7 +788,7 @@ def get_smtp_no_tls(config: dict) -> bool:
 # =============================================================================
 
 
-def get_notification_config_value(config: dict, service: str, key: str) -> Optional[str]:
+def get_notification_config_value(config: dict, service: str, key: str) -> str | None:
     """Get notification service configuration value.
 
     Common helper for notification service config retrieval.
@@ -810,7 +810,7 @@ def get_notification_config_value(config: dict, service: str, key: str) -> Optio
     return value
 
 
-def get_telegram_bot_token(config: dict) -> Optional[str]:
+def get_telegram_bot_token(config: dict) -> str | None:
     """Return telegram bot token from config.
 
     Args:
@@ -822,7 +822,7 @@ def get_telegram_bot_token(config: dict) -> Optional[str]:
     return get_notification_config_value(config, "telegram", "bot_token")
 
 
-def get_telegram_chat_id(config: dict) -> Optional[str]:
+def get_telegram_chat_id(config: dict) -> str | None:
     """Return telegram chat id from config.
 
     Args:
@@ -834,7 +834,7 @@ def get_telegram_chat_id(config: dict) -> Optional[str]:
     return get_notification_config_value(config, "telegram", "chat_id")
 
 
-def get_discord_webhook_url(config: dict) -> Optional[str]:
+def get_discord_webhook_url(config: dict) -> str | None:
     """Return discord webhook_url from config.
 
     Args:
@@ -846,7 +846,7 @@ def get_discord_webhook_url(config: dict) -> Optional[str]:
     return get_notification_config_value(config, "discord", "webhook_url")
 
 
-def get_discord_username(config: dict) -> Optional[str]:
+def get_discord_username(config: dict) -> str | None:
     """Return discord username from config.
 
     Args:
@@ -858,7 +858,7 @@ def get_discord_username(config: dict) -> Optional[str]:
     return get_notification_config_value(config, "discord", "username")
 
 
-def get_pushover_user_key(config: dict) -> Optional[str]:
+def get_pushover_user_key(config: dict) -> str | None:
     """Return Pushover user key from config.
 
     Args:
@@ -870,7 +870,7 @@ def get_pushover_user_key(config: dict) -> Optional[str]:
     return get_notification_config_value(config, "pushover", "user_key")
 
 
-def get_pushover_api_token(config: dict) -> Optional[str]:
+def get_pushover_api_token(config: dict) -> str | None:
     """Return Pushover API token from config.
 
     Args:

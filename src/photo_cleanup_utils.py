@@ -7,14 +7,13 @@ that are no longer on the server.
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
 from pathlib import Path
-from typing import Optional
 
 from src import get_logger
 
 LOGGER = get_logger()
 
 
-def remove_obsolete_files(destination_path: Optional[str], tracked_files: Optional[set[str]]) -> set[str]:
+def remove_obsolete_files(destination_path: str | None, tracked_files: set[str] | None) -> set[str]:
     """Remove local obsolete files that are no longer on server.
 
     Args:

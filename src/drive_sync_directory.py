@@ -7,7 +7,7 @@ orchestrating folder processing, file collection, and parallel downloads per SRP
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import unicodedata
-from typing import Any, Optional
+from typing import Any
 
 from src import configure_icloudpy_logging, get_logger, sync_drive
 from src.drive_cleanup import remove_obsolete
@@ -27,10 +27,10 @@ def sync_directory(
     items: Any,
     root: str,
     top: bool = True,
-    filters: Optional[dict[str, list[str]]] = None,
-    ignore: Optional[list[str]] = None,
+    filters: dict[str, list[str]] | None = None,
+    ignore: list[str] | None = None,
     remove: bool = False,
-    config: Optional[Any] = None,
+    config: Any | None = None,
 ) -> set[str]:
     """Synchronize a directory from iCloud Drive to local filesystem.
 
@@ -99,11 +99,11 @@ def sync_directory(
 def _process_folder_item(
     item: Any,
     destination_path: str,
-    filters: Optional[dict[str, list[str]]],
-    ignore: Optional[list[str]],
+    filters: dict[str, list[str]] | None,
+    ignore: list[str] | None,
     root: str,
     files: set[str],
-    config: Optional[Any],
+    config: Any | None,
 ) -> None:
     """Process a single folder item.
 
@@ -148,8 +148,8 @@ def _process_folder_item(
 def _process_file_item(
     item: Any,
     destination_path: str,
-    filters: Optional[dict[str, list[str]]],
-    ignore: Optional[list[str]],
+    filters: dict[str, list[str]] | None,
+    ignore: list[str] | None,
     root: str,
     files: set[str],
     download_tasks: list[dict[str, Any]],
