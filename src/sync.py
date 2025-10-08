@@ -526,8 +526,23 @@ def sync():
                     summary.sync_end_time = datetime.datetime.now()
 
                     # Send sync summary notification if configured
+                    # Only send notification when both enabled services have synced in this cycle
                     # Gracefully handle notification failures to not break sync
-                    if drive_stats or photos_stats:
+                    has_drive_config = config and "drive" in config
+                    has_photos_config = config and "photos" in config
+
+                    should_send_notification = False
+                    if has_drive_config and has_photos_config:
+                        # Both services configured - send notification only when both have synced
+                        should_send_notification = drive_stats is not None and photos_stats is not None
+                    elif has_drive_config and not has_photos_config:
+                        # Only drive configured - send when drive synced
+                        should_send_notification = drive_stats is not None
+                    elif has_photos_config and not has_drive_config:
+                        # Only photos configured - send when photos synced
+                        should_send_notification = photos_stats is not None
+
+                    if should_send_notification:
                         try:
                             notify.send_sync_summary(config=config, summary=summary)
                         except Exception as e:

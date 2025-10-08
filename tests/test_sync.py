@@ -558,7 +558,7 @@ class TestSync(unittest.TestCase):
         mock_getsize.assert_called()
 
     @patch("src.sync.notify.send_sync_summary", side_effect=RuntimeError("notify failure"))
-    @patch("src.sync._perform_photos_sync", return_value=None)
+    @patch("src.sync._perform_photos_sync")
     @patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1))
     @patch("src.sync._authenticate_and_get_api", return_value=SimpleNamespace(requires_2sa=False))
     @patch("src.sync.read_config")
@@ -569,15 +569,18 @@ class TestSync(unittest.TestCase):
         mock_read_config,
         _mock_auth,
         _mock_drive_sync,
-        _mock_photo_sync,
+        mock_photo_sync,
         mock_notify,
     ):
         """Sync loop should log and continue when summary notification fails."""
+
+        from src.sync_stats import PhotoStats
 
         config = deepcopy(self.config)
         config["drive"]["sync_interval"] = -1
         config["photos"]["sync_interval"] = -1
         mock_read_config.return_value = config
+        mock_photo_sync.return_value = PhotoStats(photos_downloaded=2)
 
         with self.assertLogs(sync.LOGGER, level="DEBUG") as captured_logs:
             sync.sync()
@@ -814,3 +817,30 @@ class TestSync(unittest.TestCase):
         self.assertEqual(len(oneshot_messages), 0)
         # Verify sleep was called (indicating the loop continued)
         mock_sleep.assert_called_once()
+
+    @patch("src.sync.notify.send_sync_summary")
+    @patch("src.sync._perform_photos_sync", return_value=None)
+    @patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1))
+    @patch("src.sync._authenticate_and_get_api", return_value=SimpleNamespace(requires_2sa=False))
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_sync_notification_not_sent_when_both_services_not_synced(
+        self,
+        mock_usage_post,
+        mock_read_config,
+        _mock_auth,
+        _mock_drive_sync,
+        _mock_photo_sync,
+        mock_notify,
+    ):
+        """Notification should not be sent when both services are configured but only one synced."""
+
+        config = deepcopy(self.config)
+        config["drive"]["sync_interval"] = -1
+        config["photos"]["sync_interval"] = -1
+        mock_read_config.return_value = config
+
+        sync.sync()
+
+        # Notification should NOT be called because photos didn't sync (returned None)
+        mock_notify.assert_not_called()
