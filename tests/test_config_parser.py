@@ -687,3 +687,46 @@ class TestConfigParser(unittest.TestCase):
         config["app"]["notifications"] = {"sync_summary": {"min_downloads": 0}}
         self.assertEqual(config_parser.get_sync_summary_min_downloads(config=config), 0)
 
+    def test_warning_cache_drive_remove_obsolete(self):
+        """Test that warning cache prevents repeated warnings for drive remove_obsolete."""
+        with self.assertLogs(level="WARNING") as log_context:
+            config = read_config(config_path=tests.CONFIG_PATH)
+            if "remove_obsolete" in config.get("drive", {}):
+                del config["drive"]["remove_obsolete"]
+
+            # Clear warning cache for clean test
+            config_parser.clear_config_warning_cache()
+
+            # First call should log warning
+            result1 = config_parser.get_drive_remove_obsolete(config=config)
+            # Second call should not log warning (cached)
+            result2 = config_parser.get_drive_remove_obsolete(config=config)
+
+            self.assertFalse(result1)
+            self.assertFalse(result2)
+
+            # Should only have one warning message despite two function calls
+            self.assertEqual(len(log_context.records), 1)
+            self.assertIn("remove_obsolete is not found", log_context.records[0].message)
+
+    def test_warning_cache_photos_remove_obsolete(self):
+        """Test that warning cache prevents repeated warnings for photos remove_obsolete."""
+        with self.assertLogs(level="WARNING") as log_context:
+            config = read_config(config_path=tests.CONFIG_PATH)
+            if "remove_obsolete" in config.get("photos", {}):
+                del config["photos"]["remove_obsolete"]
+
+            # Clear warning cache for clean test
+            config_parser.clear_config_warning_cache()
+
+            # First call should log warning
+            result1 = config_parser.get_photos_remove_obsolete(config=config)
+            # Second call should not log warning (cached)
+            result2 = config_parser.get_photos_remove_obsolete(config=config)
+
+            self.assertFalse(result1)
+            self.assertFalse(result2)
+
+            # Should only have one warning message despite two function calls
+            self.assertEqual(len(log_context.records), 1)
+            self.assertIn("remove_obsolete is not found", log_context.records[0].message)
