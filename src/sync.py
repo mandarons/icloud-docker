@@ -464,10 +464,17 @@ def _calculate_next_sync_schedule(config, sync_state: SyncState):
         sync_state.enable_sync_drive = True
         sync_state.enable_sync_photos = False
     elif has_drive and has_photos and sync_state.drive_time_remaining <= sync_state.photos_time_remaining:
-        sleep_for = sync_state.photos_time_remaining - sync_state.drive_time_remaining
-        sync_state.photos_time_remaining -= sync_state.drive_time_remaining
-        sync_state.enable_sync_drive = True
-        sync_state.enable_sync_photos = False
+        # Special case: if both timers are equal and large (> 10 seconds), wait for the full interval
+        # This fixes the bug where equal large intervals cause immediate re-sync
+        if sync_state.drive_time_remaining == sync_state.photos_time_remaining and sync_state.drive_time_remaining > 10:
+            sleep_for = sync_state.drive_time_remaining
+            sync_state.enable_sync_drive = True
+            sync_state.enable_sync_photos = True
+        else:
+            sleep_for = sync_state.photos_time_remaining - sync_state.drive_time_remaining
+            sync_state.photos_time_remaining -= sync_state.drive_time_remaining
+            sync_state.enable_sync_drive = True
+            sync_state.enable_sync_photos = False
     else:
         sleep_for = sync_state.drive_time_remaining - sync_state.photos_time_remaining
         sync_state.drive_time_remaining -= sync_state.photos_time_remaining

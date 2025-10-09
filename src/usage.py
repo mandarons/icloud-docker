@@ -16,7 +16,7 @@ LOGGER = get_logger()
 CACHE_FILE_NAME = "/config/.data"
 NEW_INSTALLATION_ENDPOINT = os.environ.get("NEW_INSTALLATION_ENDPOINT", None)
 NEW_HEARTBEAT_ENDPOINT = os.environ.get("NEW_HEARTBEAT_ENDPOINT", None)
-APP_NAME = "icloud-drive-docker"
+APP_NAME = "icloud-docker"
 APP_VERSION = os.environ.get("APP_VERSION", "dev")
 NEW_INSTALLATION_DATA = {"appName": APP_NAME, "appVersion": APP_VERSION}
 
@@ -153,10 +153,10 @@ def post_new_installation(data: dict, endpoint=NEW_INSTALLATION_ENDPOINT) -> str
         if response.ok:
             response_data = response.json()
             installation_id = response_data["id"]
-            LOGGER.info(f"Successfully registered new installation: {installation_id}")
+            LOGGER.debug(f"Successfully registered new installation: {installation_id}")
             return installation_id
         else:
-            LOGGER.warning(f"Installation registration failed with status {response.status_code}")
+            LOGGER.debug(f"Installation registration failed with status {response.status_code}")
     except Exception as e:
         LOGGER.error(f"Failed to post new installation: {e}")
     return None
@@ -200,15 +200,15 @@ def install(cached_data: dict) -> dict | None:
     """
     previous_id = cached_data.get("id", None)
     if previous_id:
-        LOGGER.info(f"Upgrading existing installation: {previous_id}")
+        LOGGER.debug(f"Upgrading existing installation: {previous_id}")
     else:
-        LOGGER.info("Installing new instance")
+        LOGGER.debug("Installing new instance")
 
     new_id = record_new_installation(previous_id)
     if new_id:
         cached_data["id"] = new_id
         cached_data["app_version"] = APP_VERSION
-        LOGGER.info(f"Installation completed with ID: {new_id}")
+        LOGGER.debug(f"Installation completed with ID: {new_id}")
         return cached_data
 
     LOGGER.error("Installation failed")
@@ -232,7 +232,7 @@ def post_new_heartbeat(data: dict, endpoint=NEW_HEARTBEAT_ENDPOINT) -> bool:
             LOGGER.debug("Heartbeat sent successfully")
             return True
         else:
-            LOGGER.warning(f"Heartbeat failed with status {response.status_code}")
+            LOGGER.debug(f"Heartbeat failed with status {response.status_code}")
     except Exception as e:
         LOGGER.error(f"Failed to post heartbeat: {e}")
     return False
@@ -328,11 +328,11 @@ def alive(config: dict, data: Any = None) -> bool:
     cached_data = load_cache(cache_file_path)
 
     if not already_installed(cached_data=cached_data):
-        LOGGER.info("New installation detected, registering...")
+        LOGGER.debug("New installation detected, registering...")
         installed_data = install(cached_data=cached_data)
         if installed_data is not None:
             result = save_cache(file_path=cache_file_path, data=installed_data)
-            LOGGER.info("Installation registration completed")
+            LOGGER.debug("Installation registration completed")
             return result
         else:
             LOGGER.error("Installation registration failed")
