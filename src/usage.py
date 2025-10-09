@@ -149,7 +149,7 @@ def post_new_installation(data: dict, endpoint=NEW_INSTALLATION_ENDPOINT) -> str
     """
     try:
         LOGGER.debug(f"Posting new installation to: {endpoint}")
-        response = requests.post(endpoint, json=data, timeout=5000)  # type: ignore[arg-type]
+        response = requests.post(endpoint, json=data, timeout=10)  # type: ignore[arg-type]
         if response.ok:
             response_data = response.json()
             installation_id = response_data["id"]
