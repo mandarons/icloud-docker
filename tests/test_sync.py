@@ -875,3 +875,131 @@ class TestSync(unittest.TestCase):
 
             # Verify that usage statistics were attempted
             mock_send_stats.assert_called()
+
+    def test_calculate_next_sync_schedule_equal_intervals_bug(self):
+        """Test that equal sync intervals don't cause immediate re-sync (regression test)."""
+        config = {
+            "drive": {"sync_interval": 86400},  # 24 hours
+            "photos": {"sync_interval": 86400},  # 24 hours
+        }
+
+        # Simulate state after both services just completed syncing
+        sync_state = sync.SyncState()
+        sync_state.drive_time_remaining = 86400
+        sync_state.photos_time_remaining = 86400
+
+        # Calculate next sync schedule
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        # This should NOT be 0 - that's the bug causing immediate re-sync
+        # When both timers are equal and both services just ran, we should wait
+        self.assertGreater(sleep_for, 0, "Sleep time should not be 0 when both services just completed")
+        self.assertEqual(sleep_for, 86400, "Should wait for the full interval when both services have equal timers")
+
+        # When timers are equal and > 10 seconds, both services should be enabled for next sync
+        self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
+        self.assertTrue(sync_state.enable_sync_photos, "Photos sync should be enabled")
+
+    def test_calculate_next_sync_schedule_drive_first(self):
+        """Test that drive syncs first when its timer is smaller."""
+        config = {
+            "drive": {"sync_interval": 3600},  # 1 hour
+            "photos": {"sync_interval": 7200},  # 2 hours
+        }
+
+        sync_state = sync.SyncState()
+        sync_state.drive_time_remaining = 1800  # 30 min remaining
+        sync_state.photos_time_remaining = 3600  # 1 hour remaining
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        self.assertEqual(sleep_for, 1800, "Should sleep until drive sync time")
+        self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
+        self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled")
+        self.assertEqual(sync_state.photos_time_remaining, 1800, "Photos timer should be reduced")
+
+    def test_calculate_next_sync_schedule_photos_first(self):
+        """Test that photos syncs first when its timer is smaller."""
+        config = {
+            "drive": {"sync_interval": 7200},  # 2 hours
+            "photos": {"sync_interval": 3600},  # 1 hour
+        }
+
+        sync_state = sync.SyncState()
+        sync_state.drive_time_remaining = 3600  # 1 hour remaining
+        sync_state.photos_time_remaining = 1800  # 30 min remaining
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        self.assertEqual(sleep_for, 1800, "Should sleep until photos sync time")
+        self.assertFalse(sync_state.enable_sync_drive, "Drive sync should be disabled")
+        self.assertTrue(sync_state.enable_sync_photos, "Photos sync should be enabled")
+        self.assertEqual(sync_state.drive_time_remaining, 1800, "Drive timer should be reduced")
+
+    def test_calculate_next_sync_schedule_drive_only(self):
+        """Test scheduling when only drive is configured."""
+        config = {
+            "drive": {"sync_interval": 3600},  # 1 hour
+        }
+
+        sync_state = sync.SyncState()
+        sync_state.drive_time_remaining = 1800  # 30 min remaining
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        self.assertEqual(sleep_for, 1800, "Should sleep for drive remaining time")
+        self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
+        self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled")
+
+    def test_calculate_next_sync_schedule_photos_only(self):
+        """Test scheduling when only photos is configured."""
+        config = {
+            "photos": {"sync_interval": 3600},  # 1 hour
+        }
+
+        sync_state = sync.SyncState()
+        sync_state.photos_time_remaining = 1800  # 30 min remaining
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        self.assertEqual(sleep_for, 1800, "Should sleep for photos remaining time")
+        self.assertFalse(sync_state.enable_sync_drive, "Drive sync should be disabled")
+        self.assertTrue(sync_state.enable_sync_photos, "Photos sync should be enabled")
+
+    def test_calculate_next_sync_schedule_equal_zero_timers(self):
+        """Test scheduling when both timers are 0 (initial state)."""
+        config = {
+            "drive": {"sync_interval": 86400},  # 24 hours
+            "photos": {"sync_interval": 86400},  # 24 hours
+        }
+
+        # Simulate initial state where both timers are 0
+        sync_state = sync.SyncState()
+        sync_state.drive_time_remaining = 0
+        sync_state.photos_time_remaining = 0
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        # Should have 0 sleep (immediate sync) but only drive should be enabled
+        self.assertEqual(sleep_for, 0, "Should have immediate sync when both timers are 0")
+        self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
+        self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled for first sync")
+
+    def test_calculate_next_sync_schedule_equal_small_timers(self):
+        """Test scheduling when both timers are equal but small (≤ 10 seconds)."""
+        config = {
+            "drive": {"sync_interval": 5},  # 5 seconds
+            "photos": {"sync_interval": 5},  # 5 seconds
+        }
+
+        # Simulate state where both have small equal timers
+        sync_state = sync.SyncState()
+        sync_state.drive_time_remaining = 5
+        sync_state.photos_time_remaining = 5
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        # Should use original logic for small timers: sleep_for = 0, only drive enabled
+        self.assertEqual(sleep_for, 0, "Should have 0 sleep for small equal timers")
+        self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
+        self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled")
