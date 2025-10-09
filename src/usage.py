@@ -227,7 +227,7 @@ def post_new_heartbeat(data: dict, endpoint=NEW_HEARTBEAT_ENDPOINT) -> bool:
     """
     try:
         LOGGER.debug(f"Posting heartbeat to: {endpoint}")
-        response = requests.post(endpoint, json=data, timeout=5000)  # type: ignore[arg-type]
+        response = requests.post(endpoint, json=data, timeout=20)  # type: ignore[arg-type]
         if response.ok:
             LOGGER.debug("Heartbeat sent successfully")
             return True
