@@ -844,3 +844,34 @@ class TestSync(unittest.TestCase):
 
         # Notification should NOT be called because photos didn't sync (returned None)
         mock_notify.assert_not_called()
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch("src.sync._send_usage_statistics")
+    def test_usage_statistics_exception_handling(self, mock_send_stats, _mock_keyring):
+        """Test that usage statistics exceptions are caught and logged."""
+        config = deepcopy(self.config)
+        config["username"] = data.AUTHENTICATED_USER
+        config["drive"]["sync_interval"] = -1
+        config["photos"]["sync_interval"] = -1
+
+        # Mock _send_usage_statistics to raise an exception
+        mock_send_stats.side_effect = RuntimeError("Network timeout")
+
+        with (
+            patch("src.sync.read_config") as mock_read_config,
+            patch("src.sync._authenticate_and_get_api") as mock_auth,
+            patch("src.sync._perform_drive_sync") as mock_drive,
+            patch("src.sync._perform_photos_sync") as mock_photos,
+            patch("src.sync._should_exit_oneshot_mode") as mock_exit,
+        ):
+            mock_read_config.return_value = config
+            mock_auth.return_value = self.service
+            mock_drive.return_value = DriveStats()
+            mock_photos.return_value = None
+            mock_exit.return_value = True
+
+            # Should not raise exception despite _send_usage_statistics failure
+            sync.sync()
+
+            # Verify that usage statistics were attempted
+            mock_send_stats.assert_called()
