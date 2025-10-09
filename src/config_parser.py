@@ -291,6 +291,31 @@ def get_app_max_threads(config: dict) -> int:
     return parse_max_threads_value(max_threads_config, default_max_threads)
 
 
+def get_usage_tracking_enabled(config: dict) -> bool:
+    """Get usage tracking enabled setting from configuration.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if usage tracking is enabled (default), False if disabled
+    """
+    config_path = ["app", "usage_tracking", "enabled"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        return True  # Default to enabled if not configured
+
+    value = get_config_value(config=config, config_path=config_path)
+    if isinstance(value, bool):
+        return value
+
+    # Handle string values for backwards compatibility
+    if isinstance(value, str):
+        return value.lower() not in ("false", "no", "0", "disabled", "off")
+
+    # Default to enabled for any other type
+    return True
+
+
 # =============================================================================
 # Root Destination Functions
 # =============================================================================

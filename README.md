@@ -313,6 +313,22 @@ app:
 
 For detailed notification setup instructions, troubleshooting, and advanced configuration examples, see [NOTIFICATION_CONFIG.md](NOTIFICATION_CONFIG.md).
 
+## Privacy and Usage Tracking
+
+iCloud-docker collects anonymized usage statistics to help improve the project. This includes application version, sync statistics (file counts, sync duration), and general error indicators. **No personal data, file names, or iCloud credentials are collected.**
+
+### Disable Usage Tracking
+
+To completely opt out of usage tracking, add this to your `config.yaml`:
+
+```yaml
+app:
+  usage_tracking:
+    enabled: false
+```
+
+For more details about what data is collected and how it's used, see [USAGE.md](USAGE.md).
+
 ## Setup Guides
 
 ### UGREEN NAS Setup
