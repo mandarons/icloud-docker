@@ -10,8 +10,6 @@ import os
 import shutil
 import time
 
-from icloudpy import exceptions
-
 from src import get_logger
 
 LOGGER = get_logger()
@@ -88,8 +86,14 @@ def download_photo_from_server(photo, file_size: str, destination_path: str) -> 
         local_modified_time = time.mktime(photo.added_date.timetuple())
         os.utime(destination_path, (local_modified_time, local_modified_time))
 
-    except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
-        LOGGER.error(f"Failed to download {destination_path}: {e!s}")
+    except Exception as e:
+        # Enhanced error logging with file path context
+        # This catches all exceptions including iCloudPy errors like ObjectNotFoundException
+        error_msg = str(e)
+        if "ObjectNotFoundException" in error_msg or "NOT_FOUND" in error_msg:
+            LOGGER.error(f"Photo not found in iCloud Photos - {destination_path}: {error_msg}")
+        else:
+            LOGGER.error(f"Failed to download {destination_path}: {error_msg}")
         return False
 
     return True

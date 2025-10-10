@@ -276,7 +276,7 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         stats.photos_downloaded = len(new_files)
 
         # Estimate hardlinked photos (approximate)
-        use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)
+        use_hardlinks = config_parser.get_photos_use_hardlinks(config=config, log_messages=False)
         if use_hardlinks:
             stats.photos_hardlinked = max(0, len(files_after) - len(files_before) - stats.photos_downloaded)
 

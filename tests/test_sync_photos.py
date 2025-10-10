@@ -1739,6 +1739,24 @@ class TestSyncPhotos(unittest.TestCase):
             # Test with non-existent file (should not raise exception)
             rename_legacy_file_if_exists("/non/existent/file.jpg", "/another/path.jpg")
 
+    def test_download_photo_from_server_object_not_found_exception(self):
+        """Test download_photo_from_server with ObjectNotFoundException."""
+        import tempfile
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            # Mock photo that raises ObjectNotFoundException
+            mock_photo = Mock()
+            mock_photo.download.side_effect = Exception("ObjectNotFoundException: Could not find document (NOT_FOUND)")
+
+            # Test the enhanced error handling
+            result = download_photo_from_server(mock_photo, "original", destination_path)
+            self.assertFalse(result)
+
     def test_generate_photo_path_different_normalization(self):
         """Test generate_photo_path with different normalization (line 107)."""
         from src.photo_download_manager import generate_photo_path
