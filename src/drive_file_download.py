@@ -10,8 +10,6 @@ import os
 import time
 from typing import Any
 
-from icloudpy import exceptions
-
 from src import configure_icloudpy_logging, get_logger
 from src.drive_package_processing import process_package
 
@@ -56,8 +54,14 @@ def download_file(item: Any, local_file: str) -> str | None:
         item_modified_time = time.mktime(item.date_modified.timetuple())
         os.utime(local_file, (item_modified_time, item_modified_time))
 
-    except (exceptions.ICloudPyAPIResponseException, FileNotFoundError, Exception) as e:
-        LOGGER.error(f"Failed to download {local_file}: {e!s}")
+    except Exception as e:
+        # Enhanced error logging with file path context
+        # This catches all exceptions including iCloudPy errors like ObjectNotFoundException
+        error_msg = str(e)
+        if "ObjectNotFoundException" in error_msg or "NOT_FOUND" in error_msg:
+            LOGGER.error(f"File not found in iCloud Drive - {local_file}: {error_msg}")
+        else:
+            LOGGER.error(f"Failed to download {local_file}: {error_msg}")
         return None
 
     return local_file

@@ -291,6 +291,31 @@ def get_app_max_threads(config: dict) -> int:
     return parse_max_threads_value(max_threads_config, default_max_threads)
 
 
+def get_usage_tracking_enabled(config: dict) -> bool:
+    """Get usage tracking enabled setting from configuration.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if usage tracking is enabled (default), False if disabled
+    """
+    config_path = ["app", "usage_tracking", "enabled"]
+    if not traverse_config_path(config=config, config_path=config_path):
+        return True  # Default to enabled if not configured
+
+    value = get_config_value(config=config, config_path=config_path)
+    if isinstance(value, bool):
+        return value
+
+    # Handle string values for backwards compatibility
+    if isinstance(value, str):
+        return value.lower() not in ("false", "no", "0", "disabled", "off")
+
+    # Default to enabled for any other type
+    return True
+
+
 # =============================================================================
 # Root Destination Functions
 # =============================================================================
@@ -466,11 +491,12 @@ def get_photos_all_albums(config: dict) -> bool:
     return download_all
 
 
-def get_photos_use_hardlinks(config: dict) -> bool:
+def get_photos_use_hardlinks(config: dict, log_messages: bool = True) -> bool:
     """Return flag to use hard links for duplicate photos from config.
 
     Args:
         config: Configuration dictionary
+        log_messages: Whether to log informational messages (default: True)
 
     Returns:
         True if hard links should be used, False otherwise
@@ -478,7 +504,7 @@ def get_photos_use_hardlinks(config: dict) -> bool:
     config_path = ["photos", "use_hardlinks"]
     use_hardlinks = get_config_value_or_default(config=config, config_path=config_path, default=False)
 
-    if use_hardlinks:
+    if use_hardlinks and log_messages:
         log_config_found_info("Using hard links for duplicate photos.")
 
     return use_hardlinks

@@ -276,7 +276,7 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         stats.photos_downloaded = len(new_files)
 
         # Estimate hardlinked photos (approximate)
-        use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)
+        use_hardlinks = config_parser.get_photos_use_hardlinks(config=config, log_messages=False)
         if use_hardlinks:
             stats.photos_hardlinked = max(0, len(files_after) - len(files_before) - stats.photos_downloaded)
 
@@ -324,6 +324,45 @@ def _check_services_configured(config):
     """
 
     return "drive" in config or "photos" in config
+
+
+def _send_usage_statistics(config, summary: SyncSummary) -> None:
+    """Send anonymized usage statistics.
+
+    Args:
+        config: Configuration dictionary
+        summary: Sync summary with statistics
+    """
+
+    # Create anonymized usage data
+    usage_data = {
+        "sync_duration": (
+            (summary.sync_end_time - summary.sync_start_time).total_seconds() if summary.sync_end_time else 0
+        ),
+        "has_drive_activity": bool(summary.drive_stats and summary.drive_stats.has_activity()),
+        "has_photos_activity": bool(summary.photo_stats and summary.photo_stats.has_activity()),
+        "has_errors": summary.has_errors(),
+        "timestamp": summary.sync_end_time.isoformat() if summary.sync_end_time else None,
+    }
+
+    # Add aggregated statistics (no personal data)
+    if summary.drive_stats:
+        usage_data["drive"] = {
+            "files_count": summary.drive_stats.files_downloaded,
+            "bytes_count": summary.drive_stats.bytes_downloaded,
+            "has_errors": summary.drive_stats.has_errors(),
+        }
+
+    if summary.photo_stats:
+        usage_data["photos"] = {
+            "photos_count": summary.photo_stats.photos_downloaded,
+            "bytes_count": summary.photo_stats.bytes_downloaded,
+            "hardlinks_count": summary.photo_stats.photos_hardlinked,
+            "has_errors": summary.photo_stats.has_errors(),
+        }
+
+    # Send to usage tracking
+    alive(config=config, data=usage_data)
 
 
 def _handle_2fa_required(config, username: str, sync_state: SyncState):
@@ -425,10 +464,17 @@ def _calculate_next_sync_schedule(config, sync_state: SyncState):
         sync_state.enable_sync_drive = True
         sync_state.enable_sync_photos = False
     elif has_drive and has_photos and sync_state.drive_time_remaining <= sync_state.photos_time_remaining:
-        sleep_for = sync_state.photos_time_remaining - sync_state.drive_time_remaining
-        sync_state.photos_time_remaining -= sync_state.drive_time_remaining
-        sync_state.enable_sync_drive = True
-        sync_state.enable_sync_photos = False
+        # Special case: if both timers are equal and large (> 10 seconds), wait for the full interval
+        # This fixes the bug where equal large intervals cause immediate re-sync
+        if sync_state.drive_time_remaining == sync_state.photos_time_remaining and sync_state.drive_time_remaining > 10:
+            sleep_for = sync_state.drive_time_remaining
+            sync_state.enable_sync_drive = True
+            sync_state.enable_sync_photos = True
+        else:
+            sleep_for = sync_state.photos_time_remaining - sync_state.drive_time_remaining
+            sync_state.photos_time_remaining -= sync_state.drive_time_remaining
+            sync_state.enable_sync_drive = True
+            sync_state.enable_sync_photos = False
     else:
         sleep_for = sync_state.drive_time_remaining - sync_state.photos_time_remaining
         sync_state.drive_time_remaining -= sync_state.photos_time_remaining
@@ -524,6 +570,12 @@ def sync():
                     summary.drive_stats = drive_stats
                     summary.photo_stats = photos_stats
                     summary.sync_end_time = datetime.datetime.now()
+
+                    # Send usage statistics (anonymized summary data)
+                    try:
+                        _send_usage_statistics(config, summary)
+                    except Exception as e:
+                        LOGGER.debug(f"Failed to send usage statistics: {e!s}")
 
                     # Send sync summary notification if configured
                     # Only send notification when both enabled services have synced in this cycle

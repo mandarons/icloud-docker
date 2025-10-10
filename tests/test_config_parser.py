@@ -744,3 +744,55 @@ class TestConfigParser(unittest.TestCase):
             # Should only have one warning message despite two function calls
             self.assertEqual(len(log_context.records), 1)
             self.assertIn("remove_obsolete is not found", log_context.records[0].message)
+
+    def test_get_usage_tracking_enabled_default(self):
+        """Test get_usage_tracking_enabled with default config (no usage_tracking section)."""
+        config = read_config(tests.CONFIG_PATH)
+        if config:
+            result = config_parser.get_usage_tracking_enabled(config)
+            self.assertTrue(result)  # Default should be enabled
+
+    def test_get_usage_tracking_enabled_boolean_true(self):
+        """Test get_usage_tracking_enabled with boolean True."""
+        config = {"app": {"usage_tracking": {"enabled": True}}}
+        result = config_parser.get_usage_tracking_enabled(config)
+        self.assertTrue(result)
+
+    def test_get_usage_tracking_enabled_boolean_false(self):
+        """Test get_usage_tracking_enabled with boolean False."""
+        config = {"app": {"usage_tracking": {"enabled": False}}}
+        result = config_parser.get_usage_tracking_enabled(config)
+        self.assertFalse(result)
+
+    def test_get_usage_tracking_enabled_string_values(self):
+        """Test get_usage_tracking_enabled with various string values."""
+        # Test false-like strings
+        false_strings = ["false", "no", "0", "disabled", "off", "False", "NO", "DISABLED"]
+        for false_str in false_strings:
+            config = {"app": {"usage_tracking": {"enabled": false_str}}}
+            result = config_parser.get_usage_tracking_enabled(config)
+            self.assertFalse(result, f"String '{false_str}' should be interpreted as False")
+
+        # Test true-like strings
+        true_strings = ["true", "yes", "1", "enabled", "on", "True", "YES", "anything_else"]
+        for true_str in true_strings:
+            config = {"app": {"usage_tracking": {"enabled": true_str}}}
+            result = config_parser.get_usage_tracking_enabled(config)
+            self.assertTrue(result, f"String '{true_str}' should be interpreted as True")
+
+    def test_get_usage_tracking_enabled_other_types(self):
+        """Test get_usage_tracking_enabled with other data types."""
+        # Test integer
+        config = {"app": {"usage_tracking": {"enabled": 0}}}
+        result = config_parser.get_usage_tracking_enabled(config)
+        self.assertTrue(result)  # Any non-string/non-bool type defaults to True
+
+        # Test list
+        config = {"app": {"usage_tracking": {"enabled": []}}}
+        result = config_parser.get_usage_tracking_enabled(config)
+        self.assertTrue(result)
+
+        # Test None
+        config = {"app": {"usage_tracking": {"enabled": None}}}
+        result = config_parser.get_usage_tracking_enabled(config)
+        self.assertTrue(result)

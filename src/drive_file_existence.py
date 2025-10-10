@@ -96,6 +96,18 @@ def is_package(item: Any) -> bool:
         True if item is a package, False otherwise
     """
     file_is_a_package = False
-    with item.open(stream=True) as response:
-        file_is_a_package = response.url and "/packageDownload?" in response.url
+    try:
+        with item.open(stream=True) as response:
+            file_is_a_package = response.url and "/packageDownload?" in response.url
+    except Exception as e:
+        # Enhanced error logging with file context
+        # This catches all exceptions including iCloudPy errors like ObjectNotFoundException
+        error_msg = str(e)
+        item_name = getattr(item, "name", "Unknown file")
+        if "ObjectNotFoundException" in error_msg or "NOT_FOUND" in error_msg:
+            LOGGER.error(f"File not found in iCloud Drive while checking package type - {item_name}: {error_msg}")
+        else:
+            LOGGER.error(f"Failed to check package type for {item_name}: {error_msg}")
+        # Return False if we can't determine package type due to error
+        file_is_a_package = False
     return file_is_a_package

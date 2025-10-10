@@ -164,3 +164,182 @@ class TestUsage(unittest.TestCase):
             mock_datetime_now.return_value = mock_now
             actual = usage.alive(config=self.config)
             self.assertTrue(actual)
+
+    def test_validate_cache_data_invalid_dict(self):
+        """Test cache validation with invalid data types."""
+        # Test non-dict input
+        self.assertFalse(usage.validate_cache_data("not a dict"))
+        self.assertFalse(usage.validate_cache_data([]))
+        self.assertFalse(usage.validate_cache_data(None))
+
+    def test_validate_cache_data_invalid_id(self):
+        """Test cache validation with invalid ID."""
+        # Test invalid ID type
+        self.assertFalse(usage.validate_cache_data({"id": 123}))
+        self.assertFalse(usage.validate_cache_data({"id": None}))
+
+    def test_validate_cache_data_invalid_app_version(self):
+        """Test cache validation with invalid app version."""
+        # Test invalid app_version type
+        self.assertFalse(usage.validate_cache_data({"app_version": 123}))
+        self.assertFalse(usage.validate_cache_data({"app_version": None}))
+
+    def test_validate_cache_data_invalid_timestamp(self):
+        """Test cache validation with invalid timestamp."""
+        # Test invalid timestamp format
+        self.assertFalse(usage.validate_cache_data({"heartbeat_timestamp": "invalid"}))
+        self.assertFalse(usage.validate_cache_data({"heartbeat_timestamp": 123}))
+        self.assertFalse(usage.validate_cache_data({"heartbeat_timestamp": None}))
+
+    def test_validate_cache_data_valid(self):
+        """Test cache validation with valid data."""
+        # Test empty dict (valid)
+        self.assertTrue(usage.validate_cache_data({}))
+
+        # Test valid complete data
+        valid_data = {
+            "id": str(uuid.uuid4()),
+            "app_version": "1.0.0",
+            "heartbeat_timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+        }
+        self.assertTrue(usage.validate_cache_data(valid_data))
+
+    def test_load_cache_corrupted_validation(self):
+        """Test loading corrupted cache that fails validation."""
+        file_path = usage.init_cache(config=self.config)
+
+        # Write invalid data directly to file
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write('{"id": 123, "app_version": null}')
+
+        # Load should detect invalid data and create new cache
+        data = usage.load_cache(file_path)
+        self.assertEqual(data, {})
+
+    def test_load_cache_json_decode_error(self):
+        """Test loading cache with JSON decode error."""
+        file_path = usage.init_cache(config=self.config)
+
+        # Write invalid JSON to file
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write("invalid json")
+
+        # Load should handle JSON error and create new cache
+        data = usage.load_cache(file_path)
+        self.assertEqual(data, {})
+
+    @patch("os.rename")
+    def test_save_cache_os_error(self, mock_rename):
+        """Test save cache with OS error."""
+        mock_rename.side_effect = OSError("Permission denied")
+
+        file_path = usage.init_cache(config=self.config)
+        result = usage.save_cache(file_path, {"test": "data"})
+        self.assertFalse(result)
+
+    @patch("tempfile.NamedTemporaryFile")
+    def test_save_cache_temp_file_error(self, mock_temp):
+        """Test save cache with temporary file error."""
+        mock_temp.side_effect = OSError("Cannot create temp file")
+
+        file_path = usage.init_cache(config=self.config)
+        result = usage.save_cache(file_path, {"test": "data"})
+        self.assertFalse(result)
+
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_usage_tracking_disabled(self, mock_post):
+        """Test that usage tracking can be disabled."""
+        # Modify config to disable usage tracking
+        config_with_disabled = dict(self.config)
+        config_with_disabled["app"] = {"usage_tracking": {"enabled": False}}
+
+        # Should return True but not actually send any requests
+        result = usage.alive(config=config_with_disabled)
+        self.assertTrue(result)
+
+        # No HTTP requests should have been made
+        mock_post.assert_not_called()
+
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_alive_with_usage_data(self, mock_post):
+        """Test alive function with usage data."""
+        test_data = {
+            "sync_duration": 123.45,
+            "has_errors": False,
+            "files_count": 10,
+        }
+
+        # First call should install
+        result = usage.alive(config=self.config, data=test_data)
+        self.assertTrue(result)
+
+        # Second call should send heartbeat with data
+        result = usage.alive(config=self.config, data=test_data)
+        self.assertTrue(result)
+
+    def test_heartbeat_invalid_timestamp(self):
+        """Test heartbeat with invalid timestamp in cache."""
+        # Create cache with invalid timestamp
+        cached_data = {
+            "id": str(uuid.uuid4()),
+            "app_version": usage.APP_VERSION,
+            "heartbeat_timestamp": "invalid-timestamp",
+        }
+
+        with patch("src.usage.send_heartbeat") as mock_send:
+            mock_send.return_value = True
+            result = usage.heartbeat(cached_data, None)
+            # Should treat as first heartbeat due to invalid timestamp
+            self.assertIsNotNone(result)
+            mock_send.assert_called_once()
+
+    @patch("os.unlink")
+    @patch("tempfile.NamedTemporaryFile")
+    def test_save_cache_cleanup_temp_file(self, mock_temp, mock_unlink):
+        """Test save cache temp file cleanup on error."""
+        # Mock NamedTemporaryFile to succeed but os.rename to fail
+        mock_temp_file = mock_temp.return_value.__enter__.return_value
+        mock_temp_file.name = "/tmp/test_file.tmp"
+
+        with patch("os.rename", side_effect=OSError("Rename failed")):
+            file_path = usage.init_cache(config=self.config)
+            result = usage.save_cache(file_path, {"test": "data"})
+            self.assertFalse(result)
+            mock_unlink.assert_called_once_with("/tmp/test_file.tmp")
+
+    @patch("os.unlink", side_effect=OSError("Cannot delete temp file"))
+    @patch("tempfile.NamedTemporaryFile")
+    def test_save_cache_cleanup_temp_file_fails(self, mock_temp, mock_unlink):
+        """Test save cache temp file cleanup when unlink also fails."""
+        # Mock NamedTemporaryFile to succeed but os.rename to fail
+        mock_temp_file = mock_temp.return_value.__enter__.return_value
+        mock_temp_file.name = "/tmp/test_file.tmp"
+
+        with patch("os.rename", side_effect=OSError("Rename failed")):
+            file_path = usage.init_cache(config=self.config)
+            result = usage.save_cache(file_path, {"test": "data"})
+            self.assertFalse(result)
+            # This should test the except OSError: pass block
+            mock_unlink.assert_called_once_with("/tmp/test_file.tmp")
+
+    @patch("src.usage.send_heartbeat")
+    def test_heartbeat_send_failure(self, mock_send):
+        """Test heartbeat when send_heartbeat fails."""
+        mock_send.return_value = False
+
+        # Test with no previous heartbeat (first heartbeat failure)
+        cached_data = {"id": str(uuid.uuid4())}
+        result = usage.heartbeat(cached_data, None)
+        self.assertIsNone(result)
+
+        # Test with old heartbeat (24+ hours ago, but send fails)
+        past_time = (datetime.datetime.now() - datetime.timedelta(hours=25)).strftime("%Y-%m-%d %H:%M:%S.%f")
+        cached_data["heartbeat_timestamp"] = past_time
+        result = usage.heartbeat(cached_data, None)
+        self.assertIsNone(result)
+
+    @patch("requests.post", side_effect=Exception("Network error"))
+    def test_alive_installation_failure(self, mock_post):
+        """Test alive when installation fails."""
+        result = usage.alive(config=self.config)
+        self.assertFalse(result)
