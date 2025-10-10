@@ -700,6 +700,16 @@ class TestSyncDrive(unittest.TestCase):
             mock_item.side_effect = Exception("ObjectNotFoundException: Could not find document (NOT_FOUND)")
             self.assertFalse(sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
 
+    def test_is_package_object_not_found_exception(self):
+        """Test is_package function with ObjectNotFoundException error handling."""
+        from src.drive_file_existence import is_package
+
+        with patch.object(self.file_item, "open") as mock_item:
+            mock_item.side_effect = Exception("ObjectNotFoundException: Could not find document (NOT_FOUND)")
+            # Should return False when error occurs
+            result = is_package(self.file_item)
+            self.assertFalse(result)
+
     def test_process_file_non_existing(self):
         """Test for non-existing file."""
         files = set()
@@ -1363,6 +1373,28 @@ class TestSyncDrive(unittest.TestCase):
         self.assertIsInstance(files, set)
         # The test might not have files due to filtering, but we can still verify the function works
         mock_get_max_threads.assert_called()
+
+    @patch("src.drive_sync_directory.collect_file_for_download")
+    def test_sync_directory_exception_handling(self, mock_collect):
+        """Test sync_directory exception handling when collect_file_for_download fails."""
+        # Make collect_file_for_download raise an exception
+        mock_collect.side_effect = Exception("Simulated error in collect_file_for_download")
+
+        # This should not crash despite the exception
+        files = sync_drive.sync_directory(
+            drive=self.drive,
+            destination_path=self.destination_path,
+            root=self.root,
+            items=self.drive.dir(),
+            top=True,
+            filters=self.filters,
+            remove=False,
+        )
+
+        # Should return empty set since no files were processed due to exceptions
+        self.assertIsInstance(files, set)
+        # The function should continue processing despite exceptions
+        mock_collect.assert_called()
 
     def test_thread_safe_file_operations(self):
         """Test that file set operations are thread-safe."""
