@@ -694,6 +694,12 @@ class TestSyncDrive(unittest.TestCase):
             mock_item.side_effect = KeyError("data_token")
             self.assertFalse(sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
 
+    def test_download_file_object_not_found_exception(self):
+        """Test for ObjectNotFoundException error handling."""
+        with patch.object(self.file_item, "open") as mock_item:
+            mock_item.side_effect = Exception("ObjectNotFoundException: Could not find document (NOT_FOUND)")
+            self.assertFalse(sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
+
     def test_process_file_non_existing(self):
         """Test for non-existing file."""
         files = set()

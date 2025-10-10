@@ -491,11 +491,12 @@ def get_photos_all_albums(config: dict) -> bool:
     return download_all
 
 
-def get_photos_use_hardlinks(config: dict) -> bool:
+def get_photos_use_hardlinks(config: dict, log_messages: bool = True) -> bool:
     """Return flag to use hard links for duplicate photos from config.
 
     Args:
         config: Configuration dictionary
+        log_messages: Whether to log informational messages (default: True)
 
     Returns:
         True if hard links should be used, False otherwise
@@ -503,7 +504,7 @@ def get_photos_use_hardlinks(config: dict) -> bool:
     config_path = ["photos", "use_hardlinks"]
     use_hardlinks = get_config_value_or_default(config=config, config_path=config_path, default=False)
 
-    if use_hardlinks:
+    if use_hardlinks and log_messages:
         log_config_found_info("Using hard links for duplicate photos.")
 
     return use_hardlinks
