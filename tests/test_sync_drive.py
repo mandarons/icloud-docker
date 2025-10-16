@@ -1745,6 +1745,7 @@ class TestSyncDrive(unittest.TestCase):
 
         # Should have no download tasks since parent folder is not wanted
         self.assertEqual(len(download_tasks), 0)
+        self.assertEqual(len(files), 0)
 
     def test_url_encoded_filename_decoding(self):
         """Test that URL-encoded filenames are properly decoded."""
