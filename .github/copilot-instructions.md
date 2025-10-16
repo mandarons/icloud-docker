@@ -53,6 +53,12 @@ This is a containerized iCloud sync client that downloads files/photos from iClo
 - **2FA alerts**: Automatically notifies when authentication expires (`api.requires_2sa`)
 - **Rate limiting**: `last_send` parameter prevents notification spam (returns same timestamp if < 24hrs)
 
+### Usage Tracking (`src/usage.py`)
+- **Opt-in telemetry**: Collects anonymized sync statistics for usage analytics (see `USAGE.md`)
+- **Opt-out**: Set `app.usage_tracking.enabled: false` in config to disable completely
+- **Data collected**: Version, sync duration/counts, error indicators (no file names/paths/credentials)
+- **Endpoints**: `NEW_INSTALLATION_ENDPOINT` and `NEW_HEARTBEAT_ENDPOINT` from Dockerfile build args
+
 ## Development Workflow
 
 ### Local Testing
@@ -63,11 +69,12 @@ source .venv/bin/activate && ./run-ci.sh
 ```
 
 ### Key Testing Patterns
-- **Mock strategy**: Tests use `ICloudPyServiceMock` in `tests/data/photos_data.py` (2800+ lines of fixture data)
+- **Mock strategy**: Tests use `ICloudPyServiceMock` in `tests/data/__init__.py` (4000+ lines) with photo fixtures in `tests/data/photos_data.py` (2800+ lines)
 - **Config injection**: Tests override config paths via `tests.CONFIG_PATH` and `tests.TEMP_DIR`
 - **100% coverage requirement**: `pytest.ini` enforces `--cov-fail-under=100` (build fails below 100%)
 - **Temp directory cleanup**: All tests use `setUp()/tearDown()` pattern to clean `tests.TEMP_DIR`
 - **Allure reporting**: CI generates test reports via `allure generate --clean`
+- **Test structure**: Each `src/*.py` has mirror `tests/test_*.py` (e.g., `sync.py` → `test_sync.py`)
 
 ### Docker Development
 - **Base image**: `python:3.10-alpine3.22` (multi-stage build with builder pattern)
@@ -103,11 +110,12 @@ source .venv/bin/activate && ./run-ci.sh
 - **Thread safety**: Use `files_lock` when modifying shared `files` set in parallel download workers
 
 ### Refactoring Principles - **CRITICAL FOR NEW CODE**
-- **Single Responsibility Principle**: Every function has ONE clear purpose (see `REFACTORING_SUMMARY.md`)
+- **Single Responsibility Principle**: Every function has ONE clear purpose - modules split from monoliths
 - **No code duplication**: Extract common patterns into utilities (e.g., `config_utils.py`, `filesystem_utils.py`)
 - **Separation of concerns**: Business logic, logging, and configuration parsing are separate
 - **State management**: Use classes like `SyncState` and `HardlinkRegistry` instead of parameter passing
 - **Layered architecture**: Core utilities → Business logic → Orchestration layers
+- **Example refactor**: `sync.py` main loop uses 15+ focused helpers; drive/photos split into 8/7 modules respectively
 
 ### Error Handling Strategy
 - **Graceful degradation**: Missing config sections disable features rather than crash
@@ -136,6 +144,8 @@ source .venv/bin/activate && ./run-ci.sh
 
 ## External Dependencies
 - **iCloudPy** (0.7.0): Core iCloud API client (`from icloudpy import ICloudPyService`)
+  - Runtime uses PyPI package, not the `external/icloudpy` git submodule
+  - Submodule is included for reference/development purposes only
 - **ruamel.yaml** (0.18.15): YAML parsing with comment preservation
 - **python-magic** (0.4.27): File type detection for drive sync (requires `libmagic` at runtime)
 - **requests** (~2.32.3): HTTP client for notifications and usage tracking
