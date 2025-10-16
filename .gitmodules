@@ -1,0 +1,3 @@
+[submodule "external/icloudpy"]
+	path = external/icloudpy
+	url = https://github.com/mandarons/icloudpy.git
