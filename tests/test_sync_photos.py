@@ -1880,3 +1880,31 @@ class TestSyncPhotos(unittest.TestCase):
             # Should count the False result as a failure (covers line 241)
             self.assertEqual(successful, 0)
             self.assertEqual(failed, 1)
+
+    def test_url_encoded_photo_filename_decoding(self):
+        """Test that URL-encoded photo filenames are properly decoded."""
+        from unittest.mock import MagicMock
+        from urllib.parse import unquote
+
+        from src.photo_path_utils import get_photo_name_and_extension
+
+        # Create a mock photo with URL-encoded filename
+        # This simulates photos like "Erhö+3,0+%.jpg" coming from iCloud as
+        # "Erho%CC%88+3%2C0+%25.jpg"
+        url_encoded_filename = "Photo-Erho%CC%88+3%2C0+%25.jpg"
+        expected_decoded_filename = unquote(url_encoded_filename)  # "Photo-Erhö+3,0+%.jpg"
+
+        mock_photo = MagicMock()
+        mock_photo.filename = url_encoded_filename
+
+        # Get the name and extension
+        name, extension = get_photo_name_and_extension(mock_photo, "original")
+
+        # Verify the filename was decoded
+        reconstructed_filename = f"{name}.{extension}"
+        self.assertEqual(reconstructed_filename, expected_decoded_filename)
+
+        # Verify no URL encoding artifacts remain
+        self.assertNotIn("%CC%88", name)
+        self.assertNotIn("%2C", name)
+        self.assertNotIn("%25", name)

@@ -12,6 +12,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from threading import Lock
 from typing import Any
+from urllib.parse import unquote
 
 from src import configure_icloudpy_logging, get_logger
 from src.drive_file_download import download_file
@@ -49,7 +50,10 @@ def collect_file_for_download(
     if not (item and destination_path and files is not None):
         return None
 
-    local_file = os.path.join(destination_path, item.name)
+    # Decode URL-encoded filename from iCloud API
+    # This handles special characters like %CC%88 (combining diacritical marks)
+    decoded_name = unquote(item.name)
+    local_file = os.path.join(destination_path, decoded_name)
     local_file = unicodedata.normalize("NFC", local_file)
 
     if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):

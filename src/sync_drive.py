@@ -10,6 +10,7 @@ import os
 import unicodedata
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 from src import config_parser, configure_icloudpy_logging, get_logger
 from src.drive_cleanup import remove_obsolete  # noqa: F401
@@ -73,7 +74,10 @@ def process_file(item: Any, destination_path: str, filters: list[str], ignore: l
     """
     if not (item and destination_path and files is not None):
         return False
-    local_file = os.path.join(destination_path, item.name)
+    # Decode URL-encoded filename from iCloud API
+    # This handles special characters like %CC%88 (combining diacritical marks)
+    decoded_name = unquote(item.name)
+    local_file = os.path.join(destination_path, decoded_name)
     local_file = unicodedata.normalize("NFC", local_file)
     if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
         return False
