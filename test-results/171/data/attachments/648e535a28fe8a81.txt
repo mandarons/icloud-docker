@@ -1,0 +1,9 @@
+[38;21m2025-10-16 04:41:16,335 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-16 04:41:16,336 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-16 04:41:16,336 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-16 04:41:16,336 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
+[38;5;196m2025-10-16 04:41:16,336 :: ERROR :: root :: usage.py :: 93 :: Failed to load usage cache from /config/.data: Expecting value: line 1 column 1 (char 0)[0m
+[38;5;39m2025-10-16 04:41:16,336 :: INFO :: root :: usage.py :: 94 :: Creating new empty cache file due to corruption[0m
+[38;21m2025-10-16 04:41:16,337 :: DEBUG :: root :: usage.py :: 127 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-10-16 04:41:16,337 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-16 04:41:16,337 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m

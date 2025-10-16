@@ -1,0 +1,14 @@
+DEBUG    icloudpy.base:base.py:240 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:247 Session file does not exist
+DEBUG    icloudpy.base:base.py:313 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:417 Authentication completed successfully
+DEBUG    root:drive_file_existence.py:33 File /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Test/Document scanne 2.pdf does not exist locally.
+DEBUG    root:drive_file_existence.py:33 File /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Test/Scanned document 1.pdf does not exist locally.
+INFO     root:drive_parallel_download.py:131 Starting parallel downloads with 2 threads for 2 files...
+DEBUG    root:drive_parallel_download.py:95 [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Test/Document scanne 2.pdf
+INFO     root:drive_file_download.py:38 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Test/Document scanne 2.pdf ...
+DEBUG    root:drive_parallel_download.py:95 [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Test/Scanned document 1.pdf
+INFO     root:drive_file_download.py:38 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Test/Scanned document 1.pdf ...
+DEBUG    root:drive_parallel_download.py:111 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Test/Scanned document 1.pdf
+DEBUG    root:drive_parallel_download.py:111 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Test/Document scanne 2.pdf
+INFO     root:drive_parallel_download.py:152 Parallel downloads completed: 2 successful, 0 failed

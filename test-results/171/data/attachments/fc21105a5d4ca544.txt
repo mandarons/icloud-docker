@@ -1,0 +1,6 @@
+[38;21m2025-10-16 04:41:16,462 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-16 04:41:16,463 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-16 04:41:16,463 :: DEBUG :: root :: usage.py :: 151 :: Posting new installation to: Invalid[0m
+[38;21m2025-10-16 04:41:16,463 :: DEBUG :: root :: usage.py :: 159 :: Installation registration failed with status 404[0m
+[38;21m2025-10-16 04:41:16,463 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-16 04:41:16,463 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
