@@ -9,6 +9,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import os
 import unicodedata
 from typing import Any
+from urllib.parse import unquote
 
 from src import configure_icloudpy_logging, get_logger
 from src.drive_filtering import wanted_folder
@@ -41,7 +42,10 @@ def process_folder(
     if not (item and destination_path and root):
         return None
 
-    new_directory = os.path.join(destination_path, item.name)
+    # Decode URL-encoded folder name from iCloud API
+    # This handles special characters like %CC%88 (combining diacritical marks)
+    decoded_name = unquote(item.name)
+    new_directory = os.path.join(destination_path, decoded_name)
     new_directory_norm = unicodedata.normalize("NFC", new_directory)
 
     if not wanted_folder(filters=filters, ignore=ignore, folder_path=new_directory_norm, root=root):

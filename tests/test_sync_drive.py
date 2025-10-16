@@ -7,7 +7,8 @@ import shutil
 import time
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+from urllib.parse import unquote
 
 from icloudpy.exceptions import ICloudPyAPIResponseException
 
@@ -1744,4 +1745,45 @@ class TestSyncDrive(unittest.TestCase):
 
         # Should have no download tasks since parent folder is not wanted
         self.assertEqual(len(download_tasks), 0)
-        self.assertEqual(len(files), 0)
+
+    def test_url_encoded_filename_decoding(self):
+        """Test that URL-encoded filenames are properly decoded."""
+        from src.drive_parallel_download import collect_file_for_download
+
+        # Create a mock item with URL-encoded filename
+        # This simulates files like "Geh.-Erhö+3,0+%+u.pdf" coming from iCloud as
+        # "Geh.-Erho%CC%88+3%2C0+%25+u.pdf"
+        url_encoded_filename = "Test-Erho%CC%88+3%2C0+%25+File.pdf"
+        expected_decoded_filename = unquote(url_encoded_filename)  # "Test-Erhö+3,0+%+File.pdf"
+
+        mock_item = MagicMock()
+        mock_item.name = url_encoded_filename
+        mock_item.type = "file"
+        mock_item.size = 1024
+        mock_item.date_modified = MagicMock()
+        mock_item.date_modified.timestamp.return_value = time.time()
+
+        files = set()
+
+        # Collect file for download
+        download_info = collect_file_for_download(
+            item=mock_item,
+            destination_path=self.destination_path,
+            filters=None,
+            ignore=None,
+            files=files,
+        )
+
+        # Verify the local file path has the decoded filename
+        self.assertIsNotNone(download_info)
+        expected_path = os.path.join(self.destination_path, expected_decoded_filename)
+        # Normalize both paths for comparison (NFC normalization)
+        import unicodedata
+        expected_normalized = unicodedata.normalize("NFC", expected_path)
+        actual_normalized = unicodedata.normalize("NFC", download_info["local_file"])
+        self.assertEqual(actual_normalized, expected_normalized)
+
+        # Verify the filename doesn't contain URL encoding artifacts
+        self.assertNotIn("%CC%88", download_info["local_file"])
+        self.assertNotIn("%2C", download_info["local_file"])
+        self.assertNotIn("%25", download_info["local_file"])

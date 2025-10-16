@@ -18,6 +18,7 @@ ___author___ = "Mandar Patil <mandarons@pm.me>"
 import base64
 import os
 import unicodedata
+from urllib.parse import unquote
 
 from src import get_logger
 
@@ -35,7 +36,9 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
         Tuple of (name, extension) where name is filename without extension
         and extension is the file extension
     """
-    filename = photo.filename
+    # Decode URL-encoded filename from iCloud API
+    # This handles special characters like %CC%88 (combining diacritical marks)
+    filename = unquote(photo.filename)
     name, extension = filename.rsplit(".", 1) if "." in filename else [filename, ""]
 
     # Handle original_alt file type mapping
