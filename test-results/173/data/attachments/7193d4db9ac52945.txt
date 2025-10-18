@@ -1,0 +1,9 @@
+DEBUG    icloudpy.base:base.py:240 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:247 Session file does not exist
+DEBUG    icloudpy.base:base.py:313 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:417 Authentication completed successfully
+DEBUG    root:sync_photos.py:270 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg
+WARNING  root:photo_file_utils.py:61 Failed to create hard link /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg: [Errno 2] No such file or directory: '/nonexistent/source_photo.jpg' -> '/home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg'
+WARNING  root:sync_photos.py:280 Hard link creation failed, downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg instead
+INFO     root:photo_file_utils.py:79 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg ...
+DEBUG    root:sync_photos.py:289 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg

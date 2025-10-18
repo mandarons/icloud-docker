@@ -1,0 +1,6 @@
+[38;21m2025-10-18 18:56:21,202 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 18:56:21,202 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-18 18:56:21,203 :: DEBUG :: root :: usage.py :: 282 :: Time since last heartbeat: 0:00:02[0m
+[38;21m2025-10-18 18:56:21,203 :: DEBUG :: root :: usage.py :: 286 :: Sending heartbeat (different UTC day)[0m
+[38;21m2025-10-18 18:56:21,203 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 18:56:21,204 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m

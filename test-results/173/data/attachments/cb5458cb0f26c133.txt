@@ -1,0 +1,14 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:97 Usage cache file not found, creating: /config/.data
+DEBUG    root:usage.py:127 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:205 Installing new instance
+DEBUG    root:usage.py:151 Posting new installation to: None
+DEBUG    root:usage.py:156 Successfully registered new installation: 6869af3b-5665-4d95-9373-0dc767c6d914
+DEBUG    root:usage.py:211 Installation completed with ID: 6869af3b-5665-4d95-9373-0dc767c6d914
+DEBUG    root:usage.py:229 Posting heartbeat to: None
+ERROR    root:usage.py:237 Failed to post heartbeat: Error occurred.
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data

@@ -1,0 +1,30 @@
+[38;21m2025-10-18 18:56:18,096 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-18 18:56:18,096 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-18 18:56:18,097 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-18 18:56:18,106 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-10-18 18:56:18,108 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2025-10-18 18:56:18,109 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-10-18 18:56:18,110 :: INFO :: root :: album_sync_orchestrator.py :: 60 :: Syncing album 2[0m
+[38;21m2025-10-18 18:56:18,111 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3328.JPG.[0m
+[38;21m2025-10-18 18:56:18,111 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3327.JPG.[0m
+[38;21m2025-10-18 18:56:18,111 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3322.JPG.[0m
+[38;21m2025-10-18 18:56:18,111 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3206.JPG.[0m
+[38;21m2025-10-18 18:56:18,112 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;21m2025-10-18 18:56:18,112 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo no-extension.[0m
+[38;21m2025-10-18 18:56:18,112 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;5;39m2025-10-18 18:56:18,112 :: INFO :: root :: album_sync_orchestrator.py :: 60 :: Syncing album-1-1[0m
+[38;21m2025-10-18 18:56:18,113 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3328.JPG.[0m
+[38;21m2025-10-18 18:56:18,113 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3327.JPG.[0m
+[38;21m2025-10-18 18:56:18,113 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3322.JPG.[0m
+[38;21m2025-10-18 18:56:18,114 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3206.JPG.[0m
+[38;21m2025-10-18 18:56:18,114 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;21m2025-10-18 18:56:18,114 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo no-extension.[0m
+[38;21m2025-10-18 18:56:18,114 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;5;39m2025-10-18 18:56:18,114 :: INFO :: root :: album_sync_orchestrator.py :: 60 :: Syncing album-1[0m
+[38;21m2025-10-18 18:56:18,115 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3328.JPG.[0m
+[38;21m2025-10-18 18:56:18,115 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3327.JPG.[0m
+[38;21m2025-10-18 18:56:18,115 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3322.JPG.[0m
+[38;21m2025-10-18 18:56:18,116 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3206.JPG.[0m
+[38;21m2025-10-18 18:56:18,116 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m
+[38;21m2025-10-18 18:56:18,116 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo no-extension.[0m
+[38;21m2025-10-18 18:56:18,116 :: DEBUG :: root :: album_sync_orchestrator.py :: 131 :: Skipping the unwanted photo IMG_3148.JPG.[0m

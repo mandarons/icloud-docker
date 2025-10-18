@@ -1,0 +1,46 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:326 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:97 Usage cache file not found, creating: /config/.data
+DEBUG    root:usage.py:127 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:332 New installation detected, registering...
+DEBUG    root:usage.py:205 Installing new instance
+DEBUG    root:usage.py:151 Posting new installation to: None
+DEBUG    root:usage.py:156 Successfully registered new installation: 49cc9398-3a2d-40d8-bc59-158a441968a7
+DEBUG    root:usage.py:211 Installation completed with ID: 49cc9398-3a2d-40d8-bc59-158a441968a7
+DEBUG    root:usage.py:127 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:336 Installation registration completed
+DEBUG    root:usage.py:326 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:88 Loaded and validated usage cache from: /config/.data
+DEBUG    root:usage.py:342 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:301 Sending first heartbeat
+DEBUG    root:usage.py:229 Posting heartbeat to: None
+DEBUG    root:usage.py:232 Heartbeat sent successfully
+DEBUG    root:usage.py:304 First heartbeat sent successfully
+DEBUG    root:usage.py:127 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:346 Heartbeat completed successfully
+DEBUG    root:usage.py:326 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:88 Loaded and validated usage cache from: /config/.data
+DEBUG    root:usage.py:342 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:282 Time since last heartbeat: 0:00:00.001774
+DEBUG    root:usage.py:294 Heartbeat throttled (same UTC day)
+DEBUG    root:usage.py:349 No heartbeat required or heartbeat failed
+DEBUG    root:usage.py:326 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:88 Loaded and validated usage cache from: /config/.data
+DEBUG    root:usage.py:342 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:282 Time since last heartbeat: 1 day, 0:00:00.002107
+DEBUG    root:usage.py:286 Sending heartbeat (different UTC day)
+DEBUG    root:usage.py:229 Posting heartbeat to: None
+DEBUG    root:usage.py:232 Heartbeat sent successfully
+DEBUG    root:usage.py:127 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:346 Heartbeat completed successfully
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data

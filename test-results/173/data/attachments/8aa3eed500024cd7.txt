@@ -1,0 +1,7 @@
+[38;21m2025-10-18 18:56:21,722 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 18:56:21,722 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-18 18:56:21,723 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 18:56:21,723 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
+[38;5;196m2025-10-18 18:56:21,724 :: ERROR :: root :: usage.py :: 130 :: Failed to save usage cache to /config/.data: Permission denied[0m
+[38;21m2025-10-18 18:56:21,724 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 18:56:21,724 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m

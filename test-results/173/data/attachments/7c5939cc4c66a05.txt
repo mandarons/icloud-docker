@@ -1,0 +1,24 @@
+[38;21m2025-10-18 18:56:11,905 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-18 18:56:11,905 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-18 18:56:11,905 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-18 18:56:11,914 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-10-18 18:56:11,923 :: DEBUG :: root :: usage.py :: 326 :: Usage tracking alive check started[0m
+[38;21m2025-10-18 18:56:11,923 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 18:56:11,923 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-18 18:56:11,923 :: DEBUG :: root :: usage.py :: 88 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-10-18 18:56:11,923 :: DEBUG :: root :: usage.py :: 342 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-10-18 18:56:11,923 :: DEBUG :: root :: usage.py :: 282 :: Time since last heartbeat: 0:00:00.736551[0m
+[38;21m2025-10-18 18:56:11,924 :: DEBUG :: root :: usage.py :: 294 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-10-18 18:56:11,924 :: DEBUG :: root :: usage.py :: 349 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-10-18 18:56:11,924 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every -1 seconds.[0m
+[38;5;39m2025-10-18 18:56:11,924 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every -1 seconds.[0m
+[38;21m2025-10-18 18:56:11,924 :: DEBUG :: root :: usage.py :: 326 :: Usage tracking alive check started[0m
+[38;21m2025-10-18 18:56:11,924 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 18:56:11,925 :: DEBUG :: root :: usage.py :: 35 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-18 18:56:11,925 :: DEBUG :: root :: usage.py :: 88 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-10-18 18:56:11,925 :: DEBUG :: root :: usage.py :: 342 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-10-18 18:56:11,925 :: DEBUG :: root :: usage.py :: 282 :: Time since last heartbeat: 0:00:00.738062[0m
+[38;21m2025-10-18 18:56:11,925 :: DEBUG :: root :: usage.py :: 294 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-10-18 18:56:11,925 :: DEBUG :: root :: usage.py :: 349 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-10-18 18:56:11,925 :: INFO :: root :: sync.py :: 495 :: Resyncing at Sat Oct 18 18:56:11 2025 ...[0m
+[38;5;39m2025-10-18 18:56:11,925 :: INFO :: root :: sync.py :: 619 :: All configured sync intervals are negative, exiting oneshot mode...[0m
