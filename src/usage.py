@@ -3,6 +3,7 @@
 import json
 import os
 import tempfile
+import time
 from datetime import datetime
 from typing import Any
 
@@ -19,6 +20,10 @@ NEW_HEARTBEAT_ENDPOINT = os.environ.get("NEW_HEARTBEAT_ENDPOINT", None)
 APP_NAME = "icloud-docker"
 APP_VERSION = os.environ.get("APP_VERSION", "dev")
 NEW_INSTALLATION_DATA = {"appName": APP_NAME, "appVersion": APP_VERSION}
+
+# Retry configuration
+MAX_RETRIES = int(os.environ.get("USAGE_TRACKING_MAX_RETRIES", "3"))
+RETRY_BACKOFF_FACTOR = float(os.environ.get("USAGE_TRACKING_RETRY_BACKOFF", "2.0"))
 
 
 def init_cache(config: dict) -> str:
@@ -137,8 +142,67 @@ def save_cache(file_path: str, data: dict) -> bool:
         return False
 
 
+def post_with_retry(
+    url: str,
+    json_data: dict,
+    timeout: int = 10,
+    max_retries: int = MAX_RETRIES,
+    backoff_factor: float = RETRY_BACKOFF_FACTOR,
+) -> requests.Response | None:
+    """Post request with exponential backoff retry.
+
+    Args:
+        url: Endpoint URL
+        json_data: JSON payload
+        timeout: Request timeout in seconds
+        max_retries: Maximum number of retry attempts
+        backoff_factor: Multiplier for exponential backoff
+
+    Returns:
+        Response object if successful, None otherwise
+    """
+    last_exception = None
+
+    for attempt in range(max_retries):
+        try:
+            response = requests.post(url, json=json_data, timeout=timeout)  # type: ignore[arg-type]
+
+            # Don't retry on validation errors (4xx except rate limit)
+            if 400 <= response.status_code < 500 and response.status_code != 429:
+                LOGGER.debug(f"Non-retriable error (status {response.status_code})")
+                return response
+
+            # Success or retriable error
+            if response.ok:
+                return response
+
+            # Rate limit (429) or server error (5xx) - retry
+            LOGGER.warning(
+                f"Request failed with status {response.status_code}, " f"attempt {attempt + 1}/{max_retries}",
+            )
+
+        except (requests.ConnectionError, requests.Timeout) as e:
+            last_exception = e
+            LOGGER.warning(f"Network error: {e}, attempt {attempt + 1}/{max_retries}")
+        except Exception as e:
+            # Catch other exceptions but don't retry
+            LOGGER.error(f"Unexpected error during request: {e}")
+            return None
+
+        # Exponential backoff before next retry
+        if attempt < max_retries - 1:
+            wait_time = backoff_factor**attempt
+            LOGGER.debug(f"Waiting {wait_time}s before retry...")
+            time.sleep(wait_time)
+
+    # All retries exhausted
+    if last_exception:
+        LOGGER.error(f"All retry attempts failed: {last_exception}")
+    return None
+
+
 def post_new_installation(data: dict, endpoint=NEW_INSTALLATION_ENDPOINT) -> str | None:
-    """Post new installation to server.
+    """Post new installation to server with retry logic.
 
     Args:
         data: Dictionary containing installation data
@@ -149,14 +213,16 @@ def post_new_installation(data: dict, endpoint=NEW_INSTALLATION_ENDPOINT) -> str
     """
     try:
         LOGGER.debug(f"Posting new installation to: {endpoint}")
-        response = requests.post(endpoint, json=data, timeout=10)  # type: ignore[arg-type]
-        if response.ok:
+        response = post_with_retry(endpoint, data, timeout=10)
+
+        if response and response.ok:
             response_data = response.json()
             installation_id = response_data["id"]
             LOGGER.debug(f"Successfully registered new installation: {installation_id}")
             return installation_id
         else:
-            LOGGER.debug(f"Installation registration failed with status {response.status_code}")
+            status = response.status_code if response else "no response"
+            LOGGER.error(f"Installation registration failed: {status}")
     except Exception as e:
         LOGGER.error(f"Failed to post new installation: {e}")
     return None
@@ -216,7 +282,7 @@ def install(cached_data: dict) -> dict | None:
 
 
 def post_new_heartbeat(data: dict, endpoint=NEW_HEARTBEAT_ENDPOINT) -> bool:
-    """Post the heartbeat to server.
+    """Post the heartbeat to server with retry logic.
 
     Args:
         data: Dictionary containing heartbeat data
@@ -227,12 +293,14 @@ def post_new_heartbeat(data: dict, endpoint=NEW_HEARTBEAT_ENDPOINT) -> bool:
     """
     try:
         LOGGER.debug(f"Posting heartbeat to: {endpoint}")
-        response = requests.post(endpoint, json=data, timeout=20)  # type: ignore[arg-type]
-        if response.ok:
+        response = post_with_retry(endpoint, data, timeout=20)
+
+        if response and response.ok:
             LOGGER.debug("Heartbeat sent successfully")
             return True
         else:
-            LOGGER.debug(f"Heartbeat failed with status {response.status_code}")
+            status = response.status_code if response else "no response"
+            LOGGER.error(f"Heartbeat failed: {status}")
     except Exception as e:
         LOGGER.error(f"Failed to post heartbeat: {e}")
     return False

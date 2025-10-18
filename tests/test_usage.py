@@ -4,7 +4,9 @@ import datetime
 import os
 import unittest
 import uuid
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+import requests
 
 import tests
 from src import read_config, usage
@@ -453,3 +455,230 @@ class TestUsage(unittest.TestCase):
         # In most timezones, UTC and local differ by at least 1 hour
         # This test might not be perfect for UTC timezone, but validates the intent
         # We can't assert they're different because the test might run in UTC timezone
+
+    @patch("requests.post")
+    def test_post_with_retry_success_first_attempt(self, mock_post):
+        """Test successful request on first attempt."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+
+        result = usage.post_with_retry("http://test.com", {"data": "test"})
+        self.assertIsNotNone(result)
+        self.assertTrue(result.ok)
+        self.assertEqual(mock_post.call_count, 1)
+
+    @patch("time.sleep")
+    @patch("requests.post")
+    def test_post_with_retry_success_after_retries(self, mock_post, mock_sleep):
+        """Test successful request after transient failures."""
+        # First two attempts fail with 503, third succeeds
+        mock_response_fail = MagicMock()
+        mock_response_fail.ok = False
+        mock_response_fail.status_code = 503
+
+        mock_response_success = MagicMock()
+        mock_response_success.ok = True
+        mock_response_success.status_code = 200
+
+        mock_post.side_effect = [mock_response_fail, mock_response_fail, mock_response_success]
+
+        result = usage.post_with_retry("http://test.com", {"data": "test"}, max_retries=3)
+        self.assertIsNotNone(result)
+        self.assertTrue(result.ok)
+        self.assertEqual(mock_post.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)  # Sleep before retry 2 and 3
+
+    @patch("time.sleep")
+    @patch("requests.post")
+    def test_post_with_retry_exponential_backoff(self, mock_post, mock_sleep):
+        """Test exponential backoff timing."""
+        mock_response = MagicMock()
+        mock_response.ok = False
+        mock_response.status_code = 503
+        mock_post.return_value = mock_response
+
+        usage.post_with_retry("http://test.com", {"data": "test"}, max_retries=3, backoff_factor=2.0)
+
+        # Verify exponential backoff: 2^0=1, 2^1=2 seconds
+        self.assertEqual(mock_sleep.call_count, 2)
+        mock_sleep.assert_any_call(1.0)  # 2^0
+        mock_sleep.assert_any_call(2.0)  # 2^1
+
+    @patch("requests.post")
+    def test_post_with_retry_non_retriable_4xx(self, mock_post):
+        """Test non-retriable 4xx errors (except 429) don't retry."""
+        mock_response = MagicMock()
+        mock_response.ok = False
+        mock_response.status_code = 400
+        mock_post.return_value = mock_response
+
+        result = usage.post_with_retry("http://test.com", {"data": "test"})
+        self.assertIsNotNone(result)
+        self.assertFalse(result.ok)
+        self.assertEqual(result.status_code, 400)
+        # Should not retry for 400 error
+        self.assertEqual(mock_post.call_count, 1)
+
+    @patch("time.sleep")
+    @patch("requests.post")
+    def test_post_with_retry_rate_limit_429(self, mock_post, mock_sleep):
+        """Test rate limit 429 errors are retried."""
+        mock_response_429 = MagicMock()
+        mock_response_429.ok = False
+        mock_response_429.status_code = 429
+
+        mock_response_success = MagicMock()
+        mock_response_success.ok = True
+        mock_response_success.status_code = 200
+
+        mock_post.side_effect = [mock_response_429, mock_response_success]
+
+        result = usage.post_with_retry("http://test.com", {"data": "test"})
+        self.assertIsNotNone(result)
+        self.assertTrue(result.ok)
+        self.assertEqual(mock_post.call_count, 2)
+        self.assertEqual(mock_sleep.call_count, 1)
+
+    @patch("time.sleep")
+    @patch("requests.post")
+    def test_post_with_retry_connection_error(self, mock_post, mock_sleep):
+        """Test connection errors are retried."""
+        mock_post.side_effect = [
+            requests.ConnectionError("Network error"),
+            requests.ConnectionError("Network error"),
+            MagicMock(ok=True, status_code=200),
+        ]
+
+        result = usage.post_with_retry("http://test.com", {"data": "test"}, max_retries=3)
+        self.assertIsNotNone(result)
+        self.assertTrue(result.ok)
+        self.assertEqual(mock_post.call_count, 3)
+
+    @patch("time.sleep")
+    @patch("requests.post")
+    def test_post_with_retry_timeout_error(self, mock_post, mock_sleep):
+        """Test timeout errors are retried."""
+        mock_post.side_effect = [
+            requests.Timeout("Request timeout"),
+            MagicMock(ok=True, status_code=200),
+        ]
+
+        result = usage.post_with_retry("http://test.com", {"data": "test"})
+        self.assertIsNotNone(result)
+        self.assertTrue(result.ok)
+        self.assertEqual(mock_post.call_count, 2)
+
+    @patch("time.sleep")
+    @patch("requests.post")
+    def test_post_with_retry_exhausted_retries(self, mock_post, mock_sleep):
+        """Test all retries exhausted returns None."""
+        mock_post.side_effect = requests.ConnectionError("Network error")
+
+        result = usage.post_with_retry("http://test.com", {"data": "test"}, max_retries=3)
+        self.assertIsNone(result)
+        self.assertEqual(mock_post.call_count, 3)
+        self.assertEqual(mock_sleep.call_count, 2)
+
+    @patch("requests.post")
+    def test_post_with_retry_unexpected_exception(self, mock_post):
+        """Test unexpected exceptions don't retry."""
+        mock_post.side_effect = ValueError("Unexpected error")
+
+        result = usage.post_with_retry("http://test.com", {"data": "test"})
+        self.assertIsNone(result)
+        # Should not retry on unexpected exceptions
+        self.assertEqual(mock_post.call_count, 1)
+
+    @patch("time.sleep")
+    @patch("requests.post")
+    def test_post_with_retry_server_errors_5xx(self, mock_post, mock_sleep):
+        """Test server errors (5xx) are retried."""
+        for status_code in [500, 502, 503, 504]:
+            mock_post.reset_mock()
+            mock_sleep.reset_mock()
+
+            mock_response = MagicMock()
+            mock_response.ok = False
+            mock_response.status_code = status_code
+            mock_post.return_value = mock_response
+
+            result = usage.post_with_retry("http://test.com", {"data": "test"}, max_retries=2)
+            self.assertIsNone(result)
+            self.assertEqual(mock_post.call_count, 2)
+            self.assertEqual(mock_sleep.call_count, 1)
+
+    @patch("time.sleep")
+    @patch("src.usage.post_with_retry")
+    def test_post_new_installation_with_retry(self, mock_retry, mock_sleep):
+        """Test post_new_installation uses retry logic."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.status_code = 201
+        mock_response.json.return_value = {"id": str(uuid.uuid4())}
+        mock_retry.return_value = mock_response
+
+        result = usage.post_new_installation({"test": "data"}, "http://test.com")
+        self.assertIsNotNone(result)
+        mock_retry.assert_called_once_with("http://test.com", {"test": "data"}, timeout=10)
+
+    @patch("time.sleep")
+    @patch("src.usage.post_with_retry")
+    def test_post_new_heartbeat_with_retry(self, mock_retry, mock_sleep):
+        """Test post_new_heartbeat uses retry logic."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.status_code = 201
+        mock_retry.return_value = mock_response
+
+        result = usage.post_new_heartbeat({"test": "data"}, "http://test.com")
+        self.assertTrue(result)
+        mock_retry.assert_called_once_with("http://test.com", {"test": "data"}, timeout=20)
+
+    @patch("time.sleep")
+    @patch("src.usage.post_with_retry")
+    def test_post_new_installation_retry_failure(self, mock_retry, mock_sleep):
+        """Test post_new_installation handles retry failure."""
+        mock_retry.return_value = None  # All retries failed
+
+        result = usage.post_new_installation({"test": "data"}, "http://test.com")
+        self.assertIsNone(result)
+
+    @patch("time.sleep")
+    @patch("src.usage.post_with_retry")
+    def test_post_new_heartbeat_retry_failure(self, mock_retry, mock_sleep):
+        """Test post_new_heartbeat handles retry failure."""
+        mock_retry.return_value = None  # All retries failed
+
+        result = usage.post_new_heartbeat({"test": "data"}, "http://test.com")
+        self.assertFalse(result)
+
+    def test_retry_env_variables(self):
+        """Test retry configuration from environment variables."""
+        # Test default values
+        self.assertEqual(usage.MAX_RETRIES, 3)
+        self.assertEqual(usage.RETRY_BACKOFF_FACTOR, 2.0)
+
+    @patch("src.usage.post_with_retry")
+    def test_post_new_installation_exception_handling(self, mock_retry):
+        """Test post_new_installation handles exceptions in response processing."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        mock_response.json.side_effect = ValueError("JSON decode error")
+        mock_retry.return_value = mock_response
+
+        result = usage.post_new_installation({"test": "data"}, "http://test.com")
+        self.assertIsNone(result)
+
+    @patch("src.usage.post_with_retry")
+    def test_post_new_heartbeat_exception_handling(self, mock_retry):
+        """Test post_new_heartbeat handles exceptions in response processing."""
+        mock_response = MagicMock()
+        mock_response.ok = True
+        # Simulate exception during response processing
+        type(mock_response).ok = property(lambda self: (_ for _ in ()).throw(ValueError("Error")))
+        mock_retry.return_value = mock_response
+
+        result = usage.post_new_heartbeat({"test": "data"}, "http://test.com")
+        self.assertFalse(result)
