@@ -154,12 +154,12 @@ class TestUsage(unittest.TestCase):
         # Test second run - no install but heartbeat
         actual = usage.alive(config=self.config)
         self.assertTrue(actual)
-        # Test third run - no install, no heartbeat
+        # Test third run - no install, no heartbeat (same day)
         actual = usage.alive(config=self.config)
         self.assertFalse(actual)
 
-        # Test heartbeat 24 hours ago
-        mock_now = datetime.datetime.now() + datetime.timedelta(hours=25)
+        # Test heartbeat on next UTC day (even if less than 24 hours)
+        mock_now = datetime.datetime.utcnow() + datetime.timedelta(days=1)
         with patch("src.usage.current_time") as mock_datetime_now:
             mock_datetime_now.return_value = mock_now
             actual = usage.alive(config=self.config)
@@ -343,3 +343,113 @@ class TestUsage(unittest.TestCase):
         """Test alive when installation fails."""
         result = usage.alive(config=self.config)
         self.assertFalse(result)
+
+    @patch("src.usage.send_heartbeat")
+    def test_heartbeat_same_utc_day(self, mock_send):
+        """Test heartbeat throttled when same UTC day."""
+        mock_send.return_value = True
+
+        # Create a timestamp for earlier today
+        now = datetime.datetime.utcnow()
+        earlier_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        cached_data = {
+            "id": str(uuid.uuid4()),
+            "heartbeat_timestamp": earlier_today.strftime("%Y-%m-%d %H:%M:%S.%f"),
+        }
+
+        # Mock current time to be later same day
+        later_today = earlier_today.replace(hour=23, minute=59, second=59)
+        with patch("src.usage.current_time") as mock_time:
+            mock_time.return_value = later_today
+            result = usage.heartbeat(cached_data, None)
+            # Should be throttled even though almost 24 hours
+            self.assertIsNone(result)
+            mock_send.assert_not_called()
+
+    @patch("src.usage.send_heartbeat")
+    def test_heartbeat_different_utc_day(self, mock_send):
+        """Test heartbeat sent when different UTC day."""
+        mock_send.return_value = True
+
+        # Create a timestamp for yesterday
+        today = datetime.datetime.utcnow()
+        yesterday = today - datetime.timedelta(days=1)
+
+        cached_data = {
+            "id": str(uuid.uuid4()),
+            "heartbeat_timestamp": yesterday.strftime("%Y-%m-%d %H:%M:%S.%f"),
+        }
+
+        # Mock current time to be today
+        with patch("src.usage.current_time") as mock_time:
+            mock_time.return_value = today
+            result = usage.heartbeat(cached_data, None)
+            # Should send heartbeat
+            self.assertIsNotNone(result)
+            self.assertEqual(result["heartbeat_timestamp"], str(today))
+            mock_send.assert_called_once()
+
+    @patch("src.usage.send_heartbeat")
+    def test_heartbeat_utc_midnight_boundary(self, mock_send):
+        """Test heartbeat at UTC midnight boundary."""
+        mock_send.return_value = True
+
+        # Create timestamp at 23:59:59 yesterday
+        today = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        yesterday_night = today - datetime.timedelta(seconds=1)
+
+        cached_data = {
+            "id": str(uuid.uuid4()),
+            "heartbeat_timestamp": yesterday_night.strftime("%Y-%m-%d %H:%M:%S.%f"),
+        }
+
+        # Mock current time to be 00:00:01 today (1 second after midnight)
+        today_morning = today + datetime.timedelta(seconds=1)
+        with patch("src.usage.current_time") as mock_time:
+            mock_time.return_value = today_morning
+            result = usage.heartbeat(cached_data, None)
+            # Should send heartbeat even though only 2 seconds apart
+            self.assertIsNotNone(result)
+            mock_send.assert_called_once()
+
+    @patch("src.usage.send_heartbeat")
+    def test_heartbeat_uses_utc_not_local(self, mock_send):
+        """Test that heartbeat uses UTC time, not local time."""
+        mock_send.return_value = True
+
+        # Create a timestamp using UTC
+        utc_yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=1)
+
+        cached_data = {
+            "id": str(uuid.uuid4()),
+            "heartbeat_timestamp": utc_yesterday.strftime("%Y-%m-%d %H:%M:%S.%f"),
+        }
+
+        # The heartbeat should use UTC time internally
+        result = usage.heartbeat(cached_data, None)
+
+        # Should send heartbeat because it's a different UTC day
+        self.assertIsNotNone(result)
+
+        # Verify the timestamp is in UTC format and can be parsed
+        new_timestamp = result["heartbeat_timestamp"]
+        parsed = datetime.datetime.strptime(new_timestamp, "%Y-%m-%d %H:%M:%S.%f")
+
+        # The date should be today in UTC, not local
+        utc_today = datetime.datetime.utcnow().date()
+        self.assertEqual(parsed.date(), utc_today)
+
+    def test_current_time_returns_utc(self):
+        """Test that current_time returns UTC time."""
+        result = usage.current_time()
+
+        # Should be close to utcnow, not now
+        utc_now = datetime.datetime.utcnow()
+
+        # Result should be within 1 second of UTC now
+        self.assertLess(abs((result - utc_now).total_seconds()), 1)
+
+        # In most timezones, UTC and local differ by at least 1 hour
+        # This test might not be perfect for UTC timezone, but validates the intent
+        # We can't assert they're different because the test might run in UTC timezone

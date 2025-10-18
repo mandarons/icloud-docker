@@ -3,7 +3,7 @@
 import json
 import os
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any
 
 import requests
@@ -253,12 +253,12 @@ def send_heartbeat(app_id: str | None, data: Any = None) -> bool:
 
 
 def current_time() -> datetime:
-    """Get current time.
+    """Get current UTC time.
 
     Returns:
-        Current datetime object
+        Current UTC datetime object
     """
-    return datetime.now()
+    return datetime.utcnow()
 
 
 def heartbeat(cached_data: dict, data: Any) -> dict | None:
@@ -281,8 +281,9 @@ def heartbeat(cached_data: dict, data: Any) -> dict | None:
             time_since_last = current - previous
             LOGGER.debug(f"Time since last heartbeat: {time_since_last}")
 
-            if previous < (current - timedelta(hours=24)):
-                LOGGER.debug("Sending heartbeat (24+ hours since last)")
+            # Check if different UTC day, not just 24 hours
+            if previous.date() < current.date():
+                LOGGER.debug("Sending heartbeat (different UTC day)")
                 if send_heartbeat(cached_data.get("id"), data=data):
                     cached_data["heartbeat_timestamp"] = str(current)
                     return cached_data
@@ -290,7 +291,7 @@ def heartbeat(cached_data: dict, data: Any) -> dict | None:
                     LOGGER.warning("Heartbeat send failed")
                     return None
             else:
-                LOGGER.debug("Heartbeat throttled (less than 24 hours)")
+                LOGGER.debug("Heartbeat throttled (same UTC day)")
                 return None
         except ValueError as e:
             LOGGER.error(f"Invalid heartbeat timestamp format: {e}")
