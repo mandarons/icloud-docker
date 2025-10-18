@@ -1,0 +1,6 @@
+[38;21m2025-10-18 19:47:11,918 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 19:47:11,919 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-18 19:47:11,920 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: http://test.com[0m
+[38;5;196m2025-10-18 19:47:11,921 :: ERROR :: root :: usage.py :: 227 :: Failed to post new installation: JSON decode error[0m
+[38;21m2025-10-18 19:47:11,921 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 19:47:11,921 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

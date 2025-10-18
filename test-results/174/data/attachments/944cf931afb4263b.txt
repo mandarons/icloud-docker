@@ -1,0 +1,7 @@
+[38;21m2025-10-18 19:47:11,367 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 19:47:11,367 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;5;196m2025-10-18 19:47:11,368 :: ERROR :: root :: usage.py :: 365 :: Invalid heartbeat timestamp format: time data 'invalid-timestamp' does not match format '%Y-%m-%d %H:%M:%S.%f'[0m
+[38;21m2025-10-18 19:47:11,368 :: DEBUG :: root :: usage.py :: 369 :: Sending first heartbeat[0m
+[38;21m2025-10-18 19:47:11,368 :: DEBUG :: root :: usage.py :: 372 :: First heartbeat sent successfully[0m
+[38;21m2025-10-18 19:47:11,368 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 19:47:11,368 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

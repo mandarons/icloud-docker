@@ -1,0 +1,6 @@
+[38;21m2025-10-18 19:47:11,999 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 19:47:11,999 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-18 19:47:12,001 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: http://test.com[0m
+[38;21m2025-10-18 19:47:12,002 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: bc50a66b-936e-4a63-b9a1-67155782f9c6[0m
+[38;21m2025-10-18 19:47:12,002 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 19:47:12,002 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
