@@ -674,10 +674,11 @@ class TestUsage(unittest.TestCase):
     @patch("src.usage.post_with_retry")
     def test_post_new_heartbeat_exception_handling(self, mock_retry):
         """Test post_new_heartbeat handles exceptions in response processing."""
+        from unittest.mock import PropertyMock
+
         mock_response = MagicMock()
-        mock_response.ok = True
-        # Simulate exception during response processing
-        type(mock_response).ok = property(lambda self: (_ for _ in ()).throw(ValueError("Error")))
+        # Simulate exception when accessing 'ok' property
+        type(mock_response).ok = PropertyMock(side_effect=ValueError("Error"))
         mock_retry.return_value = mock_response
 
         result = usage.post_new_heartbeat({"test": "data"}, "http://test.com")
