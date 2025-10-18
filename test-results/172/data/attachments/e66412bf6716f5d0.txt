@@ -1,0 +1,1 @@
+ERROR    root:notify.py:231 Failed to send Pushover notification. Response: <MagicMock name='post().text' id='140378669649056'>

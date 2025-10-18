@@ -1,0 +1,11 @@
+[38;21m2025-10-18 17:17:06,343 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-18 17:17:06,343 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-18 17:17:06,344 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-18 17:17:06,352 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-10-18 17:17:06,353 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-10-18 17:17:06,353 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-18 17:17:06,354 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-10-18 17:17:06,354 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-10-18 17:17:06,354 :: INFO :: root :: sync.py :: 190 :: Syncing drive...[0m
+[38;5;39m2025-10-18 17:17:06,355 :: INFO :: root :: sync.py :: 192 :: Drive synced[0m
+[38;21m2025-10-18 17:17:06,355 :: DEBUG :: root :: config_logging.py :: 44 :: Removing obsolete files and folders ...[0m

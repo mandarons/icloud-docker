@@ -1,0 +1,7 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+ERROR    root:usage.py:296 Invalid heartbeat timestamp format: time data 'invalid-timestamp' does not match format '%Y-%m-%d %H:%M:%S.%f'
+DEBUG    root:usage.py:300 Sending first heartbeat
+DEBUG    root:usage.py:303 First heartbeat sent successfully
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data

@@ -1,0 +1,4 @@
+[38;21m2025-10-18 17:17:05,548 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2025-10-18 17:17:05,548 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;226m2025-10-18 17:17:05,549 :: WARNING :: root :: config_logging.py :: 26 :: app > root root destination is missing. Using default root destination: ./icloud[0m
+[38;5;226m2025-10-18 17:17:05,549 :: WARNING :: root :: config_logging.py :: 26 :: photos > destination destination is missing. Using default photos destination: photos > destination[0m

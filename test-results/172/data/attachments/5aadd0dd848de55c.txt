@@ -1,0 +1,12 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:97 Usage cache file not found, creating: /config/.data
+DEBUG    root:usage.py:127 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:205 Installing new instance
+DEBUG    root:usage.py:151 Posting new installation to: None
+ERROR    root:usage.py:161 Failed to post new installation: Error occurred.
+ERROR    root:usage.py:214 Installation failed
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:35 Initialized usage cache at: /config/.data

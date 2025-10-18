@@ -1,0 +1,9 @@
+[38;21m2025-10-18 17:17:09,570 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-18 17:17:09,571 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-18 17:17:09,571 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-18 17:17:09,580 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+
+Performance Test Results:
+Sequential time: 0.000s
+Parallel time: 0.000s
+Performance improvement: 1.77x faster
