@@ -1,0 +1,15 @@
+[38;21m2025-10-21 00:53:05,115 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-21 00:53:05,115 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-21 00:53:05,115 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-21 00:53:05,116 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-21 00:53:05,116 :: DEBUG :: root :: usage.py :: 102 :: Usage cache file not found, creating: /config/.data[0m
+[38;21m2025-10-21 00:53:05,116 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-10-21 00:53:05,116 :: DEBUG :: root :: usage.py :: 271 :: Installing new instance[0m
+[38;21m2025-10-21 00:53:05,116 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2025-10-21 00:53:05,116 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: 8b27de7a-9e15-40b9-b43b-859510b3bbfa[0m
+[38;21m2025-10-21 00:53:05,117 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: 8b27de7a-9e15-40b9-b43b-859510b3bbfa[0m
+[38;21m2025-10-21 00:53:05,117 :: DEBUG :: root :: usage.py :: 295 :: Posting heartbeat to: None[0m
+[38;5;196m2025-10-21 00:53:05,117 :: ERROR :: root :: usage.py :: 189 :: Unexpected error during request: Error occurred.[0m
+[38;5;196m2025-10-21 00:53:05,117 :: ERROR :: root :: usage.py :: 303 :: Heartbeat failed: no response[0m
+[38;21m2025-10-21 00:53:05,117 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-21 00:53:05,117 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

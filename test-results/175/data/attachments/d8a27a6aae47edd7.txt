@@ -1,0 +1,5 @@
+[38;21m2025-10-21 00:52:57,935 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-21 00:52:57,935 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-21 00:52:57,935 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-21 00:52:57,944 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;5;196m2025-10-21 00:52:57,946 :: ERROR :: root :: drive_file_existence.py :: 108 :: File not found in iCloud Drive while checking package type - Scanned document 1.pdf: ObjectNotFoundException: Could not find document (NOT_FOUND)[0m

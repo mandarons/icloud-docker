@@ -1,0 +1,12 @@
+[38;21m2025-10-21 00:53:04,910 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-21 00:53:04,911 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-21 00:53:04,911 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-21 00:53:04,911 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-21 00:53:04,911 :: DEBUG :: root :: usage.py :: 102 :: Usage cache file not found, creating: /config/.data[0m
+[38;21m2025-10-21 00:53:04,912 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-10-21 00:53:04,912 :: DEBUG :: root :: usage.py :: 271 :: Installing new instance[0m
+[38;21m2025-10-21 00:53:04,912 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2025-10-21 00:53:04,912 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: deb200e2-cb05-4043-9a91-215c003e682f[0m
+[38;21m2025-10-21 00:53:04,912 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: deb200e2-cb05-4043-9a91-215c003e682f[0m
+[38;21m2025-10-21 00:53:04,912 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-21 00:53:04,913 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
