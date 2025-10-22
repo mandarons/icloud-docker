@@ -1,0 +1,15 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:102 Usage cache file not found, creating: /config/.data
+DEBUG    root:usage.py:132 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:271 Installing new instance
+DEBUG    root:usage.py:215 Posting new installation to: None
+DEBUG    root:usage.py:221 Successfully registered new installation: 60d7926f-40c8-4f40-be1e-b17e43953f17
+DEBUG    root:usage.py:277 Installation completed with ID: 60d7926f-40c8-4f40-be1e-b17e43953f17
+DEBUG    root:usage.py:295 Posting heartbeat to: invalid
+DEBUG    root:usage.py:172 Non-retriable error (status 404)
+ERROR    root:usage.py:303 Heartbeat failed: 404
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data

@@ -1,0 +1,17 @@
+[38;21m2025-10-22 13:54:40,941 :: DEBUG :: icloudpy.base :: base.py :: 240 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-10-22 13:54:40,941 :: INFO :: icloudpy.base :: base.py :: 247 :: Session file does not exist[0m
+[38;21m2025-10-22 13:54:40,942 :: DEBUG :: icloudpy.base :: base.py :: 313 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-10-22 13:54:40,950 :: DEBUG :: icloudpy.base :: base.py :: 417 :: Authentication completed successfully[0m
+[38;21m2025-10-22 13:54:40,958 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-10-22 13:54:40,958 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-22 13:54:40,959 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-22 13:54:40,959 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-10-22 13:54:40,959 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-10-22 13:54:40,959 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:01.214548[0m
+[38;21m2025-10-22 13:54:40,959 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-10-22 13:54:40,959 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-10-22 13:54:40,959 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every -1 seconds.[0m
+[38;5;39m2025-10-22 13:54:40,959 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every -1 seconds.[0m
+[38;21m2025-10-22 13:54:40,960 :: DEBUG :: root :: sync.py :: 578 :: Failed to send usage statistics: Network timeout[0m
+[38;5;39m2025-10-22 13:54:40,960 :: INFO :: root :: sync.py :: 495 :: Resyncing at Wed Oct 22 13:54:40 2025 ...[0m
+[38;5;39m2025-10-22 13:54:40,960 :: INFO :: root :: sync.py :: 619 :: All configured sync intervals are negative, exiting oneshot mode...[0m
