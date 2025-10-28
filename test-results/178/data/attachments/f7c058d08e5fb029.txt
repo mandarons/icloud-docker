@@ -1,0 +1,13 @@
+[38;21m2025-10-28 05:08:38,377 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-28 05:08:38,377 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-28 05:08:38,377 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-28 05:08:38,378 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-28 05:08:38,378 :: DEBUG :: root :: usage.py :: 102 :: Usage cache file not found, creating: /config/.data[0m
+[38;21m2025-10-28 05:08:38,378 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-10-28 05:08:38,378 :: DEBUG :: root :: usage.py :: 271 :: Installing new instance[0m
+[38;21m2025-10-28 05:08:38,378 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;5;196m2025-10-28 05:08:38,378 :: ERROR :: root :: usage.py :: 189 :: Unexpected error during request: Error occurred.[0m
+[38;5;196m2025-10-28 05:08:38,378 :: ERROR :: root :: usage.py :: 225 :: Installation registration failed: no response[0m
+[38;5;196m2025-10-28 05:08:38,379 :: ERROR :: root :: usage.py :: 280 :: Installation failed[0m
+[38;21m2025-10-28 05:08:38,379 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-28 05:08:38,379 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

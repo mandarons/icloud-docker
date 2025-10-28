@@ -1,0 +1,6 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:215 Posting new installation to: http://test.com
+DEBUG    root:usage.py:221 Successfully registered new installation: 07140e72-db5d-44da-a4df-5435c81ff43d
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
