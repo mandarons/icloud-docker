@@ -1,0 +1,7 @@
+[38;21m2025-10-28 05:09:12,530 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-28 05:09:12,530 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-10-28 05:09:12,532 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-28 05:09:12,532 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;5;196m2025-10-28 05:09:12,533 :: ERROR :: root :: usage.py :: 135 :: Failed to save usage cache to /config/.data: Rename failed[0m
+[38;21m2025-10-28 05:09:12,533 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-10-28 05:09:12,534 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

@@ -1,0 +1,3 @@
+[38;5;226m2025-10-28 05:09:00,676 :: WARNING :: root :: config_logging.py :: 26 :: app > smtp > no_tls no_tls is not found.[0m
+[38;5;226m2025-10-28 05:09:00,676 :: WARNING :: root :: config_logging.py :: 26 :: app > smtp > password password is not found.[0m
+[38;5;196m2025-10-28 05:09:00,677 :: ERROR :: root :: notify.py :: 707 :: Failed to send sync summary email: Test exception[0m
