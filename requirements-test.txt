@@ -3,6 +3,6 @@ allure-pytest==2.15.0
 pytest==8.4.2
 coverage==7.11.0
 pytest-cov==7.0.0
-ruff==0.14.2
+ruff==0.14.3
 ipython==8.37.0
 pre-commit==4.3.0
