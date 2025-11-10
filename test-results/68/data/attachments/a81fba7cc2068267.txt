@@ -1,4 +1,0 @@
-Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
-[38;5;226m2023-01-10 17:43:54,242 :: WARNING :: root :: config_parser.py :: 278 :: photos > filters > albums not found. Downloading all albums ...[0m
-[38;5;226m2023-01-10 17:43:54,243 :: WARNING :: root :: config_parser.py :: 295 :: Skipping the invalid file size invalid, valid file sizes are original,medium,thumb.[0m
-[38;5;226m2023-01-10 17:43:54,243 :: WARNING :: root :: config_parser.py :: 310 :: photos > filters > extensions not found. Downloading all extensions ...[0m

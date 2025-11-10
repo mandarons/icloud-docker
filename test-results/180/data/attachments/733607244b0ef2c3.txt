@@ -1,0 +1,29 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+INFO     root:album_sync_orchestrator.py:60 Syncing All Photos
+DEBUG    root:config_logging.py:44 max_threads is not found in app > max_threads. Using default max_threads: 4 (auto) ...
+INFO     root:photo_download_manager.py:222 Starting parallel photo downloads with 4 threads for 7 photos...
+DEBUG    root:photo_download_manager.py:169 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3328__original__WU4xdjhlR2lIWVlaL2FLVWtNdUd0U2YwUDFCTg==.JPG
+INFO     root:photo_file_utils.py:79 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3328__original__WU4xdjhlR2lIWVlaL2FLVWtNdUd0U2YwUDFCTg==.JPG ...
+DEBUG    root:photo_download_manager.py:169 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3327__original__RU5LekJVcitEZG1UYVAvR0VBZ2xUdXJXdHNlbg==.JPG
+INFO     root:photo_file_utils.py:79 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3327__original__RU5LekJVcitEZG1UYVAvR0VBZ2xUdXJXdHNlbg==.JPG ...
+DEBUG    root:photo_download_manager.py:169 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3322__original__QVV4VkZUMnlWc1E1NzM5dG1VNWMxNDk3ZHVGRA==.JPG
+INFO     root:photo_file_utils.py:79 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3322__original__QVV4VkZUMnlWc1E1NzM5dG1VNWMxNDk3ZHVGRA==.JPG ...
+DEBUG    root:photo_download_manager.py:169 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3206__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vg==.JPG
+INFO     root:photo_file_utils.py:79 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3206__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vg==.JPG ...
+DEBUG    root:photo_download_manager.py:188 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3327__original__RU5LekJVcitEZG1UYVAvR0VBZ2xUdXJXdHNlbg==.JPG
+DEBUG    root:photo_download_manager.py:169 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG
+INFO     root:photo_file_utils.py:79 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ...
+DEBUG    root:photo_download_manager.py:188 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3206__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vg==.JPG
+DEBUG    root:photo_download_manager.py:169 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/no-extension__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YaA==
+INFO     root:photo_file_utils.py:79 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/no-extension__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YaA== ...
+DEBUG    root:photo_download_manager.py:188 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3322__original__QVV4VkZUMnlWc1E1NzM5dG1VNWMxNDk3ZHVGRA==.JPG
+DEBUG    root:photo_download_manager.py:169 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vw==.JPG
+INFO     root:photo_file_utils.py:79 Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vw==.JPG ...
+DEBUG    root:photo_download_manager.py:188 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3328__original__WU4xdjhlR2lIWVlaL2FLVWtNdUd0U2YwUDFCTg==.JPG
+DEBUG    root:photo_download_manager.py:188 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vw==.JPG
+DEBUG    root:photo_download_manager.py:188 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG
+DEBUG    root:photo_download_manager.py:188 [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/no-extension__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YaA==
+INFO     root:photo_download_manager.py:245 Photo processing complete: 7 successful, 0 failed
