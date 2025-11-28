@@ -1,5 +1,0 @@
-Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
-[38;21m2023-01-20 20:11:48,229 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
-[38;5;39m2023-01-20 20:11:48,230 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
-[38;21m2023-01-20 20:11:48,230 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
-[38;21m2023-01-20 20:11:48,230 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m

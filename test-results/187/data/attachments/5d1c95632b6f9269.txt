@@ -1,0 +1,34 @@
+[38;21m2025-11-28 11:17:46,725 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-11-28 11:17:46,725 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-11-28 11:17:46,725 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-11-28 11:17:46,734 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;5;39m2025-11-28 11:17:46,758 :: INFO :: root :: album_sync_orchestrator.py :: 60 :: Syncing All Photos[0m
+[38;5;39m2025-11-28 11:17:46,760 :: INFO :: root :: photo_download_manager.py :: 222 :: Starting parallel photo downloads with 1 threads for 7 photos...[0m
+[38;21m2025-11-28 11:17:46,761 :: DEBUG :: root :: photo_download_manager.py :: 169 :: [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3328__original__WU4xdjhlR2lIWVlaL2FLVWtNdUd0U2YwUDFCTg==.JPG[0m
+[38;5;39m2025-11-28 11:17:46,761 :: INFO :: root :: photo_file_utils.py :: 79 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3328__original__WU4xdjhlR2lIWVlaL2FLVWtNdUd0U2YwUDFCTg==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,763 :: DEBUG :: root :: photo_download_manager.py :: 169 :: [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3327__original__RU5LekJVcitEZG1UYVAvR0VBZ2xUdXJXdHNlbg==.JPG[0m
+[38;5;39m2025-11-28 11:17:46,763 :: INFO :: root :: photo_file_utils.py :: 79 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3327__original__RU5LekJVcitEZG1UYVAvR0VBZ2xUdXJXdHNlbg==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,765 :: DEBUG :: root :: photo_download_manager.py :: 169 :: [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3322__original__QVV4VkZUMnlWc1E1NzM5dG1VNWMxNDk3ZHVGRA==.JPG[0m
+[38;5;39m2025-11-28 11:17:46,765 :: INFO :: root :: photo_file_utils.py :: 79 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3322__original__QVV4VkZUMnlWc1E1NzM5dG1VNWMxNDk3ZHVGRA==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,767 :: DEBUG :: root :: photo_download_manager.py :: 169 :: [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3206__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vg==.JPG[0m
+[38;5;39m2025-11-28 11:17:46,767 :: INFO :: root :: photo_file_utils.py :: 79 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3206__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vg==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,769 :: DEBUG :: root :: photo_download_manager.py :: 169 :: [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG[0m
+[38;5;39m2025-11-28 11:17:46,769 :: INFO :: root :: photo_file_utils.py :: 79 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,771 :: DEBUG :: root :: photo_download_manager.py :: 169 :: [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/no-extension__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YaA==[0m
+[38;5;39m2025-11-28 11:17:46,771 :: INFO :: root :: photo_file_utils.py :: 79 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/no-extension__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YaA== ...[0m
+[38;21m2025-11-28 11:17:46,773 :: DEBUG :: root :: photo_download_manager.py :: 169 :: [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vw==.JPG[0m
+[38;5;39m2025-11-28 11:17:46,773 :: INFO :: root :: photo_file_utils.py :: 79 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vw==.JPG ...[0m
+[38;5;39m2025-11-28 11:17:46,774 :: INFO :: root :: photo_download_manager.py :: 245 :: Photo processing complete: 7 successful, 0 failed[0m
+[38;5;39m2025-11-28 11:17:46,775 :: INFO :: root :: album_sync_orchestrator.py :: 60 :: Syncing All Photos[0m
+[38;21m2025-11-28 11:17:46,776 :: DEBUG :: root :: photo_file_utils.py :: 36 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3328__original__WU4xdjhlR2lIWVlaL2FLVWtNdUd0U2YwUDFCTg==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,776 :: DEBUG :: root :: photo_file_utils.py :: 36 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3327__original__RU5LekJVcitEZG1UYVAvR0VBZ2xUdXJXdHNlbg==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,777 :: DEBUG :: root :: photo_file_utils.py :: 36 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3322__original__QVV4VkZUMnlWc1E1NzM5dG1VNWMxNDk3ZHVGRA==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,777 :: DEBUG :: root :: photo_file_utils.py :: 36 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3206__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vg==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,777 :: DEBUG :: root :: photo_file_utils.py :: 36 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YZw==.JPG ...[0m
+[38;21m2025-11-28 11:17:46,777 :: DEBUG :: root :: photo_file_utils.py :: 36 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/no-extension__original__QVZ4My9WS2tiV1BkTmJXdzY4bXJXelN1ZW1YaA== ...[0m
+[38;21m2025-11-28 11:17:46,777 :: DEBUG :: root :: photo_file_utils.py :: 36 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/IMG_3148__original__QWIvOGtVQWhuR3pTeG5sOXlXdmg4SktCcE92Vw==.JPG ...[0m
+
+Photo Performance Test Results:
+Sequential time: 0.016s
+Parallel time: 0.003s
+Performance improvement: 5.78x faster

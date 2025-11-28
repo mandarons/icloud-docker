@@ -1,0 +1,27 @@
+[38;21m2025-11-28 11:17:49,877 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:17:49,877 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-11-28 11:17:49,878 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-11-28 11:17:49,878 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:17:49,878 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-11-28 11:17:49,878 :: DEBUG :: root :: usage.py :: 102 :: Usage cache file not found, creating: /config/.data[0m
+[38;21m2025-11-28 11:17:49,879 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-11-28 11:17:49,879 :: DEBUG :: root :: usage.py :: 400 :: New installation detected, registering...[0m
+[38;21m2025-11-28 11:17:49,879 :: DEBUG :: root :: usage.py :: 271 :: Installing new instance[0m
+[38;21m2025-11-28 11:17:49,879 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2025-11-28 11:17:49,879 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: 5354f7a0-563c-4ba7-86db-70488e05a8a7[0m
+[38;21m2025-11-28 11:17:49,879 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: 5354f7a0-563c-4ba7-86db-70488e05a8a7[0m
+[38;21m2025-11-28 11:17:49,880 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-11-28 11:17:49,880 :: DEBUG :: root :: usage.py :: 404 :: Installation registration completed[0m
+[38;21m2025-11-28 11:17:49,880 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-11-28 11:17:49,880 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:17:49,880 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-11-28 11:17:49,880 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-11-28 11:17:49,880 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-11-28 11:17:49,881 :: DEBUG :: root :: usage.py :: 369 :: Sending first heartbeat[0m
+[38;21m2025-11-28 11:17:49,881 :: DEBUG :: root :: usage.py :: 295 :: Posting heartbeat to: None[0m
+[38;21m2025-11-28 11:17:49,881 :: DEBUG :: root :: usage.py :: 299 :: Heartbeat sent successfully[0m
+[38;21m2025-11-28 11:17:49,881 :: DEBUG :: root :: usage.py :: 372 :: First heartbeat sent successfully[0m
+[38;21m2025-11-28 11:17:49,881 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-11-28 11:17:49,881 :: DEBUG :: root :: usage.py :: 414 :: Heartbeat completed successfully[0m
+[38;21m2025-11-28 11:17:49,882 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:17:49,882 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

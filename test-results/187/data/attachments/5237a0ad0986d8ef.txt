@@ -1,0 +1,16 @@
+[38;21m2025-11-28 11:17:50,774 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:17:50,774 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;5;226m2025-11-28 11:17:50,775 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 500, attempt 1/2[0m
+[38;21m2025-11-28 11:17:50,775 :: DEBUG :: root :: usage.py :: 195 :: Waiting 1.0s before retry...[0m
+[38;5;226m2025-11-28 11:17:50,776 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 500, attempt 2/2[0m
+[38;5;226m2025-11-28 11:17:50,776 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 502, attempt 1/2[0m
+[38;21m2025-11-28 11:17:50,776 :: DEBUG :: root :: usage.py :: 195 :: Waiting 1.0s before retry...[0m
+[38;5;226m2025-11-28 11:17:50,776 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 502, attempt 2/2[0m
+[38;5;226m2025-11-28 11:17:50,777 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 503, attempt 1/2[0m
+[38;21m2025-11-28 11:17:50,777 :: DEBUG :: root :: usage.py :: 195 :: Waiting 1.0s before retry...[0m
+[38;5;226m2025-11-28 11:17:50,777 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 503, attempt 2/2[0m
+[38;5;226m2025-11-28 11:17:50,778 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 504, attempt 1/2[0m
+[38;21m2025-11-28 11:17:50,778 :: DEBUG :: root :: usage.py :: 195 :: Waiting 1.0s before retry...[0m
+[38;5;226m2025-11-28 11:17:50,778 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 504, attempt 2/2[0m
+[38;21m2025-11-28 11:17:50,778 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:17:50,778 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

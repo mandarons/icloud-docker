@@ -1,0 +1,6 @@
+[38;21m2025-11-28 11:17:50,463 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:17:50,464 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-11-28 11:17:50,465 :: DEBUG :: root :: usage.py :: 295 :: Posting heartbeat to: http://test.com[0m
+[38;21m2025-11-28 11:17:50,465 :: DEBUG :: root :: usage.py :: 299 :: Heartbeat sent successfully[0m
+[38;21m2025-11-28 11:17:50,465 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:17:50,465 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
