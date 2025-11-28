@@ -1,0 +1,3 @@
+[38;21m2025-11-28 11:13:04,488 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-11-28 11:13:04,488 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;226m2025-11-28 11:13:04,489 :: WARNING :: root :: config_logging.py :: 26 :: drive > destination destination is missing. Using default drive destination: drive.[0m

@@ -1,0 +1,9 @@
+[38;21m2025-11-28 11:13:16,572 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:13:16,572 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;5;226m2025-11-28 11:13:16,573 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 503, attempt 1/3[0m
+[38;21m2025-11-28 11:13:16,573 :: DEBUG :: root :: usage.py :: 195 :: Waiting 1.0s before retry...[0m
+[38;5;226m2025-11-28 11:13:16,574 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 503, attempt 2/3[0m
+[38;21m2025-11-28 11:13:16,574 :: DEBUG :: root :: usage.py :: 195 :: Waiting 2.0s before retry...[0m
+[38;5;226m2025-11-28 11:13:16,574 :: WARNING :: root :: usage.py :: 180 :: Request failed with status 503, attempt 3/3[0m
+[38;21m2025-11-28 11:13:16,574 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-11-28 11:13:16,574 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
