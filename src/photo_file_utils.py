@@ -65,6 +65,10 @@ def create_hardlink(source_path: str, destination_path: str) -> bool:
 def download_photo_from_server(photo, file_size: str, destination_path: str, max_retries: int = 1) -> bool:
     """Download photo from iCloud server to local path.
 
+    This function implements automatic retry logic for HTTP 410 (Gone) errors,
+    which occur when iCloud download URLs expire. When a 410 error is detected,
+    the function clears the cached URLs and retries the download.
+
     Args:
         photo: Photo object from iCloudPy
         file_size: File size variant (original, medium, thumb, etc.)
@@ -79,8 +83,10 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
 
     LOGGER.info(f"Downloading {destination_path} ...")
 
-    retries = 0
-    while retries <= max_retries:  # noqa: PERF203
+    attempt = 0
+    max_attempts = max_retries + 1  # Initial attempt + retries
+
+    while attempt < max_attempts:  # noqa: PERF203
         try:
             download = photo.download(file_size)
             with open(destination_path, "wb") as file_out:
@@ -98,14 +104,17 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
             error_msg = str(e)
 
             # Check for HTTP 410 Gone error - download URL has expired
-            if "Gone (410)" in error_msg or "410" in error_msg:
-                if retries < max_retries:
-                    retries += 1
+            # The iCloudPy library raises exceptions with "Gone (410)" in the message
+            # when the download URL has expired (typically after 30-40 minutes)
+            if "Gone (410)" in error_msg:
+                attempt += 1
+                if attempt < max_attempts:
                     LOGGER.warning(
                         f"Download URL expired (410) for {destination_path}. "
-                        f"Refreshing URL and retrying (attempt {retries}/{max_retries})...",
+                        f"Refreshing URL and retrying (attempt {attempt}/{max_attempts})...",
                     )
                     # Clear cached versions to force URL refresh on next download attempt
+                    # This is necessary because iCloudPy caches the download URLs in _versions
                     if hasattr(photo, "_versions"):
                         photo._versions = None  # noqa: SLF001
                     continue
