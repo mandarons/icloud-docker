@@ -78,9 +78,9 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
         return False
 
     LOGGER.info(f"Downloading {destination_path} ...")
-    
+
     retries = 0
-    while retries <= max_retries:
+    while retries <= max_retries:  # noqa: PERF203
         try:
             download = photo.download(file_size)
             with open(destination_path, "wb") as file_out:
@@ -89,32 +89,32 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
             # Set file modification time to photo's added date
             local_modified_time = time.mktime(photo.added_date.timetuple())
             os.utime(destination_path, (local_modified_time, local_modified_time))
-            
+
             return True
 
-        except Exception as e:
+        except Exception as e:  # noqa: PERF203
             # Enhanced error logging with file path context
             # This catches all exceptions including iCloudPy errors like ObjectNotFoundException
             error_msg = str(e)
-            
+
             # Check for HTTP 410 Gone error - download URL has expired
             if "Gone (410)" in error_msg or "410" in error_msg:
                 if retries < max_retries:
                     retries += 1
                     LOGGER.warning(
                         f"Download URL expired (410) for {destination_path}. "
-                        f"Refreshing URL and retrying (attempt {retries}/{max_retries})..."
+                        f"Refreshing URL and retrying (attempt {retries}/{max_retries})...",
                     )
                     # Clear cached versions to force URL refresh on next download attempt
-                    if hasattr(photo, '_versions'):
-                        photo._versions = None
+                    if hasattr(photo, "_versions"):
+                        photo._versions = None  # noqa: SLF001
                     continue
                 else:
                     LOGGER.error(
-                        f"Failed to download {destination_path} after {max_retries} retries: {error_msg}"
+                        f"Failed to download {destination_path} after {max_retries} retries: {error_msg}",
                     )
                     return False
-            
+
             # Handle other errors
             if "ObjectNotFoundException" in error_msg or "NOT_FOUND" in error_msg:
                 LOGGER.error(f"Photo not found in iCloud Photos - {destination_path}: {error_msg}")
