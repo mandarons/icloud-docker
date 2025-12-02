@@ -131,7 +131,8 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
                 LOGGER.error(f"Failed to download {destination_path}: {error_msg}")
             return False
 
-    return False
+    # This line should never be reached due to the logic above, but is kept as defensive programming
+    return False  # pragma: no cover
 
 
 def rename_legacy_file_if_exists(old_path: str, new_path: str) -> None:
