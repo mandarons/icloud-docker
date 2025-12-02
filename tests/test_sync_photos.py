@@ -1856,6 +1856,26 @@ class TestSyncPhotos(unittest.TestCase):
             # Verify file was created
             self.assertTrue(os.path.exists(destination_path))
 
+    def test_download_photo_from_server_http_410_error_zero_retries(self):
+        """Test download_photo_from_server with HTTP 410 error and max_retries=0."""
+        import tempfile
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            # Mock photo that raises 410 error
+            mock_photo = Mock()
+            mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+            mock_photo.download.side_effect = Exception("Gone (410)")  # noqa: EM101
+
+            # Test that download fails immediately with max_retries=0
+            result = download_photo_from_server(mock_photo, "original", destination_path, max_retries=0)
+            self.assertFalse(result)
+            self.assertEqual(mock_photo.download.call_count, 1)  # Only initial attempt, no retries
+
     def test_generate_photo_path_different_normalization(self):
         """Test generate_photo_path with different normalization (line 107)."""
         from src.photo_download_manager import generate_photo_path
