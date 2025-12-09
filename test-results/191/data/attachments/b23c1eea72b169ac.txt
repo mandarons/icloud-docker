@@ -1,0 +1,16 @@
+[38;21m2025-12-09 03:37:10,264 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:37:10,264 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:37:10,265 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:37:10,265 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:37:10,265 :: DEBUG :: root :: usage.py :: 102 :: Usage cache file not found, creating: /config/.data[0m
+[38;21m2025-12-09 03:37:10,265 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-12-09 03:37:10,265 :: DEBUG :: root :: usage.py :: 271 :: Installing new instance[0m
+[38;21m2025-12-09 03:37:10,266 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2025-12-09 03:37:10,266 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: 78e7f295-9632-4ce0-a703-589fa250ab8f[0m
+[38;21m2025-12-09 03:37:10,266 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: 78e7f295-9632-4ce0-a703-589fa250ab8f[0m
+[38;21m2025-12-09 03:37:10,266 :: DEBUG :: root :: usage.py :: 269 :: Upgrading existing installation: 78e7f295-9632-4ce0-a703-589fa250ab8f[0m
+[38;21m2025-12-09 03:37:10,266 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2025-12-09 03:37:10,266 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: e3daa487-1c94-438c-899b-b6a09d1f956d[0m
+[38;21m2025-12-09 03:37:10,266 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: e3daa487-1c94-438c-899b-b6a09d1f956d[0m
+[38;21m2025-12-09 03:37:10,267 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:37:10,267 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

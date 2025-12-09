@@ -1,0 +1,16 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:102 Usage cache file not found, creating: /config/.data
+DEBUG    root:usage.py:132 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:271 Installing new instance
+DEBUG    root:usage.py:215 Posting new installation to: None
+DEBUG    root:usage.py:221 Successfully registered new installation: 78e7f295-9632-4ce0-a703-589fa250ab8f
+DEBUG    root:usage.py:277 Installation completed with ID: 78e7f295-9632-4ce0-a703-589fa250ab8f
+DEBUG    root:usage.py:269 Upgrading existing installation: 78e7f295-9632-4ce0-a703-589fa250ab8f
+DEBUG    root:usage.py:215 Posting new installation to: None
+DEBUG    root:usage.py:221 Successfully registered new installation: e3daa487-1c94-438c-899b-b6a09d1f956d
+DEBUG    root:usage.py:277 Installation completed with ID: e3daa487-1c94-438c-899b-b6a09d1f956d
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data

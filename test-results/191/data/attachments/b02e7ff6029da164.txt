@@ -1,0 +1,7 @@
+[38;21m2025-12-09 03:37:10,594 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:37:10,594 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:37:10,595 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: Invalid[0m
+[38;21m2025-12-09 03:37:10,595 :: DEBUG :: root :: usage.py :: 172 :: Non-retriable error (status 404)[0m
+[38;5;196m2025-12-09 03:37:10,595 :: ERROR :: root :: usage.py :: 225 :: Installation registration failed: 404[0m
+[38;21m2025-12-09 03:37:10,595 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:37:10,595 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
