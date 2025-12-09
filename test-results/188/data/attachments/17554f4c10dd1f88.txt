@@ -1,0 +1,211 @@
+[38;21m2025-12-09 03:27:56,339 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,339 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,339 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,348 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,351 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,352 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,352 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,352 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,352 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,352 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.119130[0m
+[38;21m2025-12-09 03:27:56,352 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,352 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-12-09 03:27:56,353 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2025-12-09 03:27:56,353 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every 2 seconds.[0m
+[38;21m2025-12-09 03:27:56,353 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,353 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,354 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,362 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,362 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-12-09 03:27:56,362 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,363 :: INFO :: root :: sync.py :: 190 :: Syncing drive...[0m
+[38;5;39m2025-12-09 03:27:56,363 :: INFO :: root :: sync.py :: 192 :: Drive synced[0m
+[38;21m2025-12-09 03:27:56,363 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2025-12-09 03:27:56,363 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,363 :: INFO :: root :: sync.py :: 257 :: Syncing photos...[0m
+[38;5;39m2025-12-09 03:27:56,364 :: INFO :: root :: sync.py :: 259 :: Photos synced[0m
+[38;21m2025-12-09 03:27:56,364 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,364 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,364 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,364 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,365 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,365 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.131638[0m
+[38;21m2025-12-09 03:27:56,365 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,365 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;21m2025-12-09 03:27:56,365 :: DEBUG :: root :: notify.py :: 595 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;5;39m2025-12-09 03:27:56,365 :: INFO :: root :: sync.py :: 495 :: Resyncing at Tue Dec  9 03:27:57 2025 ...[0m
+[38;21m2025-12-09 03:27:56,365 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,366 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,366 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,366 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,366 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,366 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.133034[0m
+[38;21m2025-12-09 03:27:56,366 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,366 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;21m2025-12-09 03:27:56,367 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,367 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,367 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,376 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,376 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-12-09 03:27:56,376 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,376 :: INFO :: root :: sync.py :: 190 :: Syncing drive...[0m
+[38;5;39m2025-12-09 03:27:56,376 :: INFO :: root :: sync.py :: 192 :: Drive synced[0m
+[38;21m2025-12-09 03:27:56,376 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,377 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,377 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,377 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,377 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,377 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.144063[0m
+[38;21m2025-12-09 03:27:56,377 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,377 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-12-09 03:27:56,377 :: INFO :: root :: sync.py :: 495 :: Resyncing at Tue Dec  9 03:27:56 2025 ...[0m
+[38;21m2025-12-09 03:27:56,378 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,378 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,378 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,378 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,378 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,378 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.145303[0m
+[38;21m2025-12-09 03:27:56,379 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,379 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;21m2025-12-09 03:27:56,379 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,379 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,379 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,388 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,388 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-12-09 03:27:56,388 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,388 :: INFO :: root :: sync.py :: 190 :: Syncing drive...[0m
+[38;5;39m2025-12-09 03:27:56,388 :: INFO :: root :: sync.py :: 192 :: Drive synced[0m
+[38;21m2025-12-09 03:27:56,389 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,389 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,389 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,389 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,389 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,389 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.156288[0m
+[38;21m2025-12-09 03:27:56,389 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,390 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-12-09 03:27:56,390 :: INFO :: root :: sync.py :: 495 :: Resyncing at Tue Dec  9 03:27:57 2025 ...[0m
+[38;21m2025-12-09 03:27:56,390 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,390 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,390 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,390 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,391 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,391 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.157601[0m
+[38;21m2025-12-09 03:27:56,391 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,391 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;21m2025-12-09 03:27:56,391 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,391 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,392 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,400 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,400 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2025-12-09 03:27:56,400 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,401 :: INFO :: root :: sync.py :: 257 :: Syncing photos...[0m
+[38;5;39m2025-12-09 03:27:56,401 :: INFO :: root :: sync.py :: 259 :: Photos synced[0m
+[38;21m2025-12-09 03:27:56,401 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,401 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,401 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,402 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,402 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,402 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.168840[0m
+[38;21m2025-12-09 03:27:56,402 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,402 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-12-09 03:27:56,402 :: INFO :: root :: sync.py :: 495 :: Resyncing at Tue Dec  9 03:27:57 2025 ...[0m
+[38;21m2025-12-09 03:27:56,403 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,403 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,403 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,403 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,403 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,403 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.170148[0m
+[38;21m2025-12-09 03:27:56,403 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,403 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;21m2025-12-09 03:27:56,404 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,404 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,404 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,413 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,413 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-12-09 03:27:56,413 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,413 :: INFO :: root :: sync.py :: 190 :: Syncing drive...[0m
+[38;5;39m2025-12-09 03:27:56,413 :: INFO :: root :: sync.py :: 192 :: Drive synced[0m
+[38;21m2025-12-09 03:27:56,414 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,414 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,414 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,414 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,414 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,414 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.181196[0m
+[38;21m2025-12-09 03:27:56,414 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,415 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-12-09 03:27:56,415 :: INFO :: root :: sync.py :: 495 :: Resyncing at Tue Dec  9 03:27:56 2025 ...[0m
+[38;21m2025-12-09 03:27:56,415 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,415 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,415 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,415 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,415 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,416 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.182450[0m
+[38;21m2025-12-09 03:27:56,416 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,416 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;21m2025-12-09 03:27:56,416 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,416 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,417 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,425 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,425 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-12-09 03:27:56,425 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,426 :: INFO :: root :: sync.py :: 190 :: Syncing drive...[0m
+[38;5;39m2025-12-09 03:27:56,426 :: INFO :: root :: sync.py :: 192 :: Drive synced[0m
+[38;21m2025-12-09 03:27:56,426 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,426 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,426 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,426 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,427 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,427 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.193647[0m
+[38;21m2025-12-09 03:27:56,427 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,427 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-12-09 03:27:56,427 :: INFO :: root :: sync.py :: 495 :: Resyncing at Tue Dec  9 03:27:57 2025 ...[0m
+[38;21m2025-12-09 03:27:56,427 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,427 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,428 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,428 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,428 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,428 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.194920[0m
+[38;21m2025-12-09 03:27:56,428 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,428 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;21m2025-12-09 03:27:56,429 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,429 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,429 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,437 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,438 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2025-12-09 03:27:56,438 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,438 :: INFO :: root :: sync.py :: 257 :: Syncing photos...[0m
+[38;5;39m2025-12-09 03:27:56,438 :: INFO :: root :: sync.py :: 259 :: Photos synced[0m
+[38;21m2025-12-09 03:27:56,439 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,439 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,439 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,439 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,439 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,439 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.206296[0m
+[38;21m2025-12-09 03:27:56,439 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,440 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-12-09 03:27:56,440 :: INFO :: root :: sync.py :: 495 :: Resyncing at Tue Dec  9 03:27:57 2025 ...[0m
+[38;21m2025-12-09 03:27:56,440 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,440 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,440 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,440 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,441 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,441 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.207563[0m
+[38;21m2025-12-09 03:27:56,441 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,441 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;21m2025-12-09 03:27:56,441 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /config/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-09 03:27:56,441 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-09 03:27:56,442 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-09 03:27:56,450 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2025-12-09 03:27:56,451 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2025-12-09 03:27:56,451 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2025-12-09 03:27:56,451 :: INFO :: root :: sync.py :: 190 :: Syncing drive...[0m
+[38;5;39m2025-12-09 03:27:56,451 :: INFO :: root :: sync.py :: 192 :: Drive synced[0m
+[38;21m2025-12-09 03:27:56,451 :: DEBUG :: root :: usage.py :: 394 :: Usage tracking alive check started[0m
+[38;21m2025-12-09 03:27:56,451 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-09 03:27:56,452 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-09 03:27:56,452 :: DEBUG :: root :: usage.py :: 93 :: Loaded and validated usage cache from: /config/.data[0m
+[38;21m2025-12-09 03:27:56,452 :: DEBUG :: root :: usage.py :: 410 :: Installation already registered, checking heartbeat[0m
+[38;21m2025-12-09 03:27:56,452 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 0:00:00.218966[0m
+[38;21m2025-12-09 03:27:56,452 :: DEBUG :: root :: usage.py :: 362 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2025-12-09 03:27:56,452 :: DEBUG :: root :: usage.py :: 417 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2025-12-09 03:27:56,452 :: INFO :: root :: sync.py :: 495 :: Resyncing at Tue Dec  9 03:27:56 2025 ...[0m
