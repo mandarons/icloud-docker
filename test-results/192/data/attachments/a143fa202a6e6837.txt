@@ -1,0 +1,6 @@
+[38;21m2025-12-18 17:01:14,045 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2025-12-18 17:01:14,045 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2025-12-18 17:01:14,045 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2025-12-18 17:01:14,054 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;5;39m2025-12-18 17:01:14,057 :: INFO :: root :: drive_file_download.py :: 38 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/test_package.band ...[0m
+[38;5;196m2025-12-18 17:01:14,078 :: ERROR :: root :: drive_package_processing.py :: 47 :: Unhandled file type - cannot unpack the package text/plain.[0m

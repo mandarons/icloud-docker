@@ -1,7 +1,0 @@
-Loading config from /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/data/test_config.yaml ...
-[38;21m2023-02-09 18:34:18,600 :: DEBUG :: icloudpy.base :: base.py :: 246 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
-[38;5;39m2023-02-09 18:34:18,601 :: INFO :: icloudpy.base :: base.py :: 253 :: Session file does not exist[0m
-[38;21m2023-02-09 18:34:18,601 :: DEBUG :: icloudpy.base :: base.py :: 318 :: Authenticating as quentintarantino@hotmail.fr[0m
-[38;21m2023-02-09 18:34:18,601 :: DEBUG :: icloudpy.base :: base.py :: 350 :: Authentication completed successfully[0m
-[38;5;39m2023-02-09 18:34:18,602 :: INFO :: root :: sync_drive.py :: 176 :: Downloading /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf ...[0m
-[38;5;196m2023-02-09 18:34:18,603 :: ERROR :: root :: sync_drive.py :: 186 :: Failed to download /home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf: [Errno 2] No such file or directory: '/home/runner/work/icloud-drive-docker/icloud-drive-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf'[0m
