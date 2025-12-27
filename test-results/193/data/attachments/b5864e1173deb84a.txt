@@ -1,0 +1,12 @@
+[38;21m2025-12-27 18:35:46,551 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-27 18:35:46,552 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-27 18:35:46,552 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-27 18:35:46,552 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-27 18:35:46,552 :: DEBUG :: root :: usage.py :: 102 :: Usage cache file not found, creating: /config/.data[0m
+[38;21m2025-12-27 18:35:46,553 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2025-12-27 18:35:46,553 :: DEBUG :: root :: usage.py :: 271 :: Installing new instance[0m
+[38;21m2025-12-27 18:35:46,553 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2025-12-27 18:35:46,553 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: e2d2c57c-2251-4578-81cd-8b44c6946f14[0m
+[38;21m2025-12-27 18:35:46,553 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: e2d2c57c-2251-4578-81cd-8b44c6946f14[0m
+[38;21m2025-12-27 18:35:46,553 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-27 18:35:46,554 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

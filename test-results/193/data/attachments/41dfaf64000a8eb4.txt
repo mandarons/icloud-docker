@@ -1,0 +1,9 @@
+[38;21m2025-12-27 18:35:46,442 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-27 18:35:46,443 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2025-12-27 18:35:46,443 :: DEBUG :: root :: usage.py :: 369 :: Sending first heartbeat[0m
+[38;5;226m2025-12-27 18:35:46,443 :: WARNING :: root :: usage.py :: 375 :: First heartbeat send failed[0m
+[38;21m2025-12-27 18:35:46,444 :: DEBUG :: root :: usage.py :: 350 :: Time since last heartbeat: 1 day, 1:00:00.000017[0m
+[38;21m2025-12-27 18:35:46,444 :: DEBUG :: root :: usage.py :: 354 :: Sending heartbeat (different UTC day)[0m
+[38;5;226m2025-12-27 18:35:46,444 :: WARNING :: root :: usage.py :: 359 :: Heartbeat send failed[0m
+[38;21m2025-12-27 18:35:46,444 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2025-12-27 18:35:46,444 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
