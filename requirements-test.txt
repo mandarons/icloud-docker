@@ -1,5 +1,5 @@
 -r requirements.txt
-allure-pytest==2.15.2
+allure-pytest==2.15.3
 pytest==9.0.2
 coverage==7.13.1
 pytest-cov==7.0.0
