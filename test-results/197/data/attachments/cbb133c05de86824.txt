@@ -1,0 +1,27 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+DEBUG    root:usage.py:394 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:93 Loaded and validated usage cache from: /config/.data
+DEBUG    root:usage.py:410 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:350 Time since last heartbeat: 0:00:00.344469
+DEBUG    root:usage.py:362 Heartbeat throttled (same UTC day)
+DEBUG    root:usage.py:417 No heartbeat required or heartbeat failed
+DEBUG    icloudpy.base:base.py:236 Using session file /config/session_data/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+DEBUG    root:usage.py:394 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:93 Loaded and validated usage cache from: /config/.data
+DEBUG    root:usage.py:410 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:350 Time since last heartbeat: 0:00:00.354945
+DEBUG    root:usage.py:362 Heartbeat throttled (same UTC day)
+DEBUG    root:usage.py:417 No heartbeat required or heartbeat failed
+WARNING  root:sync.py:604 Nothing to sync. Please add drive: and/or photos: section in config.yaml file.
+INFO     root:sync.py:495 Resyncing at Sun Jan 11 19:06:56 2026 ...
+INFO     root:sync.py:619 All configured sync intervals are negative, exiting oneshot mode...

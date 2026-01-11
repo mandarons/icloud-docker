@@ -1,0 +1,6 @@
+[38;21m2026-01-11 19:07:06,700 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-01-11 19:07:06,701 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;5;226m2026-01-11 19:07:06,702 :: WARNING :: root :: usage.py :: 186 :: Network error: Request timeout, attempt 1/3[0m
+[38;21m2026-01-11 19:07:06,702 :: DEBUG :: root :: usage.py :: 195 :: Waiting 1.0s before retry...[0m
+[38;21m2026-01-11 19:07:06,703 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-01-11 19:07:06,703 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
