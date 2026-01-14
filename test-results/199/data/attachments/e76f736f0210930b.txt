@@ -1,0 +1,7 @@
+[38;21m2026-01-14 18:47:13,025 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-01-14 18:47:13,025 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-01-14 18:47:13,026 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-01-14 18:47:13,034 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2026-01-14 18:47:13,035 :: DEBUG :: root :: photo_download_manager.py :: 169 :: [Thread] Starting processing of /test/path.jpg[0m
+[38;5;226m2026-01-14 18:47:13,036 :: WARNING :: root :: photo_download_manager.py :: 179 :: Hard link creation failed, downloading /test/path.jpg instead[0m
+[38;21m2026-01-14 18:47:13,036 :: DEBUG :: root :: photo_download_manager.py :: 188 :: [Thread] Completed download of /test/path.jpg[0m

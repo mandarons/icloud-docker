@@ -1,0 +1,9 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:369 Sending first heartbeat
+WARNING  root:usage.py:375 First heartbeat send failed
+DEBUG    root:usage.py:350 Time since last heartbeat: 1 day, 1:00:00.000016
+DEBUG    root:usage.py:354 Sending heartbeat (different UTC day)
+WARNING  root:usage.py:359 Heartbeat send failed
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data

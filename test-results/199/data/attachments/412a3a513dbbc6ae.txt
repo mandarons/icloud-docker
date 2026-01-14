@@ -1,0 +1,27 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:394 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:102 Usage cache file not found, creating: /config/.data
+DEBUG    root:usage.py:132 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:400 New installation detected, registering...
+DEBUG    root:usage.py:271 Installing new instance
+DEBUG    root:usage.py:215 Posting new installation to: None
+DEBUG    root:usage.py:221 Successfully registered new installation: b05c31db-fbdd-4c1b-b3c7-b5faa1f2de37
+DEBUG    root:usage.py:277 Installation completed with ID: b05c31db-fbdd-4c1b-b3c7-b5faa1f2de37
+DEBUG    root:usage.py:132 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:404 Installation registration completed
+DEBUG    root:usage.py:394 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
+DEBUG    root:usage.py:93 Loaded and validated usage cache from: /config/.data
+DEBUG    root:usage.py:410 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:369 Sending first heartbeat
+DEBUG    root:usage.py:295 Posting heartbeat to: None
+DEBUG    root:usage.py:299 Heartbeat sent successfully
+DEBUG    root:usage.py:372 First heartbeat sent successfully
+DEBUG    root:usage.py:132 Atomically saved usage cache to: /config/.data
+DEBUG    root:usage.py:414 Heartbeat completed successfully
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:40 Initialized usage cache at: /config/.data
