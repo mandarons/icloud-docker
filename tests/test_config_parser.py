@@ -581,6 +581,19 @@ class TestConfigParser(unittest.TestCase):
         """None config for Pushover API token."""
         self.assertIsNone(config_parser.get_pushover_api_token(config=None))
 
+    def test_get_pushover_notification_priority(self):
+        """Test for getting Pushover notification priority."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["pushover"] = {"priority": 1}
+        self.assertEqual(
+            config["app"]["pushover"]["priority"],
+            config_parser.get_pushover_notification_priority(config=config),
+        )
+
+    def test_get_pushover_notification_priority_none_config(self):
+        """None config for Pushover notification priority."""
+        self.assertIsNone(config_parser.get_pushover_notification_priority(config=None))
+
     def test_get_app_max_threads_default(self):
         """Test for getting app max threads with default value."""
         config = read_config(config_path=tests.CONFIG_PATH)
