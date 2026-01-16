@@ -195,7 +195,7 @@ def notify_discord(config, message, last_send=None, dry_run=False):
     return None
 
 
-def _get_pushover_config(config) -> tuple[str | None, str | None, bool]:
+def _get_pushover_config(config) -> tuple[str | None, str | None, int | None, bool]:
     """
     Extract Pushover configuration from config.
 
@@ -203,21 +203,23 @@ def _get_pushover_config(config) -> tuple[str | None, str | None, bool]:
         config: The configuration dictionary
 
     Returns:
-        Tuple of (user_key, api_token, is_configured)
+        Tuple of (user_key, api_token, priority, is_configured)
     """
     user_key = config_parser.get_pushover_user_key(config=config)
     api_token = config_parser.get_pushover_api_token(config=config)
+    priority = config_parser.get_pushover_notification_priority(config=config)
     is_configured = bool(user_key and api_token)
-    return user_key, api_token, is_configured
+    return user_key, api_token, priority, is_configured
 
 
-def post_message_to_pushover(api_token: str, user_key: str, message: str) -> bool:
+def post_message_to_pushover(api_token: str, user_key: str, priority: int | None, message: str) -> bool:
     """
     Post message to Pushover API.
 
     Args:
         api_token: Pushover API token
         user_key: Pushover user key
+        priority: Pushover notification priority (-2 to 2, optional)
         message: Message to send
 
     Returns:
@@ -225,6 +227,8 @@ def post_message_to_pushover(api_token: str, user_key: str, message: str) -> boo
     """
     url = "https://api.pushover.net/1/messages.json"
     data = {"token": api_token, "user": user_key, "message": message}
+    if priority is not None:
+        data["priority"] = priority
     response = requests.post(url, data=data, timeout=10)
     if response.status_code == 200:
         return True
@@ -249,7 +253,7 @@ def notify_pushover(config, message, last_send=None, dry_run=False):
         LOGGER.info("Throttling Pushover to once a day")
         return last_send
 
-    user_key, api_token, is_configured = _get_pushover_config(config)
+    user_key, api_token, priority, is_configured = _get_pushover_config(config)
     if not is_configured:
         LOGGER.warning("Not sending 2FA notification because Pushover is not configured.")
         return None
@@ -259,7 +263,7 @@ def notify_pushover(config, message, last_send=None, dry_run=False):
         return sent_on
 
     # user_key and api_token are guaranteed to be non-None due to is_configured check
-    if post_message_to_pushover(api_token, user_key, message):  # type: ignore[arg-type]
+    if post_message_to_pushover(api_token, user_key, priority, message):  # type: ignore[arg-type]
         return sent_on
     return None
 
@@ -663,14 +667,14 @@ def _send_pushover_no_throttle(config, message: str, dry_run: bool) -> bool:
     Returns:
         True if sent successfully, False otherwise
     """
-    user_key, api_token, is_configured = _get_pushover_config(config)
+    user_key, api_token, priority, is_configured = _get_pushover_config(config)
     if not is_configured:
         return False
 
     if dry_run:
         return True
 
-    return post_message_to_pushover(api_token, user_key, message)  # type: ignore[arg-type]
+    return post_message_to_pushover(api_token, user_key, priority, message)  # type: ignore[arg-type]
 
 
 def _send_email_no_throttle(config, message: str, subject: str, dry_run: bool) -> bool:

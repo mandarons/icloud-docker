@@ -794,6 +794,7 @@ class TestNotify(unittest.TestCase):
             post_message_mock.assert_called_once_with(
                 self.config["app"]["pushover"]["api_token"],
                 self.config["app"]["pushover"]["user_key"],
+                None,
                 self.message_body,
             )
 
@@ -807,6 +808,7 @@ class TestNotify(unittest.TestCase):
             post_message_mock.assert_called_once_with(
                 self.config["app"]["pushover"]["api_token"],
                 self.config["app"]["pushover"]["user_key"],
+                None,
                 self.message_body,
             )
 
@@ -848,7 +850,7 @@ class TestNotify(unittest.TestCase):
         """Test for successful post to Pushover."""
         with patch("requests.post") as post_mock:
             post_mock.return_value.status_code = 200
-            post_message_to_pushover("pushover_api_token", "pushover_user_key", "message")
+            post_message_to_pushover("pushover_api_token", "pushover_user_key", None, "message")
 
             # Verify that post is called with the correct arguments
             post_mock.assert_called_once_with(
@@ -861,12 +863,38 @@ class TestNotify(unittest.TestCase):
         """Test for failed post to Pushover."""
         with patch("requests.post") as post_mock:
             post_mock.return_value.status_code = 400
-            post_message_to_pushover("pushover_api_token", "pushover_user_key", "message")
+            post_message_to_pushover("pushover_api_token", "pushover_user_key", None, "message")
 
             # Verify that post is called with the correct arguments
             post_mock.assert_called_once_with(
                 "https://api.pushover.net/1/messages.json",
                 data={"token": "pushover_api_token", "user": "pushover_user_key", "message": "message"},
+                timeout=10,
+            )
+
+    def test_post_message_to_pushover_with_priority(self):
+        """Test for post to Pushover with priority."""
+        with patch("requests.post") as post_mock:
+            post_mock.return_value.status_code = 200
+            post_message_to_pushover("pushover_api_token", "pushover_user_key", 1, "message")
+
+            # Verify that post is called with the correct arguments including priority
+            post_mock.assert_called_once_with(
+                "https://api.pushover.net/1/messages.json",
+                data={"token": "pushover_api_token", "user": "pushover_user_key", "message": "message", "priority": 1},
+                timeout=10,
+            )
+
+    def test_post_message_to_pushover_with_priority_zero(self):
+        """Test for post to Pushover with priority zero."""
+        with patch("requests.post") as post_mock:
+            post_mock.return_value.status_code = 200
+            post_message_to_pushover("pushover_api_token", "pushover_user_key", 0, "message")
+
+            # Verify that post is called with priority=0 (should not be excluded due to truthiness check)
+            post_mock.assert_called_once_with(
+                "https://api.pushover.net/1/messages.json",
+                data={"token": "pushover_api_token", "user": "pushover_user_key", "message": "message", "priority": 0},
                 timeout=10,
             )
 
