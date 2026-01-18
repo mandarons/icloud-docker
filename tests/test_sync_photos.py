@@ -1757,6 +1757,125 @@ class TestSyncPhotos(unittest.TestCase):
             result = download_photo_from_server(mock_photo, "original", destination_path)
             self.assertFalse(result)
 
+    def test_download_photo_from_server_http_410_error_with_retry(self):
+        """Test download_photo_from_server with HTTP 410 error and successful retry."""
+        import tempfile
+        from io import BytesIO
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            # Mock photo that first raises 410 error, then succeeds
+            mock_photo = Mock()
+            mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+
+            # First call raises 410, second call succeeds
+            mock_response = MagicMock()
+            mock_response.raw = BytesIO(b"fake image data")
+
+            # Use side_effect to simulate first failure then success
+            call_count = [0]
+
+            def download_side_effect(*args, **kwargs):
+                call_count[0] += 1
+                if call_count[0] == 1:
+                    raise Exception("Gone (410)")  # noqa: EM101
+                # Second call succeeds
+                return mock_response
+
+            mock_photo.download.side_effect = download_side_effect
+            mock_photo.added_date = MagicMock()
+            mock_photo.added_date.timetuple.return_value = time.struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0))
+
+            # Test that download succeeds after retry
+            result = download_photo_from_server(mock_photo, "original", destination_path)
+            self.assertTrue(result)
+            self.assertEqual(mock_photo.download.call_count, 2)
+            # Verify that _versions was cleared after first 410 error
+            self.assertIsNone(mock_photo._versions)  # noqa: SLF001
+            # Verify file was created
+            self.assertTrue(os.path.exists(destination_path))
+
+    def test_download_photo_from_server_http_410_error_max_retries_exceeded(self):
+        """Test download_photo_from_server with HTTP 410 error exceeding max retries."""
+        import tempfile
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            # Mock photo that always raises 410 error
+            mock_photo = Mock()
+            mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+            mock_photo.download.side_effect = Exception("Gone (410)")  # noqa: EM101
+
+            # Test that download fails after max retries
+            result = download_photo_from_server(mock_photo, "original", destination_path, max_retries=1)
+            self.assertFalse(result)
+            self.assertEqual(mock_photo.download.call_count, 2)  # Initial attempt + 1 retry
+
+    def test_download_photo_from_server_http_410_error_without_versions_attribute(self):
+        """Test download_photo_from_server with HTTP 410 error when photo has no _versions attribute."""
+        import tempfile
+        from io import BytesIO
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            # Mock photo without _versions attribute that first raises 410 error, then succeeds
+            mock_photo = Mock(spec=["download", "added_date"])
+
+            # First call raises 410, second call succeeds
+            mock_response = MagicMock()
+            mock_response.raw = BytesIO(b"fake image data")
+
+            call_count = [0]
+
+            def download_side_effect(*args, **kwargs):
+                call_count[0] += 1
+                if call_count[0] == 1:
+                    raise Exception("Gone (410)")  # noqa: EM101
+                return mock_response
+
+            mock_photo.download.side_effect = download_side_effect
+            mock_photo.added_date = MagicMock()
+            mock_photo.added_date.timetuple.return_value = time.struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0))
+
+            # Test that download succeeds even without _versions attribute
+            result = download_photo_from_server(mock_photo, "original", destination_path)
+            self.assertTrue(result)
+            self.assertEqual(mock_photo.download.call_count, 2)
+            # Verify file was created
+            self.assertTrue(os.path.exists(destination_path))
+
+    def test_download_photo_from_server_http_410_error_zero_retries(self):
+        """Test download_photo_from_server with HTTP 410 error and max_retries=0."""
+        import tempfile
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            # Mock photo that raises 410 error
+            mock_photo = Mock()
+            mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+            mock_photo.download.side_effect = Exception("Gone (410)")  # noqa: EM101
+
+            # Test that download fails immediately with max_retries=0
+            result = download_photo_from_server(mock_photo, "original", destination_path, max_retries=0)
+            self.assertFalse(result)
+            self.assertEqual(mock_photo.download.call_count, 1)  # Only initial attempt, no retries
+
     def test_generate_photo_path_different_normalization(self):
         """Test generate_photo_path with different normalization (line 107)."""
         from src.photo_download_manager import generate_photo_path
