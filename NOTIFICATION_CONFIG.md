@@ -58,6 +58,7 @@ app:
   pushover:
     user_key: "your-30-char-user-key"
     api_token: "your-30-char-app-token"
+    priority: "your-notification-priority"
 ```
 
 **Setup Steps:**
@@ -185,6 +186,7 @@ app:
   pushover:
     user_key: "user-key"
     api_token: "app-token"
+    priority: 1
   smtp:
     email: "icloud@domain.com"
     to: "admin@domain.com"

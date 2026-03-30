@@ -907,6 +907,17 @@ def get_pushover_api_token(config: dict) -> str | None:
     """
     return get_notification_config_value(config, "pushover", "api_token")
 
+def get_pushover_notification_priority(config: dict) -> int | None:
+    """Return Pushover notification priority from config.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Pushover notification priority if configured, None otherwise
+    """
+    return get_notification_config_value(config, "pushover", "priority")
+
 
 # =============================================================================
 # Sync Summary Notification Configuration Functions
