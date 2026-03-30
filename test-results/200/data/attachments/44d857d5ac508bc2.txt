@@ -1,8 +1,0 @@
-[38;21m2026-03-30 19:25:27,524 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
-[38;21m2026-03-30 19:25:27,525 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
-[38;5;226m2026-03-30 19:25:27,526 :: WARNING :: root :: usage.py :: 186 :: Network error: Network error, attempt 1/3[0m
-[38;21m2026-03-30 19:25:27,526 :: DEBUG :: root :: usage.py :: 195 :: Waiting 1.0s before retry...[0m
-[38;5;226m2026-03-30 19:25:27,526 :: WARNING :: root :: usage.py :: 186 :: Network error: Network error, attempt 2/3[0m
-[38;21m2026-03-30 19:25:27,527 :: DEBUG :: root :: usage.py :: 195 :: Waiting 2.0s before retry...[0m
-[38;21m2026-03-30 19:25:27,527 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
-[38;21m2026-03-30 19:25:27,527 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
