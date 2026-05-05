@@ -1,0 +1,7 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+INFO     root:drive_parallel_download.py:135 Starting parallel downloads with 1 threads for 1 files...
+ERROR    root:drive_parallel_download.py:153 Download task failed with exception: Download failed
+INFO     root:drive_parallel_download.py:156 Parallel downloads completed: 0 successful, 1 failed

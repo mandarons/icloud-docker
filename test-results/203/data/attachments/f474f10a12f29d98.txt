@@ -1,0 +1,8 @@
+[38;21m2026-05-05 06:13:37,727 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-05 06:13:37,727 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2026-05-05 06:13:37,727 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-05 06:13:37,727 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;5;226m2026-05-05 06:13:37,727 :: WARNING :: root :: usage.py :: 95 :: Cache data validation failed for /config/.data, starting fresh[0m
+[38;21m2026-05-05 06:13:37,728 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2026-05-05 06:13:37,728 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-05 06:13:37,728 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m

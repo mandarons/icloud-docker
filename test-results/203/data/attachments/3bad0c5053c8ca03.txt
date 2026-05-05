@@ -1,0 +1,9 @@
+WARNING  root:config_logging.py:26 app > discord > webhook_url webhook_url is not found.
+WARNING  root:config_logging.py:26 app > discord > username username is not found.
+WARNING  root:config_logging.py:26 app > pushover > user_key user_key is not found.
+WARNING  root:config_logging.py:26 app > pushover > api_token api_token is not found.
+WARNING  root:config_logging.py:26 app > smtp > host host is not found.
+WARNING  root:config_logging.py:26 app > smtp > port port is not found.
+WARNING  root:config_logging.py:26 app > smtp > no_tls no_tls is not found.
+WARNING  root:config_logging.py:26 app > smtp > password password is not found.
+INFO     root:notify.py:609 Sync summary notification sent successfully
