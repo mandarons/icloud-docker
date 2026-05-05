@@ -2,6 +2,7 @@
 
 __author__ = "Mandar Patil <mandarons@pm.me>"
 import datetime
+import json
 import os
 from time import sleep
 
@@ -438,6 +439,126 @@ def _log_retry_time(sleep_for: int):
     LOGGER.info(f"Retrying login at {next_sync} ...")
 
 
+def _check_webaccess_state(api) -> dict:
+    """
+    Check iCloud web access state to determine if Advanced Data Protection (ADP) is enabled.
+
+    Calls the requestWebAccessState endpoint to discover whether the account has ADP enabled
+    and whether device consent for PCS (Private Cloud Storage) cookies has been granted.
+
+    Args:
+        api: Authenticated ICloudPyService instance
+
+    Returns:
+        dict: Web access state data, or empty dict on failure.
+              Key 'isDeviceConsentedForPCS' is present only when ADP is enabled.
+    """
+    try:
+        response = api.session.post(
+            f"{api.setup_endpoint}/requestWebAccessState",
+            params=api.params,
+        )
+        return response.json()
+    except Exception as error:
+        LOGGER.debug(f"Could not check web access state: {error}")
+        return {}
+
+
+def _request_pcs_cookies(api) -> bool:
+    """
+    Request PCS (Private Cloud Storage) cookies for ADP-protected iCloud services.
+
+    Must be called after device consent for PCS has been granted. The cookies are
+    automatically persisted by the icloudpy session.
+
+    Args:
+        api: Authenticated ICloudPyService instance with ADP consent granted
+
+    Returns:
+        bool: True if PCS cookies were obtained successfully, False otherwise
+    """
+    try:
+        response = api.session.post(
+            f"{api.setup_endpoint}/requestPCS",
+            params=api.params,
+            data=json.dumps({"appName": "iclouddrive", "derivedFromUserAction": False}),
+        )
+        data = response.json()
+        if data.get("status") == "success":
+            LOGGER.debug("PCS cookies obtained successfully.")
+            return True
+        LOGGER.debug(f"PCS cookie request not yet ready: {data.get('message', 'unknown')}")
+        return False
+    except Exception as error:
+        LOGGER.debug(f"Failed to request PCS cookies: {error}")
+        return False
+
+
+def _handle_pcs_required(config, api, username: str, sync_state: SyncState) -> bool:
+    """
+    Handle PCS (Private Cloud Storage) cookie acquisition for ADP-enabled accounts.
+
+    Apple's Advanced Data Protection (ADP) requires PCS cookies in addition to the
+    standard authentication token. This function checks if PCS is required and either
+    requests consent (sending a notification to the user's iPhone) or acquires the
+    cookies if consent is already granted.
+
+    When ADP is enabled and consent is not yet granted, a notification is sent to the
+    user's iPhone. The user must approve the request on their device; sync will retry
+    on the next cycle.
+
+    Args:
+        config: Configuration dictionary
+        api: Authenticated ICloudPyService instance
+        username: iCloud username
+        sync_state: Current sync state (used for notification rate limiting)
+
+    Returns:
+        bool: True if sync should proceed (no ADP, or PCS cookies obtained),
+              False if PCS consent is still pending (sync will retry next cycle)
+    """
+    pcs_state = _check_webaccess_state(api)
+
+    if "isDeviceConsentedForPCS" not in pcs_state:
+        # ADP is not enabled for this account — no PCS handling needed
+        return True
+
+    if pcs_state.get("isDeviceConsentedForPCS"):
+        # ADP is enabled and device consent is already granted — acquire PCS cookies
+        LOGGER.debug("ADP is enabled and device consent is granted. Requesting PCS cookies...")
+        if _request_pcs_cookies(api):
+            return True
+        LOGGER.error("PCS cookies not yet ready. Will retry on next sync cycle.")
+        return False
+
+    # ADP is enabled but device consent has not been granted yet
+    LOGGER.error(
+        "Advanced Data Protection (ADP) is enabled. "
+        "Please approve the PCS consent request on your iPhone to allow iCloud access.",
+    )
+    try:
+        response = api.session.post(
+            f"{api.setup_endpoint}/enableDeviceConsentForPCS",
+            params=api.params,
+        )
+        data = response.json()
+        if data.get("isDeviceConsentNotificationSent"):
+            LOGGER.info("PCS consent notification sent to your iPhone. Please approve on your device.")
+        else:
+            LOGGER.error("Failed to send PCS consent notification to your iPhone.")
+    except Exception as error:
+        LOGGER.error(f"Failed to request PCS consent: {error}")
+
+    server_region = config_parser.get_region(config=config)
+    sync_state.last_send = notify.send(
+        config=config,
+        username=username,
+        last_send=sync_state.last_send,
+        region=server_region,
+    )
+    return False
+
+
 def _calculate_next_sync_schedule(config, sync_state: SyncState):
     """
     Calculate next sync schedule and update sync state.
@@ -559,49 +680,52 @@ def sync():
                 api = _authenticate_and_get_api(config, username)
 
                 if not api.requires_2sa:
-                    # Create summary for this sync cycle
-                    summary = SyncSummary()
+                    if not _handle_pcs_required(config, api, username, sync_state):
+                        pass  # PCS not ready; fall through to sleep/exit logic below
+                    else:
+                        # Create summary for this sync cycle
+                        summary = SyncSummary()
 
-                    # Perform syncs and collect statistics
-                    drive_stats = _perform_drive_sync(config, api, sync_state, drive_sync_interval)
-                    photos_stats = _perform_photos_sync(config, api, sync_state, photos_sync_interval)
+                        # Perform syncs and collect statistics
+                        drive_stats = _perform_drive_sync(config, api, sync_state, drive_sync_interval)
+                        photos_stats = _perform_photos_sync(config, api, sync_state, photos_sync_interval)
 
-                    # Populate summary with statistics
-                    summary.drive_stats = drive_stats
-                    summary.photo_stats = photos_stats
-                    summary.sync_end_time = datetime.datetime.now()
+                        # Populate summary with statistics
+                        summary.drive_stats = drive_stats
+                        summary.photo_stats = photos_stats
+                        summary.sync_end_time = datetime.datetime.now()
 
-                    # Send usage statistics (anonymized summary data)
-                    try:
-                        _send_usage_statistics(config, summary)
-                    except Exception as e:
-                        LOGGER.debug(f"Failed to send usage statistics: {e!s}")
-
-                    # Send sync summary notification if configured
-                    # Only send notification when both enabled services have synced in this cycle
-                    # Gracefully handle notification failures to not break sync
-                    has_drive_config = config and "drive" in config
-                    has_photos_config = config and "photos" in config
-
-                    should_send_notification = False
-                    if has_drive_config and has_photos_config:
-                        # Both services configured - send notification only when both have synced
-                        should_send_notification = drive_stats is not None and photos_stats is not None
-                    elif has_drive_config and not has_photos_config:
-                        # Only drive configured - send when drive synced
-                        should_send_notification = drive_stats is not None
-                    elif has_photos_config and not has_drive_config:
-                        # Only photos configured - send when photos synced
-                        should_send_notification = photos_stats is not None
-
-                    if should_send_notification:
+                        # Send usage statistics (anonymized summary data)
                         try:
-                            notify.send_sync_summary(config=config, summary=summary)
+                            _send_usage_statistics(config, summary)
                         except Exception as e:
-                            LOGGER.debug(f"Failed to send sync summary notification: {e!s}")
+                            LOGGER.debug(f"Failed to send usage statistics: {e!s}")
 
-                    if not _check_services_configured(config):
-                        LOGGER.warning("Nothing to sync. Please add drive: and/or photos: section in config.yaml file.")
+                        # Send sync summary notification if configured
+                        # Only send notification when both enabled services have synced in this cycle
+                        # Gracefully handle notification failures to not break sync
+                        has_drive_config = config and "drive" in config
+                        has_photos_config = config and "photos" in config
+
+                        should_send_notification = False
+                        if has_drive_config and has_photos_config:
+                            # Both services configured - send notification only when both have synced
+                            should_send_notification = drive_stats is not None and photos_stats is not None
+                        elif has_drive_config and not has_photos_config:
+                            # Only drive configured - send when drive synced
+                            should_send_notification = drive_stats is not None
+                        elif has_photos_config and not has_drive_config:
+                            # Only photos configured - send when photos synced
+                            should_send_notification = photos_stats is not None
+
+                        if should_send_notification:
+                            try:
+                                notify.send_sync_summary(config=config, summary=summary)
+                            except Exception as e:
+                                LOGGER.debug(f"Failed to send sync summary notification: {e!s}")
+
+                        if not _check_services_configured(config):
+                            LOGGER.warning("Nothing to sync. Please add drive: and/or photos: section in config.yaml file.")
                 else:
                     if not _handle_2fa_required(config, username, sync_state):
                         break
