@@ -4,5 +4,5 @@ pytest==9.0.3
 coverage==7.13.5
 pytest-cov==7.1.0
 ruff==0.15.12
-ipython==8.37.0
+ipython==9.13.0
 pre-commit==4.6.0
