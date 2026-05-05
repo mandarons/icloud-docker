@@ -916,7 +916,8 @@ def get_pushover_notification_priority(config: dict) -> int | None:
     Returns:
         Pushover notification priority if configured, None otherwise
     """
-    return get_notification_config_value(config, "pushover", "priority")
+    config_path = ["app", "pushover", "priority"]
+    return get_config_value_or_none(config=config, config_path=config_path)
 
 
 # =============================================================================
