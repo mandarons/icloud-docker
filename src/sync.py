@@ -528,11 +528,11 @@ def _handle_pcs_required(config, api, username: str, sync_state: SyncState) -> b
         LOGGER.debug("ADP is enabled and device consent is granted. Requesting PCS cookies...")
         if _request_pcs_cookies(api):
             return True
-        LOGGER.error("PCS cookies not yet ready. Will retry on next sync cycle.")
+        LOGGER.warning("PCS cookies not yet ready. Will retry on next sync cycle.")
         return False
 
     # ADP is enabled but device consent has not been granted yet
-    LOGGER.error(
+    LOGGER.warning(
         "Advanced Data Protection (ADP) is enabled. "
         "Please approve the PCS consent request on your iPhone to allow iCloud access.",
     )
