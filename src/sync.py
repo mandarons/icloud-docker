@@ -680,9 +680,7 @@ def sync():
                 api = _authenticate_and_get_api(config, username)
 
                 if not api.requires_2sa:
-                    if not _handle_pcs_required(config, api, username, sync_state):
-                        pass  # PCS not ready; fall through to sleep/exit logic below
-                    else:
+                    if _handle_pcs_required(config, api, username, sync_state):
                         # Create summary for this sync cycle
                         summary = SyncSummary()
 
@@ -726,6 +724,7 @@ def sync():
 
                         if not _check_services_configured(config):
                             LOGGER.warning("Nothing to sync. Please add drive: and/or photos: section in config.yaml file.")
+                    # else: PCS not ready; fall through to sleep/exit logic below
                 else:
                     if not _handle_2fa_required(config, username, sync_state):
                         break
