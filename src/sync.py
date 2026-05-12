@@ -515,9 +515,17 @@ def _handle_pcs_required(config, api, username: str, sync_state: SyncState) -> b
 
     Returns:
         bool: True if sync should proceed (no ADP, or PCS cookies obtained),
-              False if PCS consent is still pending (sync will retry next cycle)
+              False if PCS consent is still pending or the PCS state could not be
+              determined (sync will retry next cycle)
     """
     pcs_state = _check_webaccess_state(api)
+
+    if not pcs_state:
+        LOGGER.error(
+            "Unable to determine PCS web access state. "
+            "Will retry on next sync cycle before proceeding with sync.",
+        )
+        return False
 
     if "isDeviceConsentedForPCS" not in pcs_state:
         # ADP is not enabled for this account — no PCS handling needed
