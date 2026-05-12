@@ -1,0 +1,30 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+DEBUG    root:config_logging.py:44 Checking photos destination ...
+DEBUG    root:config_logging.py:44 Checking root destination ...
+INFO     root:album_sync_orchestrator.py:60 Syncing album 2
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo no-extension.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3148.JPG.
+INFO     root:album_sync_orchestrator.py:60 Syncing album-1-1
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo no-extension.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3148.JPG.
+INFO     root:album_sync_orchestrator.py:60 Syncing album-1
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3328.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3327.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3322.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3206.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3148.JPG.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo no-extension.
+DEBUG    root:album_sync_orchestrator.py:131 Skipping the unwanted photo IMG_3148.JPG.
