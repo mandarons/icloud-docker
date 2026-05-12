@@ -5,6 +5,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import os
 import shutil
 import unittest
+import unittest.mock
 from copy import deepcopy
 from io import StringIO
 from types import SimpleNamespace
@@ -560,6 +561,7 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.notify.send_sync_summary", side_effect=RuntimeError("notify failure"))
     @patch("src.sync._perform_photos_sync")
     @patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1))
+    @patch("src.sync._handle_pcs_required", return_value=True)
     @patch("src.sync._authenticate_and_get_api", return_value=SimpleNamespace(requires_2sa=False))
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -568,6 +570,7 @@ class TestSync(unittest.TestCase):
         mock_usage_post,
         mock_read_config,
         _mock_auth,
+        _mock_pcs,
         _mock_drive_sync,
         mock_photo_sync,
         mock_notify,
@@ -821,6 +824,7 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.notify.send_sync_summary")
     @patch("src.sync._perform_photos_sync", return_value=None)
     @patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1))
+    @patch("src.sync._handle_pcs_required", return_value=True)
     @patch("src.sync._authenticate_and_get_api", return_value=SimpleNamespace(requires_2sa=False))
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -829,6 +833,7 @@ class TestSync(unittest.TestCase):
         mock_usage_post,
         mock_read_config,
         _mock_auth,
+        _mock_pcs,
         _mock_drive_sync,
         _mock_photo_sync,
         mock_notify,
@@ -1003,3 +1008,297 @@ class TestSync(unittest.TestCase):
         self.assertEqual(sleep_for, 0, "Should have 0 sleep for small equal timers")
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
         self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled")
+
+    # ---- PCS / Advanced Data Protection (ADP) tests ----
+
+    def test_check_webaccess_state_no_adp(self):
+        """Test _check_webaccess_state returns state without ADP keys for regular accounts."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.return_value.json.return_value = data.PCS_WEBACCESS_STATE_NO_ADP
+
+        result = sync._check_webaccess_state(api_mock)  # noqa: SLF001
+
+        self.assertEqual(result, data.PCS_WEBACCESS_STATE_NO_ADP)
+        self.assertNotIn("isDeviceConsentedForPCS", result)
+
+    def test_check_webaccess_state_adp_no_consent(self):
+        """Test _check_webaccess_state returns state with ADP consent=False when ADP enabled."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.return_value.json.return_value = data.PCS_WEBACCESS_STATE_ADP_NO_CONSENT
+
+        result = sync._check_webaccess_state(api_mock)  # noqa: SLF001
+
+        self.assertIn("isDeviceConsentedForPCS", result)
+        self.assertFalse(result["isDeviceConsentedForPCS"])
+
+    def test_check_webaccess_state_adp_consented(self):
+        """Test _check_webaccess_state returns state with ADP consent=True when consent granted."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.return_value.json.return_value = data.PCS_WEBACCESS_STATE_ADP_CONSENTED
+
+        result = sync._check_webaccess_state(api_mock)  # noqa: SLF001
+
+        self.assertIn("isDeviceConsentedForPCS", result)
+        self.assertTrue(result["isDeviceConsentedForPCS"])
+
+    def test_check_webaccess_state_exception_returns_empty(self):
+        """Test _check_webaccess_state returns empty dict on exception."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.side_effect = Exception("Network error")
+
+        result = sync._check_webaccess_state(api_mock)  # noqa: SLF001
+
+        self.assertEqual(result, {})
+
+    def test_request_pcs_cookies_success(self):
+        """Test _request_pcs_cookies returns True on success."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.return_value.json.return_value = data.PCS_REQUEST_SUCCESS
+
+        result = sync._request_pcs_cookies(api_mock)  # noqa: SLF001
+
+        self.assertTrue(result)
+
+    def test_request_pcs_cookies_pending(self):
+        """Test _request_pcs_cookies returns False when cookies are not yet ready."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.return_value.json.return_value = data.PCS_REQUEST_PENDING
+
+        result = sync._request_pcs_cookies(api_mock)  # noqa: SLF001
+
+        self.assertFalse(result)
+
+    def test_request_pcs_cookies_exception(self):
+        """Test _request_pcs_cookies returns False on exception."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.side_effect = Exception("Network error")
+
+        result = sync._request_pcs_cookies(api_mock)  # noqa: SLF001
+
+        self.assertFalse(result)
+
+    def test_handle_pcs_required_no_adp(self):
+        """Test _handle_pcs_required returns True when ADP is not enabled."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.return_value.json.return_value = data.PCS_WEBACCESS_STATE_NO_ADP
+        config = self.config.copy()
+        sync_state = sync.SyncState()
+
+        result = sync._handle_pcs_required(config, api_mock, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+
+        self.assertTrue(result)
+
+    def test_handle_pcs_required_webaccess_state_failed(self):
+        """Test _handle_pcs_required returns False when webaccess state cannot be determined."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.side_effect = Exception("Network error")
+        config = self.config.copy()
+        sync_state = sync.SyncState()
+
+        with self.assertLogs() as captured:
+            result = sync._handle_pcs_required(config, api_mock, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+
+        self.assertFalse(result)
+        self.assertTrue(any("Unable to determine PCS web access state" in msg for msg in captured.output))
+
+    def test_handle_pcs_required_adp_no_consent(self):
+        """Test _handle_pcs_required sends consent notification and returns False when consent not granted."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+
+        def side_effect_post(url, **kwargs):
+            response_mock = unittest.mock.MagicMock()
+            if "requestWebAccessState" in url:
+                response_mock.json.return_value = data.PCS_WEBACCESS_STATE_ADP_NO_CONSENT
+            elif "enableDeviceConsentForPCS" in url:
+                response_mock.json.return_value = data.PCS_CONSENT_NOTIFICATION_SENT
+            return response_mock
+
+        api_mock.session.post.side_effect = side_effect_post
+        config = self.config.copy()
+        sync_state = sync.SyncState()
+
+        with self.assertLogs() as captured:
+            result = sync._handle_pcs_required(config, api_mock, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+
+        self.assertFalse(result)
+        self.assertTrue(any("Advanced Data Protection" in msg for msg in captured.output))
+
+    def test_handle_pcs_required_adp_no_consent_notification_not_sent(self):
+        """Test _handle_pcs_required logs error when notification fails to send."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+
+        def side_effect_post(url, **kwargs):
+            response_mock = unittest.mock.MagicMock()
+            if "requestWebAccessState" in url:
+                response_mock.json.return_value = data.PCS_WEBACCESS_STATE_ADP_NO_CONSENT
+            elif "enableDeviceConsentForPCS" in url:
+                response_mock.json.return_value = {"isDeviceConsentNotificationSent": False}
+            return response_mock
+
+        api_mock.session.post.side_effect = side_effect_post
+        config = self.config.copy()
+        sync_state = sync.SyncState()
+
+        with self.assertLogs() as captured:
+            result = sync._handle_pcs_required(config, api_mock, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+
+        self.assertFalse(result)
+        self.assertTrue(any("Failed to send PCS consent notification" in msg for msg in captured.output))
+
+    def test_handle_pcs_required_adp_enable_consent_exception(self):
+        """Test _handle_pcs_required handles exception from enableDeviceConsentForPCS."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+
+        def side_effect_post(url, **kwargs):
+            response_mock = unittest.mock.MagicMock()
+            if "requestWebAccessState" in url:
+                response_mock.json.return_value = data.PCS_WEBACCESS_STATE_ADP_NO_CONSENT
+                return response_mock
+            connection_error = Exception("Connection error")
+            raise connection_error
+
+        api_mock.session.post.side_effect = side_effect_post
+        config = self.config.copy()
+        sync_state = sync.SyncState()
+
+        with self.assertLogs() as captured:
+            result = sync._handle_pcs_required(config, api_mock, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+
+        self.assertFalse(result)
+        self.assertTrue(any("Failed to request PCS consent" in msg for msg in captured.output))
+
+    def test_handle_pcs_required_adp_consented_cookies_success(self):
+        """Test _handle_pcs_required returns True when ADP consent is granted and cookies obtained."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+
+        def side_effect_post(url, **kwargs):
+            response_mock = unittest.mock.MagicMock()
+            if "requestWebAccessState" in url:
+                response_mock.json.return_value = data.PCS_WEBACCESS_STATE_ADP_CONSENTED
+            elif "requestPCS" in url:
+                response_mock.json.return_value = data.PCS_REQUEST_SUCCESS
+            return response_mock
+
+        api_mock.session.post.side_effect = side_effect_post
+        config = self.config.copy()
+        sync_state = sync.SyncState()
+
+        result = sync._handle_pcs_required(config, api_mock, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+
+        self.assertTrue(result)
+
+    def test_handle_pcs_required_adp_consented_cookies_pending(self):
+        """Test _handle_pcs_required returns False when consent granted but cookies not yet ready."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+
+        def side_effect_post(url, **kwargs):
+            response_mock = unittest.mock.MagicMock()
+            if "requestWebAccessState" in url:
+                response_mock.json.return_value = data.PCS_WEBACCESS_STATE_ADP_CONSENTED
+            elif "requestPCS" in url:
+                response_mock.json.return_value = data.PCS_REQUEST_PENDING
+            return response_mock
+
+        api_mock.session.post.side_effect = side_effect_post
+        config = self.config.copy()
+        sync_state = sync.SyncState()
+
+        with self.assertLogs() as captured:
+            result = sync._handle_pcs_required(config, api_mock, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+
+        self.assertFalse(result)
+        self.assertTrue(any("PCS cookies not yet ready" in msg for msg in captured.output))
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("src.sync.ICloudPyService", side_effect=data.ICloudPyServiceMock)
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_sync_with_no_adp(
+        self,
+        mock_usage_post,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+    ):
+        """Test sync proceeds normally when account has no ADP (default state)."""
+        config = self.config.copy()
+        mock_read_config.return_value = config
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+        # AUTHENTICATED_USER returns PCS_WEBACCESS_STATE_NO_ADP in the mock session
+        self.assertIsNone(sync.sync())
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.REQUIRES_PCS_CONSENT_USER)
+    @patch("src.sync.ICloudPyService", side_effect=data.ICloudPyServiceMock)
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_sync_pcs_consent_required(
+        self,
+        mock_usage_post,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+    ):
+        """Test sync exits oneshot mode when PCS consent is required (ADP enabled, no consent)."""
+        config = self.config.copy()
+        mock_read_config.return_value = config
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+
+        with self.assertLogs() as captured:
+            sync.sync()
+
+        self.assertTrue(any("Advanced Data Protection" in msg for msg in captured.output))
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_WITH_ADP_USER)
+    @patch("src.sync.ICloudPyService", side_effect=data.ICloudPyServiceMock)
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_sync_pcs_consent_granted(
+        self,
+        mock_usage_post,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+    ):
+        """Test sync proceeds when ADP is enabled and consent is already granted."""
+        config = self.config.copy()
+        mock_read_config.return_value = config
+        if ENV_ICLOUD_PASSWORD_KEY in os.environ:
+            del os.environ[ENV_ICLOUD_PASSWORD_KEY]
+        # AUTHENTICATED_WITH_ADP_USER returns PCS_WEBACCESS_STATE_ADP_CONSENTED then PCS_REQUEST_SUCCESS
+        self.assertIsNone(sync.sync())

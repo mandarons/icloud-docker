@@ -43,7 +43,16 @@ WIDGET_KEY = "widget_key" + PERSON_ID
 AUTHENTICATED_USER = PRIMARY_EMAIL
 REQUIRES_2FA_TOKEN = "requires_2fa_token"
 REQUIRES_2FA_USER = "requires_2fa_user"
-VALID_USERS = [AUTHENTICATED_USER, REQUIRES_2FA_USER, APPLE_ID_EMAIL, ICLOUD_ID_EMAIL]
+REQUIRES_PCS_CONSENT_USER = "requires_pcs_consent_user"
+AUTHENTICATED_WITH_ADP_USER = "authenticated_with_adp_user"
+VALID_USERS = [
+    AUTHENTICATED_USER,
+    REQUIRES_2FA_USER,
+    APPLE_ID_EMAIL,
+    ICLOUD_ID_EMAIL,
+    REQUIRES_PCS_CONSENT_USER,
+    AUTHENTICATED_WITH_ADP_USER,
+]
 VALID_PASSWORD = "valid_password"
 VALID_COOKIE = "valid_cookie"
 VALID_TOKEN = "valid_token"
@@ -477,6 +486,49 @@ TRUSTED_DEVICES = {"devices": [TRUSTED_DEVICE_1]}
 
 VERIFICATION_CODE_OK = {"success": True}
 VERIFICATION_CODE_KO = {"success": False}
+
+# PCS (Private Cloud Storage) mock data for Advanced Data Protection (ADP) testing
+PCS_WEBACCESS_STATE_NO_ADP = {
+    "dsid": PERSON_ID,
+    "isWebAccessAllowed": True,
+}
+PCS_WEBACCESS_STATE_ADP_NO_CONSENT = {
+    "dsid": PERSON_ID,
+    "isWebAccessAllowed": True,
+    "isDeviceConsentedForPCS": False,
+    "isICDRSDisabled": True,
+    "deviceConsentForPCSExpiry": 0,
+}
+PCS_WEBACCESS_STATE_ADP_CONSENTED = {
+    "dsid": PERSON_ID,
+    "isWebAccessAllowed": True,
+    "isDeviceConsentedForPCS": True,
+    "isICDRSDisabled": True,
+    "deviceConsentForPCSExpiry": 9999999999999,
+}
+PCS_CONSENT_NOTIFICATION_SENT = {
+    "isDeviceConsentNotificationSent": True,
+    "isWebAccessAllowed": True,
+    "isDeviceConsentedForPCS": False,
+    "isICDRSDisabled": True,
+    "deviceConsentForPCSExpiry": 0,
+}
+PCS_REQUEST_SUCCESS = {
+    "isWebAccessAllowed": True,
+    "isDeviceConsentedForPCS": True,
+    "isICDRSDisabled": True,
+    "message": "Cookies attached.",
+    "deviceConsentForPCSExpiry": 9999999999999,
+    "status": "success",
+}
+PCS_REQUEST_PENDING = {
+    "isWebAccessAllowed": True,
+    "isDeviceConsentedForPCS": True,
+    "isICDRSDisabled": True,
+    "message": "Cookies not available yet on server.",
+    "deviceConsentForPCSExpiry": 9999999999999,
+    "status": "pending",
+}
 
 # Data
 # Re-generated device :
@@ -3721,7 +3773,7 @@ class ICloudPySessionMock(base.ICloudPySession):
         """Override request method."""
         params = kwargs.get("params")
         headers = kwargs.get("headers")
-        data = json.loads(kwargs.get("data", "{}"))
+        data = json.loads(kwargs.get("data") or "{}")
 
         # Login
         if self.service.setup_endpoint in url:
@@ -3751,6 +3803,20 @@ class ICloudPySessionMock(base.ICloudPySession):
                 if headers.get("X-APPLE-WEBAUTH-TOKEN") == VALID_COOKIE:
                     return ResponseMock(LOGIN_WORKING)
                 self._raise_error(None, "Session expired")
+
+            if "requestWebAccessState" in url and method == "POST":
+                account_name = self.service.user.get("accountName", "")
+                if account_name == REQUIRES_PCS_CONSENT_USER:
+                    return ResponseMock(PCS_WEBACCESS_STATE_ADP_NO_CONSENT)
+                if account_name == AUTHENTICATED_WITH_ADP_USER:
+                    return ResponseMock(PCS_WEBACCESS_STATE_ADP_CONSENTED)
+                return ResponseMock(PCS_WEBACCESS_STATE_NO_ADP)
+
+            if "enableDeviceConsentForPCS" in url and method == "POST":
+                return ResponseMock(PCS_CONSENT_NOTIFICATION_SENT)
+
+            if "requestPCS" in url and method == "POST":
+                return ResponseMock(PCS_REQUEST_SUCCESS)
 
         if self.service.auth_endpoint in url:
             if "signin" in url and method == "POST":
