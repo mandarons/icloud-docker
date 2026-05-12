@@ -561,6 +561,7 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.notify.send_sync_summary", side_effect=RuntimeError("notify failure"))
     @patch("src.sync._perform_photos_sync")
     @patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1))
+    @patch("src.sync._handle_pcs_required", return_value=True)
     @patch("src.sync._authenticate_and_get_api", return_value=SimpleNamespace(requires_2sa=False))
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -569,6 +570,7 @@ class TestSync(unittest.TestCase):
         mock_usage_post,
         mock_read_config,
         _mock_auth,
+        _mock_pcs,
         _mock_drive_sync,
         mock_photo_sync,
         mock_notify,
@@ -822,6 +824,7 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.notify.send_sync_summary")
     @patch("src.sync._perform_photos_sync", return_value=None)
     @patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1))
+    @patch("src.sync._handle_pcs_required", return_value=True)
     @patch("src.sync._authenticate_and_get_api", return_value=SimpleNamespace(requires_2sa=False))
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
@@ -830,6 +833,7 @@ class TestSync(unittest.TestCase):
         mock_usage_post,
         mock_read_config,
         _mock_auth,
+        _mock_pcs,
         _mock_drive_sync,
         _mock_photo_sync,
         mock_notify,
@@ -1100,6 +1104,21 @@ class TestSync(unittest.TestCase):
 
         self.assertTrue(result)
 
+    def test_handle_pcs_required_webaccess_state_failed(self):
+        """Test _handle_pcs_required returns False when webaccess state cannot be determined."""
+        api_mock = unittest.mock.MagicMock()
+        api_mock.setup_endpoint = "https://setup.icloud.com/setup/ws/1"
+        api_mock.params = {}
+        api_mock.session.post.side_effect = Exception("Network error")
+        config = self.config.copy()
+        sync_state = sync.SyncState()
+
+        with self.assertLogs() as captured:
+            result = sync._handle_pcs_required(config, api_mock, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+
+        self.assertFalse(result)
+        self.assertTrue(any("Unable to determine PCS web access state" in msg for msg in captured.output))
+
     def test_handle_pcs_required_adp_no_consent(self):
         """Test _handle_pcs_required sends consent notification and returns False when consent not granted."""
         api_mock = unittest.mock.MagicMock()
@@ -1220,7 +1239,7 @@ class TestSync(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
-    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.ICloudPyService", side_effect=data.ICloudPyServiceMock)
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_with_no_adp(
@@ -1241,7 +1260,7 @@ class TestSync(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(target="src.config_parser.get_username", return_value=data.REQUIRES_PCS_CONSENT_USER)
-    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.ICloudPyService", side_effect=data.ICloudPyServiceMock)
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_pcs_consent_required(
@@ -1265,7 +1284,7 @@ class TestSync(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_WITH_ADP_USER)
-    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.ICloudPyService", side_effect=data.ICloudPyServiceMock)
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
     def test_sync_pcs_consent_granted(
