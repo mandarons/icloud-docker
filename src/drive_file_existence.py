@@ -11,7 +11,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Any
 
-from src import configure_icloudpy_logging, get_logger
+from src import DEFAULT_REQUEST_TIMEOUT_SEC, configure_icloudpy_logging, get_logger
 
 # Configure icloudpy logging immediately after import
 configure_icloudpy_logging()
@@ -86,18 +86,19 @@ def package_exists(item: Any, local_package_path: str) -> bool:
     return False
 
 
-def is_package(item: Any) -> bool:
+def is_package(item: Any, timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC) -> bool:
     """Determine if an iCloud item is a package that needs special handling.
 
     Args:
         item: iCloud item to check
+        timeout: HTTP read timeout in seconds (default: DEFAULT_REQUEST_TIMEOUT_SEC)
 
     Returns:
         True if item is a package, False otherwise
     """
     file_is_a_package = False
     try:
-        with item.open(stream=True) as response:
+        with item.open(stream=True, timeout=timeout) as response:
             file_is_a_package = response.url and "/packageDownload?" in response.url
     except Exception as e:
         # Enhanced error logging with file context
