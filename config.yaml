@@ -57,6 +57,9 @@ drive:
   # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: false
   sync_interval: 300
+  # HTTP read timeout in seconds for iCloud API requests (default: 30)
+  # Prevents the sync process from hanging indefinitely on stalled connections
+  # request_timeout: 30
   filters:
     # File filters to be included in syncing iCloud drive content
     folders:

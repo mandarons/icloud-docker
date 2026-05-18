@@ -10,6 +10,7 @@ import tests
 from src import (
     DEFAULT_DRIVE_DESTINATION,
     DEFAULT_PHOTOS_DESTINATION,
+    DEFAULT_REQUEST_TIMEOUT_SEC,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     DEFAULT_ROOT_DESTINATION,
     DEFAULT_SYNC_INTERVAL_SEC,
@@ -85,6 +86,30 @@ class TestConfigParser(unittest.TestCase):
         self.assertEqual(
             config_parser.get_drive_sync_interval(config=config, log_messages=True),
             config_parser.get_drive_sync_interval(config=config, log_messages=False),
+        )
+
+    def test_get_drive_request_timeout(self):
+        """Test for given request timeout."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        self.assertEqual(
+            config["drive"]["request_timeout"],
+            config_parser.get_drive_request_timeout(config=config),
+        )
+
+    def test_get_drive_request_timeout_default(self):
+        """Test for default request timeout when not set in config."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        del config["drive"]["request_timeout"]
+        self.assertEqual(
+            DEFAULT_REQUEST_TIMEOUT_SEC,
+            config_parser.get_drive_request_timeout(config=config),
+        )
+
+    def test_get_drive_request_timeout_none_config(self):
+        """Test for default request timeout when config is None."""
+        self.assertEqual(
+            DEFAULT_REQUEST_TIMEOUT_SEC,
+            config_parser.get_drive_request_timeout(config=None),
         )
 
     def test_get_drive_destination_path_explicit_default(self):

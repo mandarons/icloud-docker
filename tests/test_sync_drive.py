@@ -711,6 +711,18 @@ class TestSyncDrive(unittest.TestCase):
             result = is_package(self.file_item)
             self.assertFalse(result)
 
+    def test_is_package_read_timeout(self):
+        """Test is_package returns False on read timeout and passes timeout=30 to open()."""
+        import requests.exceptions
+
+        from src.drive_file_existence import is_package
+
+        with patch.object(self.file_item, "open") as mock_open:
+            mock_open.side_effect = requests.exceptions.ReadTimeout("Read timed out.")
+            result = is_package(self.file_item)
+            self.assertFalse(result)
+            mock_open.assert_called_once_with(stream=True, timeout=30)
+
     def test_process_file_non_existing(self):
         """Test for non-existing file."""
         files = set()
