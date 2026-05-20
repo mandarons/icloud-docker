@@ -1,0 +1,14 @@
+[38;21m2026-05-20 06:36:53,467 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-20 06:36:53,467 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2026-05-20 06:36:53,468 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-20 06:36:53,468 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2026-05-20 06:36:53,468 :: DEBUG :: root :: usage.py :: 102 :: Usage cache file not found, creating: /config/.data[0m
+[38;21m2026-05-20 06:36:53,469 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2026-05-20 06:36:53,469 :: DEBUG :: root :: usage.py :: 271 :: Installing new instance[0m
+[38;21m2026-05-20 06:36:53,469 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2026-05-20 06:36:53,469 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: d57b86c4-19f2-4d50-bab1-02608c74edee[0m
+[38;21m2026-05-20 06:36:53,469 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: d57b86c4-19f2-4d50-bab1-02608c74edee[0m
+[38;21m2026-05-20 06:36:53,469 :: DEBUG :: root :: usage.py :: 295 :: Posting heartbeat to: None[0m
+[38;21m2026-05-20 06:36:53,469 :: DEBUG :: root :: usage.py :: 299 :: Heartbeat sent successfully[0m
+[38;21m2026-05-20 06:36:53,470 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-20 06:36:53,470 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
