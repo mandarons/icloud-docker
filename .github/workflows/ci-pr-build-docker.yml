@@ -1,0 +1,103 @@
+name: CI - PR Docker Image Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "Pull Request number to build the Docker image for"
+        required: true
+        type: string
+
+jobs:
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: write
+    steps:
+      - name: Checkout PR source code
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.inputs.pr_number }}/head
+
+      - name: Prepare PR tag
+        id: prep
+        run: |
+          PR_NUMBER="${{ github.event.inputs.pr_number }}"
+          # Use lowercase repository name for GHCR
+          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          TAGS="ghcr.io/${REPO_NAME}:pr-${PR_NUMBER}"
+          PR_SHA=$(git rev-parse HEAD)
+          echo "PR Number: $PR_NUMBER"
+          echo "Repository: $REPO_NAME"
+          echo "Docker Tags: $TAGS"
+          echo "PR SHA: $PR_SHA"
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+          echo "pr_sha=${PR_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+          driver-opts: network=host
+
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v5
+        with:
+          context: ./
+          file: ./Dockerfile
+          build-args: |
+            NEW_INSTALLATION_ENDPOINT=${{ secrets.NEW_INSTALLATION_ENDPOINT }}
+            NEW_HEARTBEAT_ENDPOINT=${{ secrets.NEW_HEARTBEAT_ENDPOINT }}
+            APP_VERSION=pr-${{ steps.prep.outputs.pr_number }}
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.prep.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+          sbom: false
+
+      - name: Image digest
+        run: echo ${{ steps.docker_build.outputs.digest }}
+
+      - name: Comment PR with Docker image info
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: ${{ steps.prep.outputs.pr_number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `🐳 **Docker Image Built Successfully!**
+
+            The Docker image for this PR has been built and pushed to GitHub Container Registry:
+
+            **Image Tag:** \`${{ steps.prep.outputs.tags }}\`
+
+            **Usage:**
+            \`\`\`bash
+            docker pull ${{ steps.prep.outputs.tags }}
+            docker run --name icloud-pr-test -v \${PWD}/icloud:/icloud -v \${PWD}/config:/config -v \${PWD}/home-abc-local:/home/abc/.local -e ENV_CONFIG_FILE_PATH=/config/config.yaml ${{ steps.prep.outputs.tags }}
+            \`\`\`
+
+            **Build Info:**
+            - Platforms: linux/amd64, linux/arm64
+            - Image Digest: ${{ steps.docker_build.outputs.digest }}
+            - Built from PR commit: ${{ steps.prep.outputs.pr_sha }}
+            `
+            })
