@@ -115,20 +115,23 @@ def _collect_album_download_tasks(
     download_tasks = []
 
     for photo in album:
-        if is_photo_wanted(photo, extensions):
-            for file_size in file_sizes:
-                download_info = collect_download_task(
-                    photo,
-                    file_size,
-                    destination_path,
-                    files,
-                    folder_format,
-                    hardlink_registry,
-                )
-                if download_info:
-                    download_tasks.append(download_info)
-        else:
-            LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
+        try:
+            if is_photo_wanted(photo, extensions):
+                for file_size in file_sizes:
+                    download_info = collect_download_task(
+                        photo,
+                        file_size,
+                        destination_path,
+                        files,
+                        folder_format,
+                        hardlink_registry,
+                    )
+                    if download_info:
+                        download_tasks.append(download_info)
+            else:
+                LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
+        except Exception as e:
+            LOGGER.warning(f"Error processing photo, skipping: {e!s}")
 
     return download_tasks
 
