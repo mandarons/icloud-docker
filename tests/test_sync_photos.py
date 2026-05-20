@@ -967,7 +967,7 @@ class TestSyncPhotos(unittest.TestCase):
         from src.album_sync_orchestrator import _collect_album_download_tasks
 
         class MockBadPhoto:
-            """A photo whose icloudpy attribute access raises binascii.Error."""
+            """A placeholder photo object; collect_download_task will raise binascii.Error for it."""
 
         class MockGoodPhoto:
             def __init__(self):
