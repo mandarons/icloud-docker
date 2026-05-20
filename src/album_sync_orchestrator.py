@@ -89,6 +89,59 @@ def sync_album_photos(
     return True
 
 
+def _collect_photo_download_tasks(
+    photo,
+    destination_path: str,
+    file_sizes: list[str],
+    extensions: list[str] | None,
+    files: set[str] | None,
+    folder_format: str | None,
+    hardlink_registry: HardlinkRegistry | None,
+) -> list:
+    """Collect download tasks for a single photo, handling errors gracefully.
+
+    Wraps per-photo processing so that exceptions (e.g. binascii.Error from
+    iCloudPy's base64-encoded filename decoding) are caught at the photo level
+    rather than inside the album iteration loop (avoids PERF203).
+
+    Args:
+        photo: Photo object from iCloudPy
+        destination_path: Path where photos should be saved
+        file_sizes: List of file size variants to download
+        extensions: List of allowed file extensions
+        files: Set to track downloaded files
+        folder_format: strftime format string for folder organization
+        hardlink_registry: Registry for tracking downloaded files
+
+    Returns:
+        List of download tasks for this photo (empty on error or if unwanted)
+    """
+    try:
+        if not is_photo_wanted(photo, extensions):
+            LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
+            return []
+        tasks = []
+        for file_size in file_sizes:
+            download_info = collect_download_task(
+                photo,
+                file_size,
+                destination_path,
+                files,
+                folder_format,
+                hardlink_registry,
+            )
+            if download_info:
+                tasks.append(download_info)
+        return tasks
+    except Exception as e:
+        try:
+            photo_id = photo.id
+        except Exception:
+            photo_id = "<unknown>"
+        LOGGER.warning(f"Error processing photo (id: {photo_id}), skipping: {type(e).__name__}: {e!s}")
+        return []
+
+
 def _collect_album_download_tasks(
     album,
     destination_path: str,
@@ -115,27 +168,17 @@ def _collect_album_download_tasks(
     download_tasks = []
 
     for photo in album:
-        try:
-            if is_photo_wanted(photo, extensions):
-                for file_size in file_sizes:
-                    download_info = collect_download_task(
-                        photo,
-                        file_size,
-                        destination_path,
-                        files,
-                        folder_format,
-                        hardlink_registry,
-                    )
-                    if download_info:
-                        download_tasks.append(download_info)
-            else:
-                LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
-        except Exception as e:
-            try:
-                photo_id = photo.id
-            except Exception:
-                photo_id = "<unknown>"
-            LOGGER.warning(f"Error processing photo (id: {photo_id}), skipping: {type(e).__name__}: {e!s}")
+        download_tasks.extend(
+            _collect_photo_download_tasks(
+                photo,
+                destination_path,
+                file_sizes,
+                extensions,
+                files,
+                folder_format,
+                hardlink_registry,
+            ),
+        )
 
     return download_tasks
 
