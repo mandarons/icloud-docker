@@ -3,6 +3,7 @@ FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.10
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN \
+    rm -f /etc/apt/sources.list.d/yarn.list && \
     apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     software-properties-common git default-jre && \
