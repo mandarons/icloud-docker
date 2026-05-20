@@ -29,7 +29,7 @@ def sync_album_photos(
     folder_format: str | None = None,
     hardlink_registry: HardlinkRegistry | None = None,
     config=None,
-) -> bool | None:
+) -> tuple[int, int] | None:
     """Sync photos from given album.
 
     This function orchestrates the synchronization of a single album by:
@@ -49,7 +49,7 @@ def sync_album_photos(
         config: Configuration dictionary
 
     Returns:
-        True on success, None on invalid input
+        Tuple of (total_successful, total_failed) download counts, or None on invalid input
     """
     if album is None or destination_path is None or file_sizes is None:
         return None
@@ -71,11 +71,12 @@ def sync_album_photos(
     )
 
     # Execute downloads in parallel if there are tasks
+    total_successful, total_failed = 0, 0
     if download_tasks:
-        execute_parallel_downloads(download_tasks, config)
+        total_successful, total_failed = execute_parallel_downloads(download_tasks, config)
 
-    # Recursively sync subalbums
-    _sync_subalbums(
+    # Recursively sync subalbums and aggregate counts
+    sub_successful, sub_failed = _sync_subalbums(
         album,
         normalized_destination,
         file_sizes,
@@ -85,8 +86,10 @@ def sync_album_photos(
         hardlink_registry,
         config,
     )
+    total_successful += sub_successful
+    total_failed += sub_failed
 
-    return True
+    return total_successful, total_failed
 
 
 def _collect_album_download_tasks(
@@ -142,7 +145,7 @@ def _sync_subalbums(
     folder_format: str | None,
     hardlink_registry: HardlinkRegistry | None,
     config,
-) -> None:
+) -> tuple[int, int]:
     """Recursively sync all subalbums.
 
     Args:
@@ -154,9 +157,13 @@ def _sync_subalbums(
         folder_format: strftime format string for folder organization
         hardlink_registry: Registry for tracking downloaded files
         config: Configuration dictionary
+
+    Returns:
+        Tuple of (total_successful, total_failed) aggregated across all subalbums
     """
+    total_successful, total_failed = 0, 0
     for subalbum in album.subalbums:
-        sync_album_photos(
+        result = sync_album_photos(
             album.subalbums[subalbum],
             os.path.join(destination_path, subalbum),
             file_sizes,
@@ -166,3 +173,8 @@ def _sync_subalbums(
             hardlink_registry,
             config,
         )
+        if result is not None:
+            sub_successful, sub_failed = result
+            total_successful += sub_successful
+            total_failed += sub_failed
+    return total_successful, total_failed

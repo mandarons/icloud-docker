@@ -381,7 +381,7 @@ def sync_photos(config, photos):
         photos: Photos object from iCloudPy
 
     Returns:
-        None (maintains legacy behavior)
+        Tuple of (total_successful, total_failed) download counts
     """
     # Parse configuration using centralized config parser
     destination_path = config_parser.prepare_photos_destination(config=config)
@@ -395,9 +395,11 @@ def sync_photos(config, photos):
     # Initialize hard link registry using new modular approach
     hardlink_registry = create_hardlink_registry(use_hardlinks)
 
+    total_successful, total_failed = 0, 0
+
     # Special handling for "All Photos" when hardlinks are enabled
     if use_hardlinks and download_all:
-        _sync_all_photos_first_for_hardlinks(
+        sub_successful, sub_failed = _sync_all_photos_first_for_hardlinks(
             photos,
             libraries,
             destination_path,
@@ -407,9 +409,11 @@ def sync_photos(config, photos):
             hardlink_registry,
             config,
         )
+        total_successful += sub_successful
+        total_failed += sub_failed
 
     # Sync albums based on configuration
-    _sync_albums_by_configuration(
+    sub_successful, sub_failed = _sync_albums_by_configuration(
         photos,
         libraries,
         download_all,
@@ -420,10 +424,14 @@ def sync_photos(config, photos):
         hardlink_registry,
         config,
     )
+    total_successful += sub_successful
+    total_failed += sub_failed
 
     # Clean up obsolete files if enabled
     if config_parser.get_photos_remove_obsolete(config=config):
         remove_obsolete_files(destination_path, files)
+
+    return total_successful, total_failed
 
 
 def _sync_all_photos_first_for_hardlinks(
@@ -435,7 +443,7 @@ def _sync_all_photos_first_for_hardlinks(
     folder_format,
     hardlink_registry,
     config,
-):
+) -> tuple[int, int]:
     """Sync 'All Photos' album first to populate hardlink registry.
 
     Args:
@@ -447,11 +455,14 @@ def _sync_all_photos_first_for_hardlinks(
         folder_format: Folder format string
         hardlink_registry: Registry for tracking downloaded files
         config: Configuration dictionary
+
+    Returns:
+        Tuple of (total_successful, total_failed) download counts
     """
     for library in libraries:
         if library == "PrimarySync" and "All Photos" in photos.libraries[library].albums:
             LOGGER.info("Syncing 'All Photos' album first for hard link reference...")
-            sync_album_photos(
+            result = sync_album_photos(
                 album=photos.libraries[library].albums["All Photos"],
                 destination_path=os.path.join(destination_path, "All Photos"),
                 file_sizes=filters["file_sizes"],
@@ -466,7 +477,10 @@ def _sync_all_photos_first_for_hardlinks(
                     f"'All Photos' sync complete. Hard link registry populated with "
                     f"{hardlink_registry.get_registry_size()} reference files.",
                 )
+            if result is not None:
+                return result
             break
+    return 0, 0
 
 
 def _sync_albums_by_configuration(
@@ -479,7 +493,7 @@ def _sync_albums_by_configuration(
     folder_format,
     hardlink_registry,
     config,
-):
+) -> tuple[int, int]:
     """Sync albums based on configuration settings.
 
     Args:
@@ -492,10 +506,14 @@ def _sync_albums_by_configuration(
         folder_format: Folder format string
         hardlink_registry: Registry for tracking downloaded files
         config: Configuration dictionary
+
+    Returns:
+        Tuple of (total_successful, total_failed) aggregated across all libraries
     """
+    total_successful, total_failed = 0, 0
     for library in libraries:
         if download_all and library == "PrimarySync":
-            _sync_all_albums_except_filtered(
+            sub_successful, sub_failed = _sync_all_albums_except_filtered(
                 photos,
                 library,
                 filters,
@@ -506,7 +524,7 @@ def _sync_albums_by_configuration(
                 config,
             )
         elif filters["albums"] and library == "PrimarySync":
-            _sync_filtered_albums(
+            sub_successful, sub_failed = _sync_filtered_albums(
                 photos,
                 library,
                 filters,
@@ -517,7 +535,7 @@ def _sync_albums_by_configuration(
                 config,
             )
         elif filters["albums"]:
-            _sync_filtered_albums_in_library(
+            sub_successful, sub_failed = _sync_filtered_albums_in_library(
                 photos,
                 library,
                 filters,
@@ -528,7 +546,7 @@ def _sync_albums_by_configuration(
                 config,
             )
         else:
-            _sync_all_photos_in_library(
+            sub_successful, sub_failed = _sync_all_photos_in_library(
                 photos,
                 library,
                 destination_path,
@@ -538,6 +556,9 @@ def _sync_albums_by_configuration(
                 hardlink_registry,
                 config,
             )
+        total_successful += sub_successful
+        total_failed += sub_failed
+    return total_successful, total_failed
 
 
 def _sync_all_albums_except_filtered(
@@ -549,7 +570,7 @@ def _sync_all_albums_except_filtered(
     folder_format,
     hardlink_registry,
     config,
-):
+) -> tuple[int, int]:
     """Sync all albums except those in the filter exclusion list.
 
     Args:
@@ -561,14 +582,18 @@ def _sync_all_albums_except_filtered(
         folder_format: Folder format string
         hardlink_registry: Registry for tracking downloaded files
         config: Configuration dictionary
+
+    Returns:
+        Tuple of (total_successful, total_failed) aggregated across all synced albums
     """
+    total_successful, total_failed = 0, 0
     for album in photos.libraries[library].albums.keys():
         # Skip All Photos if we already synced it first
         if hardlink_registry and album == "All Photos":
             continue
         if filters["albums"] and album in iter(filters["albums"]):
             continue
-        sync_album_photos(
+        result = sync_album_photos(
             album=photos.libraries[library].albums[album],
             destination_path=os.path.join(destination_path, album),
             file_sizes=filters["file_sizes"],
@@ -578,6 +603,11 @@ def _sync_all_albums_except_filtered(
             hardlink_registry=hardlink_registry,
             config=config,
         )
+        if result is not None:
+            sub_successful, sub_failed = result
+            total_successful += sub_successful
+            total_failed += sub_failed
+    return total_successful, total_failed
 
 
 def _sync_filtered_albums(
@@ -589,7 +619,7 @@ def _sync_filtered_albums(
     folder_format,
     hardlink_registry,
     config,
-):
+) -> tuple[int, int]:
     """Sync only albums specified in filters.
 
     Args:
@@ -601,9 +631,13 @@ def _sync_filtered_albums(
         folder_format: Folder format string
         hardlink_registry: Registry for tracking downloaded files
         config: Configuration dictionary
+
+    Returns:
+        Tuple of (total_successful, total_failed) aggregated across all synced albums
     """
+    total_successful, total_failed = 0, 0
     for album in iter(filters["albums"]):
-        sync_album_photos(
+        result = sync_album_photos(
             album=photos.libraries[library].albums[album],
             destination_path=os.path.join(destination_path, album),
             file_sizes=filters["file_sizes"],
@@ -613,6 +647,11 @@ def _sync_filtered_albums(
             hardlink_registry=hardlink_registry,
             config=config,
         )
+        if result is not None:
+            sub_successful, sub_failed = result
+            total_successful += sub_successful
+            total_failed += sub_failed
+    return total_successful, total_failed
 
 
 def _sync_filtered_albums_in_library(
@@ -624,7 +663,7 @@ def _sync_filtered_albums_in_library(
     folder_format,
     hardlink_registry,
     config,
-):
+) -> tuple[int, int]:
     """Sync filtered albums in a specific library.
 
     Args:
@@ -636,10 +675,14 @@ def _sync_filtered_albums_in_library(
         folder_format: Folder format string
         hardlink_registry: Registry for tracking downloaded files
         config: Configuration dictionary
+
+    Returns:
+        Tuple of (total_successful, total_failed) aggregated across all synced albums
     """
+    total_successful, total_failed = 0, 0
     for album in iter(filters["albums"]):
         if album in photos.libraries[library].albums:
-            sync_album_photos(
+            result = sync_album_photos(
                 album=photos.libraries[library].albums[album],
                 destination_path=os.path.join(destination_path, album),
                 file_sizes=filters["file_sizes"],
@@ -649,8 +692,13 @@ def _sync_filtered_albums_in_library(
                 hardlink_registry=hardlink_registry,
                 config=config,
             )
+            if result is not None:
+                sub_successful, sub_failed = result
+                total_successful += sub_successful
+                total_failed += sub_failed
         else:
             LOGGER.warning(f"Album {album} not found in {library}. Skipping the album {album} ...")
+    return total_successful, total_failed
 
 
 def _sync_all_photos_in_library(
@@ -662,7 +710,7 @@ def _sync_all_photos_in_library(
     folder_format,
     hardlink_registry,
     config,
-):
+) -> tuple[int, int]:
     """Sync all photos in a library.
 
     Args:
@@ -674,8 +722,11 @@ def _sync_all_photos_in_library(
         folder_format: Folder format string
         hardlink_registry: Registry for tracking downloaded files
         config: Configuration dictionary
+
+    Returns:
+        Tuple of (total_successful, total_failed) download counts
     """
-    sync_album_photos(
+    result = sync_album_photos(
         album=photos.libraries[library].all,
         destination_path=os.path.join(destination_path, "all"),
         file_sizes=filters["file_sizes"],
@@ -685,3 +736,6 @@ def _sync_all_photos_in_library(
         hardlink_registry=hardlink_registry,
         config=config,
     )
+    if result is not None:
+        return result
+    return 0, 0
