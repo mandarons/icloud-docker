@@ -1016,6 +1016,37 @@ class TestSyncPhotos(unittest.TestCase):
         # A warning should have been logged for the bad photo
         self.assertTrue(any(error_msg in msg for msg in log_ctx.output))
 
+    def test_collect_photo_download_tasks_id_also_raises(self):
+        """Test _collect_photo_download_tasks when photo.id also raises (unknown id fallback)."""
+        import binascii
+
+        from src.album_sync_orchestrator import _collect_photo_download_tasks
+
+        class MockBadPhotoNoId:
+            """Photo where both collect_download_task and .id raise."""
+
+        error_msg = "bad base64"
+
+        def collect_side_effect(photo, *args, **kwargs):
+            raise binascii.Error(error_msg)
+
+        with patch("src.album_sync_orchestrator.collect_download_task",
+                   side_effect=collect_side_effect):
+            with self.assertLogs("root", level="WARNING") as log_ctx:
+                tasks = _collect_photo_download_tasks(
+                    photo=MockBadPhotoNoId(),
+                    destination_path=self.destination_path,
+                    file_sizes=["original"],
+                    extensions=None,
+                    files=set(),
+                    folder_format=None,
+                    hardlink_registry=None,
+                )
+
+        self.assertEqual(tasks, [])
+        # Warning should mention <unknown> since photo.id raises
+        self.assertTrue(any("<unknown>" in msg for msg in log_ctx.output))
+
     @patch("src.album_sync_orchestrator.execute_parallel_downloads")
     def test_sync_album_download_returns_false(self, mock_execute_downloads):
         """Test sync_album when download tasks return False."""
