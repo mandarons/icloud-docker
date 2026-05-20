@@ -25,7 +25,7 @@
           "editor.formatOnType": true,
           "editor.formatOnSave": true,
           "editor.wordBasedSuggestions": "off",
-          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.defaultFormatter": null,
           "editor.codeActionsOnSave": {
             "source.fixAll": "explicit",
             "source.organizeImports": "explicit"
