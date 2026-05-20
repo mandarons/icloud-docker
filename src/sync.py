@@ -299,7 +299,7 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
 
         # Track failed downloads so notifications reflect errors
         if isinstance(sync_result, tuple):
-            _successful, failed_downloads = sync_result
+            _, failed_downloads = sync_result
             if failed_downloads > 0:
                 stats.errors.append(f"{failed_downloads} photo download(s) failed")
 

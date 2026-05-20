@@ -2044,7 +2044,7 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertNotIn("%2C", name)
         self.assertNotIn("%25", name)
 
-    def test_sync_all_photos_first_for_hardlinks_sync_album_returns_none(self):
+    def test_sync_all_photos_first_handles_none_return(self):
         """Test _sync_all_photos_first_for_hardlinks when sync_album_photos returns None (defensive path)."""
         from src.sync_photos import _sync_all_photos_first_for_hardlinks
 
@@ -2070,7 +2070,7 @@ class TestSyncPhotos(unittest.TestCase):
         # Should return (0, 0) when sync_album_photos returns None
         self.assertEqual(result, (0, 0))
 
-    def test_sync_all_photos_in_library_sync_album_returns_none(self):
+    def test_sync_all_photos_in_library_handles_none_return(self):
         """Test _sync_all_photos_in_library when sync_album_photos returns None (defensive path)."""
         from src.sync_photos import _sync_all_photos_in_library
 
