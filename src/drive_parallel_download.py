@@ -74,13 +74,16 @@ def collect_file_for_download(
             return None
         # File is outdated; still need to determine its type for re-download
     elif os.path.isdir(local_file):
-        # It's a directory locally — likely a package (no network call needed)
+        # A directory at this path means the item was previously downloaded as a
+        # package. iCloud Drive items do not change type between file and package,
+        # so package_exists() is the correct check here (no is_package() needed).
+        # Note: package_exists() deletes the directory if it is outdated.
         if package_exists(item=item, local_package_path=local_file):
             with files_lock:
                 for f in Path(local_file).glob("**/*"):
                     files.add(str(f))
             return None
-        # Package directory was deleted by package_exists(); mark for re-download as package
+        # Directory was deleted by package_exists(); schedule re-download as a package
         return {
             "item": item,
             "local_file": local_file,
