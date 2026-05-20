@@ -97,25 +97,25 @@ def process_file(
     if os.path.isfile(local_file):
         if file_exists(item=item, local_file=local_file):
             return False
-        # File is outdated; fall through to determine type and re-download
+        # File exists locally but is outdated; need to determine type for re-download
+        timeout = config_parser.get_drive_request_timeout(config)
+        item_is_package = is_package(item=item, timeout=timeout)
     elif os.path.isdir(local_file):
+        # A directory at this path means the item was previously downloaded as a
+        # package. iCloud Drive items do not change type between file and package,
+        # so package_exists() is the correct check here (no is_package() needed).
+        # Note: package_exists() deletes the directory if it is outdated.
         if package_exists(item=item, local_package_path=local_file):
             for f in Path(local_file).glob("**/*"):
                 files.add(str(f))
             return False
-        # Package directory deleted by package_exists(); re-download as package
-        local_file = download_file(item=item, local_file=local_file)
-        if local_file:
-            for f in Path(local_file).glob("**/*"):
-                f = str(f)
-                f_normalized = unicodedata.normalize("NFD", f)
-                if os.path.exists(f):
-                    os.rename(f, f_normalized)
-                    files.add(f_normalized)
-        return bool(local_file)
+        # Directory was deleted by package_exists(); re-download it as a package
+        item_is_package = True
+    else:
+        # Item doesn't exist locally — call is_package() to determine the type
+        timeout = config_parser.get_drive_request_timeout(config)
+        item_is_package = is_package(item=item, timeout=timeout)
 
-    timeout = config_parser.get_drive_request_timeout(config)
-    item_is_package = is_package(item=item, timeout=timeout)
     local_file = download_file(item=item, local_file=local_file)
     if local_file and item_is_package:
         for f in Path(local_file).glob("**/*"):
