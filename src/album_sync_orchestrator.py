@@ -135,7 +135,7 @@ def _collect_album_download_tasks(
                 photo_id = photo.id
             except Exception:
                 photo_id = "<unknown>"
-            LOGGER.warning(f"Error processing photo (id: {photo_id}), skipping: {e!s}")
+            LOGGER.warning(f"Error processing photo (id: {photo_id}), skipping: {type(e).__name__}: {e!s}")
 
     return download_tasks
 
