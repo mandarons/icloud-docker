@@ -49,7 +49,8 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["filters"]["libraries"] = ["PrimarySync"]
         mock_read_config.return_value = config
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         album_2_path = os.path.join(self.destination_path, "album 2")
         album_1_1_path = os.path.join(album_2_path, "album-1-1")
         album_1_path = os.path.join(self.destination_path, "album-1")
@@ -77,7 +78,8 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["all_albums"] = True
         mock_read_config.return_value = config
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         album_0_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][0])
         album_1_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][1])
         self.assertFalse(os.path.isdir(album_0_path))
@@ -104,7 +106,8 @@ class TestSyncPhotos(unittest.TestCase):
         album_1_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][1])
         config["photos"]["filters"]["albums"] = None
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         self.assertTrue(os.path.isdir(album_0_path))
         self.assertTrue(os.path.isdir(album_1_path))
         self.assertTrue(len(os.listdir(album_0_path)) > 1)
@@ -122,7 +125,8 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["folder_format"] = "%Y/%m"
         mock_read_config.return_value = config
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         album_0_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][0])
         album_1_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][1])
         self.assertTrue(os.path.isdir(os.path.join(album_0_path, "2020", "08")))
@@ -156,7 +160,8 @@ class TestSyncPhotos(unittest.TestCase):
         )
         # Download missing file
         with self.assertLogs() as captured:
-            self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+            result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+            self.assertIsInstance(result, tuple)
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(
                 next(
@@ -204,7 +209,8 @@ class TestSyncPhotos(unittest.TestCase):
             os.path.join(album_1_path, "IMG_3148.JPG"),
         )
         with self.assertLogs() as captured:
-            self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+            result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+            self.assertIsInstance(result, tuple)
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(
                 next(
@@ -242,7 +248,8 @@ class TestSyncPhotos(unittest.TestCase):
 
         # No files to download
         with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
-            self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+            result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+            self.assertIsInstance(result, tuple)
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNone(next((s for s in captured[1] if "Downloading /" in s), None))
 
@@ -275,7 +282,8 @@ class TestSyncPhotos(unittest.TestCase):
         )
 
         with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
-            self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+            result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+            self.assertIsInstance(result, tuple)
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNone(next((s for s in captured[1] if "Downloading /" in s), None))
 
@@ -291,7 +299,8 @@ class TestSyncPhotos(unittest.TestCase):
         )
 
         with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
-            self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+            result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+            self.assertIsInstance(result, tuple)
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNone(next((s for s in captured[1] if "Downloading /" in s), None))
 
@@ -388,7 +397,8 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["filters"]["albums"] = []
         mock_read_config.return_value = config
         with self.assertLogs() as captured:
-            self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+            result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+            self.assertIsInstance(result, tuple)
             self.assertTrue(len(captured.records) > 0)
             self.assertIsNotNone(
                 next(
@@ -510,7 +520,8 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["filters"]["extensions"] = ["JpG"]
         mock_read_config.return_value = config
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         album_0_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][0])
         album_1_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][1])
         self.assertTrue(os.path.isdir(album_0_path))
@@ -530,7 +541,8 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["filters"]["extensions"] = ["PnG"]
         mock_read_config.return_value = config
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         album_0_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][0])
         album_1_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][1])
         self.assertTrue(os.path.isdir(album_0_path))
@@ -558,7 +570,8 @@ class TestSyncPhotos(unittest.TestCase):
         del config["photos"]["filters"]["libraries"]
         mock_read_config.return_value = config
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         all_path = os.path.join(self.destination_path, "all")
         self.assertTrue(os.path.isdir(all_path))
         # Check for PrimarySync photo
@@ -585,7 +598,8 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["filters"]["albums"] += ["Favorites"]
         mock_read_config.return_value = config
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         album_0_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][0])
         album_1_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][1])
         album_2_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][2])
@@ -605,7 +619,8 @@ class TestSyncPhotos(unittest.TestCase):
         config["photos"]["filters"]["file_sizes"] = ["original_alt"]
         mock_read_config.return_value = config
         # Sync original photos
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
         album_0_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][0])
         album_1_path = os.path.join(self.destination_path, config["photos"]["filters"]["albums"][1])
         self.assertTrue(os.path.isdir(album_0_path))
@@ -1255,7 +1270,8 @@ class TestSyncPhotos(unittest.TestCase):
         mock_read_config.return_value = config
 
         # Sync photos with hard links enabled
-        self.assertIsNone(sync_photos.sync_photos(config=config, photos=mock_service.photos))
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+        self.assertIsInstance(result, tuple)
 
         # Check if "All Photos" directory exists
         all_photos_path = os.path.join(self.destination_path, "All Photos")
@@ -2118,3 +2134,55 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertNotIn("%CC%88", name)
         self.assertNotIn("%2C", name)
         self.assertNotIn("%25", name)
+
+    def test_sync_all_photos_first_for_hardlinks_sync_album_returns_none(self):
+        """Test _sync_all_photos_first_for_hardlinks when sync_album_photos returns None (defensive path)."""
+        from src.sync_photos import _sync_all_photos_first_for_hardlinks
+
+        mock_photos = self.service.photos
+        filters = {
+            "file_sizes": ["original"],
+            "extensions": None,
+        }
+        config = read_config(config_path=tests.CONFIG_PATH)
+
+        # Mock sync_album_photos to return None (simulates invalid args scenario)
+        with patch("src.sync_photos.sync_album_photos", return_value=None):
+            result = _sync_all_photos_first_for_hardlinks(
+                photos=mock_photos,
+                libraries=["PrimarySync"],
+                destination_path=self.destination_path,
+                filters=filters,
+                files=set(),
+                folder_format=None,
+                hardlink_registry=None,
+                config=config,
+            )
+        # Should return (0, 0) when sync_album_photos returns None
+        self.assertEqual(result, (0, 0))
+
+    def test_sync_all_photos_in_library_sync_album_returns_none(self):
+        """Test _sync_all_photos_in_library when sync_album_photos returns None (defensive path)."""
+        from src.sync_photos import _sync_all_photos_in_library
+
+        mock_photos = self.service.photos
+        filters = {
+            "file_sizes": ["original"],
+            "extensions": None,
+        }
+        config = read_config(config_path=tests.CONFIG_PATH)
+
+        # Mock sync_album_photos to return None (simulates invalid args scenario)
+        with patch("src.sync_photos.sync_album_photos", return_value=None):
+            result = _sync_all_photos_in_library(
+                photos=mock_photos,
+                library="PrimarySync",
+                destination_path=self.destination_path,
+                filters=filters,
+                files=set(),
+                folder_format=None,
+                hardlink_registry=None,
+                config=config,
+            )
+        # Should return (0, 0) when sync_album_photos returns None
+        self.assertEqual(result, (0, 0))

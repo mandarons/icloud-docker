@@ -255,7 +255,7 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
                 pass
 
         LOGGER.info("Syncing photos...")
-        sync_photos.sync_photos(config=config, photos=api.photos)
+        sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
         LOGGER.info("Photos synced")
 
         # Count files after sync
@@ -296,6 +296,12 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
                         stats.bytes_saved_by_hardlinks += os.path.getsize(file_path)
         except Exception:
             pass
+
+        # Track failed downloads so notifications reflect errors
+        if isinstance(sync_result, tuple):
+            _successful, failed_downloads = sync_result
+            if failed_downloads > 0:
+                stats.errors.append(f"{failed_downloads} photo download(s) failed")
 
         # Get list of synced albums (simple approximation based on directories)
         try:

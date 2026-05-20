@@ -557,6 +557,52 @@ class TestSync(unittest.TestCase):
         self.assertEqual(sync_state.photos_time_remaining, 35)
         mock_getsize.assert_called()
 
+    @patch("src.sync.sync_photos.sync_photos")
+    def test_perform_photos_sync_tracks_failed_downloads(self, mock_sync_photos):
+        """Failed photo downloads should be recorded in stats.errors."""
+        config = deepcopy(self.config)
+        sync_state = sync.SyncState()
+        api = SimpleNamespace(photos=object())
+
+        # Simulate sync returning (3 successful, 5 failed) downloads
+        mock_sync_photos.return_value = (3, 5)
+
+        stats = sync._perform_photos_sync(  # noqa: SLF001
+            config=config,
+            api=api,
+            sync_state=sync_state,
+            photos_sync_interval=10,
+        )
+
+        self.assertIsNotNone(stats)
+        assert stats is not None
+        self.assertTrue(stats.has_errors())
+        self.assertEqual(len(stats.errors), 1)
+        self.assertIn("5 photo download(s) failed", stats.errors[0])
+
+    @patch("src.sync.sync_photos.sync_photos")
+    def test_perform_photos_sync_no_errors_when_all_succeed(self, mock_sync_photos):
+        """No errors should be recorded when all downloads succeed."""
+        config = deepcopy(self.config)
+        sync_state = sync.SyncState()
+        api = SimpleNamespace(photos=object())
+
+        # Simulate sync returning (10 successful, 0 failed)
+        mock_sync_photos.return_value = (10, 0)
+
+        stats = sync._perform_photos_sync(  # noqa: SLF001
+            config=config,
+            api=api,
+            sync_state=sync_state,
+            photos_sync_interval=10,
+        )
+
+        self.assertIsNotNone(stats)
+        assert stats is not None
+        self.assertFalse(stats.has_errors())
+        self.assertEqual(len(stats.errors), 0)
+
+
     @patch("src.sync.notify.send_sync_summary", side_effect=RuntimeError("notify failure"))
     @patch("src.sync._perform_photos_sync")
     @patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1))
