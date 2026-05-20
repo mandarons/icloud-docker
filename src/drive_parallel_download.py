@@ -14,7 +14,7 @@ from threading import Lock
 from typing import Any
 from urllib.parse import unquote
 
-from src import configure_icloudpy_logging, get_logger
+from src import config_parser, configure_icloudpy_logging, get_logger
 from src.drive_file_download import download_file
 from src.drive_file_existence import file_exists, is_package, package_exists
 from src.drive_filtering import wanted_file
@@ -34,6 +34,7 @@ def collect_file_for_download(
     filters: list[str] | None,
     ignore: list[str] | None,
     files: set[str],
+    config: dict | None = None,
 ) -> dict[str, Any] | None:
     """Collect file information for parallel download without immediately downloading.
 
@@ -43,6 +44,7 @@ def collect_file_for_download(
         filters: File extension filters
         ignore: Ignore patterns
         files: Set to track processed files (thread-safe updates)
+        config: Configuration dictionary (used to resolve request timeout)
 
     Returns:
         Download task info dict, or None if file should be skipped
@@ -63,7 +65,8 @@ def collect_file_for_download(
     with files_lock:
         files.add(local_file)
 
-    item_is_package = is_package(item=item)
+    timeout = config_parser.get_drive_request_timeout(config)
+    item_is_package = is_package(item=item, timeout=timeout)
     if item_is_package:
         if package_exists(item=item, local_package_path=local_file):
             with files_lock:

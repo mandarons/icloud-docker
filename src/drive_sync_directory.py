@@ -83,6 +83,7 @@ def sync_directory(
                 root,
                 files,
                 download_tasks,
+                config,
             )
 
     # Second pass: execute downloads in parallel
@@ -153,6 +154,7 @@ def _process_file_item(
     root: str,
     files: set[str],
     download_tasks: list[dict[str, Any]],
+    config: Any | None = None,
 ) -> None:
     """Process a single file item.
 
@@ -164,6 +166,7 @@ def _process_file_item(
         root: Root directory
         files: Set to update with processed files
         download_tasks: List to append download tasks to
+        config: Configuration object
     """
     if not wanted_parent_folder(
         filters=filters["folders"] if filters and "folders" in filters else None,
@@ -180,6 +183,7 @@ def _process_file_item(
             filters=filters["file_extensions"] if filters and "file_extensions" in filters else None,
             ignore=ignore,
             files=files,
+            config=config,
         )
         if download_info:
             download_tasks.append(download_info)

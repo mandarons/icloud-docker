@@ -56,7 +56,14 @@ def sync_drive(config: Any, drive: Any) -> set[str]:
     )
 
 
-def process_file(item: Any, destination_path: str, filters: list[str], ignore: list[str], files: set[str]) -> bool:
+def process_file(
+    item: Any,
+    destination_path: str,
+    filters: list[str],
+    ignore: list[str],
+    files: set[str],
+    config: dict | None = None,
+) -> bool:
     """Process given item as file (legacy compatibility function).
 
     This function maintains backward compatibility with existing tests.
@@ -68,6 +75,7 @@ def process_file(item: Any, destination_path: str, filters: list[str], ignore: l
         filters: File extension filters
         ignore: Ignore patterns
         files: Set to track processed files
+        config: Configuration dictionary (used to resolve request timeout)
 
     Returns:
         True if file was processed successfully, False otherwise
@@ -82,7 +90,8 @@ def process_file(item: Any, destination_path: str, filters: list[str], ignore: l
     if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
         return False
     files.add(local_file)
-    item_is_package = is_package(item=item)
+    timeout = config_parser.get_drive_request_timeout(config)
+    item_is_package = is_package(item=item, timeout=timeout)
     if item_is_package:
         if package_exists(item=item, local_package_path=local_file):
             for f in Path(local_file).glob("**/*"):

@@ -43,6 +43,7 @@ drive:
   # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: true
   sync_interval: -1
+  request_timeout: 30
   ignore:
     - "*.psd"
     - .git/

@@ -15,6 +15,7 @@ from icloudpy.services.photos import PhotoAsset
 from src import (
     DEFAULT_DRIVE_DESTINATION,
     DEFAULT_PHOTOS_DESTINATION,
+    DEFAULT_REQUEST_TIMEOUT_SEC,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     DEFAULT_ROOT_DESTINATION,
     DEFAULT_SYNC_INTERVAL_SEC,
@@ -210,6 +211,23 @@ def get_drive_sync_interval(config: dict, log_messages: bool = True) -> int:
     """
     config_path = ["drive", "sync_interval"]
     return get_sync_interval(config=config, config_path=config_path, service_name="drive", log_messages=log_messages)
+
+
+def get_drive_request_timeout(config: dict) -> int:
+    """Return drive request timeout from config.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Request timeout in seconds (default: DEFAULT_REQUEST_TIMEOUT_SEC)
+    """
+    config_path = ["drive", "request_timeout"]
+    return get_config_value_or_default(
+        config=config,
+        config_path=config_path,
+        default=DEFAULT_REQUEST_TIMEOUT_SEC,
+    )
 
 
 def get_photos_sync_interval(config: dict, log_messages: bool = True) -> int:
@@ -906,6 +924,18 @@ def get_pushover_api_token(config: dict) -> str | None:
         Pushover API token if configured, None otherwise
     """
     return get_notification_config_value(config, "pushover", "api_token")
+
+def get_pushover_notification_priority(config: dict) -> int | None:
+    """Return Pushover notification priority from config.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Pushover notification priority if configured, None otherwise
+    """
+    config_path = ["app", "pushover", "priority"]
+    return get_config_value_or_none(config=config, config_path=config_path)
 
 
 # =============================================================================
