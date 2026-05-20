@@ -662,6 +662,15 @@ class TestSyncDrive(unittest.TestCase):
         """Test if local_file is None."""
         self.assertFalse(sync_drive.file_exists(item=self.file_item, local_file=None))
 
+    def test_package_exists_none_item(self):
+        """Test package_exists returns False when item is None."""
+        self.assertFalse(sync_drive.package_exists(item=None, local_package_path=self.local_package_path))
+
+    def test_package_exists_non_existent_path(self):
+        """Test package_exists returns False when local path does not exist as a directory."""
+        non_existent = os.path.join(self.destination_path, "does_not_exist.band")
+        self.assertFalse(sync_drive.package_exists(item=self.package_item, local_package_path=non_existent))
+
     def test_download_file(self):
         """Test for valid file download."""
         self.assertTrue(sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
