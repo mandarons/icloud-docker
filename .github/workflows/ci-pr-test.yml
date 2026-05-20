@@ -86,8 +86,8 @@ jobs:
           path: htmlcov
           retention-days: 1
 
-# TODO: Below step fails for PRs from forks due to permissions issues with GITHUB_TOKEN. We can re-enable this once we have a workaround for that.
-# Or move this to a separate workflow that only runs manually taking PR number as input, so that we can trigger it for PRs from forks without worrying about permissions.
+  # TODO: Below step fails for PRs from forks due to permissions issues with GITHUB_TOKEN. We can re-enable this once we have a workaround for that.
+  # Or move this to a separate workflow that only runs manually taking PR number as input, so that we can trigger it for PRs from forks without worrying about permissions.
   # build-and-push-docker:
   #   needs: test
   #   runs-on: ubuntu-latest
