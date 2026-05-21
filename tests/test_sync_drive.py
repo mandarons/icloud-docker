@@ -677,7 +677,7 @@ class TestSyncDrive(unittest.TestCase):
         """File downloaded without TZ (UTC default) is not re-downloaded after TZ=America/Los_Angeles."""
         self._run_with_tz("UTC", lambda: sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
         self._run_with_tz("America/Los_Angeles", lambda: self.assertTrue(
-            sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path)
+            sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path),
         ))
 
     @unittest.skipUnless(hasattr(time, "tzset"), "time.tzset not available on this platform")
@@ -685,7 +685,7 @@ class TestSyncDrive(unittest.TestCase):
         """File downloaded with TZ=America/Los_Angeles is not re-downloaded after TZ=America/New_York."""
         self._run_with_tz("America/Los_Angeles", lambda: sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
         self._run_with_tz("America/New_York", lambda: self.assertTrue(
-            sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path)
+            sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path),
         ))
 
     @unittest.skipUnless(hasattr(time, "tzset"), "time.tzset not available on this platform")
@@ -693,7 +693,7 @@ class TestSyncDrive(unittest.TestCase):
         """File downloaded with TZ=America/Los_Angeles is not re-downloaded after TZ is unset (UTC)."""
         self._run_with_tz("America/Los_Angeles", lambda: sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
         self._run_with_tz("UTC", lambda: self.assertTrue(
-            sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path)
+            sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path),
         ))
 
     def _run_with_tz(self, tz: str, fn) -> None:
@@ -1207,7 +1207,7 @@ class TestSyncDrive(unittest.TestCase):
         """Package downloaded without TZ (UTC default) is not re-downloaded after TZ=America/Los_Angeles."""
         self._run_with_tz("UTC", lambda: sync_drive.download_file(item=self.package_item, local_file=self.local_package_path))
         self._run_with_tz("America/Los_Angeles", lambda: self.assertTrue(
-            sync_drive.package_exists(item=self.package_item, local_package_path=self.local_package_path)
+            sync_drive.package_exists(item=self.package_item, local_package_path=self.local_package_path),
         ))
 
     @unittest.skipUnless(hasattr(time, "tzset"), "time.tzset not available on this platform")
@@ -1215,7 +1215,7 @@ class TestSyncDrive(unittest.TestCase):
         """Package downloaded with TZ=America/Los_Angeles is not re-downloaded after TZ=America/New_York."""
         self._run_with_tz("America/Los_Angeles", lambda: sync_drive.download_file(item=self.package_item, local_file=self.local_package_path))
         self._run_with_tz("America/New_York", lambda: self.assertTrue(
-            sync_drive.package_exists(item=self.package_item, local_package_path=self.local_package_path)
+            sync_drive.package_exists(item=self.package_item, local_package_path=self.local_package_path),
         ))
 
     @unittest.skipUnless(hasattr(time, "tzset"), "time.tzset not available on this platform")
@@ -1223,7 +1223,7 @@ class TestSyncDrive(unittest.TestCase):
         """Package downloaded with TZ=America/Los_Angeles is not re-downloaded after TZ is unset (UTC)."""
         self._run_with_tz("America/Los_Angeles", lambda: sync_drive.download_file(item=self.package_item, local_file=self.local_package_path))
         self._run_with_tz("UTC", lambda: self.assertTrue(
-            sync_drive.package_exists(item=self.package_item, local_package_path=self.local_package_path)
+            sync_drive.package_exists(item=self.package_item, local_package_path=self.local_package_path),
         ))
 
     def test_process_file_nested_package_extraction(self):
