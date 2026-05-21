@@ -50,7 +50,9 @@ def download_file(item: Any, local_file: str) -> str | None:
                 else:
                     return None
 
-        # Set the file modification time to match the remote file
+        # Set the file modification time to match the remote file.
+        # iCloudPy produces date_modified via strptime(..., "%Y-%m-%dT%H:%M:%SZ") — always
+        # naive UTC with no tzinfo. replace(tzinfo=UTC) is the correct conversion.
         item_modified_time = item.date_modified.replace(tzinfo=timezone.utc).timestamp()
         os.utime(local_file, (item_modified_time, item_modified_time))
 
