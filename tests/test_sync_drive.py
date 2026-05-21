@@ -697,7 +697,13 @@ class TestSyncDrive(unittest.TestCase):
         ))
 
     def _run_with_tz(self, tz: str, fn) -> None:
-        """Run fn with the system timezone temporarily set to tz, then restore."""
+        """Run fn with the system timezone temporarily set to tz, then restore.
+
+        Not thread-safe: os.environ['TZ'] + time.tzset() mutate process-global
+        libc state. These tests must run in a single-threaded context (standard
+        unittest sequential runner). If parallel test execution is ever adopted,
+        move these tests to an isolated subprocess.
+        """
         old_tz = os.environ.get("TZ")
         os.environ["TZ"] = tz
         time.tzset()
