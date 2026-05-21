@@ -971,6 +971,97 @@ class TestSyncPhotos(unittest.TestCase):
             # Verify the exception handler was triggered
             mock_execute.assert_called()
 
+    def test_collect_album_download_tasks_skips_photo_with_invalid_base64(self):
+        """Test that photos with invalid base64-encoded filenames are skipped gracefully.
+
+        Regression test for: binascii.Error: Invalid base64-encoded string:
+        number of data characters (25) cannot be 1 more than a multiple of 4
+        """
+        import binascii
+
+        from src.album_sync_orchestrator import _collect_album_download_tasks
+
+        class MockBadPhoto:
+            """Intentionally attribute-free; the patched collect_download_task raises binascii.Error for it."""
+
+        class MockGoodPhoto:
+            def __init__(self):
+                import datetime
+
+                self.filename = "good_photo.jpg"
+                self.versions = {"original": {"type": "jpeg", "size": 1000}}
+                self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+                self.id = "good_photo_id"
+
+        class MockAlbum:
+            def __iter__(self):
+                return iter([MockBadPhoto(), MockGoodPhoto()])
+
+        album = MockAlbum()
+
+        # Simulate collect_download_task raising binascii.Error for the bad photo
+        # (as icloudpy does when photo.versions triggers filename base64 decoding)
+        error_msg = (
+            "Invalid base64-encoded string: number of data characters "
+            "(25) cannot be 1 more than a multiple of 4"
+        )
+
+        def collect_side_effect(photo, *args, **kwargs):
+            if isinstance(photo, MockBadPhoto):
+                raise binascii.Error(error_msg)
+            return None  # Good photo already exists, skip
+
+        with patch("src.album_sync_orchestrator.collect_download_task",
+                   side_effect=collect_side_effect) as mock_collect:
+            with self.assertLogs("root", level="WARNING") as log_ctx:
+                tasks = _collect_album_download_tasks(
+                    album=album,
+                    destination_path=self.destination_path,
+                    file_sizes=["original"],
+                    extensions=None,
+                    files=set(),
+                    folder_format=None,
+                    hardlink_registry=None,
+                )
+
+        # The bad photo should be skipped; no tasks should be collected
+        self.assertEqual(tasks, [])
+        # Both photos were attempted
+        self.assertEqual(mock_collect.call_count, 2)
+        # A warning should have been logged for the bad photo
+        self.assertTrue(any(error_msg in msg for msg in log_ctx.output))
+
+    def test_collect_photo_download_tasks_id_also_raises(self):
+        """Test _collect_photo_download_tasks when photo.id also raises (unknown id fallback)."""
+        import binascii
+
+        from src.album_sync_orchestrator import _collect_photo_download_tasks
+
+        class MockBadPhotoNoId:
+            """Photo where both collect_download_task and .id raise."""
+
+        error_msg = "bad base64"
+
+        def collect_side_effect(photo, *args, **kwargs):
+            raise binascii.Error(error_msg)
+
+        with patch("src.album_sync_orchestrator.collect_download_task",
+                   side_effect=collect_side_effect):
+            with self.assertLogs("root", level="WARNING") as log_ctx:
+                tasks = _collect_photo_download_tasks(
+                    photo=MockBadPhotoNoId(),
+                    destination_path=self.destination_path,
+                    file_sizes=["original"],
+                    extensions=None,
+                    files=set(),
+                    folder_format=None,
+                    hardlink_registry=None,
+                )
+
+        self.assertEqual(tasks, [])
+        # Warning should mention <unknown> since photo.id raises
+        self.assertTrue(any("<unknown>" in msg for msg in log_ctx.output))
+
     @patch("src.album_sync_orchestrator.execute_parallel_downloads")
     def test_sync_album_download_returns_false(self, mock_execute_downloads):
         """Test sync_album when download tasks return False."""
