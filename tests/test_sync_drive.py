@@ -662,6 +662,15 @@ class TestSyncDrive(unittest.TestCase):
         """Test if local_file is None."""
         self.assertFalse(sync_drive.file_exists(item=self.file_item, local_file=None))
 
+    def test_package_exists_none_item(self):
+        """Test package_exists returns False when item is None."""
+        self.assertFalse(sync_drive.package_exists(item=None, local_package_path=self.local_package_path))
+
+    def test_package_exists_non_existent_path(self):
+        """Test package_exists returns False when local path does not exist as a directory."""
+        non_existent = os.path.join(self.destination_path, "does_not_exist.band")
+        self.assertFalse(sync_drive.package_exists(item=self.package_item, local_package_path=non_existent))
+
     def test_download_file(self):
         """Test for valid file download."""
         self.assertTrue(sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
@@ -1588,6 +1597,38 @@ class TestSyncDrive(unittest.TestCase):
         # Verify that files from the package were added to the set (lines 259-262)
         self.assertIn(test_file_path, files)
         self.assertIn(test_file_path2, files)
+
+    @patch("src.drive_parallel_download.package_exists")
+    def test_collect_file_for_download_package_outdated(self, mock_package_exists):
+        """Test collect_file_for_download when local package directory exists but is outdated.
+
+        When package_exists() returns False (and deletes the directory internally),
+        the function should return a download task with is_package=True so the
+        package can be re-downloaded without an extra is_package() network call.
+        """
+        files = set()
+
+        # Mock package_exists to return False (outdated package, directory deleted internally)
+        mock_package_exists.return_value = False
+
+        # Create the local package directory to trigger the os.path.isdir branch
+        local_package_path = os.path.join(self.destination_path, self.package_name)
+        os.makedirs(local_package_path, exist_ok=True)
+
+        download_info = sync_drive.collect_file_for_download(
+            item=self.package_item,
+            destination_path=self.destination_path,
+            filters=None,
+            ignore=None,
+            files=files,
+        )
+
+        # Should return a download task marked as a package (no is_package() network call)
+        self.assertIsNotNone(download_info)
+        self.assertTrue(download_info["is_package"])
+        self.assertEqual(download_info["item"], self.package_item)
+        self.assertTrue(download_info["local_file"].endswith(self.package_name))
+        mock_package_exists.assert_called_once()
 
     @patch("src.drive_parallel_download.download_file")
     def test_download_file_task_exception_handling(self, mock_download_file):

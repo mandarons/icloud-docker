@@ -90,15 +90,32 @@ def process_file(
     if not wanted_file(filters=filters, ignore=ignore, file_path=local_file):
         return False
     files.add(local_file)
-    timeout = config_parser.get_drive_request_timeout(config)
-    item_is_package = is_package(item=item, timeout=timeout)
-    if item_is_package:
+
+    # Check local existence FIRST to avoid unnecessary network requests.
+    # is_package() makes an HTTP call for every file, which is very slow
+    # when syncing thousands of already-up-to-date files.
+    if os.path.isfile(local_file):
+        if file_exists(item=item, local_file=local_file):
+            return False
+        # File exists locally but is outdated; need to determine type for re-download
+        timeout = config_parser.get_drive_request_timeout(config)
+        item_is_package = is_package(item=item, timeout=timeout)
+    elif os.path.isdir(local_file):
+        # A directory at this path means the item was previously downloaded as a
+        # package. iCloud Drive items do not change type between file and package,
+        # so package_exists() is the correct check here (no is_package() needed).
+        # Note: package_exists() deletes the directory if it is outdated.
         if package_exists(item=item, local_package_path=local_file):
             for f in Path(local_file).glob("**/*"):
                 files.add(str(f))
             return False
-    elif file_exists(item=item, local_file=local_file):
-        return False
+        # Directory was deleted by package_exists(); re-download it as a package
+        item_is_package = True
+    else:
+        # Item doesn't exist locally — call is_package() to determine the type
+        timeout = config_parser.get_drive_request_timeout(config)
+        item_is_package = is_package(item=item, timeout=timeout)
+
     local_file = download_file(item=item, local_file=local_file)
     if local_file and item_is_package:
         for f in Path(local_file).glob("**/*"):
