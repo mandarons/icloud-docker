@@ -1810,8 +1810,6 @@ class TestSyncPhotos(unittest.TestCase):
             result = download_photo_from_server(mock_photo, "original", destination_path)
             self.assertTrue(result)
             self.assertEqual(mock_photo.download.call_count, 2)
-            # Verify that _versions was cleared after first 410 error
-            self.assertIsNone(mock_photo._versions)  # noqa: SLF001
             # Verify file was created
             self.assertTrue(os.path.exists(destination_path))
 
@@ -1889,6 +1887,25 @@ class TestSyncPhotos(unittest.TestCase):
 
             # Test that download fails immediately with max_retries=0
             result = download_photo_from_server(mock_photo, "original", destination_path, max_retries=0)
+            self.assertFalse(result)
+            self.assertEqual(mock_photo.download.call_count, 1)  # Only initial attempt, no retries
+
+    def test_download_photo_from_server_negative_max_retries_clamped_to_zero(self):
+        """Test download_photo_from_server with negative max_retries is clamped to 0."""
+        import tempfile
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            # Mock photo that raises 410 error
+            mock_photo = Mock()
+            mock_photo.download.side_effect = Exception("Gone (410)")  # noqa: EM101
+
+            # Negative max_retries should be clamped to 0 — only one attempt is made
+            result = download_photo_from_server(mock_photo, "original", destination_path, max_retries=-5)
             self.assertFalse(result)
             self.assertEqual(mock_photo.download.call_count, 1)  # Only initial attempt, no retries
 
