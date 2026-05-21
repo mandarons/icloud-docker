@@ -1,0 +1,6 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+INFO     root:photo_file_utils.py:88 Downloading /tmp/tmpymy4lbey/test_photo.jpg ...
+ERROR    root:photo_file_utils.py:129 Failed to download /tmp/tmpymy4lbey/test_photo.jpg after 0 retries: Gone (410)

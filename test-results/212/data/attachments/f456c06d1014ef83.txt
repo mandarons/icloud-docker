@@ -1,0 +1,7 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+INFO     root:photo_file_utils.py:88 Downloading /tmp/tmp10y8_74p/test_photo.jpg ...
+WARNING  root:photo_file_utils.py:117 Download URL expired (410) for /tmp/tmp10y8_74p/test_photo.jpg. Refreshing URL and retrying (attempt 1/2)...
+ERROR    root:photo_file_utils.py:129 Failed to download /tmp/tmp10y8_74p/test_photo.jpg after 1 retries: Gone (410)
