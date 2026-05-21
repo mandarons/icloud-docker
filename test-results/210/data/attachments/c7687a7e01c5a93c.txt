@@ -1,0 +1,7 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+DEBUG    root:sync_photos.py:270 [Thread] Starting processing of /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg
+INFO     root:photo_file_utils.py:58 Created hard link: /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg (linked to existing file: /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/source_photo.jpg)
+DEBUG    root:sync_photos.py:276 [Thread] Created hardlink for /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/dest_photo.jpg
