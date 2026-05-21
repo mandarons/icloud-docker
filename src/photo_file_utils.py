@@ -8,11 +8,15 @@ ___author___ = "Mandar Patil <mandarons@pm.me>"
 
 import os
 import shutil
+import threading
 import time
 
 from src import get_logger
 
 LOGGER = get_logger()
+
+# Module-level lock to protect thread-safe mutation of photo._versions during retries
+_versions_refresh_lock = threading.Lock()
 
 
 def check_photo_exists(photo, file_size: str, local_path: str) -> bool:
@@ -83,6 +87,7 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
 
     LOGGER.info(f"Downloading {destination_path} ...")
 
+    max_retries = max(0, max_retries)  # Clamp to minimum 0 for predictable behavior
     attempt = 0
     max_attempts = max_retries + 1  # Initial attempt + retries
 
@@ -115,8 +120,10 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
                     )
                     # Clear cached versions to force URL refresh on next download attempt
                     # This is necessary because iCloudPy caches the download URLs in _versions
-                    if hasattr(photo, "_versions"):
-                        photo._versions = None  # noqa: SLF001
+                    # Lock is used to prevent concurrent _versions mutation from parallel threads
+                    with _versions_refresh_lock:
+                        if hasattr(photo, "_versions"):
+                            photo._versions = None  # noqa: SLF001
                     continue
                 else:
                     LOGGER.error(
