@@ -7,6 +7,7 @@ separating existence validation logic from sync operations per SRP.
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
+from datetime import timezone
 from pathlib import Path
 from shutil import rmtree
 from typing import Any
@@ -34,7 +35,7 @@ def file_exists(item: Any, local_file: str) -> bool:
         return False
 
     local_file_modified_time = int(os.path.getmtime(local_file))
-    remote_file_modified_time = int(item.date_modified.timestamp())
+    remote_file_modified_time = int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
     local_file_size = os.path.getsize(local_file)
     remote_file_size = item.size
 
@@ -69,7 +70,7 @@ def package_exists(item: Any, local_package_path: str) -> bool:
         return False
 
     local_package_modified_time = int(os.path.getmtime(local_package_path))
-    remote_package_modified_time = int(item.date_modified.timestamp())
+    remote_package_modified_time = int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
     local_package_size = sum(f.stat().st_size for f in Path(local_package_path).glob("**/*") if f.is_file())
     remote_package_size = item.size
 

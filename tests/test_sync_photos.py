@@ -7,6 +7,7 @@ import os
 import shutil
 import time
 import unittest
+from datetime import timezone
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -730,7 +731,7 @@ class TestSyncPhotos(unittest.TestCase):
             f.write(b"A" * 1000)  # Write same content size as mock
 
         # Set modification time to match photo
-        local_modified_time = time.mktime(photo.added_date.timetuple())
+        local_modified_time = photo.added_date.replace(tzinfo=timezone.utc).timestamp()
         os.utime(photo_path, (local_modified_time, local_modified_time))
 
         download_info = sync_photos.collect_photo_for_download(
