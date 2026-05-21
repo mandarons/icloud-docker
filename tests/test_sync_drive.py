@@ -674,8 +674,8 @@ class TestSyncDrive(unittest.TestCase):
 
     @unittest.skipUnless(hasattr(time, "tzset"), "time.tzset not available on this platform")
     def test_file_exists_tz_naive_to_aware(self):
-        """File downloaded without TZ (UTC default) is not re-downloaded after TZ=America/Los_Angeles."""
-        self._run_with_tz("UTC", lambda: sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
+        """File downloaded without TZ set is not re-downloaded after TZ=America/Los_Angeles."""
+        self._run_with_tz(None, lambda: sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
         self._run_with_tz("America/Los_Angeles", lambda: self.assertTrue(
             sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path),
         ))
@@ -690,14 +690,16 @@ class TestSyncDrive(unittest.TestCase):
 
     @unittest.skipUnless(hasattr(time, "tzset"), "time.tzset not available on this platform")
     def test_file_exists_tz_aware_to_naive(self):
-        """File downloaded with TZ=America/Los_Angeles is not re-downloaded after TZ is unset (UTC)."""
+        """File downloaded with TZ=America/Los_Angeles is not re-downloaded after TZ is unset."""
         self._run_with_tz("America/Los_Angeles", lambda: sync_drive.download_file(item=self.file_item, local_file=self.local_file_path))
-        self._run_with_tz("UTC", lambda: self.assertTrue(
+        self._run_with_tz(None, lambda: self.assertTrue(
             sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path),
         ))
 
-    def _run_with_tz(self, tz: str, fn) -> None:
+    def _run_with_tz(self, tz: str | None, fn) -> None:
         """Run fn with the system timezone temporarily set to tz, then restore.
+
+        Pass tz=None to unset TZ entirely (simulates a container with no TZ env var).
 
         Not thread-safe: os.environ['TZ'] + time.tzset() mutate process-global
         libc state. These tests must run in a single-threaded context (standard
@@ -705,7 +707,10 @@ class TestSyncDrive(unittest.TestCase):
         move these tests to an isolated subprocess.
         """
         old_tz = os.environ.get("TZ")
-        os.environ["TZ"] = tz
+        if tz is None:
+            os.environ.pop("TZ", None)
+        else:
+            os.environ["TZ"] = tz
         time.tzset()
         try:
             fn()
@@ -1204,8 +1209,8 @@ class TestSyncDrive(unittest.TestCase):
 
     @unittest.skipUnless(hasattr(time, "tzset"), "time.tzset not available on this platform")
     def test_package_exists_tz_naive_to_aware(self):
-        """Package downloaded without TZ (UTC default) is not re-downloaded after TZ=America/Los_Angeles."""
-        self._run_with_tz("UTC", lambda: sync_drive.download_file(item=self.package_item, local_file=self.local_package_path))
+        """Package downloaded without TZ set is not re-downloaded after TZ=America/Los_Angeles."""
+        self._run_with_tz(None, lambda: sync_drive.download_file(item=self.package_item, local_file=self.local_package_path))
         self._run_with_tz("America/Los_Angeles", lambda: self.assertTrue(
             sync_drive.package_exists(item=self.package_item, local_package_path=self.local_package_path),
         ))
@@ -1220,9 +1225,9 @@ class TestSyncDrive(unittest.TestCase):
 
     @unittest.skipUnless(hasattr(time, "tzset"), "time.tzset not available on this platform")
     def test_package_exists_tz_aware_to_naive(self):
-        """Package downloaded with TZ=America/Los_Angeles is not re-downloaded after TZ is unset (UTC)."""
+        """Package downloaded with TZ=America/Los_Angeles is not re-downloaded after TZ is unset."""
         self._run_with_tz("America/Los_Angeles", lambda: sync_drive.download_file(item=self.package_item, local_file=self.local_package_path))
-        self._run_with_tz("UTC", lambda: self.assertTrue(
+        self._run_with_tz(None, lambda: self.assertTrue(
             sync_drive.package_exists(item=self.package_item, local_package_path=self.local_package_path),
         ))
 
