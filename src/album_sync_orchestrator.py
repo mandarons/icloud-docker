@@ -7,10 +7,12 @@ that coordinates photo filtering, download collection, and parallel execution.
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
 import os
+from typing import Any
 
 from src import get_logger
 from src.hardlink_registry import HardlinkRegistry
 from src.photo_download_manager import (
+    DownloadTaskInfo,
     collect_download_task,
     execute_parallel_downloads,
 )
@@ -90,14 +92,14 @@ def sync_album_photos(
 
 
 def _collect_photo_download_tasks(
-    photo,
+    photo: Any,
     destination_path: str,
     file_sizes: list[str],
     extensions: list[str] | None,
     files: set[str] | None,
     folder_format: str | None,
     hardlink_registry: HardlinkRegistry | None,
-) -> list:
+) -> list[DownloadTaskInfo]:
     """Collect download tasks for a single photo, handling errors gracefully.
 
     Wraps per-photo processing so that exceptions (e.g. binascii.Error from
@@ -120,7 +122,7 @@ def _collect_photo_download_tasks(
         if not is_photo_wanted(photo, extensions):
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
             return []
-        tasks = []
+        tasks: list[DownloadTaskInfo] = []
         for file_size in file_sizes:
             download_info = collect_download_task(
                 photo,
