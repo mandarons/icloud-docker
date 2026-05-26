@@ -1,0 +1,6 @@
+[38;21m2026-05-26 05:56:06,559 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-05-26 05:56:06,559 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-05-26 05:56:06,560 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-05-26 05:56:06,568 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;5;39m2026-05-26 05:56:06,570 :: INFO :: root :: photo_file_utils.py :: 88 :: Downloading /tmp/tmp73dg6qu0/test_photo.jpg ...[0m
+[38;5;226m2026-05-26 05:56:06,570 :: WARNING :: root :: photo_file_utils.py :: 117 :: Download URL expired (410) for /tmp/tmp73dg6qu0/test_photo.jpg. Refreshing URL and retrying (attempt 1/2)...[0m

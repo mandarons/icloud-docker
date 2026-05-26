@@ -1,0 +1,16 @@
+[38;21m2026-05-26 05:56:11,072 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-26 05:56:11,073 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2026-05-26 05:56:11,073 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-26 05:56:11,073 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
+[38;21m2026-05-26 05:56:11,074 :: DEBUG :: root :: usage.py :: 102 :: Usage cache file not found, creating: /config/.data[0m
+[38;21m2026-05-26 05:56:11,074 :: DEBUG :: root :: usage.py :: 132 :: Atomically saved usage cache to: /config/.data[0m
+[38;21m2026-05-26 05:56:11,074 :: DEBUG :: root :: usage.py :: 271 :: Installing new instance[0m
+[38;21m2026-05-26 05:56:11,074 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2026-05-26 05:56:11,074 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: ea11bdc4-209c-4c76-ac86-10f02cccdbcc[0m
+[38;21m2026-05-26 05:56:11,074 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: ea11bdc4-209c-4c76-ac86-10f02cccdbcc[0m
+[38;21m2026-05-26 05:56:11,074 :: DEBUG :: root :: usage.py :: 269 :: Upgrading existing installation: ea11bdc4-209c-4c76-ac86-10f02cccdbcc[0m
+[38;21m2026-05-26 05:56:11,075 :: DEBUG :: root :: usage.py :: 215 :: Posting new installation to: None[0m
+[38;21m2026-05-26 05:56:11,075 :: DEBUG :: root :: usage.py :: 221 :: Successfully registered new installation: 4c581ab7-291f-4183-b2ad-c532c25289c0[0m
+[38;21m2026-05-26 05:56:11,075 :: DEBUG :: root :: usage.py :: 277 :: Installation completed with ID: 4c581ab7-291f-4183-b2ad-c532c25289c0[0m
+[38;21m2026-05-26 05:56:11,075 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-26 05:56:11,075 :: DEBUG :: root :: usage.py :: 40 :: Initialized usage cache at: /config/.data[0m
