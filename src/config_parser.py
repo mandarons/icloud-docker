@@ -599,6 +599,36 @@ def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     return validated_sizes if validated_sizes else ["original"]
 
 
+def get_photos_library_destinations(config: dict) -> dict[str, str]:
+    """Get per-library destination subdirectory mapping from photos config.
+
+    Optional config block (under top-level ``photos``):
+
+    .. code-block:: yaml
+
+        photos:
+          destination: photos
+          library_destinations:
+            PrimarySync: personal
+            SharedLibrary: shared
+
+    When set, photos from each library are written to
+    ``<photos.destination>/<library_destinations[library]>/...`` instead of
+    sharing one destination tree. When unset (the default), all libraries
+    share the single ``photos.destination`` path — preserving the historical
+    behaviour of mandarons/icloud-docker.
+
+    Returns:
+        Dict mapping library name → subdirectory relative to ``photos.destination``.
+        Returns ``{}`` if not configured (backward-compatible default).
+    """
+    config_path = ["photos", "library_destinations"]
+    mapping = get_config_value_or_none(config=config, config_path=config_path)
+    if not mapping or not isinstance(mapping, dict):
+        return {}
+    return {str(k): str(v) for k, v in mapping.items()}
+
+
 def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
     """Get libraries filter from photos config.
 
