@@ -52,19 +52,50 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
     return name, extension
 
 
-def generate_photo_filename_with_metadata(photo, file_size: str) -> str:
-    """Generate filename with file size and photo ID metadata.
+# Module-level default filename format. ``sync_photos`` sets this once at
+# the start of a sync run via ``set_default_filename_format`` so the value
+# threads through ``generate_photo_path`` -> ``collect_download_task`` without
+# requiring a config argument on every downstream signature.
+_DEFAULT_FILENAME_FORMAT = "metadata"
+
+
+def set_default_filename_format(filename_format: str) -> None:
+    """Set the module-level default filename format. See get_photos_filename_format."""
+    global _DEFAULT_FILENAME_FORMAT
+    if filename_format in ("metadata", "simple"):
+        _DEFAULT_FILENAME_FORMAT = filename_format
+
+
+def generate_photo_filename_with_metadata(photo, file_size: str, filename_format: str | None = None) -> str:
+    """Generate filename for a photo asset.
+
+    Two conventions supported (controlled by ``filename_format`` or the
+    module-level default set by ``set_default_filename_format``):
+
+    - ``"metadata"`` (default): ``name__filesize__base64id.extension`` —
+      mandarons' historical format, encodes CloudKit asset id into the filename.
+    - ``"simple"``: ``name.extension`` — boredazfcuk/Apple convention. Lets
+      users migrate from boredazfcuk-format trees without re-downloading.
+      ``collect_download_task`` detects collisions and falls back to the
+      metadata-suffix path for the colliding photo so both files coexist.
 
     Args:
         photo: Photo object from iCloudPy
         file_size: File size variant (original, medium, thumb, etc.)
+        filename_format: ``"metadata"`` or ``"simple"``, or ``None`` to
+            use the module-level default.
 
     Returns:
-        Filename string with format: name__filesize__base64id.extension
+        Filename string in the chosen format.
     """
+    if filename_format is None:
+        filename_format = _DEFAULT_FILENAME_FORMAT
     name, extension = get_photo_name_and_extension(photo, file_size)
-    photo_id_encoded = base64.urlsafe_b64encode(photo.id.encode()).decode()
 
+    if filename_format == "simple":
+        return name if extension == "" else f"{name}.{extension}"
+
+    photo_id_encoded = base64.urlsafe_b64encode(photo.id.encode()).decode()
     if extension == "":
         return f"{'__'.join([name, file_size, photo_id_encoded])}"
     else:

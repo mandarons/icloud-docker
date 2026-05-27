@@ -133,15 +133,45 @@ def collect_download_task(photo, file_size: str, destination_path: str,
     # Generate photo path
     photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)
 
-    # Thread-safe file set update
-    if files is not None:
-        with files_lock:
-            files.add(photo_path)
-
     # Check if photo already exists with correct size
     from src.photo_file_utils import check_photo_exists
     if check_photo_exists(photo, file_size, photo_path):
+        if files is not None:
+            with files_lock:
+                files.add(photo_path)
         return None
+
+    # Filename-collision fallback: in ``simple`` mode, a plain ``IMG_1234.HEIC``
+    # path may already be occupied by a DIFFERENT iCloud photo that happens to
+    # share the human filename. ``check_photo_exists`` returned False for this
+    # photo even though the path exists — meaning size mismatch — so treat as
+    # a collision and route this photo to the metadata-suffix filename instead.
+    # The earlier-claimed plain name belongs to the first photo we saw;
+    # subsequent colliders get unique suffix names. Both photos coexist on disk
+    # and both round-trip stably on future syncs.
+    from src.photo_path_utils import (
+        _DEFAULT_FILENAME_FORMAT,
+        create_folder_path_if_needed,
+        generate_photo_filename_with_metadata,
+        normalize_file_path,
+    )
+    if _DEFAULT_FILENAME_FORMAT == "simple" and os.path.isfile(photo_path):
+        suffix_folder = create_folder_path_if_needed(destination_path, folder_format, photo)
+        suffix_basename = generate_photo_filename_with_metadata(photo, file_size, "metadata")
+        photo_path = normalize_file_path(os.path.join(suffix_folder, suffix_basename))
+        LOGGER.info(
+            f"Filename collision for {photo.filename} (id={photo.id}); "
+            f"using suffix path {photo_path} to preserve both photos."
+        )
+        if check_photo_exists(photo, file_size, photo_path):
+            if files is not None:
+                with files_lock:
+                    files.add(photo_path)
+            return None
+
+    if files is not None:
+        with files_lock:
+            files.add(photo_path)
 
     # Check for existing hardlink source
     hardlink_source = None
