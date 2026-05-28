@@ -114,6 +114,50 @@ class TestStatus(unittest.TestCase):
             shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+class TestWebUiConfig(unittest.TestCase):
+    """``config_parser.get_web_ui_{enabled,host,port}`` helpers — opt-in,
+    default OFF so vanilla mandarons installs don't suddenly open port 8080."""
+
+    def test_enabled_default_false(self):
+        from src import config_parser
+
+        self.assertFalse(config_parser.get_web_ui_enabled(config={}))
+        self.assertFalse(config_parser.get_web_ui_enabled(config={"app": {}}))
+
+    def test_enabled_true_when_set(self):
+        from src import config_parser
+
+        self.assertTrue(
+            config_parser.get_web_ui_enabled(config={"app": {"web_ui": {"enabled": True}}}),
+        )
+
+    def test_host_default(self):
+        from src import config_parser
+
+        self.assertEqual(config_parser.get_web_ui_host(config={}), "0.0.0.0")  # noqa: S104
+
+    def test_host_when_configured(self):
+        from src import config_parser
+
+        self.assertEqual(
+            config_parser.get_web_ui_host(config={"app": {"web_ui": {"host": "127.0.0.1"}}}),
+            "127.0.0.1",
+        )
+
+    def test_port_default(self):
+        from src import config_parser
+
+        self.assertEqual(config_parser.get_web_ui_port(config={}), 8080)
+
+    def test_port_when_configured(self):
+        from src import config_parser
+
+        self.assertEqual(
+            config_parser.get_web_ui_port(config={"app": {"web_ui": {"port": 9090}}}),
+            9090,
+        )
+
+
 class TestAuthForm(unittest.TestCase):
     """``GET /auth`` renders the form. Two states controlled by the
     module-level ``_PENDING_AUTH`` dict: password-only (default) and

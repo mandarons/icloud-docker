@@ -210,7 +210,12 @@ def get_drive_sync_interval(config: dict, log_messages: bool = True) -> int:
         Drive sync interval in seconds
     """
     config_path = ["drive", "sync_interval"]
-    return get_sync_interval(config=config, config_path=config_path, service_name="drive", log_messages=log_messages)
+    return get_sync_interval(
+        config=config,
+        config_path=config_path,
+        service_name="drive",
+        log_messages=log_messages,
+    )
 
 
 def get_drive_request_timeout(config: dict) -> int:
@@ -241,7 +246,12 @@ def get_photos_sync_interval(config: dict, log_messages: bool = True) -> int:
         Photos sync interval in seconds
     """
     config_path = ["photos", "sync_interval"]
-    return get_sync_interval(config=config, config_path=config_path, service_name="photos", log_messages=log_messages)
+    return get_sync_interval(
+        config=config,
+        config_path=config_path,
+        service_name="photos",
+        log_messages=log_messages,
+    )
 
 
 # =============================================================================
@@ -284,6 +294,50 @@ def parse_max_threads_value(max_threads_config: Any, default_max_threads: int) -
         max_threads = default_max_threads
 
     return max_threads
+
+
+def get_web_ui_enabled(config: dict) -> bool:
+    """Return whether the embedded web UI should start on container boot.
+
+    Default: **False** — opt-in. Existing mandarons installs see no
+    behaviour change; only users who explicitly set
+    ``app.web_ui.enabled: true`` open the port.
+    """
+    return bool(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "enabled"],
+            default=False,
+        ),
+    )
+
+
+def get_web_ui_host(config: dict) -> str:
+    """Web UI bind address.
+
+    Default ``0.0.0.0`` (all interfaces) — appropriate for the LAN /
+    reverse-proxy use case. Pin to ``127.0.0.1`` if exposing only via
+    docker's port mapping to localhost.
+    """
+    return str(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "host"],
+            default="0.0.0.0",  # noqa: S104
+        ),
+    )
+
+
+def get_web_ui_port(config: dict) -> int:
+    """Web UI TCP port. Default ``8080``. Coexists with mandarons' legacy
+    ``EXPOSE 80`` (unused) — no port collision."""
+    return int(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "port"],
+            default=8080,
+        ),
+    )
 
 
 def get_app_max_threads(config: dict) -> int:
@@ -924,6 +978,7 @@ def get_pushover_api_token(config: dict) -> str | None:
         Pushover API token if configured, None otherwise
     """
     return get_notification_config_value(config, "pushover", "api_token")
+
 
 def get_pushover_notification_priority(config: dict) -> int | None:
     """Return Pushover notification priority from config.
