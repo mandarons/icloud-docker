@@ -114,6 +114,67 @@ class TestStatus(unittest.TestCase):
             shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+class TestLogs(unittest.TestCase):
+    """``/api/logs`` returns the last N lines of the log file the running
+    ``sync.py`` is writing to. Best-effort: missing or unreadable files
+    return an empty list and never 500."""
+
+    def test_logs_returns_lines_array(self):
+        client = web.create_app(testing=True).test_client()
+        response = client.get("/api/logs")
+        self.assertEqual(response.status_code, 200)
+        payload = response.get_json()
+        self.assertIn("lines", payload)
+        self.assertIsInstance(payload["lines"], list)
+
+    def test_logs_returns_empty_when_log_file_missing(self):
+        import os
+        import tempfile
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            cfg_path = os.path.join(tmpdir, "config.yaml")
+            with open("./tests/data/test_config.yaml") as src_cfg:
+                content = src_cfg.read()
+            # Point the logger at a file that doesn't exist.
+            content = content.replace("filename: icloud.log", "filename: /nonexistent/icloud.log")
+            with open(cfg_path, "w") as f:
+                f.write(content)
+            previous = os.environ.get("ENV_CONFIG_FILE_PATH")
+            os.environ["ENV_CONFIG_FILE_PATH"] = cfg_path
+            try:
+                client = web.create_app(testing=True).test_client()
+                response = client.get("/api/logs")
+                self.assertEqual(response.status_code, 200)
+                self.assertEqual(response.get_json(), {"lines": []})
+            finally:
+                if previous is None:
+                    del os.environ["ENV_CONFIG_FILE_PATH"]
+                else:
+                    os.environ["ENV_CONFIG_FILE_PATH"] = previous
+        finally:
+            import shutil
+
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_logs_tails_last_n_lines(self):
+        """Direct test of the ``_tail_log_file`` helper."""
+        import os
+        import tempfile
+
+        with tempfile.NamedTemporaryFile("w", delete=False, suffix=".log") as f:
+            for i in range(500):
+                f.write(f"line {i}\n")
+            path = f.name
+        try:
+            tail = web._tail_log_file(path=path, lines=10)
+            self.assertEqual(len(tail), 10)
+            self.assertEqual(tail[-1], "line 499")
+            self.assertEqual(tail[0], "line 490")
+        finally:
+            os.unlink(path)
+
+
 class TestHealth(unittest.TestCase):
     """``/api/health`` is the tiny endpoint external monitors (UptimeRobot)
     can hit. 200 when the configured config file is readable; 503 when it

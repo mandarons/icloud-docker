@@ -92,6 +92,47 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
     }
 
 
+def _logger_filename(config: dict | None) -> str:
+    """Resolve where ``sync.py`` is writing log lines. Best-effort.
+
+    Reads ``app.logger.filename`` directly off the config dict to avoid
+    introducing a new ``config_parser`` helper just for this — keeps the
+    upstream PR diff small.
+    """
+    if not config:
+        return ""
+    try:
+        return config.get("app", {}).get("logger", {}).get("filename", "") or ""
+    except AttributeError:
+        return ""
+
+
+def _tail_log_file(path: str, lines: int = 200) -> list[str]:
+    """Return the last ``lines`` lines of ``path``.
+
+    Best-effort: missing path, unreadable file, or decode failure all
+    return an empty list. Reads from the end in 8 KiB blocks so the cost
+    is bounded by ``lines * average_line_length`` rather than file size.
+    """
+    if not path or not os.path.isfile(path):
+        return []
+    try:
+        with open(path, "rb") as f:
+            f.seek(0, os.SEEK_END)
+            size = f.tell()
+            block = 8192
+            data = b""
+            while size > 0 and data.count(b"\n") <= lines:
+                read_size = min(block, size)
+                size -= read_size
+                f.seek(size)
+                data = f.read(read_size) + data
+        return data.decode("utf-8", errors="replace").splitlines()[-lines:]
+    except OSError as e:
+        LOGGER.warning(f"Web UI could not tail log {path}: {e!s}")
+        return []
+
+
 def _build_status(config: dict | None) -> dict[str, Any]:
     """Compose the payload returned by /api/status (and consumed by the
     dashboard template)."""
@@ -151,6 +192,14 @@ def create_app(testing: bool = False) -> Flask:
         if not payload["config_loaded"]:
             return jsonify(payload), 503
         return jsonify(payload)
+
+    @app.route("/api/logs")
+    def logs():
+        """Last 200 lines of the configured log file. Best-effort: missing
+        or unreadable returns an empty list (never 500 — the dashboard
+        relies on this being reachable to render the rest of the page)."""
+        config = _load_current_config()
+        return jsonify({"lines": _tail_log_file(path=_logger_filename(config=config), lines=200)})
 
     return app
 
