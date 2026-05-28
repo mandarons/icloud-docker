@@ -114,6 +114,37 @@ class TestStatus(unittest.TestCase):
             shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+class TestDashboard(unittest.TestCase):
+    """``GET /`` renders the dashboard HTML — Apple-leaning design baked
+    into ``base.html`` + ``dashboard.html``."""
+
+    def test_dashboard_returns_200(self):
+        client = web.create_app(testing=True).test_client()
+        response = client.get("/")
+        self.assertEqual(response.status_code, 200)
+
+    def test_dashboard_contains_brand(self):
+        client = web.create_app(testing=True).test_client()
+        body = client.get("/").data.decode("utf-8")
+        self.assertIn("iCloud Docker", body)
+
+    def test_dashboard_contains_username(self):
+        client = web.create_app(testing=True).test_client()
+        body = client.get("/").data.decode("utf-8")
+        self.assertIn("user@test.com", body)
+
+    def test_dashboard_renders_both_service_cards(self):
+        client = web.create_app(testing=True).test_client()
+        body = client.get("/").data.decode("utf-8")
+        self.assertIn("Photos", body)
+        self.assertIn("Drive", body)
+
+    def test_dashboard_has_log_section(self):
+        client = web.create_app(testing=True).test_client()
+        body = client.get("/").data.decode("utf-8")
+        self.assertIn("Recent log", body)
+
+
 class TestLogs(unittest.TestCase):
     """``/api/logs`` returns the last N lines of the log file the running
     ``sync.py`` is writing to. Best-effort: missing or unreadable files

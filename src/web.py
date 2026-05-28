@@ -22,7 +22,7 @@ import threading
 
 from typing import Any
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, render_template
 
 from src import (
     DEFAULT_CONFIG_FILE_PATH,
@@ -167,8 +167,26 @@ def create_app(testing: bool = False) -> Flask:
     Splitting this out keeps ``tests/`` able to build the app under
     ``TESTING=True`` without spawning a thread.
     """
-    app = Flask(__name__)
+    template_dir = os.path.join(os.path.dirname(__file__), "templates")
+    static_dir = os.path.join(os.path.dirname(__file__), "static")
+    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.config["TESTING"] = testing
+
+    @app.route("/")
+    def dashboard():
+        """Render the HTML dashboard — Apple-leaning design."""
+        config = _load_current_config()
+        status_payload = _build_status(config=config)
+        log_path = _logger_filename(config=config)
+        log_lines = _tail_log_file(path=log_path, lines=200)
+        return render_template(
+            "dashboard.html",
+            status=status_payload,
+            log_lines=log_lines,
+            log_path=log_path,
+            active_nav="dashboard",
+            version=os.environ.get("APP_VERSION", ""),
+        )
 
     @app.route("/api/health")
     def health():
