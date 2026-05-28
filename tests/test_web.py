@@ -158,6 +158,97 @@ class TestWebUiConfig(unittest.TestCase):
         )
 
 
+class TestMainRun(unittest.TestCase):
+    """``main.run`` should start the web thread only when
+    ``app.web_ui.enabled`` is True, then call ``sync.sync()``."""
+
+    def test_run_starts_web_thread_when_enabled(self):
+        import os
+        import tempfile
+        from unittest.mock import patch
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            cfg_path = os.path.join(tmpdir, "config.yaml")
+            with open("./tests/data/test_config.yaml") as src_cfg:
+                content = src_cfg.read()
+            # Inject the web_ui block.
+            content = content.replace(
+                "app:\n",
+                "app:\n  web_ui:\n    enabled: true\n    port: 9999\n",
+                1,
+            )
+            with open(cfg_path, "w") as f:
+                f.write(content)
+
+            previous = os.environ.get("ENV_CONFIG_FILE_PATH")
+            os.environ["ENV_CONFIG_FILE_PATH"] = cfg_path
+            try:
+                from src import main
+
+                with patch("src.web.start_in_thread") as start, patch("src.sync.sync"):
+                    main.run()
+                start.assert_called_once_with(host="0.0.0.0", port=9999)
+            finally:
+                if previous is None:
+                    del os.environ["ENV_CONFIG_FILE_PATH"]
+                else:
+                    os.environ["ENV_CONFIG_FILE_PATH"] = previous
+        finally:
+            import shutil
+
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_run_skips_web_thread_when_disabled(self):
+        """Default config (no app.web_ui block) -> web thread NOT started."""
+        from unittest.mock import patch
+
+        from src import main
+
+        with (
+            patch("src.web.start_in_thread") as start,
+            patch("src.sync.sync") as sync_mock,
+        ):
+            main.run()
+        start.assert_not_called()
+        sync_mock.assert_called_once()
+
+    def test_run_skips_web_thread_when_partial_config(self):
+        """Partial config (e.g. missing app.credentials block) -> web
+        thread NOT started, but sync.sync is still called. The sync
+        loop has its own retry/recovery for malformed configs."""
+        import os
+        import tempfile
+        from unittest.mock import patch
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            cfg_path = os.path.join(tmpdir, "config.yaml")
+            with open(cfg_path, "w") as f:
+                f.write("app:\n  logger:\n    filename: ./icloud.log\n")
+            previous = os.environ.get("ENV_CONFIG_FILE_PATH")
+            os.environ["ENV_CONFIG_FILE_PATH"] = cfg_path
+            try:
+                from src import main
+
+                with (
+                    patch("src.web.start_in_thread") as start,
+                    patch("src.sync.sync") as sync_mock,
+                ):
+                    main.run()
+                start.assert_not_called()
+                sync_mock.assert_called_once()
+            finally:
+                if previous is None:
+                    del os.environ["ENV_CONFIG_FILE_PATH"]
+                else:
+                    os.environ["ENV_CONFIG_FILE_PATH"] = previous
+        finally:
+            import shutil
+
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+
 class TestAuthForm(unittest.TestCase):
     """``GET /auth`` renders the form. Two states controlled by the
     module-level ``_PENDING_AUTH`` dict: password-only (default) and
