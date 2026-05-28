@@ -385,6 +385,9 @@ def sync_photos(config, photos):
     """
     # Parse configuration using centralized config parser
     destination_path = config_parser.prepare_photos_destination(config=config)
+    # Apply preserve_originals_as_bak toggle for this sync run (False default).
+    from src.photo_path_utils import set_preserve_originals_as_bak
+    set_preserve_originals_as_bak(config_parser.get_photos_preserve_originals_as_bak(config=config))
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
