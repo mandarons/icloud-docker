@@ -577,13 +577,25 @@ def get_photos_folder_format(config: dict) -> str | None:
 def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     """Validate and filter file sizes against valid options.
 
+    The ``live_video_*`` keys are internal — surfaced by the Live Photo
+    auto-append mechanism in ``_collect_photo_download_tasks`` when
+    ``"original"`` is in the user's ``file_sizes``. They are NOT intended
+    for direct user configuration. Filtering them out here means a user who
+    accidentally adds them to ``file_sizes`` sees a clear "not a valid
+    option" log line instead of getting silent duplicate download tasks
+    queued (the explicit ``live_video_original`` task + the auto-append both
+    targeting the same path).
+
     Args:
         file_sizes: List of file size strings to validate
 
     Returns:
         List of valid file sizes (defaults to ["original"] if all invalid)
     """
-    valid_file_sizes = list(PhotoAsset.PHOTO_VERSION_LOOKUP.keys())
+    valid_file_sizes = [
+        k for k in PhotoAsset.PHOTO_VERSION_LOOKUP.keys()
+        if not k.startswith("live_video_")
+    ]
     validated_sizes = []
 
     for file_size in file_sizes:
