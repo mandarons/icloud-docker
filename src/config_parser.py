@@ -296,6 +296,50 @@ def parse_max_threads_value(max_threads_config: Any, default_max_threads: int) -
     return max_threads
 
 
+def get_web_ui_enabled(config: dict) -> bool:
+    """Return whether the embedded web UI should start on container boot.
+
+    Default: **False** — opt-in. Existing mandarons installs see no
+    behaviour change; only users who explicitly set
+    ``app.web_ui.enabled: true`` open the port.
+    """
+    return bool(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "enabled"],
+            default=False,
+        ),
+    )
+
+
+def get_web_ui_host(config: dict) -> str:
+    """Web UI bind address.
+
+    Default ``0.0.0.0`` (all interfaces) — appropriate for the LAN /
+    reverse-proxy use case. Pin to ``127.0.0.1`` if exposing only via
+    docker's port mapping to localhost.
+    """
+    return str(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "host"],
+            default="0.0.0.0",  # noqa: S104
+        ),
+    )
+
+
+def get_web_ui_port(config: dict) -> int:
+    """Web UI TCP port. Default ``8080``. Coexists with mandarons' legacy
+    ``EXPOSE 80`` (unused) — no port collision."""
+    return int(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "port"],
+            default=8080,
+        ),
+    )
+
+
 def get_app_max_threads(config: dict) -> int:
     """Return app-level max threads from config with support for 'auto' value.
 
