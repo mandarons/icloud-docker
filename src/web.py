@@ -186,10 +186,30 @@ def create_app(testing: bool = False) -> Flask:
     Splitting this out keeps ``tests/`` able to build the app under
     ``TESTING=True`` without spawning a thread.
     """
+    from werkzeug.middleware.proxy_fix import ProxyFix
+
     template_dir = os.path.join(os.path.dirname(__file__), "templates")
     static_dir = os.path.join(os.path.dirname(__file__), "static")
     app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
     app.config["TESTING"] = testing
+
+    # Trust X-Forwarded-* from a single reverse-proxy hop (Cloudflare Tunnel,
+    # Authelia / Traefik). Lets ``url_for`` produce ``https://`` URLs and
+    # prevents Flask from mis-detecting the scheme when behind a TLS-
+    # terminating proxy. One hop is correct here — Cloudflare → backend.
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+    @app.after_request
+    def _no_cache(response):
+        """Defense against intermediaries (browser back/forward cache,
+        Cloudflare's auto-minify, mobile carrier proxies) serving stale
+        dashboard or auth payloads. The dashboard is always live data —
+        a cached snapshot would hide a missing mount marker or an
+        expired session."""
+        response.headers["Cache-Control"] = "private, no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
 
     @app.route("/")
     def dashboard():
@@ -442,7 +462,11 @@ def start_in_thread(host: str = "0.0.0.0", port: int = 8080) -> threading.Thread
         try:
             # Werkzeug dev server — single user, behind a proxy.
             # Zero extra runtime deps (no gunicorn).
-            app.run(host=host, port=port, debug=False, use_reloader=False)
+            # threaded=True so Cloudflare's edge health-check requests
+            # don't queue behind a user's tab refreshing; without it the
+            # default single-threaded server can intermittently return
+            # empty bodies when two requests overlap.
+            app.run(host=host, port=port, debug=False, use_reloader=False, threaded=True)
         except OSError as e:
             LOGGER.error(f"Web UI failed to bind {host}:{port} — {e!s}")
 
