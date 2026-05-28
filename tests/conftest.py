@@ -1,11 +1,24 @@
 """Pytest fixtures shared across the test tree.
 
-Session-wide redirect of ``ICLOUD_DOCKER_CONFIG_DIR`` to a writable
-tempdir. The container's ``/config`` mount doesn't exist on dev hosts
-(macOS especially — read-only root). Without this redirect, the suite
-hits FileNotFoundError on ``/config/.data`` (usage cache) and
-``/config/session_data`` (icloudpy cookie dir), and a swath of tests
-fail despite the production code being correct.
+Two autouse fixtures:
+
+1. Session-wide redirect of ``ICLOUD_DOCKER_CONFIG_DIR`` to a writable
+   tempdir. The container's ``/config`` mount doesn't exist on dev hosts
+   (macOS especially -- read-only root). Without this redirect, the suite
+   hits FileNotFoundError on ``/config/.data`` (usage cache) and
+   ``/config/session_data`` (icloudpy cookie dir), and a swath of tests
+   fail despite the production code being correct.
+
+2. Per-test snapshot/restore of ``ENV_CONFIG_FILE_PATH``. Several existing
+   test files unset this in their ``tearDown`` (a well-intentioned
+   "clean up after myself" pattern that predates pytest). The problem:
+   the variable was set by the *test runner invocation*, not by the test,
+   and clearing it bleeds into later tests that then fall back to
+   ``DEFAULT_CONFIG_FILE_PATH`` (= the production ``config.yaml`` at the
+   repo root). That production config has ``root: /icloud`` -- an
+   absolute container path -- and any test that walks
+   ``prepare_root_destination`` on it tries to ``mkdir /icloud`` on the
+   developer's host, which fails on macOS and is undesirable on Linux.
 """
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
@@ -16,11 +29,12 @@ import tempfile
 import pytest
 
 _CONFIG_DIR_KEY = "ICLOUD_DOCKER_CONFIG_DIR"
+_ENV_CONFIG_FILE_PATH_KEY = "ENV_CONFIG_FILE_PATH"
 
 
 @pytest.fixture(scope="session", autouse=True)
 def _redirect_config_dir():
-    """Session-wide ``ICLOUD_DOCKER_CONFIG_DIR`` → tempdir.
+    """Session-wide ``ICLOUD_DOCKER_CONFIG_DIR`` -> tempdir.
 
     Implementation note: the ``os.environ`` setting alone is NOT what
     makes the redirect work. ``DEFAULT_COOKIE_DIRECTORY`` and
@@ -67,10 +81,23 @@ def _redirect_config_dir():
     try:
         yield
     finally:
-        # Only clean up if WE owned the tempdir — leave externally-
+        # Only clean up if WE owned the tempdir -- leave externally-
         # supplied dirs (CI mounts, user-managed paths) intact.
         if not external:
             import shutil
 
             shutil.rmtree(tmpdir, ignore_errors=True)
             os.environ.pop(_CONFIG_DIR_KEY, None)
+
+
+@pytest.fixture(autouse=True)
+def _restore_env_config_file_path():
+    """Per-test snapshot/restore of ``ENV_CONFIG_FILE_PATH``."""
+    previous = os.environ.get(_ENV_CONFIG_FILE_PATH_KEY)
+    try:
+        yield
+    finally:
+        if previous is None:
+            os.environ.pop(_ENV_CONFIG_FILE_PATH_KEY, None)
+        else:
+            os.environ[_ENV_CONFIG_FILE_PATH_KEY] = previous
