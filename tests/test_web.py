@@ -149,6 +149,110 @@ class TestAuthForm(unittest.TestCase):
                 web._PENDING_AUTH.clear()
 
 
+class TestAuthPasswordPost(unittest.TestCase):
+    """``POST /auth/password`` resolves the username from config, builds a
+    fresh ``ICloudPyService``, optionally fires the 2FA push, and stashes
+    the live session for ``POST /auth/code``."""
+
+    def setUp(self):
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH.clear()
+
+    def tearDown(self):
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH.clear()
+
+    def test_empty_password_returns_400(self):
+        client = web.create_app(testing=True).test_client()
+        response = client.post("/auth/password", data={"password": ""})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"Password is required", response.data)
+
+    def test_no_username_in_config_returns_400(self):
+        import os
+        import tempfile
+
+        tmpdir = tempfile.mkdtemp()
+        try:
+            cfg_path = os.path.join(tmpdir, "config.yaml")
+            # Minimal config with no app.credentials.username.
+            with open(cfg_path, "w") as f:
+                f.write("app:\n  logger:\n    filename: ./icloud.log\n")
+            previous = os.environ.get("ENV_CONFIG_FILE_PATH")
+            os.environ["ENV_CONFIG_FILE_PATH"] = cfg_path
+            try:
+                client = web.create_app(testing=True).test_client()
+                response = client.post("/auth/password", data={"password": "x"})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(b"app.credentials.username", response.data)
+            finally:
+                if previous is None:
+                    del os.environ["ENV_CONFIG_FILE_PATH"]
+                else:
+                    os.environ["ENV_CONFIG_FILE_PATH"] = previous
+        finally:
+            import shutil
+
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
+    def test_2fa_required_stashes_api_and_triggers_push(self):
+        """When ICloudPyService.requires_2fa is True, we stash the api +
+        redirect to /auth (now showing the code form), AND we call
+        trigger_2fa_push_notification if the helper is available."""
+        from unittest.mock import MagicMock, patch
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = True
+        fake_api.trigger_2fa_push_notification = MagicMock(return_value=True)
+
+        with (
+            patch("icloudpy.ICloudPyService", return_value=fake_api),
+            patch("icloudpy.utils.store_password_in_keyring"),
+        ):
+            client = web.create_app(testing=True).test_client()
+            response = client.post("/auth/password", data={"password": "x"})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith("/auth"))
+        fake_api.trigger_2fa_push_notification.assert_called_once()
+        with web._AUTH_LOCK:
+            self.assertIn("api", web._PENDING_AUTH)
+            self.assertEqual(web._PENDING_AUTH["username"], "user@test.com")
+
+    def test_no_2fa_required_stores_keyring_and_redirects(self):
+        """Resumed-session case: ICloudPyService picks up the existing
+        trusted-session cookie, returns requires_2fa=False, and we just
+        persist the password to the keyring and redirect to /."""
+        from unittest.mock import MagicMock, patch
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = False
+
+        with (
+            patch("icloudpy.ICloudPyService", return_value=fake_api),
+            patch("icloudpy.utils.store_password_in_keyring") as keyring,
+        ):
+            client = web.create_app(testing=True).test_client()
+            response = client.post("/auth/password", data={"password": "secret"})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith("/"))
+        keyring.assert_called_once_with(username="user@test.com", password="secret")
+        with web._AUTH_LOCK:
+            self.assertNotIn("api", web._PENDING_AUTH)
+
+    def test_authentication_exception_renders_error(self):
+        """ICloudPyService raising — rendered as error pill, no crash."""
+        from unittest.mock import patch
+
+        with patch("icloudpy.ICloudPyService", side_effect=RuntimeError("Apple said no")):
+            client = web.create_app(testing=True).test_client()
+            response = client.post("/auth/password", data={"password": "x"})
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"Apple said no", response.data)
+
+
 class TestDashboard(unittest.TestCase):
     """``GET /`` renders the dashboard HTML — Apple-leaning design baked
     into ``base.html`` + ``dashboard.html``."""
