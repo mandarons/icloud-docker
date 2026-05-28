@@ -589,6 +589,22 @@ class TestLogs(unittest.TestCase):
             os.unlink(path)
 
 
+class TestNoCacheHeaders(unittest.TestCase):
+    """Every response gets ``Cache-Control: no-store`` (defense against
+    Cloudflare / browser BFCache / mobile-carrier proxies serving a stale
+    dashboard or auth payload)."""
+
+    def test_dashboard_response_is_no_store(self):
+        client = web.create_app(testing=True).test_client()
+        response = client.get("/")
+        self.assertIn("no-store", response.headers.get("Cache-Control", ""))
+
+    def test_api_response_is_no_store(self):
+        client = web.create_app(testing=True).test_client()
+        response = client.get("/api/status")
+        self.assertIn("no-store", response.headers.get("Cache-Control", ""))
+
+
 class TestHealth(unittest.TestCase):
     """``/api/health`` is the tiny endpoint external monitors (UptimeRobot)
     can hit. 200 when the configured config file is readable; 503 when it
