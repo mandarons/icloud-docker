@@ -5,11 +5,18 @@
 <h1 class="page-title">Status</h1>
 <p class="page-sub">{{ status.config_path }}</p>
 
-{% if status.username %}
+{% set auth = status.auth_state | default('not_configured') %}
+{% if auth == 'ready' %}
 <div class="status-row">
   <div class="status-dot"></div>
-  <div class="status-text">Signed in as <strong>{{ status.username }}</strong></div>
+  <div class="status-text"><strong>{{ status.username }}</strong> — keyring populated, sync loop authenticated</div>
   <a class="status-cta" href="/auth">Re-authenticate</a>
+</div>
+{% elif auth == 'setup_needed' %}
+<div class="status-row">
+  <div class="status-dot warn"></div>
+  <div class="status-text"><strong>{{ status.username }}</strong> — first-time 2FA not yet completed (sync loop is waiting)</div>
+  <a class="status-cta" href="/auth">Authenticate now →</a>
 </div>
 {% else %}
 <div class="status-row">
@@ -50,6 +57,16 @@
         <div class="mono" style="color: var(--text-tertiary); margin-top: 4px; font-size: 12px;">{{ service.marker_path }}</div>
       </dd>
     </dl>
+    {% if service.library_destinations %}
+    <div class="section-label">Library destinations</div>
+    {% for lib_name, subdir in service.library_destinations.items() %}
+      <div class="lib-row mono">
+        <span>{{ lib_name }}</span>
+        <span class="arrow">→</span>
+        <span>{{ subdir }}/</span>
+      </div>
+    {% endfor %}
+    {% endif %}
   </div>
 {% endfor %}
 </div>
