@@ -2,10 +2,13 @@
 {% block title %}iCloud Docker · Authenticate{% endblock %}
 {% block content %}
 
+{% set auth = status.auth_state | default('not_configured') %}
 <h1 class="page-title">Authenticate</h1>
 <p class="page-sub">
   {% if pending %}
     Step 2 of 2 — enter the 6-digit code Apple just sent to your trusted device.
+  {% elif auth == 'ready' %}
+    <strong>{{ status.username }}</strong> is already signed in. The sync loop will pick up the trusted session on its next interval. Hit "Re-authenticate" below to start a fresh flow (clears the keyring and prompts Apple for a new 2FA push).
   {% else %}
     Step 1 of 2 — your Apple ID password. We never log or persist it.
     A 6-digit code will then arrive on your trusted iPhone/iPad/Mac.
@@ -20,7 +23,26 @@
 {% endif %}
 
 <div class="card" style="max-width: 480px;">
-  {% if pending %}
+  {% if not pending and auth == 'ready' %}
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
+      <div class="status-dot"></div>
+      <div class="status-text"><strong>{{ status.username }}</strong> — keyring populated</div>
+    </div>
+    <form method="post" action="/auth/password">
+      <label for="password" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">Re-authenticate with password</label>
+      <input
+        type="password"
+        name="password"
+        id="password"
+        autocomplete="current-password"
+        required
+        style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
+               font-size: 15px; background: #fafafa;">
+      <button type="submit" class="status-cta" style="display: block; width: 100%; margin-top: 14px; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+        Re-authenticate
+      </button>
+    </form>
+  {% elif pending %}
     <form method="post" action="/auth/code">
       <div style="margin-bottom: 16px;">
         <label for="code" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">6-digit code</label>
