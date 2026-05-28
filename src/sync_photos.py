@@ -451,8 +451,24 @@ def _library_destination(base_destination: str, library: str, library_destinatio
     the configured subdirectory under ``base_destination`` and ensures the
     directory exists. Otherwise returns ``base_destination`` unchanged
     (preserving mandarons' legacy single-destination behaviour).
+
+    Library-name matching has three rules, in priority order:
+
+    1. **Exact match.** ``library_destinations[library]`` if present.
+    2. **Role alias for `SharedLibrary`.** Apple's modern iCloud Shared
+       Photo Library is exposed by icloudpy under a GUID-based zone name
+       like ``SharedSync-3C977B4A-C15A-46E4-9854-585B9342C409``. A config
+       key of ``SharedLibrary`` matches any zone whose name starts with
+       ``SharedSync-`` so users don't need to discover and hardcode the
+       per-account GUID. (Configs that already use the literal current
+       Apple zone name still work via rule 1.)
+    3. **Fallthrough.** Returns ``base_destination`` unchanged.
     """
-    subdir = library_destinations.get(library) if library_destinations else None
+    if not library_destinations:
+        return base_destination
+    subdir = library_destinations.get(library)
+    if not subdir and library.startswith("SharedSync-"):
+        subdir = library_destinations.get("SharedLibrary")
     if not subdir:
         return base_destination
     dest = os.path.join(base_destination, subdir)

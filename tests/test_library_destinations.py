@@ -42,9 +42,7 @@ class TestGetPhotosLibraryDestinations(unittest.TestCase):
         assert config_parser.get_photos_library_destinations(config) == {}
 
     def test_coerces_non_string_keys_and_values_to_str(self):
-        config = {
-            "photos": {"library_destinations": {123: 456, "PrimarySync": "personal"}}
-        }
+        config = {"photos": {"library_destinations": {123: 456, "PrimarySync": "personal"}}}
         result = config_parser.get_photos_library_destinations(config)
         assert result == {"123": "456", "PrimarySync": "personal"}
 
@@ -82,3 +80,32 @@ class TestLibraryDestinationHelper(unittest.TestCase):
         with tempfile.TemporaryDirectory() as base:
             result = _library_destination(base, "PrimarySync", None)
             assert result == base
+
+    def test_shared_library_alias_matches_guid_named_zone(self):
+        """`SharedLibrary` in the config matches Apple's GUID-named shared zones
+        (e.g. ``SharedSync-3C977B4A-...``) — users don't have to discover and
+        hardcode their per-account GUID."""
+        with tempfile.TemporaryDirectory() as base:
+            mapping = {"PrimarySync": "Eric", "SharedLibrary": "Shared"}
+            result = _library_destination(base, "SharedSync-3C977B4A-C15A-46E4-9854-585B9342C409", mapping)
+            assert result == os.path.join(base, "Shared")
+            assert os.path.isdir(result)
+
+    def test_shared_library_alias_only_fires_for_sharedsync_prefix(self):
+        """The alias rule does NOT silently catch unrelated library names —
+        a non-SharedSync library that isn't explicitly mapped still falls
+        through to base."""
+        with tempfile.TemporaryDirectory() as base:
+            mapping = {"PrimarySync": "Eric", "SharedLibrary": "Shared"}
+            result = _library_destination(base, "OtherLibrary", mapping)
+            assert result == base
+
+    def test_exact_match_wins_over_shared_library_alias(self):
+        """If the exact GUID is mapped explicitly, that wins over the
+        ``SharedLibrary`` alias — predictability for users who pinned the
+        GUID before this feature shipped."""
+        with tempfile.TemporaryDirectory() as base:
+            guid_name = "SharedSync-DEADBEEF-1234-5678-9ABC-DEF012345678"
+            mapping = {guid_name: "Exact", "SharedLibrary": "Aliased"}
+            result = _library_destination(base, guid_name, mapping)
+            assert result == os.path.join(base, "Exact")
