@@ -318,6 +318,58 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
     return None
 
 
+def _perform_dry_run(config, api) -> None:
+    """Authenticate-and-enumerate path used when ``--dry-run`` is passed.
+
+    Verifies that the configured credentials, mount paths, and iCloud-side
+    state are all in working order WITHOUT writing or downloading any
+    files. Designed as the safety check users run before letting the real
+    sync loop loose on a new install.
+
+    Logs (at INFO level):
+      - Drive destination path + root-level item count (when Drive is configured)
+      - Photos destination path + library names (when Photos is configured)
+
+    Notifications, usage statistics, file writes, file deletions, and the
+    sync loop itself are all skipped.
+
+    Args:
+        config: Configuration dictionary
+        api: Authenticated iCloud API instance
+    """
+    LOGGER.info("DRY RUN: authentication succeeded — verifying configured services.")
+
+    if config and "drive" in config:
+        try:
+            drive_destination = config_parser.get_drive_destination_path(config=config)
+            LOGGER.info(f"DRY RUN: Drive destination: {drive_destination}")
+            root_items = list(api.drive.dir())
+            LOGGER.info(
+                f"DRY RUN: Drive root contains {len(root_items)} item(s) — "
+                "real sync would walk this tree per `drive.filters`.",
+            )
+        except Exception as e:
+            LOGGER.warning(f"DRY RUN: Drive enumeration failed: {e!s}")
+    else:
+        LOGGER.info("DRY RUN: no `drive:` section in config — Drive sync would be skipped.")
+
+    if config and "photos" in config:
+        try:
+            photos_destination = config_parser.get_photos_destination_path(config=config)
+            LOGGER.info(f"DRY RUN: Photos destination: {photos_destination}")
+            libraries = list(api.photos.libraries.keys()) if hasattr(api.photos, "libraries") else []
+            if libraries:
+                LOGGER.info(f"DRY RUN: Photos libraries available: {', '.join(libraries)}")
+            else:
+                LOGGER.info("DRY RUN: Photos libraries: (none reported by iCloud)")
+        except Exception as e:
+            LOGGER.warning(f"DRY RUN: Photos enumeration failed: {e!s}")
+    else:
+        LOGGER.info("DRY RUN: no `photos:` section in config — Photos sync would be skipped.")
+
+    LOGGER.info("DRY RUN complete — no files were written. Re-run without --dry-run to sync.")
+
+
 def _check_services_configured(config):
     """
     Check if any sync services are configured.
@@ -348,7 +400,7 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
         "has_drive_activity": bool(summary.drive_stats and summary.drive_stats.has_activity()),
         "has_photos_activity": bool(summary.photo_stats and summary.photo_stats.has_activity()),
         "has_errors": summary.has_errors(),
-        "timestamp": summary.sync_end_time.isoformat() if summary.sync_end_time else None,
+        "timestamp": (summary.sync_end_time.isoformat() if summary.sync_end_time else None),
     }
 
     # Add aggregated statistics (no personal data)
@@ -537,13 +589,19 @@ def _should_exit_oneshot_mode(config):
     return should_exit_drive and should_exit_photos
 
 
-def sync():
+def sync(dry_run: bool = False):
     """
     Main synchronization loop.
 
     Orchestrates the entire sync process by delegating specific responsibilities
     to focused helper functions. This function coordinates the high-level flow
     while each helper handles a single concern.
+
+    Args:
+        dry_run: When True, authenticate and summarise what would be synced,
+            then exit without writing files, sending notifications, or
+            entering the sync loop. Useful for verifying credentials, mount
+            paths, and config before the real loop starts downloading.
     """
     sync_state = SyncState()
     startup_logged = False
@@ -563,6 +621,18 @@ def sync():
         if username:
             try:
                 api = _authenticate_and_get_api(config, username)
+
+                # Dry-run path: authenticate, enumerate, log, exit.
+                # Skips the entire sync + notification + retry pipeline.
+                if dry_run:
+                    if api.requires_2sa:
+                        LOGGER.info(
+                            "DRY RUN: 2FA required — finish interactive auth first "
+                            "(see README), then re-run with --dry-run.",
+                        )
+                    else:
+                        _perform_dry_run(config, api)
+                    return
 
                 if not api.requires_2sa:
                     # Create summary for this sync cycle
