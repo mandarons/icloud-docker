@@ -253,6 +253,115 @@ class TestAuthPasswordPost(unittest.TestCase):
         self.assertIn(b"Apple said no", response.data)
 
 
+class TestAuthCodePost(unittest.TestCase):
+    """``POST /auth/code`` validates the 6-digit code on the stashed live
+    session, trusts the browser, persists the password, clears pending,
+    and redirects."""
+
+    def setUp(self):
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH.clear()
+
+    def tearDown(self):
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH.clear()
+
+    def test_empty_code_returns_400(self):
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH["api"] = object()
+            web._PENDING_AUTH["username"] = "user@test.com"
+            web._PENDING_AUTH["password"] = "secret"
+        client = web.create_app(testing=True).test_client()
+        response = client.post("/auth/code", data={"code": ""})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"Enter the 6-digit code", response.data)
+
+    def test_no_pending_auth_returns_400(self):
+        client = web.create_app(testing=True).test_client()
+        response = client.post("/auth/code", data={"code": "123456"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"No pending auth", response.data)
+
+    def test_rejected_code_returns_400(self):
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.validate_2fa_code.return_value = False
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH["api"] = fake_api
+            web._PENDING_AUTH["username"] = "user@test.com"
+            web._PENDING_AUTH["password"] = "secret"
+
+        client = web.create_app(testing=True).test_client()
+        response = client.post("/auth/code", data={"code": "000000"})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"Code rejected", response.data)
+        # Pending preserved so user can retry.
+        with web._AUTH_LOCK:
+            self.assertIn("api", web._PENDING_AUTH)
+
+    def test_accepted_code_trusts_persists_clears_redirects(self):
+        from unittest.mock import MagicMock, patch
+
+        fake_api = MagicMock()
+        fake_api.validate_2fa_code.return_value = True
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH["api"] = fake_api
+            web._PENDING_AUTH["username"] = "user@test.com"
+            web._PENDING_AUTH["password"] = "secret"
+
+        with patch("icloudpy.utils.store_password_in_keyring") as keyring:
+            client = web.create_app(testing=True).test_client()
+            response = client.post("/auth/code", data={"code": "123456"})
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith("/"))
+        fake_api.validate_2fa_code.assert_called_once_with("123456")
+        fake_api.trust_session.assert_called_once()
+        keyring.assert_called_once_with(username="user@test.com", password="secret")
+        # Pending cleared.
+        with web._AUTH_LOCK:
+            self.assertNotIn("api", web._PENDING_AUTH)
+
+    def test_trust_session_failure_still_succeeds(self):
+        """trust_session() raising is non-fatal — the code already worked,
+        we should still redirect + clear pending. Just log a warning."""
+        from unittest.mock import MagicMock, patch
+
+        fake_api = MagicMock()
+        fake_api.validate_2fa_code.return_value = True
+        fake_api.trust_session.side_effect = RuntimeError("cookie write failed")
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH["api"] = fake_api
+            web._PENDING_AUTH["username"] = "user@test.com"
+            web._PENDING_AUTH["password"] = "secret"
+
+        with patch("icloudpy.utils.store_password_in_keyring"):
+            client = web.create_app(testing=True).test_client()
+            response = client.post("/auth/code", data={"code": "123456"})
+
+        self.assertEqual(response.status_code, 302)
+        with web._AUTH_LOCK:
+            self.assertNotIn("api", web._PENDING_AUTH)
+
+
+class TestAuthReset(unittest.TestCase):
+    """``POST /auth/reset`` is the escape hatch — clears _PENDING_AUTH so
+    the form returns to the password state."""
+
+    def test_reset_clears_pending(self):
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH["api"] = object()
+            web._PENDING_AUTH["username"] = "user@test.com"
+
+        client = web.create_app(testing=True).test_client()
+        response = client.post("/auth/reset")
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.location.endswith("/auth"))
+        with web._AUTH_LOCK:
+            self.assertNotIn("api", web._PENDING_AUTH)
+
+
 class TestDashboard(unittest.TestCase):
     """``GET /`` renders the dashboard HTML — Apple-leaning design baked
     into ``base.html`` + ``dashboard.html``."""

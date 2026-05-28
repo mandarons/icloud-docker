@@ -325,6 +325,88 @@ def create_app(testing: bool = False) -> Flask:
             LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
         return redirect(url_for("dashboard"))
 
+    @app.route("/auth/code", methods=["POST"])
+    def auth_code():
+        """Step 2: validate the 6-digit code on the in-flight session,
+        trust the browser, persist the password, clear pending, redirect.
+
+        - 400 if the code field is empty or no pending auth exists.
+        - 400 + 'Code rejected' if Apple says no — pending kept so the
+          user can retry without re-entering the password.
+        - On success: validate_2fa_code -> trust_session (failures here
+          are logged but non-fatal — the code already worked) ->
+          store_password_in_keyring -> clear pending -> redirect to /.
+        """
+        code = request.form.get("code", "").strip()
+        if not code:
+            return (
+                _render_auth(message="Enter the 6-digit code.", message_kind="err"),
+                400,
+            )
+
+        with _AUTH_LOCK:
+            api = _PENDING_AUTH.get("api")
+            username = _PENDING_AUTH.get("username")
+            password = _PENDING_AUTH.get("password")
+        if api is None:
+            return (
+                _render_auth(
+                    message="No pending auth — submit your password first.",
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        try:
+            accepted = api.validate_2fa_code(code)
+        except Exception as e:
+            LOGGER.exception("Web UI: validate_2fa_code raised")
+            return (
+                _render_auth(message=f"2FA validation error: {e!s}", message_kind="err"),
+                400,
+            )
+
+        if not accepted:
+            return (
+                _render_auth(
+                    message="Code rejected by Apple. Try again — make sure you copy the latest code.",
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        # Code worked. Best-effort trust so the next session resume skips
+        # 2FA; if that fails (e.g. cookie store write error) just log it
+        # — the user's auth still succeeded for this session.
+        try:
+            api.trust_session()
+        except Exception as e:
+            LOGGER.warning(f"Web UI trust_session failed (non-fatal): {e!s}")
+
+        # Persist password to keyring so the sync-loop's next retry
+        # picks up the trusted session without prompting.
+        try:
+            from icloudpy import utils as icloudpy_utils
+
+            icloudpy_utils.store_password_in_keyring(username=username, password=password)
+        except Exception as e:
+            LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
+
+        with _AUTH_LOCK:
+            _PENDING_AUTH.clear()
+        return redirect(url_for("dashboard"))
+
+    @app.route("/auth/reset", methods=["POST"])
+    def auth_reset():
+        """Escape hatch — clear any in-flight pending-auth state.
+
+        Useful when the user closed the tab mid-2FA and wants to start
+        over without waiting for the in-memory state to expire.
+        """
+        with _AUTH_LOCK:
+            _PENDING_AUTH.clear()
+        return redirect(url_for("auth_form"))
+
     return app
 
 
