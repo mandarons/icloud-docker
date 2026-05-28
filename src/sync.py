@@ -167,6 +167,64 @@ def _authenticate_and_get_api(config, username: str):
     return get_api_instance(username=username, password=password, server_region=server_region)
 
 
+def _check_mount_marker(
+    destinations: list[str],
+    marker_filename: str,
+    required: bool,
+    service_name: str,
+) -> bool:
+    """Verify the failsafe marker file is present in every write destination.
+
+    Mirrors boredazfcuk/docker-icloudpd's ``.mounted`` pattern: protects
+    against silent bind-mount failures (typo in the host path, missing
+    share, wrong permissions) that would otherwise dump iCloud data into
+    an empty container-internal directory.
+
+    Takes a list of destinations because a single sync may write to
+    multiple bind-mounted directories — e.g. Photos with
+    ``library_destinations`` mapping the personal library to
+    ``/photos/personal`` and the shared library to ``/photos/shared``,
+    each potentially a separate mount. The marker is required in EACH
+    write destination because any one of them could be the failed mount.
+
+    Returns True when it is safe to proceed (marker not required, or
+    marker required and present in every destination). Returns False when
+    the marker is required and is missing from at least one destination —
+    in which case the caller should skip this sync cycle without
+    advancing the countdown so the next interval re-checks. Every
+    missing-marker failure is logged so the user can fix all of them in
+    one pass rather than discovering them one cycle at a time.
+
+    Args:
+        destinations: List of sync destination directories to check. Each
+            directory is checked independently. An empty list returns
+            True (nothing to check).
+        marker_filename: Filename to look for inside each destination
+            (e.g. ``.mounted``).
+        required: Whether the marker is required at all. When False this
+            is a no-op that always returns True.
+        service_name: Human-readable label used in the error log
+            (``Drive`` / ``Photos``).
+
+    Returns:
+        True if it is safe to proceed; False to skip this sync cycle.
+    """
+    if not required:
+        return True
+    all_present = True
+    for destination_path in destinations:
+        marker_path = os.path.join(destination_path, marker_filename)
+        if not os.path.isfile(marker_path):
+            LOGGER.error(
+                f"{service_name} mount marker missing: {marker_path} not found — "
+                f"refusing to sync. Create the marker file (`touch {marker_path}`) "
+                f"after confirming the destination is correctly mounted, then the "
+                f"next sync cycle will proceed.",
+            )
+            all_present = False
+    return all_present
+
+
 def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval: int):
     """
     Execute drive synchronization if enabled.
@@ -189,6 +247,17 @@ def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval:
         stats = DriveStats()
 
         destination_path = config_parser.prepare_drive_destination(config=config)
+
+        # Mount-marker failsafe (see _check_mount_marker). Skip this cycle
+        # without advancing the countdown so the next interval re-checks
+        # once the user fixes the mount + touches the marker file.
+        if not _check_mount_marker(
+            destinations=[destination_path],
+            marker_filename=config_parser.get_mount_marker_filename(config=config),
+            required=config_parser.get_drive_require_mount_marker(config=config),
+            service_name="Drive",
+        ):
+            return None
 
         # Count files before sync
         files_before = set()
@@ -256,6 +325,34 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         stats = PhotoStats()
 
         destination_path = config_parser.prepare_photos_destination(config=config)
+
+        # Mount-marker failsafe (see _check_mount_marker). Skip this cycle
+        # without advancing the countdown so the next interval re-checks
+        # once the user fixes the mount + touches the marker file.
+        #
+        # If ``photos.library_destinations`` is configured, EACH mapped
+        # subdir is a separate write target (often a separate bind mount
+        # — that's the whole reason users map libraries to subdirs).
+        # Check the marker in each: the failed-mount one could be any of
+        # them. Root is still checked because libraries with no explicit
+        # mapping fall through to it via ``_library_destination``.
+        # Read defensively so this PR is independent of the
+        # library_destinations PR being merged first.
+        photos_cfg = config.get("photos") if isinstance(config, dict) else None
+        library_destinations = photos_cfg.get("library_destinations") if isinstance(photos_cfg, dict) else None
+        marker_destinations = [destination_path]
+        if isinstance(library_destinations, dict):
+            for subdir in library_destinations.values():
+                if not isinstance(subdir, str) or not subdir:
+                    continue
+                marker_destinations.append(os.path.join(destination_path, subdir))
+        if not _check_mount_marker(
+            destinations=marker_destinations,
+            marker_filename=config_parser.get_mount_marker_filename(config=config),
+            required=config_parser.get_photos_require_mount_marker(config=config),
+            service_name="Photos",
+        ):
+            return None
 
         # Count files before sync
         files_before = set()
