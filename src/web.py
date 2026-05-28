@@ -88,16 +88,36 @@ def _get_require_mount_marker(config: dict, service: str) -> bool:
     return bool(getter(config=config))
 
 
+def _get_library_destinations(config: dict) -> dict[str, str]:
+    """``photos.library_destinations`` mapping (PR 3 helper) — best-effort
+    standalone-safe getter so PR 9 works on vanilla mandarons too."""
+    getter = getattr(config_parser, "get_photos_library_destinations", None)
+    if getter is None:
+        # Direct read fallback so the dashboard still surfaces the mapping
+        # even without PR 3's helper merged.
+        try:
+            raw = config.get("photos", {}).get("library_destinations", {}) or {}
+            return {str(k): str(v) for k, v in raw.items()}
+        except AttributeError:
+            return {}
+    try:
+        return getter(config=config) or {}
+    except Exception:
+        return {}
+
+
 def _build_service(config: dict, service: str, marker_filename: str) -> dict[str, Any]:
     """Compose a single service entry (Photos or Drive) for /api/status."""
     if service == "photos":
         destination = config_parser.prepare_photos_destination(config=config)
         interval = config_parser.get_photos_sync_interval(config=config, log_messages=False)
         name = "Photos"
+        library_destinations = _get_library_destinations(config=config)
     else:
         destination = config_parser.prepare_drive_destination(config=config)
         interval = config_parser.get_drive_sync_interval(config=config, log_messages=False)
         name = "Drive"
+        library_destinations = {}
 
     marker_path = os.path.join(destination, marker_filename)
     return {
@@ -108,6 +128,7 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
         "require_mount_marker": _get_require_mount_marker(config=config, service=service),
         "marker_present": os.path.isfile(marker_path),
         "marker_path": marker_path,
+        "library_destinations": library_destinations,
     }
 
 
@@ -170,14 +191,42 @@ def _build_status(config: dict | None) -> dict[str, Any]:
     if "drive" in config:
         services.append(_build_service(config=config, service="drive", marker_filename=marker_filename))
 
+    username = config_parser.get_username(config=config)
     return {
         "config_loaded": True,
         "config_path": _current_config_path(),
-        "username": config_parser.get_username(config=config),
+        "username": username,
         "region": config_parser.get_region(config=config),
         "marker_filename": marker_filename,
         "services": services,
+        "auth_state": _detect_auth_state(username=username),
     }
+
+
+def _detect_auth_state(username: str | None) -> str:
+    """Best-effort check of whether the sync loop can actually authenticate.
+
+    Returns one of:
+      - ``not_configured`` — no ``app.credentials.username`` in config.
+      - ``setup_needed`` — username set, but the keyring has no password
+        cached. The container's first 2FA flow hasn't been completed.
+      - ``ready`` — username set + keyring entry present. Sync loop can
+        resume the session on the next retry.
+
+    Distinct from a *live* iCloud session check (which would require
+    hitting Apple). This is the cheap on-disk signal users see today
+    when sync.py's loop prints ``Password is not stored in keyring``.
+    """
+    if not username:
+        return "not_configured"
+    try:
+        from icloudpy import utils as icloudpy_utils
+
+        if icloudpy_utils.password_exists_in_keyring(username):
+            return "ready"
+    except Exception as e:
+        LOGGER.debug(f"Web UI auth-state check raised: {e!s}")
+    return "setup_needed"
 
 
 def create_app(testing: bool = False) -> Flask:
