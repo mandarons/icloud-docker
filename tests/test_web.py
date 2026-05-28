@@ -114,6 +114,41 @@ class TestStatus(unittest.TestCase):
             shutil.rmtree(tmpdir, ignore_errors=True)
 
 
+class TestAuthForm(unittest.TestCase):
+    """``GET /auth`` renders the form. Two states controlled by the
+    module-level ``_PENDING_AUTH`` dict: password-only (default) and
+    code-only (after a successful password POST that triggered 2FA)."""
+
+    def setUp(self):
+        """Ensure no pending auth leaks across tests."""
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH.clear()
+
+    def test_auth_get_returns_200(self):
+        client = web.create_app(testing=True).test_client()
+        response = client.get("/auth")
+        self.assertEqual(response.status_code, 200)
+
+    def test_auth_renders_password_field_when_no_pending(self):
+        client = web.create_app(testing=True).test_client()
+        body = client.get("/auth").data.decode("utf-8")
+        self.assertIn('name="password"', body)
+        self.assertIn('action="/auth/password"', body)
+
+    def test_auth_renders_code_field_when_pending(self):
+        with web._AUTH_LOCK:
+            web._PENDING_AUTH["api"] = object()
+            web._PENDING_AUTH["username"] = "user@test.com"
+        try:
+            client = web.create_app(testing=True).test_client()
+            body = client.get("/auth").data.decode("utf-8")
+            self.assertIn('name="code"', body)
+            self.assertIn('action="/auth/code"', body)
+        finally:
+            with web._AUTH_LOCK:
+                web._PENDING_AUTH.clear()
+
+
 class TestDashboard(unittest.TestCase):
     """``GET /`` renders the dashboard HTML — Apple-leaning design baked
     into ``base.html`` + ``dashboard.html``."""

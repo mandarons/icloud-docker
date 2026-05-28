@@ -34,6 +34,13 @@ from src import (
 
 LOGGER = get_logger()
 
+# Module-level holder for the live icloudpy session created during
+# POST /auth/password, so POST /auth/code can call validate_2fa_code on
+# the SAME session. Cleared after a successful trust_session or via
+# POST /auth/reset.
+_PENDING_AUTH: dict[str, Any] = {}
+_AUTH_LOCK = threading.Lock()
+
 
 def _current_config_path() -> str:
     """Resolve the active config path the same way sync.py does."""
@@ -218,6 +225,25 @@ def create_app(testing: bool = False) -> Flask:
         relies on this being reachable to render the rest of the page)."""
         config = _load_current_config()
         return jsonify({"lines": _tail_log_file(path=_logger_filename(config=config), lines=200)})
+
+    @app.route("/auth", methods=["GET"])
+    def auth_form():
+        """Auth form. Renders the password field by default; renders the
+        6-digit code field instead when ``_PENDING_AUTH`` indicates that
+        the password step already succeeded and 2FA is pending."""
+        config = _load_current_config()
+        status_payload = _build_status(config=config)
+        with _AUTH_LOCK:
+            pending = bool(_PENDING_AUTH)
+        return render_template(
+            "auth.html",
+            status=status_payload,
+            pending=pending,
+            message=None,
+            message_kind=None,
+            active_nav="auth",
+            version=os.environ.get("APP_VERSION", ""),
+        )
 
     return app
 
