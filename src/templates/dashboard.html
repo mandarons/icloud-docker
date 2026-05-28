@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}iCloud Docker · Status{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Status</h1>
+<p class="page-sub">{{ status.config_path }}</p>
+
+{% if status.username %}
+<div class="status-row">
+  <div class="status-dot"></div>
+  <div class="status-text">Signed in as <strong>{{ status.username }}</strong></div>
+  <a class="status-cta" href="/auth">Re-authenticate</a>
+</div>
+{% else %}
+<div class="status-row">
+  <div class="status-dot warn"></div>
+  <div class="status-text">No <strong>app.credentials.username</strong> in config.yaml</div>
+  <a class="status-cta" href="/auth">Set up</a>
+</div>
+{% endif %}
+
+<div class="grid">
+{% for service in status.services %}
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon {{ service.name | lower }}">{{ service.name[0] }}</div>
+      <div class="card-title-wrap">
+        <div class="card-title">{{ service.name }}</div>
+        <div class="card-subtitle">every {{ (service.sync_interval_s // 3600) }} h</div>
+      </div>
+    </div>
+    <dl class="kv">
+      <dt>Destination</dt><dd class="mono">{{ service.destination }}</dd>
+      <dt>Interval</dt><dd>{{ service.sync_interval_s }} s</dd>
+      <dt>Mount marker</dt>
+      <dd>
+        {% if service.require_mount_marker %}
+          {% if service.marker_present %}
+            <span class="pill success">required · present</span>
+          {% else %}
+            <span class="pill err">required · missing</span>
+          {% endif %}
+        {% else %}
+          {% if service.marker_present %}
+            <span class="pill success">present (optional)</span>
+          {% else %}
+            <span class="pill warn">not required</span>
+          {% endif %}
+        {% endif %}
+        <div class="mono" style="color: var(--text-tertiary); margin-top: 4px; font-size: 12px;">{{ service.marker_path }}</div>
+      </dd>
+    </dl>
+  </div>
+{% endfor %}
+</div>
+
+<div class="logs-card">
+  <div class="logs-head">
+    <h2>Recent log</h2>
+    <a href="/api/logs" class="mono" style="font-size: 12px;">/api/logs</a>
+  </div>
+  {% if log_lines %}
+    <pre class="logs">{% for line in log_lines %}{{ line }}
+{% endfor %}</pre>
+  {% else %}
+    <div class="logs-empty">No log file found at <span class="mono">{{ log_path or "(unset)" }}</span>.</div>
+  {% endif %}
+</div>
+
+{% endblock %}

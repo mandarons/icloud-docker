@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}iCloud Docker{% endblock %}</title>
+  <style>
+    /* Apple-leaning design — see docs/plans/2026-05-28-web-ui-mocks/mock-A-apple.html */
+    :root {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --text: #1d1d1f;
+      --text-secondary: #515154;
+      --text-tertiary: #86868b;
+      --divider: #e8e8ed;
+      --accent: #0071e3;
+      --accent-hover: #0077ed;
+      --success-bg: #e8f5e9;
+      --success-fg: #1d6f2b;
+      --warn-bg: #fff4d8;
+      --warn-fg: #87580a;
+      --err-bg: #fdecec;
+      --err-fg: #b3261e;
+      --radius: 12px;
+      --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      font-size: 15px; line-height: 1.47; -webkit-font-smoothing: antialiased;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .mono { font-family: "SF Mono", ui-monospace, Menlo, Monaco, monospace; font-size: 13px; }
+
+    .header {
+      background: rgba(255,255,255,0.86);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 1px solid var(--divider);
+      position: sticky; top: 0; z-index: 10;
+    }
+    .header-inner {
+      max-width: 1024px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; height: 48px; gap: 24px;
+    }
+    .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .brand-version {
+      display: inline-block; margin-left: 8px;
+      font-size: 11px; font-weight: 500; color: var(--text-tertiary);
+      padding: 2px 7px; border-radius: 999px; background: rgba(0,0,0,0.04);
+      vertical-align: 2px;
+    }
+    .nav { display: flex; gap: 4px; margin-left: auto; }
+    .nav a {
+      color: var(--text-secondary); font-size: 13px;
+      padding: 6px 12px; border-radius: 8px; text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav a:hover { background: rgba(0,0,0,0.04); color: var(--text); text-decoration: none; }
+    .nav a.active { color: var(--accent); }
+
+    .container { max-width: 1024px; margin: 0 auto; padding: 32px 24px 48px; }
+
+    .page-title { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+    .page-sub { color: var(--text-tertiary); font-size: 14px; margin: 0 0 28px; }
+
+    .status-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+      padding: 16px 20px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #34c759; box-shadow: 0 0 0 4px rgba(52,199,89,0.16); flex-shrink: 0; }
+    .status-dot.warn { background: #ff9500; box-shadow: 0 0 0 4px rgba(255,149,0,0.16); }
+    .status-dot.err  { background: #ff3b30; box-shadow: 0 0 0 4px rgba(255,59,48,0.16); }
+    .status-text { font-size: 15px; }
+    .status-text strong { font-weight: 600; }
+    .status-cta {
+      margin-left: auto; padding: 7px 14px; border-radius: 999px;
+      background: var(--accent); color: #fff !important; font-size: 13px; font-weight: 500;
+      transition: background 0.15s;
+    }
+    .status-cta:hover { background: var(--accent-hover); text-decoration: none; }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+    @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+    .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+    .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .card-icon {
+      width: 36px; height: 36px; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 600; color: #fff;
+    }
+    .card-icon.photos { background: linear-gradient(135deg,#ff6b6b 0%,#ffd166 100%); }
+    .card-icon.drive  { background: linear-gradient(135deg,#5ac8fa 0%,#0071e3 100%); }
+    .card-title-wrap { flex: 1; min-width: 0; }
+    .card-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .card-subtitle { color: var(--text-tertiary); font-size: 13px; margin-top: 2px; }
+
+    .kv { display: grid; grid-template-columns: 100px 1fr; gap: 6px 12px; font-size: 14px; }
+    .kv dt { color: var(--text-tertiary); }
+    .kv dd { margin: 0; color: var(--text); word-break: break-word; }
+    .kv dd.mono { font-size: 13px; }
+
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 3px 10px; border-radius: 999px;
+      font-size: 12px; font-weight: 500;
+    }
+    .pill.success { background: var(--success-bg); color: var(--success-fg); }
+    .pill.warn    { background: var(--warn-bg);    color: var(--warn-fg); }
+    .pill.err     { background: var(--err-bg);     color: var(--err-fg); }
+    .pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    .section-label {
+      font-size: 11px; color: var(--text-tertiary);
+      text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600;
+      margin: 16px 0 8px; padding-top: 14px; border-top: 1px solid var(--divider);
+    }
+    .lib-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 0; }
+    .lib-row .arrow { color: var(--text-tertiary); }
+
+    .logs-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
+    .logs-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .logs-head h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .logs-empty { color: var(--text-tertiary); font-size: 13px; padding: 12px; }
+    .logs {
+      background: #f5f5f7; border-radius: 8px; padding: 14px 16px;
+      font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12px; line-height: 1.6;
+      color: var(--text-secondary); max-height: 360px; overflow-y: auto;
+      border: 1px solid var(--divider);
+      margin: 0; white-space: pre-wrap; word-break: break-word;
+    }
+    .log-warn { color: var(--warn-fg); }
+    .log-err  { color: var(--err-fg); }
+  </style>
+</head>
+<body>
+<header class="header">
+  <div class="header-inner">
+    <div class="brand">☁️ iCloud Docker{% if version %}<span class="brand-version">{{ version }}</span>{% endif %}</div>
+    <nav class="nav">
+      <a href="/" class="{% if active_nav == 'dashboard' %}active{% endif %}">Dashboard</a>
+      <a href="/auth" class="{% if active_nav == 'auth' %}active{% endif %}">Auth</a>
+    </nav>
+  </div>
+</header>
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>
