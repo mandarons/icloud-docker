@@ -42,13 +42,21 @@ def download_file(item: Any, local_file: str) -> str | None:
                 for chunk in response.iter_content(4 * 1024 * 1024):
                     file_out.write(chunk)
 
-            # Check if this is a package that needs processing
+            # Check if this is a package that needs processing.
+            #
+            # ``process_package`` now returns the local_file path for both
+            # successful unpacks AND unrecognised mime types (the bytes
+            # are still on disk as a flat bundle — see the docstring on
+            # ``process_package`` for the rationale). It only returns
+            # ``None`` on hard processing failure that leaves the file in
+            # an unusable state. So we surface that as a download failure
+            # but no longer treat "couldn't unpack" as failure when the
+            # downloaded bytes are intact.
             if response.url and "/packageDownload?" in response.url:
                 processed_file = process_package(local_file=local_file)
-                if processed_file:
-                    local_file = processed_file
-                else:
+                if processed_file is None:
                     return None
+                local_file = processed_file
 
         # Set the file modification time to match the remote file
         item_modified_time = time.mktime(item.date_modified.timetuple())
