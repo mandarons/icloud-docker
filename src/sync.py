@@ -318,7 +318,7 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
     return None
 
 
-def _perform_dry_run(config, api) -> None:
+def _perform_dry_run(config, api, check_files: int | None = None) -> None:
     """Authenticate-and-enumerate path used when ``--dry-run`` is passed.
 
     Verifies that the configured credentials, mount paths, and iCloud-side
@@ -329,13 +329,19 @@ def _perform_dry_run(config, api) -> None:
     Logs (at INFO level):
       - Drive destination path + root-level item count (when Drive is configured)
       - Photos destination path + library names (when Photos is configured)
-
-    Notifications, usage statistics, file writes, file deletions, and the
-    sync loop itself are all skipped.
+      - When ``check_files`` is not None: per-library would-skip /
+        size-mismatch / not-found counts (see ``migration_check``).
 
     Args:
         config: Configuration dictionary
         api: Authenticated iCloud API instance
+        check_files: When set (``--check-files=N``), additionally walks
+            up to N photos per library and reports what a real sync
+            would do per file. ``0`` walks every photo. ``None`` skips
+            this check (cheap default for ``--dry-run`` alone).
+
+    Notifications, usage statistics, file writes, file deletions, and the
+    sync loop itself are all skipped.
     """
     LOGGER.info("DRY RUN: authentication succeeded — verifying configured services.")
 
@@ -366,6 +372,36 @@ def _perform_dry_run(config, api) -> None:
             LOGGER.warning(f"DRY RUN: Photos enumeration failed: {e!s}")
     else:
         LOGGER.info("DRY RUN: no `photos:` section in config — Photos sync would be skipped.")
+
+    if check_files is not None and config and "photos" in config:
+        try:
+            from src import migration_check
+
+            LOGGER.info(
+                f"DRY RUN: walking photos for file-existence check "
+                f"(--check-files={'all' if check_files == 0 else check_files} per library) ...",
+            )
+            results = migration_check.check_migration(api=api, config=config, sample=check_files)
+            for library_name, result in results.items():
+                stats = result["stats"]
+                LOGGER.info(
+                    f"DRY RUN: {library_name} (dest {result['library_dest']}): "
+                    f"sampled={result['checked']} "
+                    f"would_skip={stats['would_skip']} "
+                    f"size_mismatch={stats['size_mismatch']} "
+                    f"not_found={stats['not_found']} "
+                    f"errors={stats['error']}",
+                )
+                for status, items in result["samples"].items():
+                    for item in items:
+                        if status == "size_mismatch":
+                            path, expected, actual = item
+                            LOGGER.info(f"DRY RUN:   sample {status}: {path} (have {actual:,}b, want {expected:,}b)")
+                        else:
+                            path, expected = item
+                            LOGGER.info(f"DRY RUN:   sample {status}: {path} ({expected:,}b)")
+        except Exception as e:
+            LOGGER.warning(f"DRY RUN: check-files walk failed: {e!s}")
 
     LOGGER.info("DRY RUN complete — no files were written. Re-run without --dry-run to sync.")
 
@@ -589,7 +625,7 @@ def _should_exit_oneshot_mode(config):
     return should_exit_drive and should_exit_photos
 
 
-def sync(dry_run: bool = False):
+def sync(dry_run: bool = False, check_files: int | None = None):
     """
     Main synchronization loop.
 
@@ -602,6 +638,11 @@ def sync(dry_run: bool = False):
             then exit without writing files, sending notifications, or
             entering the sync loop. Useful for verifying credentials, mount
             paths, and config before the real loop starts downloading.
+        check_files: Optional sample size for the per-photo file-existence
+            check during dry-run. Only meaningful with ``dry_run=True``.
+            ``None`` skips the check (cheap default). ``0`` walks every
+            photo (slow on large libraries). Positive N walks N
+            stride-sampled photos per library.
     """
     sync_state = SyncState()
     startup_logged = False
@@ -631,7 +672,7 @@ def sync(dry_run: bool = False):
                             "(see README), then re-run with --dry-run.",
                         )
                     else:
-                        _perform_dry_run(config, api)
+                        _perform_dry_run(config, api, check_files=check_files)
                     return
 
                 if not api.requires_2sa:
