@@ -67,23 +67,64 @@
     .page-sub { color: var(--text-tertiary); font-size: 14px; margin: 0 0 28px; }
 
     .status-row {
-      display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
       padding: 16px 20px; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow);
+      flex-wrap: wrap;
     }
     .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #34c759; box-shadow: 0 0 0 4px rgba(52,199,89,0.16); flex-shrink: 0; }
     .status-dot.warn { background: #ff9500; box-shadow: 0 0 0 4px rgba(255,149,0,0.16); }
     .status-dot.err  { background: #ff3b30; box-shadow: 0 0 0 4px rgba(255,59,48,0.16); }
-    .status-text { font-size: 15px; }
+    .status-text { font-size: 15px; flex: 1 1 200px; min-width: 0; }
     .status-text strong { font-weight: 600; }
     .status-cta {
-      margin-left: auto; padding: 7px 14px; border-radius: 999px;
+      padding: 8px 16px; border-radius: 999px;
       background: var(--accent); color: #fff !important; font-size: 13px; font-weight: 500;
-      transition: background 0.15s;
+      transition: background 0.15s; white-space: nowrap; min-height: 32px;
+      display: inline-flex; align-items: center; justify-content: center;
+      border: none; cursor: pointer; font-family: inherit;
     }
     .status-cta:hover { background: var(--accent-hover); text-decoration: none; }
+    .status-cta.secondary { background: rgba(0,0,0,0.04); color: var(--text) !important; }
+    .status-cta.secondary:hover { background: rgba(0,0,0,0.08); }
+    .status-actions { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+    .global-actions {
+      display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap;
+    }
+    .btn {
+      padding: 10px 16px; border-radius: 10px; border: 1px solid var(--divider);
+      background: var(--surface); color: var(--text); font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+      font-family: inherit; min-height: 40px;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .btn:hover:not(:disabled) { background: rgba(0,0,0,0.03); border-color: rgba(0,0,0,0.15); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-small { font-size: 13px; padding: 7px 12px; min-height: 32px; }
 
     .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
     @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+
+    /* Mobile breakpoint — narrower than the existing 720px grid trigger
+       because the status row + per-card actions need rewrapping before
+       the cards collapse to a single column. */
+    @media (max-width: 560px) {
+      .container { padding: 20px 16px 32px; }
+      .header-inner { padding: 0 16px; gap: 12px; }
+      .page-title { font-size: 26px; }
+      .page-sub { word-break: break-all; }
+      .status-row { padding: 14px 16px; gap: 10px; }
+      .status-text { flex-basis: 100%; }
+      .status-actions { margin-left: 0; width: 100%; }
+      .status-cta, .btn { flex: 1; }
+      .card { padding: 20px; }
+      .kv { grid-template-columns: 1fr; gap: 2px; }
+      .kv dt { font-size: 12px; margin-top: 8px; }
+      .kv dt:first-child { margin-top: 0; }
+      .logs { font-size: 11px; max-height: 240px; }
+    }
 
     .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
     .card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
@@ -102,6 +143,25 @@
     .kv dt { color: var(--text-tertiary); }
     .kv dd { margin: 0; color: var(--text); word-break: break-word; }
     .kv dd.mono { font-size: 13px; }
+
+    .path-hint {
+      display: block; color: var(--text-tertiary); font-size: 11px;
+      margin-top: 2px; line-height: 1.4;
+    }
+
+    .stats {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      padding: 12px 14px; margin: 12px 0 0;
+      background: #f5f5f7; border-radius: 8px;
+    }
+    .stat { display: flex; flex-direction: column; gap: 2px; }
+    .stat-value { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+    .stat-label { font-size: 11px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    .card-actions {
+      display: flex; gap: 8px; margin-top: 16px; padding-top: 14px;
+      border-top: 1px solid var(--divider);
+    }
 
     .pill {
       display: inline-flex; align-items: center; gap: 6px;
