@@ -14,7 +14,12 @@ from src.config_parser import get_usage_tracking_enabled, prepare_root_destinati
 
 LOGGER = get_logger()
 
-CACHE_FILE_NAME = "/config/.data"
+# Same ICLOUD_DOCKER_CONFIG_DIR override as ``DEFAULT_COOKIE_DIRECTORY``.
+# Defaults to ``/config/.data`` to match upstream mandarons; tests on
+# non-container hosts (macOS, etc) override via the env var.
+CACHE_FILE_NAME = os.path.join(
+    os.environ.get("ICLOUD_DOCKER_CONFIG_DIR", "/config"), ".data"
+)
 NEW_INSTALLATION_ENDPOINT = os.environ.get("NEW_INSTALLATION_ENDPOINT", None)
 NEW_HEARTBEAT_ENDPOINT = os.environ.get("NEW_HEARTBEAT_ENDPOINT", None)
 APP_NAME = "icloud-docker"
@@ -92,7 +97,9 @@ def load_cache(file_path: str) -> dict:
                 data = loaded_data
                 LOGGER.debug(f"Loaded and validated usage cache from: {file_path}")
             else:
-                LOGGER.warning(f"Cache data validation failed for {file_path}, starting fresh")
+                LOGGER.warning(
+                    f"Cache data validation failed for {file_path}, starting fresh"
+                )
                 save_cache(file_path=file_path, data={})
         except (json.JSONDecodeError, OSError) as e:
             LOGGER.error(f"Failed to load usage cache from {file_path}: {e}")
@@ -178,7 +185,8 @@ def post_with_retry(
 
             # Rate limit (429) or server error (5xx) - retry
             LOGGER.warning(
-                f"Request failed with status {response.status_code}, " f"attempt {attempt + 1}/{max_retries}",
+                f"Request failed with status {response.status_code}, "
+                f"attempt {attempt + 1}/{max_retries}",
             )
 
         except (requests.ConnectionError, requests.Timeout) as e:
@@ -252,7 +260,11 @@ def already_installed(cached_data: dict) -> bool:
     Returns:
         True if installation is up-to-date, False otherwise
     """
-    return "id" in cached_data and "app_version" in cached_data and cached_data["app_version"] == APP_VERSION
+    return (
+        "id" in cached_data
+        and "app_version" in cached_data
+        and cached_data["app_version"] == APP_VERSION
+    )
 
 
 def install(cached_data: dict) -> dict | None:
