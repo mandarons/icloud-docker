@@ -31,6 +31,7 @@ from src import (
     config_parser,
     get_logger,
     read_config,
+    web_signals,
 )
 
 LOGGER = get_logger()
@@ -110,25 +111,55 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
     """Compose a single service entry (Photos or Drive) for /api/status."""
     if service == "photos":
         destination = config_parser.prepare_photos_destination(config=config)
-        interval = config_parser.get_photos_sync_interval(config=config, log_messages=False)
+        interval = config_parser.get_photos_sync_interval(
+            config=config, log_messages=False
+        )
         name = "Photos"
         library_destinations = _get_library_destinations(config=config)
     else:
         destination = config_parser.prepare_drive_destination(config=config)
-        interval = config_parser.get_drive_sync_interval(config=config, log_messages=False)
+        interval = config_parser.get_drive_sync_interval(
+            config=config, log_messages=False
+        )
         name = "Drive"
         library_destinations = {}
 
     marker_path = os.path.join(destination, marker_filename)
+    state = web_signals.get_sync_state(service=service)
+    stats = None
+    if state:
+        completed_at = state.get("completed_at")
+        stats = {
+            "last_sync_relative": (
+                web_signals.format_relative_time(completed_at) if completed_at else None
+            ),
+            "files_downloaded": state.get("files_downloaded"),
+            "files_skipped": state.get("files_skipped"),
+            "files_removed": state.get("files_removed"),
+            "files_on_disk": (
+                (state.get("files_downloaded") or 0) + (state.get("files_skipped") or 0)
+                if (
+                    state.get("files_downloaded") is not None
+                    or state.get("files_skipped") is not None
+                )
+                else None
+            ),
+            "errors": state.get("errors", 0),
+            "duration_seconds": state.get("duration_seconds"),
+        }
     return {
         "name": name,
         "destination": destination,
         "destination_exists": os.path.isdir(destination),
         "sync_interval_s": interval,
-        "require_mount_marker": _get_require_mount_marker(config=config, service=service),
+        "require_mount_marker": _get_require_mount_marker(
+            config=config, service=service
+        ),
         "marker_present": os.path.isfile(marker_path),
         "marker_path": marker_path,
         "library_destinations": library_destinations,
+        "stats": stats,
+        "force_sync_pending": service in web_signals.pending_force_syncs(),
     }
 
 
@@ -187,9 +218,17 @@ def _build_status(config: dict | None) -> dict[str, Any]:
     marker_filename = _get_marker_filename(config=config)
     services = []
     if "photos" in config:
-        services.append(_build_service(config=config, service="photos", marker_filename=marker_filename))
+        services.append(
+            _build_service(
+                config=config, service="photos", marker_filename=marker_filename
+            )
+        )
     if "drive" in config:
-        services.append(_build_service(config=config, service="drive", marker_filename=marker_filename))
+        services.append(
+            _build_service(
+                config=config, service="drive", marker_filename=marker_filename
+            )
+        )
 
     username = config_parser.get_username(config=config)
     return {
@@ -200,6 +239,7 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         "marker_filename": marker_filename,
         "services": services,
         "auth_state": _detect_auth_state(username=username),
+        "force_sync_pending": web_signals.pending_force_syncs(),
     }
 
 
@@ -255,7 +295,9 @@ def create_app(testing: bool = False) -> Flask:
         dashboard or auth payloads. The dashboard is always live data —
         a cached snapshot would hide a missing mount marker or an
         expired session."""
-        response.headers["Cache-Control"] = "private, no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Cache-Control"] = (
+            "private, no-store, no-cache, must-revalidate, max-age=0"
+        )
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
         return response
@@ -305,7 +347,9 @@ def create_app(testing: bool = False) -> Flask:
         or unreadable returns an empty list (never 500 — the dashboard
         relies on this being reachable to render the rest of the page)."""
         config = _load_current_config()
-        return jsonify({"lines": _tail_log_file(path=_logger_filename(config=config), lines=200)})
+        return jsonify(
+            {"lines": _tail_log_file(path=_logger_filename(config=config), lines=200)}
+        )
 
     @app.route("/auth", methods=["GET"])
     def auth_form():
@@ -365,7 +409,9 @@ def create_app(testing: bool = False) -> Flask:
         except Exception as e:
             LOGGER.exception("Web UI auth failed during ICloudPyService instantiation")
             return (
-                _render_auth(message=f"Authentication failed: {e!s}", message_kind="err"),
+                _render_auth(
+                    message=f"Authentication failed: {e!s}", message_kind="err"
+                ),
                 400,
             )
 
@@ -389,7 +435,9 @@ def create_app(testing: bool = False) -> Flask:
         # password to the keyring so the sync loop can use it on the
         # next retry, then bounce back to the dashboard.
         try:
-            icloudpy_utils.store_password_in_keyring(username=username, password=password)
+            icloudpy_utils.store_password_in_keyring(
+                username=username, password=password
+            )
         except Exception as e:
             LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
         return redirect(url_for("dashboard"))
@@ -431,7 +479,9 @@ def create_app(testing: bool = False) -> Flask:
         except Exception as e:
             LOGGER.exception("Web UI: validate_2fa_code raised")
             return (
-                _render_auth(message=f"2FA validation error: {e!s}", message_kind="err"),
+                _render_auth(
+                    message=f"2FA validation error: {e!s}", message_kind="err"
+                ),
                 400,
             )
 
@@ -457,7 +507,9 @@ def create_app(testing: bool = False) -> Flask:
         try:
             from icloudpy import utils as icloudpy_utils
 
-            icloudpy_utils.store_password_in_keyring(username=username, password=password)
+            icloudpy_utils.store_password_in_keyring(
+                username=username, password=password
+            )
         except Exception as e:
             LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
 
@@ -475,6 +527,152 @@ def create_app(testing: bool = False) -> Flask:
         with _AUTH_LOCK:
             _PENDING_AUTH.clear()
         return redirect(url_for("auth_form"))
+
+    @app.route("/auth/refresh-trust", methods=["POST"])
+    def auth_refresh_trust():
+        """One-tap re-auth using the keyring-cached password.
+
+        When Apple's trusted-session lifetime is winding down (or has
+        already expired since the last sync attempt), this lets the user
+        kick off a fresh 2FA push without having to retype their
+        password. Useful for "reset the clock" workflows where the
+        password didn't change — only the trust window did.
+
+        Flow:
+          1. Look up keyring password by username from config.
+          2. If absent → bounce to /auth so the user enters a new one.
+          3. If present → spin up a transient ICloudPyService, fire the
+             2FA push if needed, stash the live session under the same
+             _PENDING_AUTH dict /auth/code already consumes.
+          4. Redirect to /auth — UI is now in "enter 6-digit code" mode.
+        """
+        config = _load_current_config()
+        username = None
+        if config:
+            try:
+                username = config_parser.get_username(config=config)
+            except (KeyError, AttributeError, TypeError):
+                username = None
+        if not username:
+            return (
+                _render_auth(
+                    message="No app.credentials.username in config.yaml — set it first.",
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        try:
+            from icloudpy import utils as icloudpy_utils
+
+            password = icloudpy_utils.get_password_from_keyring(username)
+        except Exception as e:
+            LOGGER.exception("Web UI: keyring lookup raised")
+            return (
+                _render_auth(
+                    message=f"Keyring lookup failed: {e!s}",
+                    message_kind="err",
+                ),
+                500,
+            )
+        if not password:
+            return (
+                _render_auth(
+                    message=(
+                        "No password in keyring — submit one below to "
+                        "complete the first-time auth."
+                    ),
+                    message_kind="warn",
+                ),
+                400,
+            )
+
+        try:
+            import icloudpy
+
+            api = icloudpy.ICloudPyService(
+                apple_id=username,
+                password=password,
+                cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+            )
+        except Exception as e:
+            LOGGER.exception("Web UI refresh-trust: ICloudPyService raised")
+            return (
+                _render_auth(
+                    message=(
+                        f"Refresh trust failed: {e!s}. Your stored "
+                        "password may be stale — submit a new one below."
+                    ),
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        if not api.requires_2fa:
+            # Trust window was still alive — nothing to do, sync loop is
+            # already authenticated. Bounce back to the dashboard with
+            # the success state.
+            return redirect(url_for("dashboard"))
+
+        try:
+            trigger = getattr(api, "trigger_2fa_push_notification", None)
+            if callable(trigger):
+                trigger()
+        except Exception as e:
+            LOGGER.warning(f"Web UI refresh-trust 2FA push failed: {e!s}")
+
+        with _AUTH_LOCK:
+            _PENDING_AUTH["api"] = api
+            _PENDING_AUTH["username"] = username
+            _PENDING_AUTH["password"] = password
+        return redirect(url_for("auth_form"))
+
+    @app.route("/api/sync", methods=["POST"])
+    def api_sync():
+        """Queue an immediate sync run for one or both services.
+
+        ``service=drive`` / ``service=photos`` / ``service=all``. The
+        web thread can't run sync.sync() directly — it would race with
+        the existing loop. Instead this touches a sentinel file in
+        ICLOUD_DOCKER_CONFIG_DIR; ``src.sync`` checks for it at the top
+        of each loop iteration and resets the countdown when present.
+
+        Idempotent: tapping repeatedly while a request is still queued
+        is a no-op (the sentinel just gets re-touched).
+        """
+        service = (
+            (request.form.get("service") or request.args.get("service") or "")
+            .strip()
+            .lower()
+        )
+        if service == "all":
+            wanted = ("drive", "photos")
+        elif service in ("drive", "photos"):
+            wanted = (service,)
+        else:
+            return (
+                jsonify({"error": "service must be one of: drive, photos, all"}),
+                400,
+            )
+
+        # Honour the user's config — only queue services that are
+        # actually configured. Avoids touching a photos sentinel on a
+        # drive-only install.
+        config = _load_current_config()
+        configured = {svc for svc in ("drive", "photos") if config and svc in config}
+        if not configured:
+            return jsonify({"error": "no services configured"}), 400
+
+        queued = []
+        for svc in wanted:
+            if svc in configured and web_signals.request_force_sync(svc):
+                queued.append(svc)
+
+        # Browser form submit gets a redirect; API consumers (curl,
+        # monitors) get JSON. Distinguished by Accept header.
+        if request.headers.get("Accept", "").startswith("application/json"):
+            return jsonify({"queued": queued})
+        return redirect(url_for("dashboard"))
 
     return app
 
@@ -499,7 +697,9 @@ def _render_auth(message: str | None, message_kind: str | None):
     )
 
 
-def start_in_thread(host: str = "0.0.0.0", port: int = 8080) -> threading.Thread:  # noqa: S104
+def start_in_thread(
+    host: str = "0.0.0.0", port: int = 8080
+) -> threading.Thread:  # noqa: S104
     """Launch the Flask app on a daemon thread.
 
     The main sync loop owns the process; the web thread dies when the
@@ -515,7 +715,9 @@ def start_in_thread(host: str = "0.0.0.0", port: int = 8080) -> threading.Thread
             # don't queue behind a user's tab refreshing; without it the
             # default single-threaded server can intermittently return
             # empty bodies when two requests overlap.
-            app.run(host=host, port=port, debug=False, use_reloader=False, threaded=True)
+            app.run(
+                host=host, port=port, debug=False, use_reloader=False, threaded=True
+            )
         except OSError as e:
             LOGGER.error(f"Web UI failed to bind {host}:{port} — {e!s}")
 

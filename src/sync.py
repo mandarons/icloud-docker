@@ -120,9 +120,13 @@ def _extract_sync_intervals(config, log_messages: bool = False):
     photos_sync_interval = 0
 
     if config and "drive" in config:
-        drive_sync_interval = config_parser.get_drive_sync_interval(config=config, log_messages=log_messages)
+        drive_sync_interval = config_parser.get_drive_sync_interval(
+            config=config, log_messages=log_messages
+        )
     if config and "photos" in config:
-        photos_sync_interval = config_parser.get_photos_sync_interval(config=config, log_messages=log_messages)
+        photos_sync_interval = config_parser.get_photos_sync_interval(
+            config=config, log_messages=log_messages
+        )
 
     return drive_sync_interval, photos_sync_interval
 
@@ -164,7 +168,9 @@ def _authenticate_and_get_api(config, username: str):
     """
     server_region = config_parser.get_region(config=config)
     password = _retrieve_password(username)
-    return get_api_instance(username=username, password=password, server_region=server_region)
+    return get_api_instance(
+        username=username, password=password, server_region=server_region
+    )
 
 
 def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval: int):
@@ -289,9 +295,13 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         stats.photos_downloaded = len(new_files)
 
         # Estimate hardlinked photos (approximate)
-        use_hardlinks = config_parser.get_photos_use_hardlinks(config=config, log_messages=False)
+        use_hardlinks = config_parser.get_photos_use_hardlinks(
+            config=config, log_messages=False
+        )
         if use_hardlinks:
-            stats.photos_hardlinked = max(0, len(files_after) - len(files_before) - stats.photos_downloaded)
+            stats.photos_hardlinked = max(
+                0, len(files_after) - len(files_before) - stats.photos_downloaded
+            )
 
         # Count skipped photos
         stats.photos_skipped = len(files_before & files_after)
@@ -356,12 +366,20 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
     # Create anonymized usage data
     usage_data = {
         "sync_duration": (
-            (summary.sync_end_time - summary.sync_start_time).total_seconds() if summary.sync_end_time else 0
+            (summary.sync_end_time - summary.sync_start_time).total_seconds()
+            if summary.sync_end_time
+            else 0
         ),
-        "has_drive_activity": bool(summary.drive_stats and summary.drive_stats.has_activity()),
-        "has_photos_activity": bool(summary.photo_stats and summary.photo_stats.has_activity()),
+        "has_drive_activity": bool(
+            summary.drive_stats and summary.drive_stats.has_activity()
+        ),
+        "has_photos_activity": bool(
+            summary.photo_stats and summary.photo_stats.has_activity()
+        ),
         "has_errors": summary.has_errors(),
-        "timestamp": (summary.sync_end_time.isoformat() if summary.sync_end_time else None),
+        "timestamp": (
+            summary.sync_end_time.isoformat() if summary.sync_end_time else None
+        ),
     }
 
     # Add aggregated statistics (no personal data)
@@ -427,7 +445,9 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
     Returns:
         bool: True if should continue (retry), False if should exit
     """
-    LOGGER.error("Password is not stored in keyring. Please save the password in keyring.")
+    LOGGER.error(
+        "Password is not stored in keyring. Please save the password in keyring."
+    )
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -453,7 +473,9 @@ def _log_retry_time(sleep_for: int):
     Args:
         sleep_for: Sleep duration in seconds
     """
-    next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
+    next_sync = (
+        datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
+    ).strftime("%c")
     LOGGER.info(f"Retrying login at {next_sync} ...")
 
 
@@ -482,15 +504,24 @@ def _calculate_next_sync_schedule(config, sync_state: SyncState):
         sleep_for = sync_state.drive_time_remaining
         sync_state.enable_sync_drive = True
         sync_state.enable_sync_photos = False
-    elif has_drive and has_photos and sync_state.drive_time_remaining <= sync_state.photos_time_remaining:
+    elif (
+        has_drive
+        and has_photos
+        and sync_state.drive_time_remaining <= sync_state.photos_time_remaining
+    ):
         # Special case: if both timers are equal and large (> 10 seconds), wait for the full interval
         # This fixes the bug where equal large intervals cause immediate re-sync
-        if sync_state.drive_time_remaining == sync_state.photos_time_remaining and sync_state.drive_time_remaining > 10:
+        if (
+            sync_state.drive_time_remaining == sync_state.photos_time_remaining
+            and sync_state.drive_time_remaining > 10
+        ):
             sleep_for = sync_state.drive_time_remaining
             sync_state.enable_sync_drive = True
             sync_state.enable_sync_photos = True
         else:
-            sleep_for = sync_state.photos_time_remaining - sync_state.drive_time_remaining
+            sleep_for = (
+                sync_state.photos_time_remaining - sync_state.drive_time_remaining
+            )
             sync_state.photos_time_remaining -= sync_state.drive_time_remaining
             sync_state.enable_sync_drive = True
             sync_state.enable_sync_photos = False
@@ -510,7 +541,9 @@ def _log_next_sync_time(sleep_for: int):
     Args:
         sleep_for: Sleep duration in seconds
     """
-    next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
+    next_sync = (
+        datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
+    ).strftime("%c")
     LOGGER.info(f"Resyncing at {next_sync} ...")
 
 
@@ -570,8 +603,27 @@ def sync():
             _log_sync_intervals_at_startup(config)
             startup_logged = True
 
-        drive_sync_interval, photos_sync_interval = _extract_sync_intervals(config, log_messages=False)
+        drive_sync_interval, photos_sync_interval = _extract_sync_intervals(
+            config, log_messages=False
+        )
         username = config_parser.get_username(config=config) if config else None
+
+        # Web UI "Sync now" requests: ``src.web_signals`` writes a
+        # sentinel file when the user taps the button; we delete it and
+        # zero the countdown so the next pass through the sync calls
+        # runs immediately. Best-effort import so vanilla mandarons
+        # builds without the web-UI module still work.
+        try:
+            from src import web_signals as _ws
+
+            if _ws.consume_force_sync("drive"):
+                LOGGER.info("Force-sync requested for Drive — running immediately")
+                sync_state.drive_time_remaining = 0
+            if _ws.consume_force_sync("photos"):
+                LOGGER.info("Force-sync requested for Photos — running immediately")
+                sync_state.photos_time_remaining = 0
+        except ImportError:
+            pass
 
         if username:
             try:
@@ -582,13 +634,47 @@ def sync():
                     summary = SyncSummary()
 
                     # Perform syncs and collect statistics
-                    drive_stats = _perform_drive_sync(config, api, sync_state, drive_sync_interval)
-                    photos_stats = _perform_photos_sync(config, api, sync_state, photos_sync_interval)
+                    drive_stats = _perform_drive_sync(
+                        config, api, sync_state, drive_sync_interval
+                    )
+                    photos_stats = _perform_photos_sync(
+                        config, api, sync_state, photos_sync_interval
+                    )
 
                     # Populate summary with statistics
                     summary.drive_stats = drive_stats
                     summary.photo_stats = photos_stats
                     summary.sync_end_time = datetime.datetime.now()
+
+                    # Persist per-service last-sync state for the web
+                    # dashboard. Best-effort — if the JSON write fails
+                    # the sync itself is unaffected.
+                    try:
+                        from src import web_signals as _ws
+
+                        if drive_stats is not None:
+                            _ws.record_sync_completion(
+                                service="drive",
+                                files_downloaded=drive_stats.files_downloaded,
+                                files_skipped=drive_stats.files_skipped,
+                                files_removed=drive_stats.files_removed,
+                                errors=len(drive_stats.errors),
+                                duration_seconds=drive_stats.duration_seconds,
+                            )
+                        if photos_stats is not None:
+                            _ws.record_sync_completion(
+                                service="photos",
+                                files_downloaded=photos_stats.photos_downloaded,
+                                files_skipped=photos_stats.photos_skipped,
+                                errors=len(photos_stats.errors),
+                                duration_seconds=photos_stats.duration_seconds,
+                            )
+                    except ImportError:
+                        pass
+                    except Exception as e:
+                        LOGGER.debug(
+                            f"web_signals: record_sync_completion raised: {e!s}"
+                        )
 
                     # Send usage statistics (anonymized summary data)
                     try:
@@ -605,7 +691,9 @@ def sync():
                     should_send_notification = False
                     if has_drive_config and has_photos_config:
                         # Both services configured - send notification only when both have synced
-                        should_send_notification = drive_stats is not None and photos_stats is not None
+                        should_send_notification = (
+                            drive_stats is not None and photos_stats is not None
+                        )
                     elif has_drive_config and not has_photos_config:
                         # Only drive configured - send when drive synced
                         should_send_notification = drive_stats is not None
@@ -617,10 +705,14 @@ def sync():
                         try:
                             notify.send_sync_summary(config=config, summary=summary)
                         except Exception as e:
-                            LOGGER.debug(f"Failed to send sync summary notification: {e!s}")
+                            LOGGER.debug(
+                                f"Failed to send sync summary notification: {e!s}"
+                            )
 
                     if not _check_services_configured(config):
-                        LOGGER.warning("Nothing to sync. Please add drive: and/or photos: section in config.yaml file.")
+                        LOGGER.warning(
+                            "Nothing to sync. Please add drive: and/or photos: section in config.yaml file."
+                        )
                 else:
                     if not _handle_2fa_required(config, username, sync_state):
                         break
@@ -635,7 +727,9 @@ def sync():
         _log_next_sync_time(sleep_for)
 
         if _should_exit_oneshot_mode(config):
-            LOGGER.info("All configured sync intervals are negative, exiting oneshot mode...")
+            LOGGER.info(
+                "All configured sync intervals are negative, exiting oneshot mode..."
+            )
             break
 
         sleep(sleep_for)
