@@ -148,10 +148,16 @@ def get_region(config: dict) -> str:
         Region string ('global' or 'china')
     """
     config_path = ["app", "region"]
-    region = get_config_value_or_default(config=config, config_path=config_path, default="global")
+    region = get_config_value_or_default(
+        config=config, config_path=config_path, default="global"
+    )
 
-    if region == "global" and not traverse_config_path(config=config, config_path=config_path):
-        log_config_not_found_warning(config_path, "not found. Using default value - global ...")
+    if region == "global" and not traverse_config_path(
+        config=config, config_path=config_path
+    ):
+        log_config_not_found_warning(
+            config_path, "not found. Using default value - global ..."
+        )
     elif region not in ["global", "china"]:
         log_config_error(
             config_path,
@@ -167,7 +173,9 @@ def get_region(config: dict) -> str:
 # =============================================================================
 
 
-def get_sync_interval(config: dict, config_path: list[str], service_name: str, log_messages: bool = True) -> int:
+def get_sync_interval(
+    config: dict, config_path: list[str], service_name: str, log_messages: bool = True
+) -> int:
     """Get sync interval for a service (drive or photos).
 
     Extracted common logic for retrieving sync intervals.
@@ -194,7 +202,9 @@ def get_sync_interval(config: dict, config_path: list[str], service_name: str, l
                 f"is not found. Using default sync_interval: {sync_interval} seconds ...",
             )
         else:
-            log_config_found_info(f"Syncing {service_name} every {sync_interval} seconds.")
+            log_config_found_info(
+                f"Syncing {service_name} every {sync_interval} seconds."
+            )
 
     return sync_interval
 
@@ -210,7 +220,12 @@ def get_drive_sync_interval(config: dict, log_messages: bool = True) -> int:
         Drive sync interval in seconds
     """
     config_path = ["drive", "sync_interval"]
-    return get_sync_interval(config=config, config_path=config_path, service_name="drive", log_messages=log_messages)
+    return get_sync_interval(
+        config=config,
+        config_path=config_path,
+        service_name="drive",
+        log_messages=log_messages,
+    )
 
 
 def get_drive_request_timeout(config: dict) -> int:
@@ -241,7 +256,12 @@ def get_photos_sync_interval(config: dict, log_messages: bool = True) -> int:
         Photos sync interval in seconds
     """
     config_path = ["photos", "sync_interval"]
-    return get_sync_interval(config=config, config_path=config_path, service_name="photos", log_messages=log_messages)
+    return get_sync_interval(
+        config=config,
+        config_path=config_path,
+        service_name="photos",
+        log_messages=log_messages,
+    )
 
 
 # =============================================================================
@@ -271,9 +291,13 @@ def parse_max_threads_value(max_threads_config: Any, default_max_threads: int) -
     # Handle "auto" value
     if isinstance(max_threads_config, str) and max_threads_config.lower() == "auto":
         max_threads = default_max_threads
-        log_config_found_info(f"Using automatic thread count: {max_threads} threads (based on CPU cores).")
+        log_config_found_info(
+            f"Using automatic thread count: {max_threads} threads (based on CPU cores)."
+        )
     elif isinstance(max_threads_config, int) and max_threads_config >= 1:
-        max_threads = min(max_threads_config, 16)  # Cap at 16 to avoid overwhelming servers
+        max_threads = min(
+            max_threads_config, 16
+        )  # Cap at 16 to avoid overwhelming servers
         log_config_found_info(f"Using configured max_threads: {max_threads}.")
     else:
         log_invalid_config_value(
@@ -433,7 +457,9 @@ def get_drive_remove_obsolete(config: dict) -> bool:
         True if obsolete files should be removed, False otherwise
     """
     config_path = ["drive", "remove_obsolete"]
-    drive_remove_obsolete = get_config_value_or_default(config=config, config_path=config_path, default=False)
+    drive_remove_obsolete = get_config_value_or_default(
+        config=config, config_path=config_path, default=False
+    )
 
     if not drive_remove_obsolete:
         _log_config_warning_once(
@@ -441,7 +467,9 @@ def get_drive_remove_obsolete(config: dict) -> bool:
             "remove_obsolete is not found. Not removing the obsolete files and folders.",
         )
     else:
-        log_config_debug(f"{'R' if drive_remove_obsolete else 'Not R'}emoving obsolete files and folders ...")
+        log_config_debug(
+            f"{'R' if drive_remove_obsolete else 'Not R'}emoving obsolete files and folders ..."
+        )
 
     return drive_remove_obsolete
 
@@ -449,6 +477,38 @@ def get_drive_remove_obsolete(config: dict) -> bool:
 # =============================================================================
 # Photos Configuration Functions
 # =============================================================================
+
+
+def get_photos_enumeration_chunk_size(config: dict | None) -> int:
+    """Tasks to buffer before draining via execute_parallel_downloads.
+
+    Smaller = lower peak memory, more per-chunk HTTP setup overhead.
+    Larger = higher peak memory, fewer chunks. Default 1000 keeps
+    resident set at ~10 MB on typical libraries while still amortising
+    connection setup. Tested empirically on a 111K-photo library:
+    1000 sustained < 1 GB resident through the full enumeration.
+
+    Args:
+        config: Configuration dictionary (None falls back to default).
+
+    Returns:
+        Positive integer chunk size, defaulting to 1000.
+    """
+    # Local import to avoid a circular import: album_sync_orchestrator
+    # imports config_parser, and the module-level DEFAULT constant
+    # already lives in album_sync_orchestrator.
+    from src.album_sync_orchestrator import DEFAULT_ENUMERATION_CHUNK_SIZE
+
+    raw = get_config_value_or_default(
+        config=config or {},
+        config_path=["photos", "enumeration_chunk_size"],
+        default=DEFAULT_ENUMERATION_CHUNK_SIZE,
+    )
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_ENUMERATION_CHUNK_SIZE
+    return value if value > 0 else DEFAULT_ENUMERATION_CHUNK_SIZE
 
 
 def get_photos_destination_path(config: dict) -> str:
@@ -501,7 +561,9 @@ def get_photos_all_albums(config: dict) -> bool:
         True if all albums should be synced, False otherwise
     """
     config_path = ["photos", "all_albums"]
-    download_all = get_config_value_or_default(config=config, config_path=config_path, default=False)
+    download_all = get_config_value_or_default(
+        config=config, config_path=config_path, default=False
+    )
 
     if download_all:
         log_config_found_info("Syncing all albums.")
@@ -520,7 +582,9 @@ def get_photos_use_hardlinks(config: dict, log_messages: bool = True) -> bool:
         True if hard links should be used, False otherwise
     """
     config_path = ["photos", "use_hardlinks"]
-    use_hardlinks = get_config_value_or_default(config=config, config_path=config_path, default=False)
+    use_hardlinks = get_config_value_or_default(
+        config=config, config_path=config_path, default=False
+    )
 
     if use_hardlinks and log_messages:
         log_config_found_info("Using hard links for duplicate photos.")
@@ -538,7 +602,9 @@ def get_photos_remove_obsolete(config: dict) -> bool:
         True if obsolete files should be removed, False otherwise
     """
     config_path = ["photos", "remove_obsolete"]
-    photos_remove_obsolete = get_config_value_or_default(config=config, config_path=config_path, default=False)
+    photos_remove_obsolete = get_config_value_or_default(
+        config=config, config_path=config_path, default=False
+    )
 
     if not photos_remove_obsolete:
         _log_config_warning_once(
@@ -546,7 +612,9 @@ def get_photos_remove_obsolete(config: dict) -> bool:
             "remove_obsolete is not found. Not removing the obsolete files and folders.",
         )
     else:
-        log_config_debug(f"{'R' if photos_remove_obsolete else 'Not R'}emoving obsolete files and folders ...")
+        log_config_debug(
+            f"{'R' if photos_remove_obsolete else 'Not R'}emoving obsolete files and folders ..."
+        )
 
     return photos_remove_obsolete
 
@@ -599,7 +667,9 @@ def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     return validated_sizes if validated_sizes else ["original"]
 
 
-def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
+def get_photos_libraries_filter(
+    config: dict, base_config_path: list[str]
+) -> list[str] | None:
     """Get libraries filter from photos config.
 
     Args:
@@ -613,13 +683,17 @@ def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> li
     libraries = get_config_value_or_none(config=config, config_path=config_path)
 
     if not libraries or len(libraries) == 0:
-        log_config_not_found_warning(config_path, "not found. Downloading all libraries ...")
+        log_config_not_found_warning(
+            config_path, "not found. Downloading all libraries ..."
+        )
         return None
 
     return libraries
 
 
-def get_photos_albums_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
+def get_photos_albums_filter(
+    config: dict, base_config_path: list[str]
+) -> list[str] | None:
     """Get albums filter from photos config.
 
     Args:
@@ -633,13 +707,17 @@ def get_photos_albums_filter(config: dict, base_config_path: list[str]) -> list[
     albums = get_config_value_or_none(config=config, config_path=config_path)
 
     if not albums or len(albums) == 0:
-        log_config_not_found_warning(config_path, "not found. Downloading all albums ...")
+        log_config_not_found_warning(
+            config_path, "not found. Downloading all albums ..."
+        )
         return None
 
     return albums
 
 
-def get_photos_file_sizes_filter(config: dict, base_config_path: list[str]) -> list[str]:
+def get_photos_file_sizes_filter(
+    config: dict, base_config_path: list[str]
+) -> list[str]:
     """Get file sizes filter from photos config.
 
     Args:
@@ -652,14 +730,18 @@ def get_photos_file_sizes_filter(config: dict, base_config_path: list[str]) -> l
     config_path = base_config_path + ["file_sizes"]
 
     if not traverse_config_path(config=config, config_path=config_path):
-        log_config_not_found_warning(config_path, "not found. Downloading original size photos ...")
+        log_config_not_found_warning(
+            config_path, "not found. Downloading original size photos ..."
+        )
         return ["original"]
 
     file_sizes = get_config_value(config=config, config_path=config_path)
     return validate_file_sizes(file_sizes)
 
 
-def get_photos_extensions_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
+def get_photos_extensions_filter(
+    config: dict, base_config_path: list[str]
+) -> list[str] | None:
     """Get extensions filter from photos config.
 
     Args:
@@ -673,7 +755,9 @@ def get_photos_extensions_filter(config: dict, base_config_path: list[str]) -> l
     extensions = get_config_value_or_none(config=config, config_path=config_path)
 
     if not extensions or len(extensions) == 0:
-        log_config_not_found_warning(config_path, "not found. Downloading all extensions ...")
+        log_config_not_found_warning(
+            config_path, "not found. Downloading all extensions ..."
+        )
         return None
 
     return extensions
@@ -708,8 +792,12 @@ def get_photos_filters(config: dict) -> dict[str, Any]:
     # Parse individual filter components
     photos_filters["libraries"] = get_photos_libraries_filter(config, base_config_path)
     photos_filters["albums"] = get_photos_albums_filter(config, base_config_path)
-    photos_filters["file_sizes"] = get_photos_file_sizes_filter(config, base_config_path)
-    photos_filters["extensions"] = get_photos_extensions_filter(config, base_config_path)
+    photos_filters["file_sizes"] = get_photos_file_sizes_filter(
+        config, base_config_path
+    )
+    photos_filters["extensions"] = get_photos_extensions_filter(
+        config, base_config_path
+    )
 
     return photos_filters
 
@@ -719,7 +807,9 @@ def get_photos_filters(config: dict) -> dict[str, Any]:
 # =============================================================================
 
 
-def get_smtp_config_value(config: dict, key: str, warn_if_missing: bool = True) -> str | None:
+def get_smtp_config_value(
+    config: dict, key: str, warn_if_missing: bool = True
+) -> str | None:
     """Get SMTP configuration value with optional warning.
 
     Common helper for SMTP config retrieval to reduce duplication.
@@ -924,6 +1014,7 @@ def get_pushover_api_token(config: dict) -> str | None:
         Pushover API token if configured, None otherwise
     """
     return get_notification_config_value(config, "pushover", "api_token")
+
 
 def get_pushover_notification_priority(config: dict) -> int | None:
     """Return Pushover notification priority from config.
