@@ -20,8 +20,15 @@ ENV_ICLOUD_PASSWORD_KEY = "ENV_ICLOUD_PASSWORD"
 ENV_CONFIG_FILE_PATH_KEY = "ENV_CONFIG_FILE_PATH"
 DEFAULT_LOGGER_LEVEL = "info"
 DEFAULT_LOG_FILE_NAME = "icloud.log"
-DEFAULT_CONFIG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME)
-DEFAULT_COOKIE_DIRECTORY = "/config/session_data"
+DEFAULT_CONFIG_FILE_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME
+)
+# Operator-overridable via ICLOUD_DOCKER_CONFIG_DIR. Default ``/config`` is
+# the in-container mount point users bind their config volume to. Setting
+# this env var lets the test suite run on macOS / non-container hosts
+# where ``/config`` isn't writable.
+_CONFIG_DIR = os.environ.get("ICLOUD_DOCKER_CONFIG_DIR", "/config")
+DEFAULT_COOKIE_DIRECTORY = os.path.join(_CONFIG_DIR, "session_data")
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -34,7 +41,9 @@ def read_config(config_path=DEFAULT_CONFIG_FILE_PATH):
     with open(file=config_path, encoding="utf-8") as config_file:
         config = YAML().load(config_file)
     config["app"]["credentials"]["username"] = (
-        config["app"]["credentials"]["username"].strip() if config["app"]["credentials"]["username"] is not None else ""
+        config["app"]["credentials"]["username"].strip()
+        if config["app"]["credentials"]["username"] is not None
+        else ""
     )
     return config
 
@@ -46,10 +55,14 @@ def get_logger_config(config):
         return None
     config_app_logger = config["app"]["logger"]
     logger_config["level"] = (
-        config_app_logger["level"].strip().lower() if "level" in config_app_logger else DEFAULT_LOGGER_LEVEL
+        config_app_logger["level"].strip().lower()
+        if "level" in config_app_logger
+        else DEFAULT_LOGGER_LEVEL
     )
     logger_config["filename"] = (
-        config_app_logger["filename"].strip().lower() if "filename" in config_app_logger else DEFAULT_LOG_FILE_NAME
+        config_app_logger["filename"].strip().lower()
+        if "filename" in config_app_logger
+        else DEFAULT_LOG_FILE_NAME
     )
     return logger_config
 
@@ -98,7 +111,13 @@ class ColorfulConsoleFormatter(logging.Formatter):
 
 def configure_icloudpy_logging():
     """Configure icloudpy logging to match app logging level."""
-    logger_config = get_logger_config(config=read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)))
+    logger_config = get_logger_config(
+        config=read_config(
+            config_path=os.environ.get(
+                ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH
+            )
+        )
+    )
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
 
@@ -120,7 +139,13 @@ def configure_icloudpy_logging():
 def get_logger():
     """Return logger."""
     logger = logging.getLogger()
-    logger_config = get_logger_config(config=read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)))
+    logger_config = get_logger_config(
+        config=read_config(
+            config_path=os.environ.get(
+                ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH
+            )
+        )
+    )
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
         logger.setLevel(level=level_name)
@@ -142,7 +167,9 @@ def get_logger():
             )
             logger.addHandler(file_handler)
 
-        if not log_handler_exists(logger=logger, handler_type=logging.StreamHandler, stream=sys.stdout):
+        if not log_handler_exists(
+            logger=logger, handler_type=logging.StreamHandler, stream=sys.stdout
+        ):
             console_handler = logging.StreamHandler(sys.stdout)
             console_handler.setFormatter(
                 ColorfulConsoleFormatter(
