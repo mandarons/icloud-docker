@@ -33,7 +33,14 @@ def process_package(local_file: str) -> str | None:
         local_file: Path to the downloaded package file
 
     Returns:
-        Path to the processed file/directory, or False if processing failed
+        Path to the processed file/directory. The local file path is also
+        returned when the mime type is not a recognised archive (the
+        bytes are preserved on disk as a single-file bundle — Apple's
+        iWork formats ``.key``/``.pages``/``.numbers``, JMG ``.jmb``,
+        etc. report as ``application/octet-stream`` and don't need
+        unpacking to be usable by their target application). Returns
+        ``None`` only on hard processing errors that leave the file in
+        an unusable state.
     """
     archive_file = local_file
     magic_object = magic.Magic(mime=True)
@@ -44,10 +51,17 @@ def process_package(local_file: str) -> str | None:
     elif file_mime_type == "application/gzip":
         return _process_gzip_package(local_file, archive_file)
     else:
-        LOGGER.error(
-            f"Unhandled file type - cannot unpack the package {file_mime_type}.",
+        # NOT an error — many iCloud Drive "package" downloads are flat
+        # binary bundles (Apple iWork .key/.pages/.numbers,
+        # third-party .jmb, etc) that report as application/octet-stream
+        # but don't need to be unpacked to be usable by their target
+        # application. The bytes are already on disk at ``local_file``;
+        # treat that as the canonical local representation.
+        LOGGER.info(
+            f"Package format not recognised for unpacking ({file_mime_type}); "
+            f"keeping as single-file bundle: {local_file}",
         )
-        return None
+        return local_file
 
 
 def _process_zip_package(local_file: str, archive_file: str) -> str:
