@@ -82,31 +82,37 @@ def process_package(local_file: str, flatten: bool = False) -> str | None:
 
 
 def _zip_entries_self_prefixed(zf: zipfile.ZipFile, bundle_basename: str) -> bool:
-    """Heuristic: True when every non-empty entry in the zip is rooted at
-    ``<bundle_basename>/``.
+    """Heuristic: True when every non-empty entry in the zip is rooted
+    at ``<bundle_basename>/`` (with or without a leading ``../``).
 
-    Distinguishes the two zip layouts we see from iCloud Drive in the
-    wild:
+    Distinguishes three zip layouts we see from iCloud Drive in the wild:
 
     1. **Self-prefixed** — e.g. a GarageBand ``Project.band`` whose zip
        contains entries like ``Project.band/Alternatives/000/...``.
        Extracting into the parent directory reconstructs the bundle
        correctly.
 
-    2. **Bare-rooted** — e.g. a Numbers ``Untitled.numbers`` whose zip
+    2. **Self-prefixed with traversal** — gzip-wrapped bundles whose
+       inner ZIP has entries like ``../<basename>/...``. The ``..``
+       resolves to the parent of the extract target, so the end-state
+       is identical to case 1 when we extract into the parent dir.
+
+    3. **Bare-rooted** — e.g. a Numbers ``Untitled.numbers`` whose zip
        contains generic entries like ``Data/Document.iwa``,
        ``Metadata/buildVersion.plist`` etc. Two iWork files in the
        same folder will both extract ``Data/...`` into the parent dir,
        clobbering each other and raising ``FileExistsError``.
 
-    For case 2 we need to extract into a bundle-named subdirectory of
-    its own so siblings don't collide.
+    For case 3 we need to extract into a bundle-named subdirectory of
+    its own so siblings don't collide. Cases 1 and 2 keep the legacy
+    "extract into parent" behaviour.
     """
     names = [n for n in zf.namelist() if n and n != bundle_basename + "/"]
     if not names:
         return False
     prefix = bundle_basename + "/"
-    return all(n.startswith(prefix) for n in names)
+    traversal_prefix = "../" + prefix
+    return all(n.startswith(prefix) or n.startswith(traversal_prefix) for n in names)
 
 
 def _process_zip_package(local_file: str, archive_file: str) -> str:
