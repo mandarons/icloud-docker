@@ -22,7 +22,7 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
-def process_package(local_file: str) -> str | None:
+def process_package(local_file: str, flatten: bool = False) -> str | None:
     """Process and extract a downloaded package file.
 
     This function handles different archive types (ZIP, gzip) and extracts them
@@ -31,6 +31,12 @@ def process_package(local_file: str) -> str | None:
 
     Args:
         local_file: Path to the downloaded package file
+        flatten: When True, skip unpacking entirely and keep the package
+            on disk as a single binary file (the gzip / zip bytes). Useful
+            for backup-style deployments (NAS / cold storage) where bundle-
+            directory semantics aren't needed and single-file storage is
+            preferred for simpler dedup, restoration, and inode footprint.
+            Opt-in via ``drive.flatten_packages: true`` in config.yaml.
 
     Returns:
         Path to the processed file/directory. The local file path is also
@@ -45,6 +51,17 @@ def process_package(local_file: str) -> str | None:
     archive_file = local_file
     magic_object = magic.Magic(mime=True)
     file_mime_type = magic_object.from_file(filename=local_file)
+
+    if flatten:
+        # The downloaded bytes are already at local_file; nothing to do.
+        # The dedup story for the next-sync cycle relies on the file_exists
+        # comparator either matching size+mtime (zip case) or the operator
+        # accepting a re-download (octet-stream case — see PR 11 follow-up).
+        LOGGER.info(
+            f"flatten_packages enabled — keeping {local_file} as single-file bundle"
+            f" ({file_mime_type}); skipping unpack."
+        )
+        return local_file
 
     if file_mime_type == "application/zip":
         return _process_zip_package(local_file, archive_file)
@@ -64,6 +81,34 @@ def process_package(local_file: str) -> str | None:
         return local_file
 
 
+def _zip_entries_self_prefixed(zf: zipfile.ZipFile, bundle_basename: str) -> bool:
+    """Heuristic: True when every non-empty entry in the zip is rooted at
+    ``<bundle_basename>/``.
+
+    Distinguishes the two zip layouts we see from iCloud Drive in the
+    wild:
+
+    1. **Self-prefixed** — e.g. a GarageBand ``Project.band`` whose zip
+       contains entries like ``Project.band/Alternatives/000/...``.
+       Extracting into the parent directory reconstructs the bundle
+       correctly.
+
+    2. **Bare-rooted** — e.g. a Numbers ``Untitled.numbers`` whose zip
+       contains generic entries like ``Data/Document.iwa``,
+       ``Metadata/buildVersion.plist`` etc. Two iWork files in the
+       same folder will both extract ``Data/...`` into the parent dir,
+       clobbering each other and raising ``FileExistsError``.
+
+    For case 2 we need to extract into a bundle-named subdirectory of
+    its own so siblings don't collide.
+    """
+    names = [n for n in zf.namelist() if n and n != bundle_basename + "/"]
+    if not names:
+        return False
+    prefix = bundle_basename + "/"
+    return all(n.startswith(prefix) for n in names)
+
+
 def _process_zip_package(local_file: str, archive_file: str) -> str:
     """Process a ZIP package file.
 
@@ -76,12 +121,26 @@ def _process_zip_package(local_file: str, archive_file: str) -> str:
     """
     archive_file += ".zip"
     os.rename(local_file, archive_file)
-    LOGGER.info(f"Unpacking {archive_file} to {os.path.dirname(archive_file)}")
-    zipfile.ZipFile(archive_file).extractall(path=os.path.dirname(archive_file))
+    parent_dir = os.path.dirname(archive_file)
+    bundle_basename = os.path.basename(local_file)
+
+    with zipfile.ZipFile(archive_file) as zf:
+        if _zip_entries_self_prefixed(zf, bundle_basename):
+            # Entries are already namespaced under the bundle name; the
+            # parent dir is the right place to extract them.
+            extract_dir = parent_dir
+        else:
+            # Entries are bare paths (Data/Document.iwa, etc). Extract
+            # into the bundle directory itself so siblings in the same
+            # parent folder don't collide on shared internal names.
+            extract_dir = local_file
+            os.makedirs(extract_dir, exist_ok=True)
+        LOGGER.info(f"Unpacking {archive_file} to {extract_dir}")
+        zf.extractall(path=extract_dir)
 
     # Handle Unicode normalization for cross-platform compatibility
     normalized_path = unicodedata.normalize("NFD", local_file)
-    if normalized_path != local_file:
+    if normalized_path != local_file and os.path.exists(local_file):
         os.rename(local_file, normalized_path)
         local_file = normalized_path
 

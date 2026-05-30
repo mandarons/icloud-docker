@@ -19,7 +19,9 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
-def download_file(item: Any, local_file: str) -> str | None:
+def download_file(
+    item: Any, local_file: str, flatten_packages: bool = False
+) -> str | None:
     """Download a file from iCloud to local filesystem.
 
     This function handles the actual download of files from iCloud, including
@@ -28,6 +30,12 @@ def download_file(item: Any, local_file: str) -> str | None:
     Args:
         item: iCloud file item to download
         local_file: Local path to save the file
+        flatten_packages: When True, package downloads (``/packageDownload?``
+            URLs) skip the unpack step entirely and stay on disk as a
+            single binary file. Useful for backup-style deployments where
+            bundle-directory semantics aren't needed and single-file
+            storage simplifies dedup / restoration. Opt-in via
+            ``drive.flatten_packages: true`` in config.yaml.
 
     Returns:
         Path to the downloaded/processed file, or None if download failed
@@ -53,7 +61,9 @@ def download_file(item: Any, local_file: str) -> str | None:
             # but no longer treat "couldn't unpack" as failure when the
             # downloaded bytes are intact.
             if response.url and "/packageDownload?" in response.url:
-                processed_file = process_package(local_file=local_file)
+                processed_file = process_package(
+                    local_file=local_file, flatten=flatten_packages
+                )
                 if processed_file is None:
                     return None
                 local_file = processed_file
