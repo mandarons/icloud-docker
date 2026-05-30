@@ -30,7 +30,8 @@ class TestLivePhotoPairDownload(unittest.TestCase):
         # Patch is_photo_wanted to always pass; we're testing task collection,
         # not the wantedness filter.
         self._wanted_patcher = patch(
-            "src.album_sync_orchestrator.is_photo_wanted", return_value=True
+            "src.album_sync_orchestrator.is_photo_wanted",
+            return_value=True,
         )
         self._wanted_patcher.start()
 
@@ -83,7 +84,8 @@ class TestLivePhotoPairDownload(unittest.TestCase):
 
     @patch("src.album_sync_orchestrator.collect_download_task")
     def test_live_photo_without_original_request_does_not_append_mov(
-        self, fake_collect
+        self,
+        fake_collect,
     ):
         """If the user asked only for medium/thumb (not original), the .mov is not appended.
 
@@ -100,7 +102,7 @@ class TestLivePhotoPairDownload(unittest.TestCase):
         )
         fake_collect.side_effect = lambda *a, **kw: MagicMock(name=f"task-{a[1]}")
 
-        tasks = _collect_photo_download_tasks(
+        _collect_photo_download_tasks(
             photo,
             destination_path="/tmp/dest",
             file_sizes=["medium", "thumb"],
@@ -121,7 +123,7 @@ class TestLivePhotoPairDownload(unittest.TestCase):
         photo.filename = "IMG_x.HEIC"
         photo.id = "x"
         type(photo).versions = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("CloudKit broken"))
+            lambda self: (_ for _ in ()).throw(RuntimeError("CloudKit broken")),
         )
         fake_collect.side_effect = lambda *a, **kw: MagicMock(name="task")
 
@@ -141,7 +143,8 @@ class TestLivePhotoPairDownload(unittest.TestCase):
 
     @patch("src.album_sync_orchestrator.collect_download_task")
     def test_live_video_original_with_none_collect_result_is_skipped(
-        self, fake_collect
+        self,
+        fake_collect,
     ):
         """If collect_download_task returns None for the .mov, it's not appended."""
         photo = _fake_photo(
