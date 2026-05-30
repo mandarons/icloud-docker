@@ -121,11 +121,13 @@ def _extract_sync_intervals(config, log_messages: bool = False):
 
     if config and "drive" in config:
         drive_sync_interval = config_parser.get_drive_sync_interval(
-            config=config, log_messages=log_messages,
+            config=config,
+            log_messages=log_messages,
         )
     if config and "photos" in config:
         photos_sync_interval = config_parser.get_photos_sync_interval(
-            config=config, log_messages=log_messages,
+            config=config,
+            log_messages=log_messages,
         )
 
     return drive_sync_interval, photos_sync_interval
@@ -169,7 +171,9 @@ def _authenticate_and_get_api(config, username: str):
     server_region = config_parser.get_region(config=config)
     password = _retrieve_password(username)
     return get_api_instance(
-        username=username, password=password, server_region=server_region,
+        username=username,
+        password=password,
+        server_region=server_region,
     )
 
 
@@ -296,11 +300,13 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
 
         # Estimate hardlinked photos (approximate)
         use_hardlinks = config_parser.get_photos_use_hardlinks(
-            config=config, log_messages=False,
+            config=config,
+            log_messages=False,
         )
         if use_hardlinks:
             stats.photos_hardlinked = max(
-                0, len(files_after) - len(files_before) - stats.photos_downloaded,
+                0,
+                len(files_after) - len(files_before) - stats.photos_downloaded,
             )
 
         # Count skipped photos
@@ -604,7 +610,8 @@ def sync():
             startup_logged = True
 
         drive_sync_interval, photos_sync_interval = _extract_sync_intervals(
-            config, log_messages=False,
+            config,
+            log_messages=False,
         )
         username = config_parser.get_username(config=config) if config else None
 
@@ -622,7 +629,9 @@ def sync():
             if _ws.consume_force_sync("photos"):
                 LOGGER.info("Force-sync requested for Photos — running immediately")
                 sync_state.photos_time_remaining = 0
-        except ImportError:
+        except (
+            ImportError
+        ):  # pragma: no cover — best-effort fallback for builds without web_signals
             pass
 
         if username:
@@ -635,10 +644,16 @@ def sync():
 
                     # Perform syncs and collect statistics
                     drive_stats = _perform_drive_sync(
-                        config, api, sync_state, drive_sync_interval,
+                        config,
+                        api,
+                        sync_state,
+                        drive_sync_interval,
                     )
                     photos_stats = _perform_photos_sync(
-                        config, api, sync_state, photos_sync_interval,
+                        config,
+                        api,
+                        sync_state,
+                        photos_sync_interval,
                     )
 
                     # Populate summary with statistics
@@ -669,7 +684,9 @@ def sync():
                                 errors=len(photos_stats.errors),
                                 duration_seconds=photos_stats.duration_seconds,
                             )
-                    except ImportError:
+                    except (
+                        ImportError
+                    ):  # pragma: no cover — best-effort fallback for builds without web_signals
                         pass
                     except Exception as e:
                         LOGGER.debug(

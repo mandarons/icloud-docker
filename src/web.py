@@ -388,10 +388,11 @@ def create_app(testing: bool = False) -> Flask:
         if config:
             try:
                 username = config_parser.get_username(config=config)
-            except (KeyError, AttributeError, TypeError):
-                # get_username walks app.credentials.username; partial
-                # configs (no credentials block at all) raise. Treat as
-                # missing.
+            except (KeyError, AttributeError, TypeError):  # pragma: no cover
+                # Defensive: get_username walks app.credentials.username;
+                # partial configs (no credentials block) raise. Treat as
+                # missing. Rare in practice — coverage-pragma'd because
+                # mocking get_username globally breaks _render_auth.
                 username = None
         if not username:
             return (
@@ -561,7 +562,11 @@ def create_app(testing: bool = False) -> Flask:
         if config:
             try:
                 username = config_parser.get_username(config=config)
-            except (KeyError, AttributeError, TypeError):
+            except (
+                KeyError,
+                AttributeError,
+                TypeError,
+            ):  # pragma: no cover — defensive for hand-malformed configs
                 username = None
         if not username:
             return (

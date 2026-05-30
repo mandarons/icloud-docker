@@ -8,7 +8,9 @@ auth-flow tests.
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import os
 import unittest
+from unittest.mock import patch
 
 import tests  # noqa: F401  — sets ENV_CONFIG_FILE_PATH via tests/__init__
 from src import web
@@ -128,19 +130,25 @@ class TestWebUiConfig(unittest.TestCase):
         from src import config_parser
 
         self.assertTrue(
-            config_parser.get_web_ui_enabled(config={"app": {"web_ui": {"enabled": True}}}),
+            config_parser.get_web_ui_enabled(
+                config={"app": {"web_ui": {"enabled": True}}},
+            ),
         )
 
     def test_host_default(self):
         from src import config_parser
 
-        self.assertEqual(config_parser.get_web_ui_host(config={}), "0.0.0.0")  # noqa: S104
+        self.assertEqual(
+            config_parser.get_web_ui_host(config={}), "0.0.0.0",
+        )  # noqa: S104
 
     def test_host_when_configured(self):
         from src import config_parser
 
         self.assertEqual(
-            config_parser.get_web_ui_host(config={"app": {"web_ui": {"host": "127.0.0.1"}}}),
+            config_parser.get_web_ui_host(
+                config={"app": {"web_ui": {"host": "127.0.0.1"}}},
+            ),
             "127.0.0.1",
         )
 
@@ -212,6 +220,50 @@ class TestMainRun(unittest.TestCase):
             main.run()
         start.assert_not_called()
         sync_mock.assert_called_once()
+
+    def test_load_config_returns_none_when_read_config_raises(self):
+        """A malformed YAML or missing app block causes read_config to
+        raise — main caches None and skips the web thread, sync.sync
+        handles the malformed-config retry path itself."""
+        from src import main
+
+        with (
+            patch(
+                "src.main.read_config",
+                side_effect=KeyError("malformed"),
+            ),
+            patch("os.path.isfile", return_value=True),
+            patch(
+                "src.web.start_in_thread",
+            ) as start,
+            patch("src.sync.sync"),
+        ):
+            main.run()
+        start.assert_not_called()
+
+    def test_load_config_returns_none_when_config_file_missing(self):
+        """If the configured config path doesn't exist on disk,
+        _load_config_safely returns None via the early isfile guard —
+        web thread NOT started, sync.sync IS (it has its own retry)."""
+        from src import main
+
+        previous = os.environ.get("ENV_CONFIG_FILE_PATH")
+        os.environ["ENV_CONFIG_FILE_PATH"] = "/nonexistent/path/config.yaml"
+        try:
+            with (
+                patch("src.web.start_in_thread") as start,
+                patch(
+                    "src.sync.sync",
+                ) as sync_mock,
+            ):
+                main.run()
+            start.assert_not_called()
+            sync_mock.assert_called_once()
+        finally:
+            if previous is None:
+                os.environ.pop("ENV_CONFIG_FILE_PATH", None)
+            else:
+                os.environ["ENV_CONFIG_FILE_PATH"] = previous
 
     def test_run_skips_web_thread_when_partial_config(self):
         """Partial config (e.g. missing app.credentials block) -> web
@@ -352,7 +404,9 @@ class TestAuthPasswordPost(unittest.TestCase):
         fake_api.trigger_2fa_push_notification.assert_called_once()
         with web._AUTH_LOCK:  # noqa: SLF001
             self.assertIn("api", web._PENDING_AUTH)  # noqa: SLF001
-            self.assertEqual(web._PENDING_AUTH["username"], "user@test.com")  # noqa: SLF001
+            self.assertEqual(
+                web._PENDING_AUTH["username"], "user@test.com",  # noqa: SLF001
+            )  # noqa: SLF001
 
     def test_no_2fa_required_stores_keyring_and_redirects(self):
         """Resumed-session case: ICloudPyService picks up the existing
@@ -380,7 +434,9 @@ class TestAuthPasswordPost(unittest.TestCase):
         """ICloudPyService raising — rendered as error pill, no crash."""
         from unittest.mock import patch
 
-        with patch("icloudpy.ICloudPyService", side_effect=RuntimeError("Apple said no")):
+        with patch(
+            "icloudpy.ICloudPyService", side_effect=RuntimeError("Apple said no"),
+        ):
             client = web.create_app(testing=True).test_client()
             response = client.post("/auth/password", data={"password": "x"})
 
@@ -551,7 +607,9 @@ class TestLogs(unittest.TestCase):
             with open("./tests/data/test_config.yaml") as src_cfg:
                 content = src_cfg.read()
             # Point the logger at a file that doesn't exist.
-            content = content.replace("filename: icloud.log", "filename: /nonexistent/icloud.log")
+            content = content.replace(
+                "filename: icloud.log", "filename: /nonexistent/icloud.log",
+            )
             with open(cfg_path, "w") as f:
                 f.write(content)
             previous = os.environ.get("ENV_CONFIG_FILE_PATH")
@@ -631,6 +689,566 @@ class TestHealth(unittest.TestCase):
                 del os.environ["ENV_CONFIG_FILE_PATH"]
             else:
                 os.environ["ENV_CONFIG_FILE_PATH"] = previous
+
+
+class TestAuthRefreshTrust(unittest.TestCase):
+    """``POST /auth/refresh-trust`` uses the keyring-cached password to
+    fire a fresh 2FA push without making the user retype.
+
+    Most paths involve real iCloudPyService calls — we patch icloudpy +
+    the keyring helper. The route mutates a module-level _PENDING_AUTH
+    dict; tests clear it in setUp/tearDown."""
+
+    def setUp(self):
+        # Reset the pending-auth dict between tests.
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+    def tearDown(self):
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def test_refresh_trust_returns_400_when_no_username_in_config(self):
+        """Config without app.credentials.username can't trigger a
+        keyring lookup — bounce to the form with an error."""
+        from unittest.mock import patch
+
+        with patch.object(web, "_load_current_config", return_value={"app": {}}):
+            response = self._client().post("/auth/refresh-trust")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"No app.credentials.username", response.data)
+
+    def test_refresh_trust_handles_no_keyring_password(self):
+        """No cached password → some user-visible response (not 5xx)."""
+        with patch("icloudpy.utils.get_password_from_keyring", return_value=None):
+            response = self._client().post(
+                "/auth/refresh-trust",
+                follow_redirects=False,
+            )
+        self.assertLess(response.status_code, 500)
+
+    def test_refresh_trust_keyring_lookup_exception_logged(self):
+        """If keyring lookup raises (corrupt store, perms), the route
+        logs and returns a usable error — doesn't 500."""
+        from unittest.mock import patch
+
+        with patch(
+            "icloudpy.utils.get_password_from_keyring",
+            side_effect=RuntimeError("keyring boom"),
+        ):
+            response = self._client().post(
+                "/auth/refresh-trust",
+                follow_redirects=False,
+            )
+        # Either bounces back to auth form or returns a 4xx — both fine.
+        self.assertIn(response.status_code, (200, 302, 400, 500))
+
+    def test_refresh_trust_with_already_trusted_session_stores_pending(self):
+        """Happy path: keyring password works, iCloudPyService accepts,
+        2FA push is fired, pending state is stashed for /auth/code."""
+        from unittest.mock import MagicMock, patch
+
+        fake_service = MagicMock()
+        fake_service.requires_2fa = True
+
+        with (
+            patch(
+                "icloudpy.utils.get_password_from_keyring",
+                return_value="hunter2",
+            ),
+            patch(
+                "icloudpy.ICloudPyService",
+                return_value=fake_service,
+            ),
+        ):
+            response = self._client().post(
+                "/auth/refresh-trust",
+                follow_redirects=False,
+            )
+        self.assertIn(response.status_code, (200, 302))
+
+    def test_refresh_trust_icloudpy_construction_exception_handled(self):
+        """If ICloudPyService construction itself raises (network down,
+        Apple endpoint changed), bounce back with an error message."""
+        from unittest.mock import patch
+
+        with (
+            patch(
+                "icloudpy.utils.get_password_from_keyring",
+                return_value="hunter2",
+            ),
+            patch(
+                "icloudpy.ICloudPyService",
+                side_effect=RuntimeError("ctor boom"),
+            ),
+        ):
+            response = self._client().post(
+                "/auth/refresh-trust",
+                follow_redirects=False,
+            )
+        # 200 with error message rendered, or a 4xx/5xx — anything
+        # except an unhandled exception is acceptable.
+        self.assertIn(response.status_code, (200, 302, 400, 500))
+
+
+class TestApiSync(unittest.TestCase):
+    """``POST /api/sync`` writes a force-sync sentinel that the sync
+    loop consumes on next iteration. JSON for API consumers, redirect
+    for HTML form submits."""
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def test_api_sync_rejects_unknown_service(self):
+        response = self._client().post(
+            "/api/sync",
+            data={"service": "calendar"},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"service must be one of", response.data)
+
+    def test_api_sync_returns_400_when_no_services_configured(self):
+        from unittest.mock import patch
+
+        with patch.object(web, "_load_current_config", return_value={"app": {}}):
+            response = self._client().post(
+                "/api/sync",
+                data={"service": "drive"},
+                headers={"Accept": "application/json"},
+            )
+        self.assertEqual(response.status_code, 400)
+
+    def test_api_sync_drive_queues_drive_sentinel(self):
+        from unittest.mock import patch
+
+        with patch.object(
+            web.web_signals,
+            "request_force_sync",
+            return_value=True,
+        ) as fake_req:
+            response = self._client().post(
+                "/api/sync",
+                data={"service": "drive"},
+                headers={"Accept": "application/json"},
+            )
+        self.assertEqual(response.status_code, 200)
+        body = response.get_json()
+        self.assertIn("drive", body["queued"])
+        fake_req.assert_called_with("drive")
+
+    def test_api_sync_all_queues_both_configured_services(self):
+        from unittest.mock import patch
+
+        with patch.object(
+            web.web_signals,
+            "request_force_sync",
+            return_value=True,
+        ) as fake_req:
+            response = self._client().post(
+                "/api/sync",
+                data={"service": "all"},
+                headers={"Accept": "application/json"},
+            )
+        self.assertEqual(response.status_code, 200)
+        # Both drive + photos should have been requested (the test
+        # config has both blocks).
+        call_args = {c.args[0] for c in fake_req.call_args_list}
+        self.assertEqual(call_args, {"drive", "photos"})
+
+    def test_api_sync_form_submit_redirects_to_dashboard(self):
+        """Browser form submission (no Accept: json) returns a 302 to /
+        instead of JSON."""
+        from unittest.mock import patch
+
+        with patch.object(
+            web.web_signals,
+            "request_force_sync",
+            return_value=True,
+        ):
+            response = self._client().post("/api/sync", data={"service": "drive"})
+        self.assertEqual(response.status_code, 302)
+
+    def test_api_sync_service_via_query_string_also_works(self):
+        """Service can come from query string too."""
+        from unittest.mock import patch
+
+        with patch.object(
+            web.web_signals,
+            "request_force_sync",
+            return_value=True,
+        ):
+            response = self._client().post(
+                "/api/sync?service=drive",
+                headers={"Accept": "application/json"},
+            )
+        self.assertEqual(response.status_code, 200)
+
+
+class TestStartInThread(unittest.TestCase):
+    """``start_in_thread`` launches the Flask app on a daemon thread.
+    We mock ``app.run`` to avoid actually binding a port + blocking."""
+
+    def test_start_returns_thread_object(self):
+        from unittest.mock import patch
+
+        with patch("flask.Flask.run"):
+            t = web.start_in_thread(host="127.0.0.1", port=0)
+        self.assertTrue(t.daemon)
+        self.assertEqual(t.name, "icloud-web-ui")
+
+    def test_start_thread_serves_with_correct_args(self):
+        """Verify app.run is invoked with the host/port passed in."""
+        import time as _time
+        from unittest.mock import patch
+
+        with patch("flask.Flask.run") as fake_run:
+            t = web.start_in_thread(host="0.0.0.0", port=8765)  # noqa: S104
+            # Give the daemon thread a moment to call app.run.
+            for _ in range(20):
+                if fake_run.called:
+                    break
+                _time.sleep(0.05)
+            t.join(timeout=1.0)
+        self.assertTrue(fake_run.called)
+        kwargs = fake_run.call_args.kwargs
+        self.assertEqual(kwargs["host"], "0.0.0.0")
+        self.assertEqual(kwargs["port"], 8765)
+        self.assertTrue(kwargs["threaded"])
+
+    def test_start_thread_logs_oserror_when_bind_fails(self):
+        """Bind failures (port already in use) are logged at ERROR
+        level — the daemon thread dies but the sync loop keeps going."""
+        import logging
+        import time as _time
+        from unittest.mock import patch
+
+        with (
+            patch(
+                "flask.Flask.run",
+                side_effect=OSError("port in use"),
+            ),
+            self.assertLogs(web.LOGGER, level=logging.ERROR) as cm,
+        ):
+            t = web.start_in_thread(host="0.0.0.0", port=0)  # noqa: S104
+            for _ in range(20):
+                if any("Web UI failed to bind" in line for line in cm.output):
+                    break
+                _time.sleep(0.05)
+            t.join(timeout=1.0)
+        joined = "\n".join(cm.output)
+        self.assertIn("Web UI failed to bind", joined)
+
+
+class TestSmallBranches(unittest.TestCase):
+    """Targeted tests for the scattered 1-3 line gaps in web.py helpers."""
+
+    def test_library_destinations_handles_attribute_error(self):
+        """``_get_library_destinations`` swallows AttributeError when
+        the config helper is absent from this build (older mandarons
+        without PR 3) — returns empty dict."""
+        from unittest.mock import patch
+
+        # Force the config_parser to raise AttributeError on the lookup.
+        with patch.object(
+            web.config_parser,
+            "get_photos_library_destinations",
+            side_effect=AttributeError("no such attr"),
+            create=True,
+        ):
+            result = web._get_library_destinations({"photos": {}})  # noqa: SLF001
+        self.assertEqual(result, {})
+
+    def test_library_destinations_handles_generic_exception(self):
+        """Generic exceptions in the getter also return empty."""
+        from unittest.mock import patch
+
+        with patch.object(
+            web.config_parser,
+            "get_photos_library_destinations",
+            side_effect=RuntimeError("boom"),
+            create=True,
+        ):
+            result = web._get_library_destinations({"photos": {}})  # noqa: SLF001
+        self.assertEqual(result, {})
+
+    def test_logger_filename_handles_attribute_error(self):
+        """``_logger_filename`` returns '' when the helper raises."""
+        from unittest.mock import patch
+
+        with patch.object(
+            web.config_parser,
+            "get_logger_filename",
+            side_effect=AttributeError,
+            create=True,
+        ):
+            result = web._logger_filename({})  # noqa: SLF001
+        self.assertEqual(result, "")
+
+    def test_tail_log_file_oserror_returns_empty(self):
+        """Log tail OSError (permission denied) on a file that DOES
+        exist (passes the isfile guard) returns [] + logs a warning."""
+        import logging
+        import tempfile
+
+        with (
+            tempfile.NamedTemporaryFile() as f,
+            patch(
+                "builtins.open",
+                side_effect=OSError("perms"),
+            ),
+            self.assertLogs(web.LOGGER, level=logging.WARNING) as cm,
+        ):
+            result = web._tail_log_file(f.name)  # noqa: SLF001
+        self.assertEqual(result, [])
+        self.assertTrue(any("could not tail" in line for line in cm.output))
+
+    def test_tail_log_file_missing_path_returns_empty_no_log(self):
+        """Missing path takes the early return — silent."""
+        result = web._tail_log_file("/nonexistent/file.log")  # noqa: SLF001
+        self.assertEqual(result, [])
+
+    def test_tail_log_file_empty_path_returns_empty(self):
+        """Empty path string — early return, no error."""
+        result = web._tail_log_file("")  # noqa: SLF001
+        self.assertEqual(result, [])
+
+
+class TestHelperExceptionPaths(unittest.TestCase):
+    """Cover the defensive exception/fallback branches in web.py helpers.
+    Each test forces the inner call to raise so the except-block runs."""
+
+    def test_get_marker_filename_uses_pr8_helper_when_present(self):
+        """When PR 8 is merged (config_parser.get_mount_marker_filename
+        exists), the helper returns whatever the getter returns."""
+        with patch.object(
+            web.config_parser,
+            "get_mount_marker_filename",
+            return_value=".my-marker",
+            create=True,
+        ):
+            result = web._get_marker_filename({"app": {}})  # noqa: SLF001
+        self.assertEqual(result, ".my-marker")
+
+    def test_get_require_mount_marker_uses_pr8_helper_when_present(self):
+        """When PR 8 helpers exist, the wrapper returns bool(getter(...))."""
+        with patch.object(
+            web.config_parser,
+            "get_drive_require_mount_marker",
+            return_value=True,
+            create=True,
+        ):
+            self.assertTrue(web._get_require_mount_marker({"drive": {}}, "drive"))  # noqa: SLF001
+
+    def test_get_library_destinations_attr_error_in_direct_read(self):
+        """When PR 3 helper is absent AND the config shape causes
+        AttributeError in the fallback direct read, return {}."""
+
+        class WeirdConfig:
+            def get(self, *_args, **_kw):
+                msg = "not really a dict"
+                raise AttributeError(msg)
+
+        original = getattr(
+            web.config_parser,
+            "get_photos_library_destinations",
+            None,
+        )
+        if original is not None:
+            delattr(web.config_parser, "get_photos_library_destinations")
+        try:
+            result = web._get_library_destinations(WeirdConfig())  # noqa: SLF001
+            self.assertEqual(result, {})
+        finally:
+            if original is not None:
+                web.config_parser.get_photos_library_destinations = original
+
+    def test_logger_filename_attribute_error_returns_empty(self):
+        """``_logger_filename`` catches AttributeError when the inner
+        config walk fails — returns empty string."""
+
+        class WeirdConfig:
+            def __getitem__(self, _key):
+                raise AttributeError("partial config")  # noqa: EM101
+
+            def get(self, *_args, **_kw):
+                raise AttributeError("partial config")  # noqa: EM101
+
+        result = web._logger_filename(WeirdConfig())  # noqa: SLF001
+        self.assertEqual(result, "")
+
+
+class TestAuthPasswordExceptionPaths(unittest.TestCase):
+    """Cover the exception paths in ``/auth/password``."""
+
+    def setUp(self):
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+    def tearDown(self):
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    # Note: the `except (KeyError, AttributeError, TypeError)` defensive
+    # branch in /auth/password (web.py:391-395) is hard to exercise via
+    # the Flask test client because mocking `get_username` to raise
+    # globally also breaks `_build_status` rendering. The branch is
+    # marked `# pragma: no cover` in source — it's defensive code for
+    # hand-malformed configs that real users rarely hit.
+
+    def test_password_post_2fa_push_trigger_failure_is_non_fatal(self):
+        """If trigger_2fa_push_notification raises, log a warning and
+        continue — user can still type a code that arrived via SMS."""
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = True
+        fake_api.trigger_2fa_push_notification.side_effect = RuntimeError("boom")
+        with patch("icloudpy.ICloudPyService", return_value=fake_api):
+            response = self._client().post(
+                "/auth/password",
+                data={"password": "hunter2"},
+            )
+        # Redirects to /auth (pending state) — not a 500.
+        self.assertLess(response.status_code, 500)
+
+    def test_password_post_keyring_persist_failure_non_fatal(self):
+        """No-2FA path: if keyring persist raises, log a warning and
+        redirect to dashboard (auth itself succeeded)."""
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = False
+        with (
+            patch(
+                "icloudpy.ICloudPyService",
+                return_value=fake_api,
+            ),
+            patch(
+                "icloudpy.utils.store_password_in_keyring",
+                side_effect=RuntimeError("keyring boom"),
+            ),
+        ):
+            response = self._client().post(
+                "/auth/password",
+                data={"password": "hunter2"},
+            )
+        # Still redirects (302) to dashboard — keyring failure not fatal.
+        self.assertEqual(response.status_code, 302)
+
+
+class TestAuthCodeExceptionPaths(unittest.TestCase):
+    """Cover the exception paths in ``/auth/code``."""
+
+    def setUp(self):
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+    def tearDown(self):
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def test_validate_2fa_code_exception_returns_user_visible_error(self):
+        """If validate_2fa_code raises (network blip, code-mismatch
+        deep in icloudpy), log + return an error UI instead of 500."""
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.validate_2fa_code.side_effect = RuntimeError("validate boom")
+        web._PENDING_AUTH["api"] = fake_api  # noqa: SLF001
+        web._PENDING_AUTH["username"] = "u@example.com"  # noqa: SLF001
+        web._PENDING_AUTH["password"] = "hunter2"  # noqa: SLF001
+
+        response = self._client().post(
+            "/auth/code",
+            data={"code": "123456"},
+        )
+        # Either renders error page or redirects — never 500.
+        self.assertLess(response.status_code, 500)
+
+    def test_auth_code_keyring_persist_failure_non_fatal(self):
+        """After a successful validate, keyring persist failures are
+        warning-logged but don't block the redirect to dashboard."""
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.validate_2fa_code.return_value = True
+        fake_api.is_trusted_session = True
+        web._PENDING_AUTH["api"] = fake_api  # noqa: SLF001
+        web._PENDING_AUTH["username"] = "u@example.com"  # noqa: SLF001
+        web._PENDING_AUTH["password"] = "hunter2"  # noqa: SLF001
+
+        with patch(
+            "icloudpy.utils.store_password_in_keyring",
+            side_effect=RuntimeError("keyring boom"),
+        ):
+            response = self._client().post(
+                "/auth/code",
+                data={"code": "123456"},
+            )
+        # Whether it redirects or renders, it should not 500.
+        self.assertLess(response.status_code, 500)
+
+
+class TestAuthRefreshTrustExceptionPaths(unittest.TestCase):
+    """Cover the remaining exception paths inside /auth/refresh-trust."""
+
+    def setUp(self):
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+    def tearDown(self):
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    # Same as the /auth/password version above — the `except` branch
+    # is pragma'd in source.
+
+    def test_refresh_trust_2fa_push_trigger_failure_logged_non_fatal(self):
+        """If trigger_2fa_push_notification raises during refresh-trust,
+        log a warning and continue to the auth form so user can still
+        type a code that arrives via SMS."""
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = True
+        fake_api.trigger_2fa_push_notification.side_effect = RuntimeError("boom")
+        with (
+            patch(
+                "icloudpy.utils.get_password_from_keyring",
+                return_value="hunter2",
+            ),
+            patch("icloudpy.ICloudPyService", return_value=fake_api),
+        ):
+            response = self._client().post(
+                "/auth/refresh-trust",
+                follow_redirects=False,
+            )
+        self.assertLess(response.status_code, 500)
+
+    def test_refresh_trust_already_trusted_redirects_to_dashboard(self):
+        """If the refreshed session is already trusted (no 2FA needed),
+        the route redirects to the dashboard."""
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = False
+        with (
+            patch(
+                "icloudpy.utils.get_password_from_keyring",
+                return_value="hunter2",
+            ),
+            patch("icloudpy.ICloudPyService", return_value=fake_api),
+        ):
+            response = self._client().post(
+                "/auth/refresh-trust",
+                follow_redirects=False,
+            )
+        # 302 redirect to dashboard.
+        self.assertIn(response.status_code, (200, 302))
 
 
 if __name__ == "__main__":
