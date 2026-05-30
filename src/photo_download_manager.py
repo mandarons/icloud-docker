@@ -161,7 +161,7 @@ def collect_download_task(photo, file_size: str, destination_path: str,
         photo_path = normalize_file_path(os.path.join(suffix_folder, suffix_basename))
         LOGGER.info(
             f"Filename collision for {photo.filename} (id={photo.id}); "
-            f"using suffix path {photo_path} to preserve both photos."
+            f"using suffix path {photo_path} to preserve both photos.",
         )
         if check_photo_exists(photo, file_size, photo_path):
             if files is not None:

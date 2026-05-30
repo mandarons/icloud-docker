@@ -629,7 +629,7 @@ def get_photos_filename_format(config: dict) -> str:
     value = str(value).lower().strip()
     if value not in ("metadata", "simple"):
         log_config_not_found_warning(
-            config_path, f"unknown value {value!r}; falling back to 'metadata'"
+            config_path, f"unknown value {value!r}; falling back to 'metadata'",
         )
         return "metadata"
     return value
