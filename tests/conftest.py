@@ -22,14 +22,23 @@ _CONFIG_DIR_KEY = "ICLOUD_DOCKER_CONFIG_DIR"
 def _redirect_config_dir():
     """Session-wide ``ICLOUD_DOCKER_CONFIG_DIR`` → tempdir.
 
-    The redirect MUST be set before any ``from src import ...`` happens
-    at module-import time (because ``DEFAULT_COOKIE_DIRECTORY`` is
-    captured at import). Pytest collects conftest first, so this fires
-    early — but we also patch the cached constants here in case ``src``
-    was already imported by an earlier conftest layer.
+    Implementation note: the ``os.environ`` setting alone is NOT what
+    makes the redirect work. ``DEFAULT_COOKIE_DIRECTORY`` and
+    ``CACHE_FILE_NAME`` are captured at module-import time, and by the
+    time this autouse fixture runs (first test execution) the test
+    modules have already done ``from src import ...`` and the constants
+    have already resolved to ``/config/...``. The reassignment of
+    ``src.DEFAULT_COOKIE_DIRECTORY`` / ``src.usage.CACHE_FILE_NAME``
+    below is what actually redirects callers. The env-var set is kept
+    only so child processes (if any) inherit the override. Future
+    contributors who add a new module that captures
+    ``ICLOUD_DOCKER_CONFIG_DIR`` at import time MUST add a matching
+    reassignment here.
     """
     if _CONFIG_DIR_KEY in os.environ:
-        # Honor explicit caller override (e.g. CI integration tests).
+        # Honor explicit caller override (e.g. CI integration tests
+        # that mount their own writable ``/config``). The override path
+        # is expected to be already-resolved upstream of pytest.
         yield
         return
 
@@ -41,7 +50,11 @@ def _redirect_config_dir():
 
     src.DEFAULT_COOKIE_DIRECTORY = os.path.join(tmpdir, "session_data")
     src.usage.CACHE_FILE_NAME = os.path.join(tmpdir, ".data")
-    os.makedirs(src.DEFAULT_COOKIE_DIRECTORY, exist_ok=True)
+    # NOTE: we deliberately do NOT pre-create ``session_data/`` here.
+    # ``tests/test_sync.py::test_sync`` asserts that ``sync.sync()``
+    # itself creates the directory on first run; pre-creating would
+    # make that assertion trivially pass regardless of whether the
+    # production code path actually ran.
     try:
         yield
     finally:
