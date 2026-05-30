@@ -738,7 +738,12 @@ def sync(dry_run: bool = False, check_files: int | None = None):
 
     while True:
         config = _load_configuration()
-        alive(config=config)
+        # Skip telemetry on dry-run: ``alive()`` registers the installation
+        # and saves the usage cache to disk, both of which violate the
+        # "no side effects" dry-run contract. (The real sync loop still
+        # calls it on every iteration as before.)
+        if not dry_run:
+            alive(config=config)
 
         # Log sync intervals once at startup
         if not startup_logged:
