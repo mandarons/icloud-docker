@@ -59,7 +59,7 @@ def process_package(local_file: str, flatten: bool = False) -> str | None:
         # accepting a re-download (octet-stream case — see PR 11 follow-up).
         LOGGER.info(
             f"flatten_packages enabled — keeping {local_file} as single-file bundle"
-            f" ({file_mime_type}); skipping unpack."
+            f" ({file_mime_type}); skipping unpack.",
         )
         return local_file
 
@@ -112,7 +112,7 @@ def _zip_entries_self_prefixed(zf: zipfile.ZipFile, bundle_basename: str) -> boo
         return False
     prefix = bundle_basename + "/"
     traversal_prefix = "../" + prefix
-    return all(n.startswith(prefix) or n.startswith(traversal_prefix) for n in names)
+    return all(n.startswith((prefix, traversal_prefix)) for n in names)
 
 
 def _process_zip_package(local_file: str, archive_file: str) -> str:

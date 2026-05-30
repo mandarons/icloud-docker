@@ -22,7 +22,6 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import io
 import os
-import shutil
 import tempfile
 import unittest
 import zipfile
@@ -70,7 +69,7 @@ class TestSelfPrefixedZipExtractsIntoParent(unittest.TestCase):
             self.assertTrue(os.path.isdir(local_file))
             self.assertTrue(os.path.isfile(os.path.join(local_file, "projectData")))
             self.assertTrue(
-                os.path.isfile(os.path.join(local_file, "Resources", "Info.plist"))
+                os.path.isfile(os.path.join(local_file, "Resources", "Info.plist")),
             )
 
 
@@ -95,12 +94,12 @@ class TestBareRootedZipExtractsIntoBundleSubdir(unittest.TestCase):
             self.assertEqual(result, local_file)
             self.assertTrue(os.path.isdir(local_file))
             self.assertTrue(
-                os.path.isfile(os.path.join(local_file, "Data", "Document.iwa"))
+                os.path.isfile(os.path.join(local_file, "Data", "Document.iwa")),
             )
             self.assertTrue(
                 os.path.isfile(
-                    os.path.join(local_file, "Metadata", "buildVersion.plist")
-                )
+                    os.path.join(local_file, "Metadata", "buildVersion.plist"),
+                ),
             )
             # The bare names did NOT escape into the parent dir.
             self.assertFalse(os.path.exists(os.path.join(base, "Data")))
@@ -133,7 +132,7 @@ class TestBareRootedZipExtractsIntoBundleSubdir(unittest.TestCase):
             # internal structure; neither clobbered the other.
             self.assertTrue(os.path.isfile(os.path.join(first, "Data", "Document.iwa")))
             self.assertTrue(
-                os.path.isfile(os.path.join(second, "Data", "Document.iwa"))
+                os.path.isfile(os.path.join(second, "Data", "Document.iwa")),
             )
 
 
@@ -155,7 +154,7 @@ class TestFlattenPackagesSkipsUnpack(unittest.TestCase):
             original_size = os.path.getsize(local_file)
 
             result = drive_package_processing.process_package(
-                local_file=local_file, flatten=True
+                local_file=local_file, flatten=True,
             )
             self.assertEqual(result, local_file)
             self.assertTrue(os.path.isfile(local_file))
@@ -175,7 +174,7 @@ class TestFlattenPackagesSkipsUnpack(unittest.TestCase):
                 f.write(b"opaque-bundle-bytes-no-magic")
 
             result = drive_package_processing.process_package(
-                local_file=local_file, flatten=True
+                local_file=local_file, flatten=True,
             )
             self.assertEqual(result, local_file)
             self.assertTrue(os.path.isfile(local_file))

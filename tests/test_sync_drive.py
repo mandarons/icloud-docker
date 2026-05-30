@@ -29,7 +29,7 @@ class TestSyncDrive(unittest.TestCase):
         self.destination_path = self.root
         os.makedirs(self.destination_path, exist_ok=True)
         self.service = data.ICloudPyServiceMock(
-            data.AUTHENTICATED_USER, data.VALID_PASSWORD
+            data.AUTHENTICATED_USER, data.VALID_PASSWORD,
         )
         self.drive = self.service.drive
         self.items = self.drive.dir()
@@ -476,8 +476,8 @@ class TestSyncDrive(unittest.TestCase):
         """Test for wanted folder filters as None."""
         self.assertTrue(
             sync_drive.wanted_folder(
-                filters=None, ignore=None, root=self.root, folder_path="dir1"
-            )
+                filters=None, ignore=None, root=self.root, folder_path="dir1",
+            ),
         )
 
     def test_wanted_folder_none_root(self):
@@ -496,7 +496,7 @@ class TestSyncDrive(unittest.TestCase):
         self.filters["file_extensions"] = ["py"]
         self.assertTrue(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], ignore=None, file_path=__file__
+                filters=self.filters["file_extensions"], ignore=None, file_path=__file__,
             ),
         )
 
@@ -520,18 +520,18 @@ class TestSyncDrive(unittest.TestCase):
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIn(
-                "Skipping the unwanted file", captured.records[0].getMessage()
+                "Skipping the unwanted file", captured.records[0].getMessage(),
             )
 
     def test_wanted_file_none_file_path(self):
         """Test for unexpected wanted file path."""
         self.assertTrue(
-            sync_drive.wanted_file(filters=None, ignore=None, file_path=__file__)
+            sync_drive.wanted_file(filters=None, ignore=None, file_path=__file__),
         )
         self.assertFalse(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], ignore=None, file_path=None
-            )
+                filters=self.filters["file_extensions"], ignore=None, file_path=None,
+            ),
         )
 
     def test_wanted_file_empty_file_extensions(self):
@@ -540,7 +540,7 @@ class TestSyncDrive(unittest.TestCase):
         self.filters["file_extensions"] = []
         self.assertTrue(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], ignore=None, file_path=__file__
+                filters=self.filters["file_extensions"], ignore=None, file_path=__file__,
             ),
         )
         self.filters = dict(original_filters)
@@ -550,7 +550,7 @@ class TestSyncDrive(unittest.TestCase):
         self.filters["file_extensions"] = ["pY"]
         self.assertTrue(
             sync_drive.wanted_file(
-                filters=self.filters["file_extensions"], ignore=None, file_path=__file__
+                filters=self.filters["file_extensions"], ignore=None, file_path=__file__,
             ),
         )
         self.filters["file_extensions"] = ["pY"]
@@ -662,21 +662,21 @@ class TestSyncDrive(unittest.TestCase):
     def test_file_non_existing_file(self):
         """Test for file does not exist."""
         self.assertFalse(
-            sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path)
+            sync_drive.file_exists(item=self.file_item, local_file=self.local_file_path),
         )
 
     def test_file_existing_file(self):
         """Test for file exists."""
         sync_drive.download_file(item=self.file_item, local_file=self.local_file_path)
         actual = sync_drive.file_exists(
-            item=self.file_item, local_file=self.local_file_path
+            item=self.file_item, local_file=self.local_file_path,
         )
         self.assertTrue(actual)
         # Verbose
         sync_drive.download_file(item=self.file_item, local_file=self.local_file_path)
         with self.assertLogs(logger=LOGGER, level="DEBUG") as captured:
             actual = sync_drive.file_exists(
-                item=self.file_item, local_file=self.local_file_path
+                item=self.file_item, local_file=self.local_file_path,
             )
             self.assertTrue(actual)
             self.assertTrue(len(captured.records) > 0)
@@ -685,7 +685,7 @@ class TestSyncDrive(unittest.TestCase):
     def test_file_exists_none_item(self):
         """Test if item is None."""
         self.assertFalse(
-            sync_drive.file_exists(item=None, local_file=self.local_file_path)
+            sync_drive.file_exists(item=None, local_file=self.local_file_path),
         )
 
     def test_file_exists_none_local_file(self):
@@ -696,8 +696,8 @@ class TestSyncDrive(unittest.TestCase):
         """Test package_exists returns False when item is None."""
         self.assertFalse(
             sync_drive.package_exists(
-                item=None, local_package_path=self.local_package_path
-            )
+                item=None, local_package_path=self.local_package_path,
+            ),
         )
 
     def test_package_exists_non_existent_path(self):
@@ -705,24 +705,24 @@ class TestSyncDrive(unittest.TestCase):
         non_existent = os.path.join(self.destination_path, "does_not_exist.band")
         self.assertFalse(
             sync_drive.package_exists(
-                item=self.package_item, local_package_path=non_existent
-            )
+                item=self.package_item, local_package_path=non_existent,
+            ),
         )
 
     def test_download_file(self):
         """Test for valid file download."""
         self.assertTrue(
             sync_drive.download_file(
-                item=self.file_item, local_file=self.local_file_path
-            )
+                item=self.file_item, local_file=self.local_file_path,
+            ),
         )
 
         # Verbose
         with self.assertLogs() as captured:
             self.assertTrue(
                 sync_drive.download_file(
-                    item=self.file_item, local_file=self.local_file_path
-                )
+                    item=self.file_item, local_file=self.local_file_path,
+                ),
             )
             self.assertTrue(len(captured.records) > 0)
             self.assertIn("Downloading ", captured.records[0].getMessage())
@@ -730,7 +730,7 @@ class TestSyncDrive(unittest.TestCase):
     def test_download_file_none_item(self):
         """Test for item as None."""
         self.assertFalse(
-            sync_drive.download_file(item=None, local_file=self.local_file_path)
+            sync_drive.download_file(item=None, local_file=self.local_file_path),
         )
 
     def test_download_file_none_local_file(self):
@@ -743,7 +743,7 @@ class TestSyncDrive(unittest.TestCase):
             sync_drive.download_file(
                 item=self.file_item,
                 local_file=os.path.join(
-                    self.destination_path, "non-existent-folder", self.file_name
+                    self.destination_path, "non-existent-folder", self.file_name,
                 ),
             ),
         )
@@ -754,20 +754,20 @@ class TestSyncDrive(unittest.TestCase):
             mock_item.side_effect = KeyError("data_token")
             self.assertFalse(
                 sync_drive.download_file(
-                    item=self.file_item, local_file=self.local_file_path
-                )
+                    item=self.file_item, local_file=self.local_file_path,
+                ),
             )
 
     def test_download_file_object_not_found_exception(self):
         """Test for ObjectNotFoundException error handling."""
         with patch.object(self.file_item, "open") as mock_item:
             mock_item.side_effect = Exception(
-                "ObjectNotFoundException: Could not find document (NOT_FOUND)"
+                "ObjectNotFoundException: Could not find document (NOT_FOUND)",
             )
             self.assertFalse(
                 sync_drive.download_file(
-                    item=self.file_item, local_file=self.local_file_path
-                )
+                    item=self.file_item, local_file=self.local_file_path,
+                ),
             )
 
     def test_is_package_object_not_found_exception(self):
@@ -776,7 +776,7 @@ class TestSyncDrive(unittest.TestCase):
 
         with patch.object(self.file_item, "open") as mock_item:
             mock_item.side_effect = Exception(
-                "ObjectNotFoundException: Could not find document (NOT_FOUND)"
+                "ObjectNotFoundException: Could not find document (NOT_FOUND)",
             )
             # Should return False when error occurs
             result = is_package(self.file_item)
@@ -933,7 +933,7 @@ class TestSyncDrive(unittest.TestCase):
         files = set()
         files.add(obsolete_path)
         actual = sync_drive.remove_obsolete(
-            destination_path=self.destination_path, files=files
+            destination_path=self.destination_path, files=files,
         )
         self.assertTrue(len(actual) == 1)
         self.assertFalse(os.path.isfile(obsolete_file_path))
@@ -950,7 +950,7 @@ class TestSyncDrive(unittest.TestCase):
         # Remove the directory
         files.remove(obsolete_path)
         actual = sync_drive.remove_obsolete(
-            destination_path=self.destination_path, files=files
+            destination_path=self.destination_path, files=files,
         )
         self.assertTrue(len(actual) == 1)
         self.assertFalse(os.path.isdir(obsolete_path))
@@ -958,7 +958,7 @@ class TestSyncDrive(unittest.TestCase):
         os.mkdir(obsolete_path)
         shutil.copyfile(__file__, obsolete_file_path)
         actual = sync_drive.remove_obsolete(
-            destination_path=self.destination_path, files=files
+            destination_path=self.destination_path, files=files,
         )
         self.assertTrue(len(actual) > 0)
         self.assertFalse(os.path.isdir(obsolete_path))
@@ -968,7 +968,7 @@ class TestSyncDrive(unittest.TestCase):
             os.mkdir(obsolete_path)
             shutil.copyfile(__file__, obsolete_file_path)
             actual = sync_drive.remove_obsolete(
-                destination_path=self.destination_path, files=files
+                destination_path=self.destination_path, files=files,
             )
             self.assertTrue(len(actual) > 0)
             self.assertFalse(os.path.isdir(obsolete_path))
@@ -978,12 +978,12 @@ class TestSyncDrive(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_remove_obsolete_package(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
     ):
         """Test for removing obsolete package."""
         mock_service = self.service
@@ -992,20 +992,20 @@ class TestSyncDrive(unittest.TestCase):
         config["drive"]["destination"] = self.destination_path
         mock_read_config.return_value = config
         ms_band_package_local_path = os.path.join(
-            self.destination_path, "Obsidian", "Sample", "ms.band"
+            self.destination_path, "Obsidian", "Sample", "ms.band",
         )
         files = sync_drive.sync_drive(config=config, drive=mock_service.drive)
         self.assertIsNotNone(files)
         files.remove(ms_band_package_local_path)
         files = sync_drive.remove_obsolete(
-            destination_path=self.destination_path, files=files
+            destination_path=self.destination_path, files=files,
         )
         self.assertFalse(os.path.exists(ms_band_package_local_path))
 
     def test_remove_obsolete_none_destination_path(self):
         """Test for destination path as None."""
         self.assertTrue(
-            len(sync_drive.remove_obsolete(destination_path=None, files=set())) == 0
+            len(sync_drive.remove_obsolete(destination_path=None, files=set())) == 0,
         )
 
     def test_remove_obsolete_none_files(self):
@@ -1013,7 +1013,7 @@ class TestSyncDrive(unittest.TestCase):
         obsolete_path = os.path.join(self.destination_path, "obsolete")
         self.assertTrue(
             len(sync_drive.remove_obsolete(destination_path=obsolete_path, files=None))
-            == 0
+            == 0,
         )
 
     def test_sync_directory_without_remove(self):
@@ -1030,20 +1030,20 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(len(actual) == 49)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
+            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test")),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf"
-                )
+                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf",
+                ),
             ),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf"
-                )
+                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf",
+                ),
             ),
         )
 
@@ -1051,7 +1051,7 @@ class TestSyncDrive(unittest.TestCase):
         """Test for remove as True."""
         os.mkdir(os.path.join(self.destination_path, "obsolete"))
         shutil.copyfile(
-            __file__, os.path.join(self.destination_path, "obsolete", "obsolete.py")
+            __file__, os.path.join(self.destination_path, "obsolete", "obsolete.py"),
         )
         actual = sync_drive.sync_directory(
             drive=self.drive,
@@ -1066,20 +1066,20 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(len(actual) == 49)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
+            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test")),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf"
-                )
+                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf",
+                ),
             ),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf"
-                )
+                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf",
+                ),
             ),
         )
 
@@ -1100,20 +1100,20 @@ class TestSyncDrive(unittest.TestCase):
         self.assertTrue(len(actual) == 53)
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
+            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test")),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf"
-                )
+                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf",
+                ),
             ),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf"
-                )
+                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf",
+                ),
             ),
         )
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "unwanted")))
@@ -1194,12 +1194,12 @@ class TestSyncDrive(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_sync_drive_valids(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
     ):
         """Test for valid sync_drive."""
         mock_service = self.service
@@ -1207,51 +1207,51 @@ class TestSyncDrive(unittest.TestCase):
         config["drive"]["destination"] = self.destination_path
         mock_read_config.return_value = config
         self.assertIsNotNone(
-            sync_drive.sync_drive(config=config, drive=mock_service.drive)
+            sync_drive.sync_drive(config=config, drive=mock_service.drive),
         )
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "icloudpy")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
+            os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test")),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf"
-                )
+                    self.destination_path, "icloudpy", "Test", "Document scanne 2.pdf",
+                ),
             ),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf"
-                )
+                    self.destination_path, "icloudpy", "Test", "Scanned document 1.pdf",
+                ),
             ),
         )
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "Obsidian")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "Obsidian", "Sample"))
+            os.path.isdir(os.path.join(self.destination_path, "Obsidian", "Sample")),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "Obsidian", "Sample", "This is a title.md"
-                )
-            )
+                    self.destination_path, "Obsidian", "Sample", "This is a title.md",
+                ),
+            ),
         )
         self.assertEqual(
             sum(
                 f.stat().st_size
                 for f in Path(
                     os.path.join(
-                        self.destination_path, "Obsidian", "Sample", "Project.band"
-                    )
+                        self.destination_path, "Obsidian", "Sample", "Project.band",
+                    ),
                 ).glob("**/*")
                 if f.is_file()
             ),
             sum(
                 f.stat().st_size
                 for f in Path(
-                    os.path.join(tests.DATA_DIR, "Project_original.band")
+                    os.path.join(tests.DATA_DIR, "Project_original.band"),
                 ).glob("**/*")
                 if f.is_file()
             ),
@@ -1276,7 +1276,7 @@ class TestSyncDrive(unittest.TestCase):
         files = set()
         # Existing package
         sync_drive.download_file(
-            item=self.package_item, local_file=self.local_package_path
+            item=self.package_item, local_file=self.local_package_path,
         )
         # Do not download the package
         self.assertFalse(
@@ -1322,7 +1322,7 @@ class TestSyncDrive(unittest.TestCase):
             sum(
                 f.stat().st_size
                 for f in Path(os.path.join(self.destination_path, "ms.band")).glob(
-                    "**/*"
+                    "**/*",
                 )
                 if f.is_file()
             ),
@@ -1377,10 +1377,10 @@ class TestSyncDrive(unittest.TestCase):
             )
             self.assertTrue(len(actual) == 50)
             self.assertTrue(
-                os.path.isdir(os.path.join(self.destination_path, "icloudpy"))
+                os.path.isdir(os.path.join(self.destination_path, "icloudpy")),
             )
             self.assertTrue(
-                os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test"))
+                os.path.isdir(os.path.join(self.destination_path, "icloudpy", "Test")),
             )
             self.assertTrue(
                 os.path.isfile(
@@ -1405,12 +1405,12 @@ class TestSyncDrive(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER
+        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
     def test_child_ignored_folder(
-        self, mock_read_config, mock_service, mock_get_username, mock_get_password
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
     ):
         """Test for child ignored folder."""
         mock_service = self.service
@@ -1419,36 +1419,36 @@ class TestSyncDrive(unittest.TestCase):
         config["drive"]["ignore"] = ["icloudpy/*"]
         mock_read_config.return_value = config
         self.assertIsNotNone(
-            sync_drive.sync_drive(config=config, drive=mock_service.drive)
+            sync_drive.sync_drive(config=config, drive=mock_service.drive),
         )
         self.assertFalse(
-            os.path.exists(os.path.join(self.destination_path, "icloudpy", "Test"))
+            os.path.exists(os.path.join(self.destination_path, "icloudpy", "Test")),
         )
         self.assertTrue(os.path.isdir(os.path.join(self.destination_path, "Obsidian")))
         self.assertTrue(
-            os.path.isdir(os.path.join(self.destination_path, "Obsidian", "Sample"))
+            os.path.isdir(os.path.join(self.destination_path, "Obsidian", "Sample")),
         )
         self.assertTrue(
             os.path.isfile(
                 os.path.join(
-                    self.destination_path, "Obsidian", "Sample", "This is a title.md"
-                )
-            )
+                    self.destination_path, "Obsidian", "Sample", "This is a title.md",
+                ),
+            ),
         )
         self.assertEqual(
             sum(
                 f.stat().st_size
                 for f in Path(
                     os.path.join(
-                        self.destination_path, "Obsidian", "Sample", "Project.band"
-                    )
+                        self.destination_path, "Obsidian", "Sample", "Project.band",
+                    ),
                 ).glob("**/*")
                 if f.is_file()
             ),
             sum(
                 f.stat().st_size
                 for f in Path(
-                    os.path.join(tests.DATA_DIR, "Project_original.band")
+                    os.path.join(tests.DATA_DIR, "Project_original.band"),
                 ).glob("**/*")
                 if f.is_file()
             ),
@@ -1594,7 +1594,7 @@ class TestSyncDrive(unittest.TestCase):
         """Test sync_directory exception handling when collect_file_for_download fails."""
         # Make collect_file_for_download raise an exception
         mock_collect.side_effect = Exception(
-            "Simulated error in collect_file_for_download"
+            "Simulated error in collect_file_for_download",
         )
 
         # This should not crash despite the exception
@@ -1634,7 +1634,7 @@ class TestSyncDrive(unittest.TestCase):
         files_per_thread = 5
         for i in range(thread_count):
             thread = threading.Thread(
-                target=add_files, args=(i * files_per_thread, files_per_thread)
+                target=add_files, args=(i * files_per_thread, files_per_thread),
             )
             threads.append(thread)
             thread.start()
@@ -1657,19 +1657,19 @@ class TestSyncDrive(unittest.TestCase):
 
         # Test with None item
         result = sync_drive.collect_file_for_download(
-            None, self.destination_path, None, None, files
+            None, self.destination_path, None, None, files,
         )
         self.assertIsNone(result)
 
         # Test with None destination_path
         result = sync_drive.collect_file_for_download(
-            self.file_item, None, None, None, files
+            self.file_item, None, None, None, files,
         )
         self.assertIsNone(result)
 
         # Test with None files
         result = sync_drive.collect_file_for_download(
-            self.file_item, self.destination_path, None, None, None
+            self.file_item, self.destination_path, None, None, None,
         )
         self.assertIsNone(result)
 
@@ -1879,7 +1879,7 @@ class TestSyncDrive(unittest.TestCase):
     @patch("src.sync_drive.download_file_task")
     @patch("src.sync_drive.get_max_threads")
     def test_parallel_download_returns_false(
-        self, mock_get_max_threads, mock_download_task
+        self, mock_get_max_threads, mock_download_task,
     ):
         """Test parallel download when download_file_task returns False."""
         # Configure mocks
@@ -2023,7 +2023,7 @@ class TestSyncDrive(unittest.TestCase):
         # Create filters that specify a different folder (making current parent folder unwanted)
         restrictive_filters = {
             "folders": [
-                "SomeOtherFolder/SubFolder"
+                "SomeOtherFolder/SubFolder",
             ],  # Only allow a specific folder path that doesn't match our test
             "file_extensions": [],
         }
@@ -2055,7 +2055,7 @@ class TestSyncDrive(unittest.TestCase):
         # "Geh.-Erho%CC%88+3%2C0+%25+u.pdf"
         url_encoded_filename = "Test-Erho%CC%88+3%2C0+%25+File.pdf"
         expected_decoded_filename = unquote(
-            url_encoded_filename
+            url_encoded_filename,
         )  # "Test-Erhö+3,0+%+File.pdf"
 
         mock_item = MagicMock()
