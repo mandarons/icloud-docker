@@ -108,11 +108,11 @@ def _extract_sync_intervals(config, log_messages: bool = False):
 
     if config and "drive" in config:
         drive_sync_interval = config_parser.get_drive_sync_interval(
-            config=config, log_messages=log_messages
+            config=config, log_messages=log_messages,
         )
     if config and "photos" in config:
         photos_sync_interval = config_parser.get_photos_sync_interval(
-            config=config, log_messages=log_messages
+            config=config, log_messages=log_messages,
         )
 
     return drive_sync_interval, photos_sync_interval
@@ -156,7 +156,7 @@ def _authenticate_and_get_api(config, username: str):
     server_region = config_parser.get_region(config=config)
     password = _retrieve_password(username)
     return get_api_instance(
-        username=username, password=password, server_region=server_region
+        username=username, password=password, server_region=server_region,
     )
 
 
@@ -283,11 +283,11 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
 
         # Estimate hardlinked photos (approximate)
         use_hardlinks = config_parser.get_photos_use_hardlinks(
-            config=config, log_messages=False
+            config=config, log_messages=False,
         )
         if use_hardlinks:
             stats.photos_hardlinked = max(
-                0, len(files_after) - len(files_before) - stats.photos_downloaded
+                0, len(files_after) - len(files_before) - stats.photos_downloaded,
             )
 
         # Count skipped photos
@@ -368,13 +368,13 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
             LOGGER.warning(f"DRY RUN: Drive enumeration failed: {e!s}")
     else:
         LOGGER.info(
-            "DRY RUN: no `drive:` section in config — Drive sync would be skipped."
+            "DRY RUN: no `drive:` section in config — Drive sync would be skipped.",
         )
 
     if config and "photos" in config:
         try:
             photos_destination = config_parser.get_photos_destination_path(
-                config=config
+                config=config,
             )
             LOGGER.info(f"DRY RUN: Photos destination: {photos_destination}")
             libraries = (
@@ -384,7 +384,7 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
             )
             if libraries:
                 LOGGER.info(
-                    f"DRY RUN: Photos libraries available: {', '.join(libraries)}"
+                    f"DRY RUN: Photos libraries available: {', '.join(libraries)}",
                 )
             else:
                 LOGGER.info("DRY RUN: Photos libraries: (none reported by iCloud)")
@@ -392,7 +392,7 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
             LOGGER.warning(f"DRY RUN: Photos enumeration failed: {e!s}")
     else:
         LOGGER.info(
-            "DRY RUN: no `photos:` section in config — Photos sync would be skipped."
+            "DRY RUN: no `photos:` section in config — Photos sync would be skipped.",
         )
 
     if check_files is not None:
@@ -407,7 +407,7 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
                     f"(--check-files={'all' if check_files == 0 else check_files} per library) ...",
                 )
                 results = migration_check.check_migration(
-                    api=api, config=config, sample=check_files
+                    api=api, config=config, sample=check_files,
                 )
                 for library_name, result in results.items():
                     stats = result["stats"]
@@ -424,12 +424,12 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
                             if status == "size_mismatch":
                                 path, expected, actual = item
                                 LOGGER.info(
-                                    f"DRY RUN:   sample {status}: {path} (have {actual:,}b, want {expected:,}b)"
+                                    f"DRY RUN:   sample {status}: {path} (have {actual:,}b, want {expected:,}b)",
                                 )
                             else:
                                 path, expected = item
                                 LOGGER.info(
-                                    f"DRY RUN:   sample {status}: {path} ({expected:,}b)"
+                                    f"DRY RUN:   sample {status}: {path} ({expected:,}b)",
                                 )
             except Exception as e:
                 LOGGER.warning(f"DRY RUN: photos check-files walk failed: {e!s}")
@@ -440,7 +440,7 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
         if config and "drive" in config:
             try:
                 drive_result = migration_check.check_drive_migration(
-                    api=api, config=config, sample=check_files
+                    api=api, config=config, sample=check_files,
                 )
                 if drive_result is not None:
                     stats = drive_result["stats"]
@@ -457,18 +457,18 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
                             if status == "size_mismatch":
                                 path, expected, actual = item
                                 LOGGER.info(
-                                    f"DRY RUN:   sample {status}: {path} (have {actual:,}b, want {expected:,}b)"
+                                    f"DRY RUN:   sample {status}: {path} (have {actual:,}b, want {expected:,}b)",
                                 )
                             else:
                                 path, expected = item
                                 LOGGER.info(
-                                    f"DRY RUN:   sample {status}: {path} ({expected:,}b)"
+                                    f"DRY RUN:   sample {status}: {path} ({expected:,}b)",
                                 )
             except Exception as e:
                 LOGGER.warning(f"DRY RUN: drive check-files walk failed: {e!s}")
 
     LOGGER.info(
-        "DRY RUN complete — no files were written. Re-run without --dry-run to sync."
+        "DRY RUN complete — no files were written. Re-run without --dry-run to sync.",
     )
 
 
@@ -502,10 +502,10 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
             else 0
         ),
         "has_drive_activity": bool(
-            summary.drive_stats and summary.drive_stats.has_activity()
+            summary.drive_stats and summary.drive_stats.has_activity(),
         ),
         "has_photos_activity": bool(
-            summary.photo_stats and summary.photo_stats.has_activity()
+            summary.photo_stats and summary.photo_stats.has_activity(),
         ),
         "has_errors": summary.has_errors(),
         "timestamp": (
@@ -577,7 +577,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         bool: True if should continue (retry), False if should exit
     """
     LOGGER.error(
-        "Password is not stored in keyring. Please save the password in keyring."
+        "Password is not stored in keyring. Please save the password in keyring.",
     )
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
@@ -746,7 +746,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
             startup_logged = True
 
         drive_sync_interval, photos_sync_interval = _extract_sync_intervals(
-            config, log_messages=False
+            config, log_messages=False,
         )
         username = config_parser.get_username(config=config) if config else None
 
@@ -772,10 +772,10 @@ def sync(dry_run: bool = False, check_files: int | None = None):
 
                     # Perform syncs and collect statistics
                     drive_stats = _perform_drive_sync(
-                        config, api, sync_state, drive_sync_interval
+                        config, api, sync_state, drive_sync_interval,
                     )
                     photos_stats = _perform_photos_sync(
-                        config, api, sync_state, photos_sync_interval
+                        config, api, sync_state, photos_sync_interval,
                     )
 
                     # Populate summary with statistics
@@ -813,12 +813,12 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                             notify.send_sync_summary(config=config, summary=summary)
                         except Exception as e:
                             LOGGER.debug(
-                                f"Failed to send sync summary notification: {e!s}"
+                                f"Failed to send sync summary notification: {e!s}",
                             )
 
                     if not _check_services_configured(config):
                         LOGGER.warning(
-                            "Nothing to sync. Please add drive: and/or photos: section in config.yaml file."
+                            "Nothing to sync. Please add drive: and/or photos: section in config.yaml file.",
                         )
                 else:
                     if not _handle_2fa_required(config, username, sync_state):
@@ -835,7 +835,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
 
         if _should_exit_oneshot_mode(config):
             LOGGER.info(
-                "All configured sync intervals are negative, exiting oneshot mode..."
+                "All configured sync intervals are negative, exiting oneshot mode...",
             )
             break
 

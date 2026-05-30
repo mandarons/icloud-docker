@@ -7,7 +7,6 @@ import logging
 import os
 import shutil
 import unittest
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import tests
@@ -42,7 +41,7 @@ class TestDryRunPerform(unittest.TestCase):
         """When Drive is configured, log destination path + root item count."""
         api = self._make_api(drive_items=["dir1", "dir2", "file.txt"])
         with self.assertLogs(sync.LOGGER, level=logging.INFO) as cm:
-            sync._perform_dry_run(config=self.config, api=api)
+            sync._perform_dry_run(config=self.config, api=api)  # noqa: SLF001
         joined = "\n".join(cm.output)
         self.assertIn("DRY RUN: Drive destination:", joined)
         self.assertIn("Drive root contains 3 item(s)", joined)
@@ -51,7 +50,7 @@ class TestDryRunPerform(unittest.TestCase):
         """When Photos is configured, log destination path + library names."""
         api = self._make_api(photos_libraries={"PrimarySync": object(), "SharedLibrary": object()})
         with self.assertLogs(sync.LOGGER, level=logging.INFO) as cm:
-            sync._perform_dry_run(config=self.config, api=api)
+            sync._perform_dry_run(config=self.config, api=api)  # noqa: SLF001
         joined = "\n".join(cm.output)
         self.assertIn("DRY RUN: Photos destination:", joined)
         self.assertIn("PrimarySync", joined)
@@ -63,7 +62,7 @@ class TestDryRunPerform(unittest.TestCase):
         api.drive.dir.side_effect = RuntimeError("boom")
         api.photos.libraries = {}
         with self.assertLogs(sync.LOGGER, level=logging.WARNING) as cm:
-            sync._perform_dry_run(config=self.config, api=api)
+            sync._perform_dry_run(config=self.config, api=api)  # noqa: SLF001
         joined = "\n".join(cm.output)
         self.assertIn("Drive enumeration failed", joined)
         self.assertIn("boom", joined)
@@ -74,12 +73,12 @@ class TestDryRunPerform(unittest.TestCase):
         class BoomPhotos:
             @property
             def libraries(self):
-                raise RuntimeError("photos boom")
+                raise RuntimeError("photos boom")  # noqa: EM101
 
         api = self._make_api(drive_items=[])
         api.photos = BoomPhotos()
         with self.assertLogs(sync.LOGGER, level=logging.WARNING) as cm:
-            sync._perform_dry_run(config=self.config, api=api)
+            sync._perform_dry_run(config=self.config, api=api)  # noqa: SLF001
         joined = "\n".join(cm.output)
         self.assertIn("Photos enumeration failed", joined)
 
@@ -87,7 +86,7 @@ class TestDryRunPerform(unittest.TestCase):
         """Final 'DRY RUN complete' line is always emitted."""
         api = self._make_api()
         with self.assertLogs(sync.LOGGER, level=logging.INFO) as cm:
-            sync._perform_dry_run(config=self.config, api=api)
+            sync._perform_dry_run(config=self.config, api=api)  # noqa: SLF001
         joined = "\n".join(cm.output)
         self.assertIn("DRY RUN complete", joined)
         self.assertIn("--dry-run", joined)
@@ -97,7 +96,7 @@ class TestDryRunPerform(unittest.TestCase):
         config = {"app": dict(self.config["app"])}  # no drive, no photos
         api = self._make_api()
         with self.assertLogs(sync.LOGGER, level=logging.INFO) as cm:
-            sync._perform_dry_run(config=config, api=api)
+            sync._perform_dry_run(config=config, api=api)  # noqa: SLF001
         joined = "\n".join(cm.output)
         self.assertIn("no `drive:` section in config", joined)
         self.assertIn("no `photos:` section in config", joined)
