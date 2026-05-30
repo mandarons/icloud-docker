@@ -21,7 +21,7 @@ ENV_CONFIG_FILE_PATH_KEY = "ENV_CONFIG_FILE_PATH"
 DEFAULT_LOGGER_LEVEL = "info"
 DEFAULT_LOG_FILE_NAME = "icloud.log"
 DEFAULT_CONFIG_FILE_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME
+    os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME,
 )
 # Operator-overridable via ICLOUD_DOCKER_CONFIG_DIR. Default ``/config`` is
 # the in-container mount point users bind their config volume to. Setting
@@ -114,9 +114,9 @@ def configure_icloudpy_logging():
     logger_config = get_logger_config(
         config=read_config(
             config_path=os.environ.get(
-                ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH
-            )
-        )
+                ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH,
+            ),
+        ),
     )
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
@@ -142,9 +142,9 @@ def get_logger():
     logger_config = get_logger_config(
         config=read_config(
             config_path=os.environ.get(
-                ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH
-            )
-        )
+                ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH,
+            ),
+        ),
     )
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
@@ -168,7 +168,7 @@ def get_logger():
             logger.addHandler(file_handler)
 
         if not log_handler_exists(
-            logger=logger, handler_type=logging.StreamHandler, stream=sys.stdout
+            logger=logger, handler_type=logging.StreamHandler, stream=sys.stdout,
         ):
             console_handler = logging.StreamHandler(sys.stdout)
             console_handler.setFormatter(
