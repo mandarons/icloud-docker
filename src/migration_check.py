@@ -132,20 +132,28 @@ def check_library(
     range you care about validating.
     """
     library_dest = _library_destination(photos_base, library_name, mapping)
+    # Match the real sync's default path layout: ``_sync_all_photos_in_library``
+    # in src/sync_photos.py iterates ``library.all`` (not
+    # ``library.albums["All Photos"]``) and writes under
+    # ``<library_dest>/all/<folder_format>/<filename>``. Earlier versions
+    # of this checker walked the album view and reported existing files
+    # as ``not_found`` because the on-disk path it computed was missing
+    # the trailing ``/all/`` segment.
+    check_dest = os.path.join(library_dest, "all")
     stats = {"would_skip": 0, "size_mismatch": 0, "not_found": 0, "error": 0}
     samples = {"would_skip": [], "size_mismatch": [], "not_found": []}
 
     seen = 0
     checked = 0
     try:
-        for photo in library.albums["All Photos"]:
+        for photo in library.all:
             if sample > 0 and checked >= sample:
                 break
             seen += 1
             checked += 1
             status, path, expected, actual = _check_one_photo(
                 photo,
-                library_dest,
+                check_dest,
                 folder_format,
             )
             stats[status] = stats.get(status, 0) + 1
@@ -180,7 +188,15 @@ def check_migration(api, config: dict, sample: int = 0) -> dict[str, Any]:
         Dict keyed by library name → per-library result dict (see
         ``check_library``).
     """
-    photos_base = config_parser.prepare_photos_destination(config=config)
+    # Read-only path resolution — never call prepare_*_destination from
+    # the dry-run path. Those helpers ``os.makedirs`` the destination,
+    # which would leave stub directories on disk if the user
+    # misconfigured the mount they're trying to validate (exactly what
+    # --dry-run is supposed to catch BEFORE writing anything).
+    photos_base = os.path.join(
+        config_parser.get_root_destination_path(config=config),
+        config_parser.get_photos_destination_path(config=config),
+    )
     # Defensive: feat/photos-library-destinations may not be merged yet.
     # Falls back to an empty mapping (every library writes to the same
     # photos_base) so this PR is independent of PR 3.
@@ -372,7 +388,11 @@ def check_drive_migration(api, config: dict, sample: int = 0) -> dict[str, Any] 
     if "drive" not in (config or {}):
         return None
     try:
-        drive_destination = config_parser.prepare_drive_destination(config=config)
+        # Read-only resolution — see check_migration above for rationale.
+        drive_destination = os.path.join(
+            config_parser.get_root_destination_path(config=config),
+            config_parser.get_drive_destination_path(config=config),
+        )
     except Exception as e:
         LOGGER.warning(f"check_migration: drive destination resolution failed: {e!s}")
         return None

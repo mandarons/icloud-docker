@@ -25,8 +25,13 @@ def _fake_photo(filename: str, size: int, year: int = 2024, month: int = 1):
 
 
 def _fake_library(photos: list):
-    """Wrap a list of photo mocks in an object shaped like a PhotoLibrary."""
+    """Wrap a list of photo mocks in an object shaped like a PhotoLibrary.
+
+    Exposes ``.all`` (what the real sync iterates) AND
+    ``.albums["All Photos"]`` (legacy callers / older test fixtures).
+    """
     library = MagicMock()
+    library.all = photos
     library.albums = {"All Photos": photos}
     return library
 
@@ -85,10 +90,12 @@ class TestCheckLibrary(unittest.TestCase):
             # Create three photos on disk at the expected paths with the
             # expected sizes; check_library should report all would_skip.
             photos = []
+            # Match the real sync's layout: <library_dest>/all/<filename>.
+            all_dir = os.path.join(base, "all")
+            os.makedirs(all_dir, exist_ok=True)
             for i, size in enumerate([1000, 2000, 3000]):
                 name = f"IMG_{i}.HEIC"
-                path = os.path.join(base, name)
-                with open(path, "wb") as f:
+                with open(os.path.join(all_dir, name), "wb") as f:
                     f.write(b"x" * size)
                 photos.append(_fake_photo(name, size))
 
@@ -121,10 +128,13 @@ class TestCheckLibrary(unittest.TestCase):
 
     def test_size_mismatch_counts_separately_from_not_found(self):
         with tempfile.TemporaryDirectory() as base:
-            # One file present at correct size, one at wrong size, one missing.
-            with open(os.path.join(base, "IMG_a.HEIC"), "wb") as f:
+            # Real sync writes under <library_dest>/all/, so the
+            # checker looks there too.
+            all_dir = os.path.join(base, "all")
+            os.makedirs(all_dir, exist_ok=True)
+            with open(os.path.join(all_dir, "IMG_a.HEIC"), "wb") as f:
                 f.write(b"x" * 1000)  # matches
-            with open(os.path.join(base, "IMG_b.HEIC"), "wb") as f:
+            with open(os.path.join(all_dir, "IMG_b.HEIC"), "wb") as f:
                 f.write(b"x" * 500)  # wrong size — expected 2000
 
             photos = [
@@ -375,7 +385,9 @@ class TestCheckOnePhotoEdges(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as base:
             name = "IMG_0.HEIC"
-            with open(os.path.join(base, name), "wb") as f:
+            all_dir = os.path.join(base, "all")
+            os.makedirs(all_dir, exist_ok=True)
+            with open(os.path.join(all_dir, name), "wb") as f:
                 f.write(b"x" * 1000)
             photo = _fake_photo(name, 1000)
             with patch("os.path.getsize", side_effect=OSError("perms")):
@@ -393,14 +405,20 @@ class TestCheckOnePhotoEdges(unittest.TestCase):
         """A walk that explodes mid-iteration (transient iCloud error)
         is logged and returns partial counts — not a hard fail."""
 
-        class BoomLibrary:
-            def __init__(self):
-                self.albums = {"All Photos": self}
+        class BoomIterable:
+            """Iterable that yields one photo, then explodes."""
 
             def __iter__(self):
                 yield _fake_photo("IMG_0.HEIC", 1000)
                 msg = "iter boom"
                 raise RuntimeError(msg)
+
+        class BoomLibrary:
+            def __init__(self):
+                # check_library iterates ``library.all`` (matching
+                # sync_photos.py's default path).
+                self.all = BoomIterable()
+                self.albums = {"All Photos": self.all}
 
         with tempfile.TemporaryDirectory() as base:
             result = migration_check.check_library(
@@ -733,9 +751,13 @@ class TestCheckMigrationOrchestrator(unittest.TestCase):
     def test_check_drive_migration_returns_none_when_destination_resolution_fails(self):
         from unittest.mock import patch
 
+        # check_drive_migration now uses the non-mutating
+        # get_*_destination_path getters (per Copilot review feedback —
+        # dry-run mustn't side-effect mkdir). Patch the getter that the
+        # try-block actually invokes.
         with patch.object(
             migration_check.config_parser,
-            "prepare_drive_destination",
+            "get_root_destination_path",
             side_effect=RuntimeError("bad path"),
         ):
             self.assertIsNone(
