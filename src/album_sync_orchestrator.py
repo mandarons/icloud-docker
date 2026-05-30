@@ -152,7 +152,16 @@ def _collect_photo_download_tasks(
             # required.
             try:
                 live_versions = photo.versions
-            except Exception:
+            except Exception as e:
+                # Treat-as-no-Live-Photo soft path. Logged at DEBUG so
+                # users investigating "why is the .mov missing for this
+                # photo?" can spot CloudKit-record-read failures without
+                # noise at INFO/WARNING for the common case.
+                photo_id = getattr(photo, "filename", "?")
+                LOGGER.debug(
+                    f"Live Photo pairing skipped for {photo_id}: "
+                    f"photo.versions read failed: {type(e).__name__}: {e!s}",
+                )
                 live_versions = {}
             if "live_video_original" in live_versions:
                 live_task = collect_download_task(
