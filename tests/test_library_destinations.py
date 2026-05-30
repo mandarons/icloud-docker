@@ -32,7 +32,7 @@ class TestGetPhotosLibraryDestinations(unittest.TestCase):
                     "PrimarySync": "personal",
                     "SharedLibrary": "shared",
                 },
-            }
+            },
         }
         result = config_parser.get_photos_library_destinations(config)
         assert result == {"PrimarySync": "personal", "SharedLibrary": "shared"}
