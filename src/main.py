@@ -37,4 +37,20 @@ if __name__ == "__main__":
         ),
     )
     args = parser.parse_args()
+
+    # Validate the --check-files / --dry-run combination before handing off
+    # to sync.sync(). Without these guards, `--check-files 10` (no
+    # --dry-run) starts the normal sync loop and silently ignores the
+    # flag, and `--check-files -1` is treated as "walk everything" by
+    # the migration walkers (since `if sample > 0` is the cap-check) —
+    # both of which trip up users expecting fail-fast feedback.
+    if args.check_files is not None:
+        if not args.dry_run:
+            parser.error("--check-files requires --dry-run")
+        if args.check_files < 0:
+            parser.error(
+                "--check-files must be a non-negative integer "
+                "(0 means walk everything, N > 0 caps the walk at N)",
+            )
+
     sync.sync(dry_run=args.dry_run, check_files=args.check_files)
