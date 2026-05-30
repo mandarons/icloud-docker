@@ -13,7 +13,7 @@ collisions get suffixes.
 import os
 import tempfile
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 
 def _fake_photo(filename, photo_id, original_size):

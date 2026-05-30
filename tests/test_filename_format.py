@@ -91,14 +91,14 @@ class TestSetDefaultFilenameFormat(unittest.TestCase):
         set_default_filename_format("simple")
         from src import photo_path_utils
 
-        assert photo_path_utils._DEFAULT_FILENAME_FORMAT == "simple"
+        assert photo_path_utils._DEFAULT_FILENAME_FORMAT == "simple"  # noqa: SLF001
 
     def test_set_to_metadata(self):
         set_default_filename_format("simple")
         set_default_filename_format("metadata")
         from src import photo_path_utils
 
-        assert photo_path_utils._DEFAULT_FILENAME_FORMAT == "metadata"
+        assert photo_path_utils._DEFAULT_FILENAME_FORMAT == "metadata"  # noqa: SLF001
 
     def test_unknown_value_is_ignored(self):
         set_default_filename_format("simple")  # baseline
@@ -106,7 +106,7 @@ class TestSetDefaultFilenameFormat(unittest.TestCase):
         from src import photo_path_utils
 
         # Stays at simple — invalid value silently rejected
-        assert photo_path_utils._DEFAULT_FILENAME_FORMAT == "simple"
+        assert photo_path_utils._DEFAULT_FILENAME_FORMAT == "simple"  # noqa: SLF001
 
 
 
