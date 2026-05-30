@@ -72,7 +72,7 @@ class TestChunkedEnumeration(unittest.TestCase):
         ):
             # All-in-one-chunk: 30 photos, chunk=100 → 1 drain call
             mock_exec.reset_mock()
-            s1, f1 = album_sync_orchestrator._collect_and_execute_album_in_chunks(
+            s1, f1 = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
                 album,
                 "/tmp/dest",
                 ["original"],
@@ -89,7 +89,7 @@ class TestChunkedEnumeration(unittest.TestCase):
             album = _fake_album(photos)
 
             mock_exec.reset_mock()
-            s2, f2 = album_sync_orchestrator._collect_and_execute_album_in_chunks(
+            s2, f2 = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
                 album,
                 "/tmp/dest",
                 ["original"],
@@ -118,7 +118,7 @@ class TestChunkedEnumeration(unittest.TestCase):
             album_sync_orchestrator,
             "execute_parallel_downloads",
         ) as mock_exec:
-            s, f = album_sync_orchestrator._collect_and_execute_album_in_chunks(
+            s, f = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
                 album,
                 "/tmp/dest",
                 ["original"],
@@ -149,7 +149,7 @@ class TestChunkedEnumeration(unittest.TestCase):
                 side_effect=lambda tasks, _: (len(tasks), 0),
             ) as mock_exec,
         ):
-            s, f = album_sync_orchestrator._collect_and_execute_album_in_chunks(
+            s, f = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
                 album,
                 "/tmp/dest",
                 ["original"],
@@ -182,7 +182,7 @@ class TestChunkedEnumeration(unittest.TestCase):
                 side_effect=lambda tasks, _: (len(tasks), 0),
             ) as mock_exec,
         ):
-            s, _ = album_sync_orchestrator._collect_and_execute_album_in_chunks(
+            s, _ = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
                 album,
                 "/tmp/dest",
                 ["original"],
@@ -225,7 +225,7 @@ class TestChunkedEnumeration(unittest.TestCase):
                 side_effect=_record_drain_size,
             ),
         ):
-            s, _ = album_sync_orchestrator._collect_and_execute_album_in_chunks(
+            s, _ = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
                 album,
                 "/tmp/dest",
                 ["original"],
