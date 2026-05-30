@@ -65,7 +65,7 @@ class TestCheckMountMarker(unittest.TestCase):
     def test_returns_true_when_not_required(self):
         """No marker file means no-op when require=False."""
         self.assertTrue(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp],
                 marker_filename=".mounted",
                 required=False,
@@ -77,7 +77,7 @@ class TestCheckMountMarker(unittest.TestCase):
         """Marker file present satisfies the failsafe."""
         open(os.path.join(self.tmp, ".mounted"), "w").close()
         self.assertTrue(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp],
                 marker_filename=".mounted",
                 required=True,
@@ -88,7 +88,7 @@ class TestCheckMountMarker(unittest.TestCase):
     def test_returns_false_when_required_and_marker_absent(self):
         """Marker absent + required → False (caller should skip sync)."""
         self.assertFalse(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp],
                 marker_filename=".mounted",
                 required=True,
@@ -99,7 +99,7 @@ class TestCheckMountMarker(unittest.TestCase):
     def test_error_logged_when_marker_missing(self):
         """Refusal is logged at ERROR level with actionable instructions."""
         with self.assertLogs(sync.LOGGER, level=logging.ERROR) as cm:
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp],
                 marker_filename=".mounted",
                 required=True,
@@ -115,7 +115,7 @@ class TestCheckMountMarker(unittest.TestCase):
         open(os.path.join(self.tmp, ".icloud-ok"), "w").close()
         # Default name would fail; custom name succeeds.
         self.assertFalse(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp],
                 marker_filename=".mounted",
                 required=True,
@@ -123,7 +123,7 @@ class TestCheckMountMarker(unittest.TestCase):
             ),
         )
         self.assertTrue(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp],
                 marker_filename=".icloud-ok",
                 required=True,
@@ -140,7 +140,7 @@ class TestCheckMountMarker(unittest.TestCase):
         for d in (self.tmp, sub1, sub2):
             open(os.path.join(d, ".mounted"), "w").close()
         self.assertTrue(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp, sub1, sub2],
                 marker_filename=".mounted",
                 required=True,
@@ -158,7 +158,7 @@ class TestCheckMountMarker(unittest.TestCase):
         open(os.path.join(self.tmp, ".mounted"), "w").close()
         open(os.path.join(sub1, ".mounted"), "w").close()
         self.assertFalse(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp, sub1, sub2],
                 marker_filename=".mounted",
                 required=True,
@@ -174,7 +174,7 @@ class TestCheckMountMarker(unittest.TestCase):
         os.makedirs(sub_shared)
         # No markers anywhere.
         with self.assertLogs(sync.LOGGER, level=logging.ERROR) as cm:
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[self.tmp, sub_personal, sub_shared],
                 marker_filename=".mounted",
                 required=True,
@@ -191,7 +191,7 @@ class TestCheckMountMarker(unittest.TestCase):
         ghost = os.path.join(self.tmp, "never-mounted")
         # Intentionally do NOT mkdir ghost.
         self.assertFalse(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[ghost],
                 marker_filename=".mounted",
                 required=True,
@@ -202,7 +202,7 @@ class TestCheckMountMarker(unittest.TestCase):
     def test_empty_destinations_returns_true(self):
         """Empty destination list means nothing to check — safe to proceed."""
         self.assertTrue(
-            sync._check_mount_marker(
+            sync._check_mount_marker(  # noqa: SLF001
                 destinations=[],
                 marker_filename=".mounted",
                 required=True,
@@ -266,7 +266,7 @@ class TestPhotosCheckCoversLibraryDestinations(unittest.TestCase):
             "prepare_photos_destination",
             return_value=self.tmp,
         ):
-            result = sync._perform_photos_sync(
+            result = sync._perform_photos_sync(  # noqa: SLF001
                 config=self._config(),
                 api=None,
                 sync_state=self._make_state(),
@@ -296,7 +296,7 @@ class TestPhotosCheckCoversLibraryDestinations(unittest.TestCase):
             ),
             self.assertLogs(sync.LOGGER, level=logging.INFO) as cm,
         ):
-            sync._perform_photos_sync(
+            sync._perform_photos_sync(  # noqa: SLF001
                 config=self._config(),
                 api=fake_api,
                 sync_state=self._make_state(),
