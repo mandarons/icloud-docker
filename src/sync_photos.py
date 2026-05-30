@@ -385,10 +385,23 @@ def sync_photos(config, photos):
     """
     # Parse configuration using centralized config parser
     destination_path = config_parser.prepare_photos_destination(config=config)
-    # Apply preserve_originals_as_bak toggle for this sync run (False default).
-    from src.photo_path_utils import set_preserve_originals_as_bak
-    set_preserve_originals_as_bak(config_parser.get_photos_preserve_originals_as_bak(config=config))
     filters = config_parser.get_photos_filters(config=config)
+    # preserve_originals_as_bak invariant: at least ONE visible file per
+    # photo must always land on disk. The suffix only hides ``original``
+    # behind ``.bak`` -- so if the user isn't ALSO downloading
+    # ``original_alt`` (the visible "current view" of an edited photo),
+    # enabling the suffix would leave nothing visible. Gate the toggle
+    # on both ``preserve_originals_as_bak: true`` AND ``original_alt`` in
+    # ``file_sizes``. If a photo is later removed from iCloud, the normal
+    # remove_obsolete sweep cascades to both the visible file AND the
+    # ``.bak`` sidecar (neither is in tracked_files, both get deleted) --
+    # so there's no risk of orphan ``.bak`` files outliving their parent.
+    from src.photo_path_utils import set_preserve_originals_as_bak
+
+    set_preserve_originals_as_bak(
+        config_parser.get_photos_preserve_originals_as_bak(config=config)
+        and "original_alt" in (filters.get("file_sizes") or []),
+    )
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
     use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)

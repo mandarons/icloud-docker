@@ -116,13 +116,105 @@ class TestPartialCloudkitRecordSafe(unittest.TestCase):
         set_preserve_originals_as_bak(False)
 
     def test_versions_raises_falls_through_to_normal_name(self):
-        photo = MagicMock()
-        photo.filename = "IMG_9999.HEIC"
-        photo.id = "xyz"
-        # Make photo.versions raise
-        type(photo).versions = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("broken record")),
-        )
-        # Should not raise; should return normal name without .bak
-        name = generate_photo_filename_with_metadata(photo, "original")
+        """A partial CloudKit record where ``photo.versions`` raises
+        must not crash filename generation. Treat-as-no-alt soft path
+        is exercised — result is the normal name with no ``.bak``."""
+
+        # Use a dedicated stub class instead of mutating ``MagicMock``'s
+        # class via ``type(photo).versions = property(...)`` — that
+        # pattern monkey-patches MagicMock globally and leaks into every
+        # later test that touches ``MagicMock().versions``.
+        class _BrokenPhoto:
+            filename = "IMG_9999.HEIC"
+            id = "xyz"
+
+            @property
+            def versions(self):
+                msg = "broken record"
+                raise RuntimeError(msg)
+
+        name = generate_photo_filename_with_metadata(_BrokenPhoto(), "original")
         assert not name.endswith(".bak"), f"got {name!r}"
+
+
+
+class TestSyncGateRequiresOriginalAlt(unittest.TestCase):
+    """The ``sync_photos.sync_photos`` orchestrator must only flip the
+    ``set_preserve_originals_as_bak`` toggle when ``original_alt`` is
+    actually in the configured ``file_sizes``. Otherwise the suffix
+    hides the original AND the visible edited view is never downloaded
+    -- the photo "disappears" from photo browsers.
+
+    The toggle defaults to OFF, so we observe the boolean the
+    orchestrator passes to ``set_preserve_originals_as_bak`` via patch.
+    """
+
+    def setUp(self):
+        set_preserve_originals_as_bak(False)
+
+    def tearDown(self):
+        set_preserve_originals_as_bak(False)
+
+    def _config(self, file_sizes):
+        return {
+            "photos": {
+                "destination": "photos",
+                "preserve_originals_as_bak": True,
+                "filters": {
+                    "libraries": ["PrimarySync"],
+                    "file_sizes": file_sizes,
+                },
+            },
+        }
+
+    def _run_with_config(self, config):
+        from unittest.mock import MagicMock, patch
+
+        from src import sync_photos
+
+        api_photos = MagicMock()
+        api_photos.libraries = {"PrimarySync": MagicMock(all=[], albums={})}
+        with patch.object(
+            sync_photos.config_parser,
+            "prepare_photos_destination",
+            return_value="/tmp/photos",
+        ), patch.object(
+            sync_photos, "_sync_albums_by_configuration", return_value=(0, 0),
+        ), patch.object(
+            sync_photos, "remove_obsolete_files",
+        ), patch(
+            "src.photo_path_utils.set_preserve_originals_as_bak",
+        ) as fake_set:
+            sync_photos.sync_photos(config=config, photos=api_photos)
+        return fake_set
+
+    def test_gate_FALSE_when_original_alt_not_in_file_sizes(self):
+        """preserve_originals_as_bak=true BUT original_alt not requested
+        -> the orchestrator must call ``set_preserve_originals_as_bak(False)``
+        so the original lands at its normal (visible) name. Otherwise
+        the photo has no visible representation on disk."""
+        fake_set = self._run_with_config(self._config(["original"]))
+        # set_preserve_originals_as_bak called with False (or never called).
+        if fake_set.call_args_list:
+            last_arg = fake_set.call_args_list[-1].args[0]
+            assert last_arg is False, f"expected False, got {last_arg!r}"
+
+    def test_gate_TRUE_when_original_alt_IS_in_file_sizes(self):
+        """preserve_originals_as_bak=true AND original_alt requested
+        -> the toggle activates; the edited "current view" lands
+        visibly while the untouched original goes to .bak."""
+        fake_set = self._run_with_config(self._config(["original", "original_alt"]))
+        # Last call was True.
+        assert fake_set.call_args_list, "set_preserve_originals_as_bak never called"
+        last_arg = fake_set.call_args_list[-1].args[0]
+        assert last_arg is True, f"expected True, got {last_arg!r}"
+
+    def test_gate_FALSE_when_config_false_even_if_original_alt_present(self):
+        """preserve_originals_as_bak=false short-circuits regardless of
+        file_sizes."""
+        cfg = self._config(["original", "original_alt"])
+        cfg["photos"]["preserve_originals_as_bak"] = False
+        fake_set = self._run_with_config(cfg)
+        if fake_set.call_args_list:
+            last_arg = fake_set.call_args_list[-1].args[0]
+            assert last_arg is False, f"expected False, got {last_arg!r}"
