@@ -87,10 +87,12 @@ def generate_photo_filename_with_metadata(photo, file_size: str) -> str:
     separately to give the user a visible "current view" file plus a hidden
     "untouched original" sidecar.
 
-    Works uniformly across both ``filename_format`` modes — the
-    ``.original.bak`` qualifier is appended to whatever the base filename
-    would have been (``name__filesize__base64id.ext`` in metadata mode or
-    ``name.ext`` in simple mode).
+    This function produces only the metadata-style filename:
+    ``name__filesize__base64id.ext``. The ``.original.bak`` suffix is
+    appended to that base when the preservation toggle applies. A
+    separate ``simple``-format codepath (introduced by the
+    feat/photos-filename-format-simple PR) handles its own filename
+    composition; it does NOT flow through this function.
 
     Args:
         photo: Photo object from iCloudPy
