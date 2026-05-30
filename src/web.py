@@ -19,7 +19,6 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 import threading
-
 from typing import Any
 
 from flask import Flask, jsonify, redirect, render_template, request, url_for
@@ -112,14 +111,16 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
     if service == "photos":
         destination = config_parser.prepare_photos_destination(config=config)
         interval = config_parser.get_photos_sync_interval(
-            config=config, log_messages=False
+            config=config,
+            log_messages=False,
         )
         name = "Photos"
         library_destinations = _get_library_destinations(config=config)
     else:
         destination = config_parser.prepare_drive_destination(config=config)
         interval = config_parser.get_drive_sync_interval(
-            config=config, log_messages=False
+            config=config,
+            log_messages=False,
         )
         name = "Drive"
         library_destinations = {}
@@ -153,7 +154,8 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
         "destination_exists": os.path.isdir(destination),
         "sync_interval_s": interval,
         "require_mount_marker": _get_require_mount_marker(
-            config=config, service=service
+            config=config,
+            service=service,
         ),
         "marker_present": os.path.isfile(marker_path),
         "marker_path": marker_path,
@@ -220,14 +222,18 @@ def _build_status(config: dict | None) -> dict[str, Any]:
     if "photos" in config:
         services.append(
             _build_service(
-                config=config, service="photos", marker_filename=marker_filename
-            )
+                config=config,
+                service="photos",
+                marker_filename=marker_filename,
+            ),
         )
     if "drive" in config:
         services.append(
             _build_service(
-                config=config, service="drive", marker_filename=marker_filename
-            )
+                config=config,
+                service="drive",
+                marker_filename=marker_filename,
+            ),
         )
 
     username = config_parser.get_username(config=config)
@@ -348,7 +354,7 @@ def create_app(testing: bool = False) -> Flask:
         relies on this being reachable to render the rest of the page)."""
         config = _load_current_config()
         return jsonify(
-            {"lines": _tail_log_file(path=_logger_filename(config=config), lines=200)}
+            {"lines": _tail_log_file(path=_logger_filename(config=config), lines=200)},
         )
 
     @app.route("/auth", methods=["GET"])
@@ -410,7 +416,8 @@ def create_app(testing: bool = False) -> Flask:
             LOGGER.exception("Web UI auth failed during ICloudPyService instantiation")
             return (
                 _render_auth(
-                    message=f"Authentication failed: {e!s}", message_kind="err"
+                    message=f"Authentication failed: {e!s}",
+                    message_kind="err",
                 ),
                 400,
             )
@@ -436,7 +443,8 @@ def create_app(testing: bool = False) -> Flask:
         # next retry, then bounce back to the dashboard.
         try:
             icloudpy_utils.store_password_in_keyring(
-                username=username, password=password
+                username=username,
+                password=password,
             )
         except Exception as e:
             LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
@@ -480,7 +488,8 @@ def create_app(testing: bool = False) -> Flask:
             LOGGER.exception("Web UI: validate_2fa_code raised")
             return (
                 _render_auth(
-                    message=f"2FA validation error: {e!s}", message_kind="err"
+                    message=f"2FA validation error: {e!s}",
+                    message_kind="err",
                 ),
                 400,
             )
@@ -508,7 +517,8 @@ def create_app(testing: bool = False) -> Flask:
             from icloudpy import utils as icloudpy_utils
 
             icloudpy_utils.store_password_in_keyring(
-                username=username, password=password
+                username=username,
+                password=password,
             )
         except Exception as e:
             LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
@@ -663,10 +673,11 @@ def create_app(testing: bool = False) -> Flask:
         if not configured:
             return jsonify({"error": "no services configured"}), 400
 
-        queued = []
-        for svc in wanted:
-            if svc in configured and web_signals.request_force_sync(svc):
-                queued.append(svc)
+        queued = [
+            svc
+            for svc in wanted
+            if svc in configured and web_signals.request_force_sync(svc)
+        ]
 
         # Browser form submit gets a redirect; API consumers (curl,
         # monitors) get JSON. Distinguished by Accept header.
@@ -698,7 +709,8 @@ def _render_auth(message: str | None, message_kind: str | None):
 
 
 def start_in_thread(
-    host: str = "0.0.0.0", port: int = 8080
+    host: str = "0.0.0.0",
+    port: int = 8080,
 ) -> threading.Thread:  # noqa: S104
     """Launch the Flask app on a daemon thread.
 
@@ -716,7 +728,11 @@ def start_in_thread(
             # default single-threaded server can intermittently return
             # empty bodies when two requests overlap.
             app.run(
-                host=host, port=port, debug=False, use_reloader=False, threaded=True
+                host=host,
+                port=port,
+                debug=False,
+                use_reloader=False,
+                threaded=True,
             )
         except OSError as e:
             LOGGER.error(f"Web UI failed to bind {host}:{port} — {e!s}")
