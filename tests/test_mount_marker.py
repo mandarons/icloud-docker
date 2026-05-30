@@ -48,7 +48,8 @@ class TestMountMarkerConfigHelpers(unittest.TestCase):
         """Default marker filename is ``.mounted`` (matches boredazfcuk convention)."""
         self.assertEqual(config_parser.get_mount_marker_filename(config={}), ".mounted")
         self.assertEqual(
-            config_parser.get_mount_marker_filename(config={"app": {}}), ".mounted",
+            config_parser.get_mount_marker_filename(config={"app": {}}),
+            ".mounted",
         )
 
     def test_get_mount_marker_filename_when_configured(self):
@@ -221,6 +222,49 @@ class TestCheckMountMarker(unittest.TestCase):
                 service_name="Drive",
             ),
         )
+
+
+class TestDriveSyncSkippedWhenMarkerMissing(unittest.TestCase):
+    """``_perform_drive_sync`` returns None and skips the sync cycle
+    when ``drive.require_mount_marker`` is true but the marker file
+    isn't present at the destination."""
+
+    def setUp(self):
+        """Tempdir without any marker file."""
+        self.tmp = tempfile.mkdtemp()
+
+    def tearDown(self):
+        """Remove the tempdir."""
+        import shutil
+
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_drive_sync_returns_none_when_marker_missing(self):
+        """The Drive marker-missing branch sets the early return that
+        keeps the countdown from advancing. Without this test the early
+        return is unexecuted code."""
+        from unittest.mock import MagicMock, patch
+
+        state = sync.SyncState()
+        state.enable_sync_drive = True
+        config = {
+            "drive": {
+                "destination": self.tmp,
+                "require_mount_marker": True,
+            },
+        }
+        with patch.object(
+            sync.config_parser,
+            "prepare_drive_destination",
+            return_value=self.tmp,
+        ):
+            result = sync._perform_drive_sync(  # noqa: SLF001
+                config=config,
+                api=MagicMock(),
+                sync_state=state,
+                drive_sync_interval=300,
+            )
+        self.assertIsNone(result)
 
 
 class TestPhotosCheckCoversLibraryDestinations(unittest.TestCase):
