@@ -68,8 +68,8 @@ def collect_file_for_download(
     flatten_packages = (
         bool(
             getattr(config_parser, "get_drive_flatten_packages", lambda _c: False)(
-                config
-            )
+                config,
+            ),
         )
         if config
         else False
@@ -159,7 +159,7 @@ def download_file_task(download_info: dict[str, Any]) -> bool:
 
 
 def execute_parallel_downloads(
-    download_tasks: list[dict[str, Any]], max_threads: int
+    download_tasks: list[dict[str, Any]], max_threads: int,
 ) -> tuple[int, int]:
     """Execute multiple file downloads in parallel.
 
@@ -174,7 +174,7 @@ def execute_parallel_downloads(
         return 0, 0
 
     LOGGER.info(
-        f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files..."
+        f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...",
     )
 
     successful_downloads = 0
@@ -199,6 +199,6 @@ def execute_parallel_downloads(
                 failed_downloads += 1
 
     LOGGER.info(
-        f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed"
+        f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed",
     )
     return successful_downloads, failed_downloads

@@ -20,7 +20,7 @@ LOGGER = get_logger()
 
 
 def download_file(
-    item: Any, local_file: str, flatten_packages: bool = False
+    item: Any, local_file: str, flatten_packages: bool = False,
 ) -> str | None:
     """Download a file from iCloud to local filesystem.
 
@@ -62,7 +62,7 @@ def download_file(
             # downloaded bytes are intact.
             if response.url and "/packageDownload?" in response.url:
                 processed_file = process_package(
-                    local_file=local_file, flatten=flatten_packages
+                    local_file=local_file, flatten=flatten_packages,
                 )
                 if processed_file is None:
                     return None
