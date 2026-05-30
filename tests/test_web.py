@@ -256,8 +256,8 @@ class TestAuthForm(unittest.TestCase):
 
     def setUp(self):
         """Ensure no pending auth leaks across tests."""
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH.clear()
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.clear()  # noqa: SLF001
 
     def test_auth_get_returns_200(self):
         client = web.create_app(testing=True).test_client()
@@ -271,17 +271,17 @@ class TestAuthForm(unittest.TestCase):
         self.assertIn('action="/auth/password"', body)
 
     def test_auth_renders_code_field_when_pending(self):
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH["api"] = object()
-            web._PENDING_AUTH["username"] = "user@test.com"
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = object()  # noqa: SLF001
+            web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
         try:
             client = web.create_app(testing=True).test_client()
             body = client.get("/auth").data.decode("utf-8")
             self.assertIn('name="code"', body)
             self.assertIn('action="/auth/code"', body)
         finally:
-            with web._AUTH_LOCK:
-                web._PENDING_AUTH.clear()
+            with web._AUTH_LOCK:  # noqa: SLF001
+                web._PENDING_AUTH.clear()  # noqa: SLF001
 
 
 class TestAuthPasswordPost(unittest.TestCase):
@@ -290,12 +290,12 @@ class TestAuthPasswordPost(unittest.TestCase):
     the live session for ``POST /auth/code``."""
 
     def setUp(self):
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH.clear()
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.clear()  # noqa: SLF001
 
     def tearDown(self):
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH.clear()
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.clear()  # noqa: SLF001
 
     def test_empty_password_returns_400(self):
         client = web.create_app(testing=True).test_client()
@@ -350,9 +350,9 @@ class TestAuthPasswordPost(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.location.endswith("/auth"))
         fake_api.trigger_2fa_push_notification.assert_called_once()
-        with web._AUTH_LOCK:
-            self.assertIn("api", web._PENDING_AUTH)
-            self.assertEqual(web._PENDING_AUTH["username"], "user@test.com")
+        with web._AUTH_LOCK:  # noqa: SLF001
+            self.assertIn("api", web._PENDING_AUTH)  # noqa: SLF001
+            self.assertEqual(web._PENDING_AUTH["username"], "user@test.com")  # noqa: SLF001
 
     def test_no_2fa_required_stores_keyring_and_redirects(self):
         """Resumed-session case: ICloudPyService picks up the existing
@@ -373,8 +373,8 @@ class TestAuthPasswordPost(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.location.endswith("/"))
         keyring.assert_called_once_with(username="user@test.com", password="secret")
-        with web._AUTH_LOCK:
-            self.assertNotIn("api", web._PENDING_AUTH)
+        with web._AUTH_LOCK:  # noqa: SLF001
+            self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
     def test_authentication_exception_renders_error(self):
         """ICloudPyService raising — rendered as error pill, no crash."""
@@ -394,18 +394,18 @@ class TestAuthCodePost(unittest.TestCase):
     and redirects."""
 
     def setUp(self):
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH.clear()
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.clear()  # noqa: SLF001
 
     def tearDown(self):
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH.clear()
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.clear()  # noqa: SLF001
 
     def test_empty_code_returns_400(self):
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH["api"] = object()
-            web._PENDING_AUTH["username"] = "user@test.com"
-            web._PENDING_AUTH["password"] = "secret"
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = object()  # noqa: SLF001
+            web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
+            web._PENDING_AUTH["password"] = "secret"  # noqa: SLF001
         client = web.create_app(testing=True).test_client()
         response = client.post("/auth/code", data={"code": ""})
         self.assertEqual(response.status_code, 400)
@@ -422,28 +422,28 @@ class TestAuthCodePost(unittest.TestCase):
 
         fake_api = MagicMock()
         fake_api.validate_2fa_code.return_value = False
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH["api"] = fake_api
-            web._PENDING_AUTH["username"] = "user@test.com"
-            web._PENDING_AUTH["password"] = "secret"
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = fake_api  # noqa: SLF001
+            web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
+            web._PENDING_AUTH["password"] = "secret"  # noqa: SLF001
 
         client = web.create_app(testing=True).test_client()
         response = client.post("/auth/code", data={"code": "000000"})
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"Code rejected", response.data)
         # Pending preserved so user can retry.
-        with web._AUTH_LOCK:
-            self.assertIn("api", web._PENDING_AUTH)
+        with web._AUTH_LOCK:  # noqa: SLF001
+            self.assertIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
     def test_accepted_code_trusts_persists_clears_redirects(self):
         from unittest.mock import MagicMock, patch
 
         fake_api = MagicMock()
         fake_api.validate_2fa_code.return_value = True
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH["api"] = fake_api
-            web._PENDING_AUTH["username"] = "user@test.com"
-            web._PENDING_AUTH["password"] = "secret"
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = fake_api  # noqa: SLF001
+            web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
+            web._PENDING_AUTH["password"] = "secret"  # noqa: SLF001
 
         with patch("icloudpy.utils.store_password_in_keyring") as keyring:
             client = web.create_app(testing=True).test_client()
@@ -455,8 +455,8 @@ class TestAuthCodePost(unittest.TestCase):
         fake_api.trust_session.assert_called_once()
         keyring.assert_called_once_with(username="user@test.com", password="secret")
         # Pending cleared.
-        with web._AUTH_LOCK:
-            self.assertNotIn("api", web._PENDING_AUTH)
+        with web._AUTH_LOCK:  # noqa: SLF001
+            self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
     def test_trust_session_failure_still_succeeds(self):
         """trust_session() raising is non-fatal — the code already worked,
@@ -466,18 +466,18 @@ class TestAuthCodePost(unittest.TestCase):
         fake_api = MagicMock()
         fake_api.validate_2fa_code.return_value = True
         fake_api.trust_session.side_effect = RuntimeError("cookie write failed")
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH["api"] = fake_api
-            web._PENDING_AUTH["username"] = "user@test.com"
-            web._PENDING_AUTH["password"] = "secret"
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = fake_api  # noqa: SLF001
+            web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
+            web._PENDING_AUTH["password"] = "secret"  # noqa: SLF001
 
         with patch("icloudpy.utils.store_password_in_keyring"):
             client = web.create_app(testing=True).test_client()
             response = client.post("/auth/code", data={"code": "123456"})
 
         self.assertEqual(response.status_code, 302)
-        with web._AUTH_LOCK:
-            self.assertNotIn("api", web._PENDING_AUTH)
+        with web._AUTH_LOCK:  # noqa: SLF001
+            self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
 
 class TestAuthReset(unittest.TestCase):
@@ -485,16 +485,16 @@ class TestAuthReset(unittest.TestCase):
     the form returns to the password state."""
 
     def test_reset_clears_pending(self):
-        with web._AUTH_LOCK:
-            web._PENDING_AUTH["api"] = object()
-            web._PENDING_AUTH["username"] = "user@test.com"
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = object()  # noqa: SLF001
+            web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
 
         client = web.create_app(testing=True).test_client()
         response = client.post("/auth/reset")
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.location.endswith("/auth"))
-        with web._AUTH_LOCK:
-            self.assertNotIn("api", web._PENDING_AUTH)
+        with web._AUTH_LOCK:  # noqa: SLF001
+            self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
 
 class TestDashboard(unittest.TestCase):
@@ -581,7 +581,7 @@ class TestLogs(unittest.TestCase):
                 f.write(f"line {i}\n")
             path = f.name
         try:
-            tail = web._tail_log_file(path=path, lines=10)
+            tail = web._tail_log_file(path=path, lines=10)  # noqa: SLF001
             self.assertEqual(len(tail), 10)
             self.assertEqual(tail[-1], "line 499")
             self.assertEqual(tail[0], "line 490")

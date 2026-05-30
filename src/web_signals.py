@@ -78,11 +78,11 @@ def pending_force_syncs() -> list[str]:
 
     Used by the dashboard to render "Queued ✓" instead of "Sync now".
     """
-    pending = []
-    for service in _VALID_SERVICES:
-        if os.path.isfile(_sentinel_path(service)):
-            pending.append(service)
-    return pending
+    return [
+        service
+        for service in _VALID_SERVICES
+        if os.path.isfile(_sentinel_path(service))
+    ]
 
 
 def consume_force_sync(service: str) -> bool:
