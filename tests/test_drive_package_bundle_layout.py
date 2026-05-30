@@ -154,7 +154,8 @@ class TestFlattenPackagesSkipsUnpack(unittest.TestCase):
             original_size = os.path.getsize(local_file)
 
             result = drive_package_processing.process_package(
-                local_file=local_file, flatten=True,
+                local_file=local_file,
+                flatten=True,
             )
             self.assertEqual(result, local_file)
             self.assertTrue(os.path.isfile(local_file))
@@ -174,10 +175,31 @@ class TestFlattenPackagesSkipsUnpack(unittest.TestCase):
                 f.write(b"opaque-bundle-bytes-no-magic")
 
             result = drive_package_processing.process_package(
-                local_file=local_file, flatten=True,
+                local_file=local_file,
+                flatten=True,
             )
             self.assertEqual(result, local_file)
             self.assertTrue(os.path.isfile(local_file))
+
+
+class TestZipEntriesSelfPrefixedEdgeCases(unittest.TestCase):
+    """Edge cases for ``_zip_entries_self_prefixed``."""
+
+    def test_returns_false_for_empty_zip(self):
+        """A zip whose only entry is the bare bundle folder itself (no
+        contents) returns False — there's nothing to prefix-check, and
+        downstream logic should fall through to the bundle-subdir
+        layout rather than extracting nothing into the parent."""
+        bundle = "Empty.numbers"
+        with tempfile.TemporaryDirectory() as tmp:
+            zip_path = os.path.join(tmp, "empty.zip")
+            with zipfile.ZipFile(zip_path, "w") as zf:
+                zf.writestr(bundle + "/", "")
+            with zipfile.ZipFile(zip_path) as zf:
+                assert (
+                    drive_package_processing._zip_entries_self_prefixed(zf, bundle)  # noqa: SLF001
+                    is False
+                )
 
 
 class TestFlattenPackagesConfigGetter(unittest.TestCase):
