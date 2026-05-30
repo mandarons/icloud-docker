@@ -121,7 +121,7 @@ class TestPartialCloudkitRecordSafe(unittest.TestCase):
         photo.id = "xyz"
         # Make photo.versions raise
         type(photo).versions = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("broken record"))
+            lambda self: (_ for _ in ()).throw(RuntimeError("broken record")),
         )
         # Should not raise; should return normal name without .bak
         name = generate_photo_filename_with_metadata(photo, "original")
