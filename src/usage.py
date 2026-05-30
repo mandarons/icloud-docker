@@ -18,7 +18,7 @@ LOGGER = get_logger()
 # Defaults to ``/config/.data`` to match upstream mandarons; tests on
 # non-container hosts (macOS, etc) override via the env var.
 CACHE_FILE_NAME = os.path.join(
-    os.environ.get("ICLOUD_DOCKER_CONFIG_DIR", "/config"), ".data"
+    os.environ.get("ICLOUD_DOCKER_CONFIG_DIR", "/config"), ".data",
 )
 NEW_INSTALLATION_ENDPOINT = os.environ.get("NEW_INSTALLATION_ENDPOINT", None)
 NEW_HEARTBEAT_ENDPOINT = os.environ.get("NEW_HEARTBEAT_ENDPOINT", None)
@@ -98,7 +98,7 @@ def load_cache(file_path: str) -> dict:
                 LOGGER.debug(f"Loaded and validated usage cache from: {file_path}")
             else:
                 LOGGER.warning(
-                    f"Cache data validation failed for {file_path}, starting fresh"
+                    f"Cache data validation failed for {file_path}, starting fresh",
                 )
                 save_cache(file_path=file_path, data={})
         except (json.JSONDecodeError, OSError) as e:
