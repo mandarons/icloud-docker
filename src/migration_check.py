@@ -58,7 +58,9 @@ except (
 ):  # pragma: no cover — only when feat/photos-library-destinations isn't merged
 
     def _library_destination(
-        base_destination: str, library: str, library_destinations: dict,
+        base_destination: str,
+        library: str,
+        library_destinations: dict,
     ) -> str:
         """Fallback that always returns the base destination.
 
@@ -74,7 +76,9 @@ LOGGER = get_logger()
 
 
 def _check_one_photo(
-    photo, library_dest: str, folder_format: str | None,
+    photo,
+    library_dest: str,
+    folder_format: str | None,
 ) -> tuple[str, str, int, int]:
     """Compute target path + status for a single photo. Returns
     ``(status, path, expected_size, actual_size)`` where ``status`` is
@@ -140,7 +144,9 @@ def check_library(
             seen += 1
             checked += 1
             status, path, expected, actual = _check_one_photo(
-                photo, library_dest, folder_format,
+                photo,
+                library_dest,
+                folder_format,
             )
             stats[status] = stats.get(status, 0) + 1
             if status in samples and len(samples[status]) < 3:
@@ -175,7 +181,13 @@ def check_migration(api, config: dict, sample: int = 0) -> dict[str, Any]:
         ``check_library``).
     """
     photos_base = config_parser.prepare_photos_destination(config=config)
-    mapping = config_parser.get_photos_library_destinations(config=config)
+    # Defensive: feat/photos-library-destinations may not be merged yet.
+    # Falls back to an empty mapping (every library writes to the same
+    # photos_base) so this PR is independent of PR 3.
+    if hasattr(config_parser, "get_photos_library_destinations"):
+        mapping = config_parser.get_photos_library_destinations(config=config)
+    else:  # pragma: no cover — only when feat/photos-library-destinations isn't merged
+        mapping = {}
     folder_format = config_parser.get_photos_folder_format(config=config)
 
     # mandarons' sync_photos.sync_photos() normally sets this singleton
@@ -251,7 +263,10 @@ def _check_one_drive_file(item, local_path: str) -> tuple[str, str, int, int]:
 
 
 def _walk_drive_recursive(
-    folder, destination_path: str, sample: int, state: dict,
+    folder,
+    destination_path: str,
+    sample: int,
+    state: dict,
 ) -> None:
     """Recursively walk a Drive folder, mutating ``state`` in place.
 
@@ -291,7 +306,8 @@ def _walk_drive_recursive(
             except Exception:
                 decoded = name
             sub_dest = unicodedata.normalize(
-                "NFC", os.path.join(destination_path, decoded),
+                "NFC",
+                os.path.join(destination_path, decoded),
             )
             _walk_drive_recursive(item, sub_dest, sample, state)
         elif item_type == "file":
@@ -300,7 +316,8 @@ def _walk_drive_recursive(
             except Exception:
                 decoded = name
             local_path = unicodedata.normalize(
-                "NFC", os.path.join(destination_path, decoded),
+                "NFC",
+                os.path.join(destination_path, decoded),
             )
             status, path, expected, actual = _check_one_drive_file(item, local_path)
             state["stats"][status] = state["stats"].get(status, 0) + 1
@@ -361,5 +378,7 @@ def check_drive_migration(api, config: dict, sample: int = 0) -> dict[str, Any] 
         return None
     LOGGER.info(f"check_migration: walking iCloud Drive (sample={sample or 'all'}) ...")
     return check_drive(
-        drive=api.drive, drive_destination=drive_destination, sample=sample,
+        drive=api.drive,
+        drive_destination=drive_destination,
+        sample=sample,
     )
