@@ -42,7 +42,9 @@ class TestGetPhotosLibraryDestinations(unittest.TestCase):
         assert config_parser.get_photos_library_destinations(config) == {}
 
     def test_coerces_non_string_keys_and_values_to_str(self):
-        config = {"photos": {"library_destinations": {123: 456, "PrimarySync": "personal"}}}
+        config = {
+            "photos": {"library_destinations": {123: 456, "PrimarySync": "personal"}},
+        }
         result = config_parser.get_photos_library_destinations(config)
         assert result == {"123": "456", "PrimarySync": "personal"}
 
@@ -87,7 +89,9 @@ class TestLibraryDestinationHelper(unittest.TestCase):
         hardcode their per-account GUID."""
         with tempfile.TemporaryDirectory() as base:
             mapping = {"PrimarySync": "Eric", "SharedLibrary": "Shared"}
-            result = _library_destination(base, "SharedSync-3C977B4A-C15A-46E4-9854-585B9342C409", mapping)
+            result = _library_destination(
+                base, "SharedSync-3C977B4A-C15A-46E4-9854-585B9342C409", mapping,
+            )
             assert result == os.path.join(base, "Shared")
             assert os.path.isdir(result)
 
@@ -109,3 +113,55 @@ class TestLibraryDestinationHelper(unittest.TestCase):
             mapping = {guid_name: "Exact", "SharedLibrary": "Aliased"}
             result = _library_destination(base, guid_name, mapping)
             assert result == os.path.join(base, "Exact")
+
+
+class TestSyncPhotosRemoveObsoletePerLibrary(unittest.TestCase):
+    """When ``library_destinations`` is configured AND
+    ``photos.remove_obsolete`` is true, ``sync_photos`` must call the
+    obsolete-cleanup once per library subdir (not once on the parent
+    destination — that would walk siblings' photo trees and delete them)."""
+
+    def test_per_library_remove_obsolete_invokes_once_per_subdir(self):
+        from unittest.mock import MagicMock, patch
+
+        from src import sync_photos as sp
+
+        with tempfile.TemporaryDirectory() as base:
+            config = {
+                "photos": {
+                    "destination": base,
+                    "remove_obsolete": True,
+                    "library_destinations": {
+                        "PrimarySync": "personal",
+                        "SharedLibrary": "shared",
+                    },
+                    "filters": {
+                        "libraries": ["PrimarySync", "SharedLibrary"],
+                        "file_sizes": ["original"],
+                    },
+                },
+            }
+            fake_photos = MagicMock()
+            fake_photos.libraries = {
+                "PrimarySync": MagicMock(),
+                "SharedLibrary": MagicMock(),
+            }
+
+            with patch.object(
+                sp.config_parser,
+                "prepare_photos_destination",
+                return_value=base,
+            ), patch.object(
+                sp,
+                "_sync_albums_by_configuration",
+                return_value=(0, 0),
+            ), patch.object(
+                sp, "remove_obsolete_files",
+            ) as fake_remove:
+                sp.sync_photos(config=config, photos=fake_photos)
+
+            called_paths = [c.args[0] for c in fake_remove.call_args_list]
+            assert called_paths == [
+                os.path.join(base, "personal"),
+                os.path.join(base, "shared"),
+            ]
