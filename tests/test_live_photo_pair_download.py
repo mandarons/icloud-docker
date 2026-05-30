@@ -118,17 +118,27 @@ class TestLivePhotoPairDownload(unittest.TestCase):
 
     @patch("src.album_sync_orchestrator.collect_download_task")
     def test_versions_access_failure_is_non_fatal(self, fake_collect):
-        """If photo.versions raises (partial CloudKit record), still emit the still tasks."""
-        photo = MagicMock()
-        photo.filename = "IMG_x.HEIC"
-        photo.id = "x"
-        type(photo).versions = property(
-            lambda self: (_ for _ in ()).throw(RuntimeError("CloudKit broken")),
-        )
+        """If photo.versions raises (partial CloudKit record), still emit
+        the still tasks. The pairing failure is logged at DEBUG (verified
+        in test_versions_access_failure_logs_debug below) and the still
+        path proceeds normally."""
+
+        # Use a dedicated stub class rather than ``type(photo).versions = property(...)``
+        # which mutates the global ``MagicMock`` class and pollutes every
+        # later test that touches ``MagicMock().versions``.
+        class _BrokenPhoto:
+            filename = "IMG_x.HEIC"
+            id = "x"
+
+            @property
+            def versions(self):
+                msg = "CloudKit broken"
+                raise RuntimeError(msg)
+
         fake_collect.side_effect = lambda *a, **kw: MagicMock(name="task")
 
         tasks = _collect_photo_download_tasks(
-            photo,
+            _BrokenPhoto(),
             destination_path="/tmp/dest",
             file_sizes=["original"],
             extensions=None,
@@ -137,9 +147,42 @@ class TestLivePhotoPairDownload(unittest.TestCase):
             hardlink_registry=None,
         )
 
-        # Original still task was collected; .mov path swallowed the exception
-        # and did not append anything.
+        # Original still task was collected; the broken .versions read
+        # was caught and the .mov path emitted nothing.
         assert len(tasks) == 1
+
+    @patch("src.album_sync_orchestrator.collect_download_task")
+    def test_versions_access_failure_logs_debug(self, fake_collect):
+        """Operators investigating "why is the .mov missing for this
+        photo?" should see a DEBUG line. Verifies the swallow-and-skip
+        path is observable, not silent."""
+        import logging
+
+        class _BrokenPhoto:
+            filename = "IMG_y.HEIC"
+            id = "y"
+
+            @property
+            def versions(self):
+                msg = "CloudKit broken"
+                raise RuntimeError(msg)
+
+        fake_collect.side_effect = lambda *a, **kw: MagicMock(name="task")
+
+        from src import album_sync_orchestrator
+
+        with self.assertLogs(album_sync_orchestrator.LOGGER, level=logging.DEBUG) as cm:
+            _collect_photo_download_tasks(
+                _BrokenPhoto(),
+                destination_path="/tmp/dest",
+                file_sizes=["original"],
+                extensions=None,
+                files=set(),
+                folder_format=None,
+                hardlink_registry=None,
+            )
+        joined = "\n".join(cm.output)
+        assert "Live Photo pairing skipped for IMG_y.HEIC" in joined, joined
 
     @patch("src.album_sync_orchestrator.collect_download_task")
     def test_live_video_original_with_none_collect_result_is_skipped(
