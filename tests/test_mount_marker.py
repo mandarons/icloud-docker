@@ -17,34 +17,46 @@ class TestMountMarkerConfigHelpers(unittest.TestCase):
     def test_get_drive_require_mount_marker_default_false(self):
         """Default is False so existing installs see no behaviour change."""
         self.assertFalse(config_parser.get_drive_require_mount_marker(config={}))
-        self.assertFalse(config_parser.get_drive_require_mount_marker(config={"drive": {}}))
+        self.assertFalse(
+            config_parser.get_drive_require_mount_marker(config={"drive": {}}),
+        )
 
     def test_get_drive_require_mount_marker_true_when_set(self):
         """Returns True when explicitly enabled."""
         self.assertTrue(
-            config_parser.get_drive_require_mount_marker(config={"drive": {"require_mount_marker": True}}),
+            config_parser.get_drive_require_mount_marker(
+                config={"drive": {"require_mount_marker": True}},
+            ),
         )
 
     def test_get_photos_require_mount_marker_default_false(self):
         """Default is False so existing installs see no behaviour change."""
         self.assertFalse(config_parser.get_photos_require_mount_marker(config={}))
-        self.assertFalse(config_parser.get_photos_require_mount_marker(config={"photos": {}}))
+        self.assertFalse(
+            config_parser.get_photos_require_mount_marker(config={"photos": {}}),
+        )
 
     def test_get_photos_require_mount_marker_true_when_set(self):
         """Returns True when explicitly enabled."""
         self.assertTrue(
-            config_parser.get_photos_require_mount_marker(config={"photos": {"require_mount_marker": True}}),
+            config_parser.get_photos_require_mount_marker(
+                config={"photos": {"require_mount_marker": True}},
+            ),
         )
 
     def test_get_mount_marker_filename_default(self):
         """Default marker filename is ``.mounted`` (matches boredazfcuk convention)."""
         self.assertEqual(config_parser.get_mount_marker_filename(config={}), ".mounted")
-        self.assertEqual(config_parser.get_mount_marker_filename(config={"app": {}}), ".mounted")
+        self.assertEqual(
+            config_parser.get_mount_marker_filename(config={"app": {}}), ".mounted",
+        )
 
     def test_get_mount_marker_filename_when_configured(self):
         """Returns the configured filename when ``app.mount_marker_filename`` is set."""
         self.assertEqual(
-            config_parser.get_mount_marker_filename(config={"app": {"mount_marker_filename": ".icloud-ok"}}),
+            config_parser.get_mount_marker_filename(
+                config={"app": {"mount_marker_filename": ".icloud-ok"}},
+            ),
             ".icloud-ok",
         )
 
@@ -303,6 +315,49 @@ class TestPhotosCheckCoversLibraryDestinations(unittest.TestCase):
                 photos_sync_interval=300,
             )
         joined = "\n".join(cm.output)
+        self.assertNotIn("Photos mount marker missing", joined)
+
+    def test_non_string_or_empty_subdir_entries_are_skipped(self):
+        """Defensive: if `library_destinations` contains non-string or
+        empty values (mis-configured YAML, future schema drift), those
+        entries don't crash — they're silently skipped from the marker
+        check. Root + the one valid subdir still get checked normally."""
+        from unittest.mock import MagicMock, patch
+
+        # Only root + valid `personal` subdir get markers; the bad
+        # entries should be skipped, NOT cause a marker-missing error.
+        for d in (self.tmp, self.personal):
+            open(os.path.join(d, ".mounted"), "w").close()
+
+        config = {
+            "photos": {
+                "destination": self.tmp,
+                "require_mount_marker": True,
+                "library_destinations": {
+                    "PrimarySync": "personal",  # valid
+                    "Bogus": "",  # empty string — skip
+                    "Numeric": 42,  # non-string — skip
+                },
+            },
+        }
+        fake_api = MagicMock()
+        with (
+            patch.object(
+                sync.config_parser,
+                "prepare_photos_destination",
+                return_value=self.tmp,
+            ),
+            patch.object(sync.sync_photos, "sync_photos", return_value=set()),
+            self.assertLogs(sync.LOGGER, level=logging.INFO) as cm,
+        ):
+            sync._perform_photos_sync(  # noqa: SLF001
+                config=config,
+                api=fake_api,
+                sync_state=self._make_state(),
+                photos_sync_interval=300,
+            )
+        joined = "\n".join(cm.output)
+        # Marker check passed: no "marker missing" for any path.
         self.assertNotIn("Photos mount marker missing", joined)
 
 
