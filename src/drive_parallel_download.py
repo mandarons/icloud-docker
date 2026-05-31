@@ -66,11 +66,7 @@ def collect_file_for_download(
         files.add(local_file)
 
     flatten_packages = (
-        bool(
-            getattr(config_parser, "get_drive_flatten_packages", lambda _c: False)(
-                config,
-            ),
-        )
+        bool(config_parser.get_drive_flatten_packages(config))
         if config
         else False
     )
