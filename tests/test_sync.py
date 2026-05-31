@@ -39,7 +39,8 @@ class TestSync(unittest.TestCase):
         self.config["app"]["root"] = self.root_dir
         os.makedirs(tests.TEMP_DIR, exist_ok=True)
         self.service = data.ICloudPyServiceMock(
-            data.AUTHENTICATED_USER, data.VALID_PASSWORD,
+            data.AUTHENTICATED_USER,
+            data.VALID_PASSWORD,
         )
 
     def tearDown(self) -> None:
@@ -48,7 +49,8 @@ class TestSync(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -75,7 +77,8 @@ class TestSync(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -105,7 +108,8 @@ class TestSync(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -136,7 +140,8 @@ class TestSync(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -165,7 +170,8 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -199,7 +205,8 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -278,7 +285,8 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -309,7 +317,8 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -420,7 +429,9 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.os.path.getsize", side_effect=RuntimeError("size failure"))
     @patch("src.sync.sync_drive")
     def test_perform_drive_sync_handles_getsize_failure(
-        self, mock_sync_drive, _mock_getsize,
+        self,
+        mock_sync_drive,
+        _mock_getsize,
     ):
         """Gracefully handle size calculation failures when counting new files."""
 
@@ -542,7 +553,9 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.os.path.getsize")
     @patch("src.sync.sync_photos.sync_photos")
     def test_perform_photos_sync_handles_hardlink_bytes_failure(
-        self, mock_sync_photos, mock_getsize,
+        self,
+        mock_sync_photos,
+        mock_getsize,
     ):
         """Handle errors when estimating bytes saved by hardlinks."""
 
@@ -643,7 +656,8 @@ class TestSync(unittest.TestCase):
         self.assertEqual(len(stats.errors), 0)
 
     @patch(
-        "src.sync.notify.send_sync_summary", side_effect=RuntimeError("notify failure"),
+        "src.sync.notify.send_sync_summary",
+        side_effect=RuntimeError("notify failure"),
     )
     @patch("src.sync._perform_photos_sync")
     @patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1))
@@ -696,7 +710,8 @@ class TestSync(unittest.TestCase):
             del os.environ[ENV_ICLOUD_PASSWORD_KEY]
 
         actual = sync.get_api_instance(
-            username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD,
+            username=data.AUTHENTICATED_USER,
+            password=data.VALID_PASSWORD,
         )
         self.assertNotIn(".com.cn", actual.home_endpoint)
         self.assertNotIn(".com.cn", actual.setup_endpoint)
@@ -714,7 +729,8 @@ class TestSync(unittest.TestCase):
             del os.environ[ENV_ICLOUD_PASSWORD_KEY]
 
         actual = sync.get_api_instance(
-            username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD,
+            username=data.AUTHENTICATED_USER,
+            password=data.VALID_PASSWORD,
         )
         self.assertNotIn(".com.cn", actual.home_endpoint)
         self.assertNotIn(".com.cn", actual.setup_endpoint)
@@ -722,7 +738,8 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -768,7 +785,8 @@ class TestSync(unittest.TestCase):
         side_effect=exceptions.ICloudPyNoStoredPasswordAvailableException,
     )
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -817,7 +835,8 @@ class TestSync(unittest.TestCase):
     @patch("src.usage.alive")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -869,7 +888,8 @@ class TestSync(unittest.TestCase):
     @patch("src.usage.alive")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -919,7 +939,8 @@ class TestSync(unittest.TestCase):
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -1038,13 +1059,16 @@ class TestSync(unittest.TestCase):
 
         # Calculate next sync schedule
         sleep_for = sync._calculate_next_sync_schedule(  # noqa: SLF001
-            config, sync_state,
+            config,
+            sync_state,
         )  # noqa: SLF001
 
         # This should NOT be 0 - that's the bug causing immediate re-sync
         # When both timers are equal and both services just ran, we should wait
         self.assertGreater(
-            sleep_for, 0, "Sleep time should not be 0 when both services just completed",
+            sleep_for,
+            0,
+            "Sleep time should not be 0 when both services just completed",
         )
         self.assertEqual(
             sleep_for,
@@ -1068,16 +1092,20 @@ class TestSync(unittest.TestCase):
         sync_state.photos_time_remaining = 3600  # 1 hour remaining
 
         sleep_for = sync._calculate_next_sync_schedule(  # noqa: SLF001
-            config, sync_state,
+            config,
+            sync_state,
         )  # noqa: SLF001
 
         self.assertEqual(sleep_for, 1800, "Should sleep until drive sync time")
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
         self.assertFalse(
-            sync_state.enable_sync_photos, "Photos sync should be disabled",
+            sync_state.enable_sync_photos,
+            "Photos sync should be disabled",
         )
         self.assertEqual(
-            sync_state.photos_time_remaining, 1800, "Photos timer should be reduced",
+            sync_state.photos_time_remaining,
+            1800,
+            "Photos timer should be reduced",
         )
 
     def test_calculate_next_sync_schedule_photos_first(self):
@@ -1092,14 +1120,17 @@ class TestSync(unittest.TestCase):
         sync_state.photos_time_remaining = 1800  # 30 min remaining
 
         sleep_for = sync._calculate_next_sync_schedule(  # noqa: SLF001
-            config, sync_state,
+            config,
+            sync_state,
         )  # noqa: SLF001
 
         self.assertEqual(sleep_for, 1800, "Should sleep until photos sync time")
         self.assertFalse(sync_state.enable_sync_drive, "Drive sync should be disabled")
         self.assertTrue(sync_state.enable_sync_photos, "Photos sync should be enabled")
         self.assertEqual(
-            sync_state.drive_time_remaining, 1800, "Drive timer should be reduced",
+            sync_state.drive_time_remaining,
+            1800,
+            "Drive timer should be reduced",
         )
 
     def test_calculate_next_sync_schedule_drive_only(self):
@@ -1112,13 +1143,15 @@ class TestSync(unittest.TestCase):
         sync_state.drive_time_remaining = 1800  # 30 min remaining
 
         sleep_for = sync._calculate_next_sync_schedule(  # noqa: SLF001
-            config, sync_state,
+            config,
+            sync_state,
         )  # noqa: SLF001
 
         self.assertEqual(sleep_for, 1800, "Should sleep for drive remaining time")
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
         self.assertFalse(
-            sync_state.enable_sync_photos, "Photos sync should be disabled",
+            sync_state.enable_sync_photos,
+            "Photos sync should be disabled",
         )
 
     def test_calculate_next_sync_schedule_photos_only(self):
@@ -1131,7 +1164,8 @@ class TestSync(unittest.TestCase):
         sync_state.photos_time_remaining = 1800  # 30 min remaining
 
         sleep_for = sync._calculate_next_sync_schedule(  # noqa: SLF001
-            config, sync_state,
+            config,
+            sync_state,
         )  # noqa: SLF001
 
         self.assertEqual(sleep_for, 1800, "Should sleep for photos remaining time")
@@ -1151,12 +1185,15 @@ class TestSync(unittest.TestCase):
         sync_state.photos_time_remaining = 0
 
         sleep_for = sync._calculate_next_sync_schedule(  # noqa: SLF001
-            config, sync_state,
+            config,
+            sync_state,
         )  # noqa: SLF001
 
         # Should have 0 sleep (immediate sync) but only drive should be enabled
         self.assertEqual(
-            sleep_for, 0, "Should have immediate sync when both timers are 0",
+            sleep_for,
+            0,
+            "Should have immediate sync when both timers are 0",
         )
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
         self.assertFalse(
@@ -1177,14 +1214,16 @@ class TestSync(unittest.TestCase):
         sync_state.photos_time_remaining = 5
 
         sleep_for = sync._calculate_next_sync_schedule(  # noqa: SLF001
-            config, sync_state,
+            config,
+            sync_state,
         )  # noqa: SLF001
 
         # Should use original logic for small timers: sleep_for = 0, only drive enabled
         self.assertEqual(sleep_for, 0, "Should have 0 sleep for small equal timers")
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
         self.assertFalse(
-            sync_state.enable_sync_photos, "Photos sync should be disabled",
+            sync_state.enable_sync_photos,
+            "Photos sync should be disabled",
         )
 
 
@@ -1206,7 +1245,8 @@ class TestWebSignalsSyncIntegration(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -1251,7 +1291,8 @@ class TestWebSignalsSyncIntegration(unittest.TestCase):
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(
-        target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER,
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
     )
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
@@ -1289,3 +1330,52 @@ class TestWebSignalsSyncIntegration(unittest.TestCase):
         # the contract is just that sync() didn't raise.
         if "record_sync_completion" in joined:
             self.assertIn("record_sync_completion raised", joined)
+
+
+class TestInterruptibleSleep(unittest.TestCase):
+    """``_interruptible_sleep`` chunks long sleeps and polls the
+    web-signal sentinels so the "Sync now" button feels responsive
+    even mid-multi-hour interval."""
+
+    def test_short_interval_uses_single_sleep_call(self):
+        """``<= _CHUNK`` should produce exactly one ``sleep`` call so
+        existing tests counting sleep invocations stay correct."""
+        from unittest.mock import patch
+
+        with patch("src.sync.sleep") as mock_sleep:
+            sync._interruptible_sleep(2)  # noqa: SLF001 -- module-private helper
+        mock_sleep.assert_called_once_with(2)
+
+    def test_long_interval_chunks_and_polls_sentinels(self):
+        """``> _CHUNK`` should produce multiple sleep calls AND call
+        ``pending_force_syncs()`` between each chunk."""
+        from unittest.mock import patch
+
+        with (
+            patch("src.sync.sleep") as mock_sleep,
+            patch(
+                "src.web_signals.pending_force_syncs",
+                return_value=[],
+            ) as mock_pending,
+        ):
+            sync._interruptible_sleep(5)  # noqa: SLF001
+        # Expect [sleep(2), sleep(2), sleep(1)] -- 3 calls.
+        self.assertEqual(mock_sleep.call_count, 3)
+        self.assertEqual(mock_pending.call_count, 3)
+
+    def test_long_interval_returns_early_when_sentinel_fires(self):
+        """If ``pending_force_syncs`` reports any sentinel mid-loop,
+        the helper exits without consuming the remaining chunks."""
+        from unittest.mock import patch
+
+        with (
+            patch("src.sync.sleep") as mock_sleep,
+            patch(
+                "src.web_signals.pending_force_syncs",
+                side_effect=[[], ["drive"]],
+            ) as mock_pending,
+        ):
+            sync._interruptible_sleep(10)  # noqa: SLF001
+        # Exited after the second chunk -> 2 sleeps + 2 polls.
+        self.assertEqual(mock_sleep.call_count, 2)
+        self.assertEqual(mock_pending.call_count, 2)

@@ -29,6 +29,7 @@
       <div class="status-text"><strong>{{ status.username }}</strong> — keyring populated</div>
     </div>
     <form method="post" action="/auth/password">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label for="password" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">Re-authenticate with password</label>
       <input
         type="password"
@@ -44,6 +45,7 @@
     </form>
   {% elif pending %}
     <form method="post" action="/auth/code">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <div style="margin-bottom: 16px;">
         <label for="code" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">6-digit code</label>
         <input
@@ -65,6 +67,7 @@
       </button>
     </form>
     <form method="post" action="/auth/reset" style="margin-top: 12px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button type="submit" style="width: 100%; padding: 9px 14px; font-size: 13px; background: transparent; border: 1px solid var(--divider); border-radius: 999px; color: var(--text-secondary); cursor: pointer;">
         Start over
       </button>

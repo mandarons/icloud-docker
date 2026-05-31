@@ -17,8 +17,11 @@ when exposing publicly. Opt-out via ``app.web_ui.enabled: false`` in
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import hmac
 import os
+import secrets
 import threading
+import time
 from typing import Any
 
 from flask import Flask, jsonify, redirect, render_template, request, url_for
@@ -42,6 +45,80 @@ LOGGER = get_logger()
 _PENDING_AUTH: dict[str, Any] = {}
 _AUTH_LOCK = threading.Lock()
 
+# Drop stale pending auth after this many seconds. The submitted Apple ID
+# password sits in process memory (in ``_PENDING_AUTH["password"]``) while
+# waiting for the user to enter their 2FA code; without an expiry it would
+# linger indefinitely if the user closed the browser tab mid-flow. 10 min
+# is generous for typing a code -- and short enough that a forgotten
+# session evaporates before the next sync cycle picks up the keyring.
+_PENDING_AUTH_TTL_SECONDS = 600
+
+
+def _pending_auth_is_stale() -> bool:
+    """True when the in-memory password is older than the TTL.
+
+    Caller must hold ``_AUTH_LOCK``. Returns False for an empty dict
+    (nothing to expire) and for entries that pre-date stashed_at
+    bookkeeping (defensive — we never penalise a fresh stash).
+    """
+    if not _PENDING_AUTH:
+        return False
+    stashed_at = _PENDING_AUTH.get("stashed_at")
+    if stashed_at is None:
+        return False
+    return (time.monotonic() - stashed_at) > _PENDING_AUTH_TTL_SECONDS
+
+
+def _expire_stale_pending_auth_unlocked() -> None:
+    """If the pending auth is older than the TTL, wipe it. Caller holds the lock."""
+    if _pending_auth_is_stale():
+        LOGGER.info("Web UI: expiring stale _PENDING_AUTH past TTL.")
+        _PENDING_AUTH.clear()
+
+
+# CSRF defence. Threat model: even with the default host pinned to
+# 127.0.0.1, a user who opts into LAN exposure (host: 0.0.0.0) AND lacks
+# a proper auth proxy in front would otherwise be vulnerable to a
+# same-network attacker who tricks them into loading a page that posts
+# to ``/auth/refresh-trust`` or ``/api/sync``. Double-submit cookie
+# pattern: per-process random token, set as a SameSite=Strict cookie,
+# required on every state-changing POST as either a form field
+# ``csrf_token`` or an ``X-CSRF-Token`` header. SameSite=Strict alone
+# already blocks the cross-site cookie send in modern browsers; the
+# server-side compare is belt-and-braces for older clients.
+_CSRF_TOKEN = secrets.token_urlsafe(32)
+_CSRF_COOKIE_NAME = "csrf_token"
+
+
+def _get_csrf_token() -> str:
+    """Expose the token to templates (so forms can embed it) and to
+    tests (so they can post it). Process-lifetime, regenerated on
+    restart -- enough for a single-user operator console."""
+    return _CSRF_TOKEN
+
+
+def _require_csrf() -> tuple[Any, int] | None:
+    """Validate CSRF token on the current request. Returns ``None``
+    when the request is allowed, or a ``(response, status)`` tuple
+    when it should be rejected. Use at the top of every state-
+    changing endpoint:
+
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+    """
+    cookie = request.cookies.get(_CSRF_COOKIE_NAME)
+    submitted = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
+    # The cookie must match this process's token AND the submitted value
+    # must match the cookie. Browsers won't include a SameSite=Strict
+    # cookie on a cross-site POST, so the cookie absence alone is the
+    # primary signal; the form/header echo is the belt-and-braces leg.
+    if not cookie or not hmac.compare_digest(cookie, _CSRF_TOKEN):
+        return jsonify({"error": "CSRF cookie missing or stale"}), 403
+    if not submitted or not hmac.compare_digest(submitted, cookie):
+        return jsonify({"error": "CSRF token mismatch"}), 403
+    return None
+
 
 def _current_config_path() -> str:
     """Resolve the active config path the same way sync.py does."""
@@ -62,8 +139,14 @@ def _load_current_config() -> dict | None:
         return None
     try:
         return read_config(config_path=path)
-    except (KeyError, AttributeError, TypeError) as e:
-        LOGGER.warning(f"Web UI: read_config failed (partial config?): {e!s}")
+    except Exception as e:
+        # Broad on purpose: ``/api/health`` exists for external monitors
+        # and must be robust against any config-loading failure (YAML
+        # parse errors, permission denied, missing credentials block,
+        # ruamel internals raising). A 500 on /api/health blinds the
+        # monitor; rendering a "config error" state lets the user fix
+        # it via the UI.
+        LOGGER.warning(f"Web UI: read_config failed: {e!s}")
         return None
 
 
@@ -306,6 +389,21 @@ def create_app(testing: bool = False) -> Flask:
         )
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+        # CSRF defence: set the SameSite=Strict token cookie on every
+        # response so forms rendered server-side can read it (via the
+        # template) and same-site fetches automatically include it.
+        # ``secure=False`` because the default deployment is loopback
+        # over plain HTTP; users behind a TLS proxy benefit from the
+        # proxy's transport security, and SameSite=Strict is the load-
+        # bearing protection here regardless of TLS.
+        response.set_cookie(
+            _CSRF_COOKIE_NAME,
+            _CSRF_TOKEN,
+            samesite="Strict",
+            httponly=False,
+            secure=False,
+            path="/",
+        )
         return response
 
     @app.route("/")
@@ -322,6 +420,7 @@ def create_app(testing: bool = False) -> Flask:
             log_path=log_path,
             active_nav="dashboard",
             version=os.environ.get("APP_VERSION", ""),
+            csrf_token=_get_csrf_token(),
         )
 
     @app.route("/api/health")
@@ -376,6 +475,10 @@ def create_app(testing: bool = False) -> Flask:
         Exceptions are caught and rendered as an error pill on /auth so
         the user sees what Apple said.
         """
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+
         password = request.form.get("password", "")
         if not password:
             return (
@@ -434,9 +537,11 @@ def create_app(testing: bool = False) -> Flask:
             except Exception as e:
                 LOGGER.warning(f"Web UI 2FA push trigger failed (non-fatal): {e!s}")
             with _AUTH_LOCK:
+                _expire_stale_pending_auth_unlocked()
                 _PENDING_AUTH["api"] = api
                 _PENDING_AUTH["username"] = username
                 _PENDING_AUTH["password"] = password
+                _PENDING_AUTH["stashed_at"] = time.monotonic()
             return redirect(url_for("auth_form"))
 
         # No 2FA needed — cached session still trusted. Persist the
@@ -463,6 +568,10 @@ def create_app(testing: bool = False) -> Flask:
           are logged but non-fatal — the code already worked) ->
           store_password_in_keyring -> clear pending -> redirect to /.
         """
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+
         code = request.form.get("code", "").strip()
         if not code:
             return (
@@ -471,6 +580,7 @@ def create_app(testing: bool = False) -> Flask:
             )
 
         with _AUTH_LOCK:
+            _expire_stale_pending_auth_unlocked()
             api = _PENDING_AUTH.get("api")
             username = _PENDING_AUTH.get("username")
             password = _PENDING_AUTH.get("password")
@@ -483,50 +593,59 @@ def create_app(testing: bool = False) -> Flask:
                 400,
             )
 
+        # All exit paths from here clear ``_PENDING_AUTH`` -- including
+        # failed validate_2fa_code, rejected codes, and trust_session
+        # failures. Without the ``finally`` the previous code only cleared
+        # on the success path, leaving the password sitting in process
+        # memory if Apple raised. On rejection the user retries via
+        # /auth/refresh-trust or by re-entering the password; we'd rather
+        # they take that path than leave a stale credential in memory.
         try:
-            accepted = api.validate_2fa_code(code)
-        except Exception as e:
-            LOGGER.exception("Web UI: validate_2fa_code raised")
-            return (
-                _render_auth(
-                    message=f"2FA validation error: {e!s}",
-                    message_kind="err",
-                ),
-                400,
-            )
+            try:
+                accepted = api.validate_2fa_code(code)
+            except Exception as e:
+                LOGGER.exception("Web UI: validate_2fa_code raised")
+                return (
+                    _render_auth(
+                        message=f"2FA validation error: {e!s}",
+                        message_kind="err",
+                    ),
+                    400,
+                )
 
-        if not accepted:
-            return (
-                _render_auth(
-                    message="Code rejected by Apple. Try again — make sure you copy the latest code.",
-                    message_kind="err",
-                ),
-                400,
-            )
+            if not accepted:
+                return (
+                    _render_auth(
+                        message="Code rejected by Apple. Try again — make sure you copy the latest code.",
+                        message_kind="err",
+                    ),
+                    400,
+                )
 
-        # Code worked. Best-effort trust so the next session resume skips
-        # 2FA; if that fails (e.g. cookie store write error) just log it
-        # — the user's auth still succeeded for this session.
-        try:
-            api.trust_session()
-        except Exception as e:
-            LOGGER.warning(f"Web UI trust_session failed (non-fatal): {e!s}")
+            # Code worked. Best-effort trust so the next session resume skips
+            # 2FA; if that fails (e.g. cookie store write error) just log it
+            # — the user's auth still succeeded for this session.
+            try:
+                api.trust_session()
+            except Exception as e:
+                LOGGER.warning(f"Web UI trust_session failed (non-fatal): {e!s}")
 
-        # Persist password to keyring so the sync-loop's next retry
-        # picks up the trusted session without prompting.
-        try:
-            from icloudpy import utils as icloudpy_utils
+            # Persist password to keyring so the sync-loop's next retry
+            # picks up the trusted session without prompting.
+            try:
+                from icloudpy import utils as icloudpy_utils
 
-            icloudpy_utils.store_password_in_keyring(
-                username=username,
-                password=password,
-            )
-        except Exception as e:
-            LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
+                icloudpy_utils.store_password_in_keyring(
+                    username=username,
+                    password=password,
+                )
+            except Exception as e:
+                LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
 
-        with _AUTH_LOCK:
-            _PENDING_AUTH.clear()
-        return redirect(url_for("dashboard"))
+            return redirect(url_for("dashboard"))
+        finally:
+            with _AUTH_LOCK:
+                _PENDING_AUTH.clear()
 
     @app.route("/auth/reset", methods=["POST"])
     def auth_reset():
@@ -535,6 +654,10 @@ def create_app(testing: bool = False) -> Flask:
         Useful when the user closed the tab mid-2FA and wants to start
         over without waiting for the in-memory state to expire.
         """
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+
         with _AUTH_LOCK:
             _PENDING_AUTH.clear()
         return redirect(url_for("auth_form"))
@@ -557,6 +680,10 @@ def create_app(testing: bool = False) -> Flask:
              _PENDING_AUTH dict /auth/code already consumes.
           4. Redirect to /auth — UI is now in "enter 6-digit code" mode.
         """
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+
         config = _load_current_config()
         username = None
         if config:
@@ -637,9 +764,11 @@ def create_app(testing: bool = False) -> Flask:
             LOGGER.warning(f"Web UI refresh-trust 2FA push failed: {e!s}")
 
         with _AUTH_LOCK:
+            _expire_stale_pending_auth_unlocked()
             _PENDING_AUTH["api"] = api
             _PENDING_AUTH["username"] = username
             _PENDING_AUTH["password"] = password
+            _PENDING_AUTH["stashed_at"] = time.monotonic()
         return redirect(url_for("auth_form"))
 
     @app.route("/api/sync", methods=["POST"])
@@ -655,6 +784,10 @@ def create_app(testing: bool = False) -> Flask:
         Idempotent: tapping repeatedly while a request is still queued
         is a no-op (the sentinel just gets re-touched).
         """
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+
         service = (
             (request.form.get("service") or request.args.get("service") or "")
             .strip()
@@ -710,13 +843,14 @@ def _render_auth(message: str | None, message_kind: str | None):
         message_kind=message_kind,
         active_nav="auth",
         version=os.environ.get("APP_VERSION", ""),
+        csrf_token=_get_csrf_token(),
     )
 
 
 def start_in_thread(
-    host: str = "0.0.0.0",
+    host: str = "127.0.0.1",
     port: int = 8080,
-) -> threading.Thread:  # noqa: S104
+) -> threading.Thread:
     """Launch the Flask app on a daemon thread.
 
     The main sync loop owns the process; the web thread dies when the
@@ -725,13 +859,17 @@ def start_in_thread(
     app = create_app()
 
     def _serve():
+        # NOTE on the server: ``Flask.app.run()`` uses Werkzeug's dev
+        # server. Choice is intentional -- this UI is a single-user,
+        # behind-a-proxy operator console (default host 127.0.0.1, no
+        # CSRF, no authn of its own), not a public-facing API. Zero
+        # extra runtime deps (no gunicorn) keeps the docker image
+        # small. ``threaded=True`` lets Cloudflare's edge health-checks
+        # overlap with the user's tab. Werkzeug will emit its
+        # "WARNING: This is a development server" banner at startup --
+        # that's expected, leaving it visible so anyone repurposing
+        # this for unattended public exposure sees it.
         try:
-            # Werkzeug dev server — single user, behind a proxy.
-            # Zero extra runtime deps (no gunicorn).
-            # threaded=True so Cloudflare's edge health-check requests
-            # don't queue behind a user's tab refreshing; without it the
-            # default single-threaded server can intermittently return
-            # empty bodies when two requests overlap.
             app.run(
                 host=host,
                 port=port,

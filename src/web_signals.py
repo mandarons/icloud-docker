@@ -26,7 +26,7 @@ import os
 import time
 from typing import Any
 
-from src import DEFAULT_COOKIE_DIRECTORY, get_logger
+from src import get_logger
 
 LOGGER = get_logger()
 
@@ -36,11 +36,18 @@ def _config_dir() -> str:
 
     Mirrors the ICLOUD_DOCKER_CONFIG_DIR / DEFAULT_COOKIE_DIRECTORY
     setup: same logic the keyring redirect uses, so dev hosts without
-    ``/config`` still work via a tempdir.
+    ``/config`` still work via a tempdir. Reads
+    ``DEFAULT_COOKIE_DIRECTORY`` via ``sys.modules`` so the test
+    fixture's monkeypatch is honoured -- a ``from src import
+    DEFAULT_COOKIE_DIRECTORY`` at module top would bind the value once
+    at import time and miss the redirect.
     """
+    import sys
+
     # DEFAULT_COOKIE_DIRECTORY is "<config_dir>/session_data"; strip the
     # trailing component to recover the config dir.
-    return os.path.dirname(DEFAULT_COOKIE_DIRECTORY) or "/config"
+    cookie_dir = sys.modules["src"].DEFAULT_COOKIE_DIRECTORY
+    return os.path.dirname(cookie_dir) or "/config"
 
 
 _VALID_SERVICES = ("drive", "photos")
