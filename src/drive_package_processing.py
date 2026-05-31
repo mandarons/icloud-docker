@@ -49,19 +49,20 @@ def process_package(local_file: str, flatten: bool = False) -> str | None:
         an unusable state.
     """
     archive_file = local_file
-    magic_object = magic.Magic(mime=True)
-    file_mime_type = magic_object.from_file(filename=local_file)
 
     if flatten:
         # The downloaded bytes are already at local_file; nothing to do.
-        # The dedup story for the next-sync cycle relies on the file_exists
-        # comparator either matching size+mtime (zip case) or the operator
-        # accepting a re-download (octet-stream case — see PR 11 follow-up).
+        # Skip libmagic entirely -- flatten mode doesn't care what the
+        # bytes are, and libmagic can fail on truncated or unusual
+        # downloads where we still want to keep the bytes on disk.
         LOGGER.info(
-            f"flatten_packages enabled — keeping {local_file} as single-file bundle"
-            f" ({file_mime_type}); skipping unpack.",
+            f"flatten_packages enabled -- keeping {local_file} as "
+            f"single-file bundle; skipping unpack.",
         )
         return local_file
+
+    magic_object = magic.Magic(mime=True)
+    file_mime_type = magic_object.from_file(filename=local_file)
 
     if file_mime_type == "application/zip":
         return _process_zip_package(local_file, archive_file)
@@ -81,38 +82,102 @@ def process_package(local_file: str, flatten: bool = False) -> str | None:
         return local_file
 
 
-def _zip_entries_self_prefixed(zf: zipfile.ZipFile, bundle_basename: str) -> bool:
-    """Heuristic: True when every non-empty entry in the zip is rooted
-    at ``<bundle_basename>/`` (with or without a leading ``../``).
+def _zip_entries_self_prefixed(zf: zipfile.ZipFile, bundle_basename: str) -> str | None:
+    """Heuristic classifier for the three zip layouts iCloud Drive serves.
 
-    Distinguishes three zip layouts we see from iCloud Drive in the wild:
+    Returns one of:
+      - ``"self"``   — every entry starts with ``<bundle_basename>/``;
+                       extract into parent_dir, safety boundary is
+                       parent_dir.
+      - ``"traversal"`` — every entry starts with ``../<bundle_basename>/``
+                       (gzip-wrapped bundles do this). The traversal
+                       resolves UP one level, so extracting into
+                       parent_dir lands files in *grandparent_dir*.
+                       Safety boundary must be grandparent_dir too.
+      - ``None``     — bare-rooted (or empty); extract into a bundle-
+                       named subdir to avoid sibling collisions.
 
-    1. **Self-prefixed** — e.g. a GarageBand ``Project.band`` whose zip
-       contains entries like ``Project.band/Alternatives/000/...``.
-       Extracting into the parent directory reconstructs the bundle
-       correctly.
+    Differentiating ``self`` vs ``traversal`` matters for the zip-slip
+    safety check: ``traversal`` is a benign-but-escape-the-extract-dir
+    pattern, so the safety boundary needs to be set to the dir the
+    ``..`` lands in, not the dir we passed to ``extractall``.
 
-    2. **Self-prefixed with traversal** — gzip-wrapped bundles whose
-       inner ZIP has entries like ``../<basename>/...``. The ``..``
-       resolves to the parent of the extract target, so the end-state
-       is identical to case 1 when we extract into the parent dir.
+    The three layouts in the wild:
 
-    3. **Bare-rooted** — e.g. a Numbers ``Untitled.numbers`` whose zip
-       contains generic entries like ``Data/Document.iwa``,
-       ``Metadata/buildVersion.plist`` etc. Two iWork files in the
-       same folder will both extract ``Data/...`` into the parent dir,
-       clobbering each other and raising ``FileExistsError``.
+    1. **self** — e.g. a GarageBand ``Project.band`` whose zip contains
+       entries like ``Project.band/Alternatives/000/...``. Extracting
+       into the parent dir reconstructs the bundle correctly.
 
-    For case 3 we need to extract into a bundle-named subdirectory of
-    its own so siblings don't collide. Cases 1 and 2 keep the legacy
-    "extract into parent" behaviour.
+    2. **traversal** — gzip-wrapped bundles whose inner ZIP has
+       entries like ``../<basename>/...``. The ``..`` resolves to
+       the parent of the extract target, so when we extract into the
+       parent dir the files end up in the grandparent. End-state is
+       analogous to ``self`` but one level up.
+
+    3. **None (bare-rooted)** — e.g. a Numbers ``Untitled.numbers``
+       whose zip contains generic entries like ``Data/Document.iwa``,
+       ``Metadata/buildVersion.plist``. Two iWork files in the same
+       folder both extract ``Data/...`` and clobber each other; for
+       this case we extract into a bundle-named subdir.
     """
     names = [n for n in zf.namelist() if n and n != bundle_basename + "/"]
     if not names:
-        return False
+        return None
     prefix = bundle_basename + "/"
     traversal_prefix = "../" + prefix
-    return all(n.startswith((prefix, traversal_prefix)) for n in names)
+    if all(n.startswith(prefix) for n in names):
+        return "self"
+    if all(n.startswith((prefix, traversal_prefix)) for n in names):
+        return "traversal"
+    return None
+
+
+def _safe_extractall(zf: zipfile.ZipFile, extract_dir: str, safety_boundary: str) -> None:
+    """Path-validating wrapper around ``ZipFile.extractall``.
+
+    Defends against Zip Slip (CWE-22): a malicious zip can embed entries
+    with absolute paths (``/etc/passwd``) or ``..`` traversal segments
+    that resolve outside the intended extract directory. iCloud Drive
+    package bytes are untrusted network input -- if Apple's CloudKit
+    were ever compromised, or an attacker-controlled iCloud account
+    shared a poisoned package with the user, ``extractall`` would
+    happily write anywhere on the filesystem.
+
+    For each entry, resolves the final target path with ``os.path.realpath``
+    and verifies it stays under ``safety_boundary`` (the directory we're
+    extracting into, OR -- in the self-prefixed-with-``../`` case -- the
+    parent dir whose nesting structure the zip relies on). Entries that
+    escape are skipped with a WARNING.
+
+    Args:
+        zf: Open ZipFile.
+        extract_dir: Path passed to ``extractall``.
+        safety_boundary: Absolute directory the extracted tree must
+            remain under. For self-prefixed bundles this is the parent
+            of the bundle; for bare-rooted bundles this equals
+            ``extract_dir``.
+    """
+    boundary_abs = os.path.realpath(safety_boundary)
+    safe_members = []
+    for member in zf.infolist():
+        target = os.path.realpath(os.path.join(extract_dir, member.filename))
+        # The boundary check uses ``commonpath`` so we don't get tricked
+        # by prefixes like ``/var/data2/`` matching ``/var/data`` via
+        # naive ``startswith``.
+        try:
+            common = os.path.commonpath([boundary_abs, target])
+        except ValueError:  # pragma: no cover -- Windows-only (different drives)
+            common = ""
+        if common != boundary_abs:
+            LOGGER.warning(
+                f"Zip Slip blocked: refused to extract {member.filename!r} "
+                f"-> {target!r} (outside safety boundary {boundary_abs!r})",
+            )
+            continue
+        safe_members.append(member)
+    # Pass the filtered member list to extractall so vetoed entries are
+    # never touched.
+    zf.extractall(path=extract_dir, members=safe_members)
 
 
 def _process_zip_package(local_file: str, archive_file: str) -> str:
@@ -131,18 +196,31 @@ def _process_zip_package(local_file: str, archive_file: str) -> str:
     bundle_basename = os.path.basename(local_file)
 
     with zipfile.ZipFile(archive_file) as zf:
-        if _zip_entries_self_prefixed(zf, bundle_basename):
-            # Entries are already namespaced under the bundle name; the
-            # parent dir is the right place to extract them.
+        layout = _zip_entries_self_prefixed(zf, bundle_basename)
+        if layout == "self":
+            # Entries are ``<bundle>/...``; extract into parent_dir and
+            # the bundle dir takes shape at ``<parent_dir>/<bundle>/``.
             extract_dir = parent_dir
+            safety_boundary = parent_dir
+        elif layout == "traversal":
+            # Entries are ``../<bundle>/...``. Extracting into parent_dir
+            # makes the ``..`` resolve to grandparent_dir, so files land
+            # at ``<grandparent_dir>/<bundle>/...``. The safety boundary
+            # must include grandparent_dir for the legitimate traversal
+            # to be allowed -- otherwise the zip-slip guard rejects every
+            # entry. Real bundles in the wild (gzip-wrapped GarageBand
+            # exports etc.) use this layout.
+            extract_dir = parent_dir
+            safety_boundary = os.path.dirname(parent_dir) or parent_dir
         else:
-            # Entries are bare paths (Data/Document.iwa, etc). Extract
-            # into the bundle directory itself so siblings in the same
-            # parent folder don't collide on shared internal names.
+            # Bare-rooted: entries are ``Data/Document.iwa`` etc.
+            # Extract into a bundle-named subdir so siblings don't
+            # collide on shared internal names.
             extract_dir = local_file
             os.makedirs(extract_dir, exist_ok=True)
+            safety_boundary = extract_dir
         LOGGER.info(f"Unpacking {archive_file} to {extract_dir}")
-        zf.extractall(path=extract_dir)
+        _safe_extractall(zf, extract_dir, safety_boundary)
 
     # Handle Unicode normalization for cross-platform compatibility
     normalized_path = unicodedata.normalize("NFD", local_file)

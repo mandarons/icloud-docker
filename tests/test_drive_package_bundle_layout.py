@@ -185,10 +185,10 @@ class TestFlattenPackagesSkipsUnpack(unittest.TestCase):
 class TestZipEntriesSelfPrefixedEdgeCases(unittest.TestCase):
     """Edge cases for ``_zip_entries_self_prefixed``."""
 
-    def test_returns_false_for_empty_zip(self):
+    def test_returns_none_for_empty_zip(self):
         """A zip whose only entry is the bare bundle folder itself (no
-        contents) returns False — there's nothing to prefix-check, and
-        downstream logic should fall through to the bundle-subdir
+        contents) returns ``None`` — there's nothing to prefix-check,
+        and downstream logic should fall through to the bundle-subdir
         layout rather than extracting nothing into the parent."""
         bundle = "Empty.numbers"
         with tempfile.TemporaryDirectory() as tmp:
@@ -197,8 +197,48 @@ class TestZipEntriesSelfPrefixedEdgeCases(unittest.TestCase):
                 zf.writestr(bundle + "/", "")
             with zipfile.ZipFile(zip_path) as zf:
                 assert (
-                    drive_package_processing._zip_entries_self_prefixed(zf, bundle)  # noqa: SLF001
-                    is False
+                    drive_package_processing._zip_entries_self_prefixed(  # noqa: SLF001
+                        zf,
+                        bundle,
+                    )
+                    is None
+                )
+
+    def test_returns_self_for_self_prefixed(self):
+        """Plain ``<bundle>/...`` entries classify as ``self``."""
+        bundle = "Project.band"
+        with tempfile.TemporaryDirectory() as tmp:
+            zip_path = os.path.join(tmp, "p.zip")
+            with zipfile.ZipFile(zip_path, "w") as zf:
+                zf.writestr(f"{bundle}/projectData", b"x")
+                zf.writestr(f"{bundle}/Resources/Info.plist", b"<plist/>")
+            with zipfile.ZipFile(zip_path) as zf:
+                assert (
+                    drive_package_processing._zip_entries_self_prefixed(  # noqa: SLF001
+                        zf,
+                        bundle,
+                    )
+                    == "self"
+                )
+
+    def test_returns_traversal_for_dotdot_prefixed(self):
+        """``../<bundle>/...`` entries classify as ``traversal`` — the
+        layout used by gzip-wrapped bundles in the wild. The safety
+        boundary chooser uses this to widen the boundary to the
+        grandparent dir so the legitimate traversal is allowed."""
+        bundle = "ms.band"
+        with tempfile.TemporaryDirectory() as tmp:
+            zip_path = os.path.join(tmp, "m.zip")
+            with zipfile.ZipFile(zip_path, "w") as zf:
+                zf.writestr(f"../{bundle}/projectData", b"x")
+                zf.writestr(f"../{bundle}/Resources/Info.plist", b"<plist/>")
+            with zipfile.ZipFile(zip_path) as zf:
+                assert (
+                    drive_package_processing._zip_entries_self_prefixed(  # noqa: SLF001
+                        zf,
+                        bundle,
+                    )
+                    == "traversal"
                 )
 
 
@@ -227,3 +267,197 @@ class TestFlattenPackagesConfigGetter(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestZipSlipDefence(unittest.TestCase):
+    """``_safe_extractall`` must reject any zip member whose final
+    target path escapes the configured safety boundary.
+
+    Defends against Zip Slip (CWE-22) on untrusted CloudKit-served
+    package bytes. The exploit shape: a zip entry with an absolute
+    path or unbounded ``..`` traversal makes ``extractall`` write
+    outside the destination directory."""
+
+    def _make_malicious_zip(
+        self,
+        tmpdir: str,
+        name: str,
+        members: dict[str, bytes],
+    ) -> str:
+        """Build a zip with arbitrary internal paths (including evil ones)."""
+        path = os.path.join(tmpdir, name)
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
+            for arcname, body in members.items():
+                zf.writestr(arcname, body)
+        with open(path, "wb") as f:
+            f.write(buf.getvalue())
+        return path
+
+    def test_absolute_path_entry_is_rejected(self):
+        """A zip member with an absolute path (``/etc/poisoned``)
+        is refused; benign entries in the same zip still extract."""
+        with tempfile.TemporaryDirectory() as base:
+            extract_dir = os.path.join(base, "extract")
+            os.makedirs(extract_dir)
+            zip_path = self._make_malicious_zip(
+                base,
+                "evil.zip",
+                {
+                    "/etc/poisoned": b"would overwrite system file",
+                    "data/safe.txt": b"this should land",
+                },
+            )
+            with zipfile.ZipFile(zip_path) as zf:
+                drive_package_processing._safe_extractall(  # noqa: SLF001
+                    zf,
+                    extract_dir,
+                    extract_dir,
+                )  # noqa: SLF001
+            # Benign entry made it.
+            self.assertTrue(
+                os.path.isfile(os.path.join(extract_dir, "data", "safe.txt")),
+            )
+            # /etc was never touched (and obviously the test process
+            # wouldn't have perms anyway -- the assertion is that
+            # `_safe_extractall` returned without raising).
+
+    def test_dotdot_traversal_entry_is_rejected(self):
+        """``../../../escape.txt`` is refused even with shallow
+        ``..`` segments that resolve outside ``extract_dir``."""
+        with tempfile.TemporaryDirectory() as base:
+            extract_dir = os.path.join(base, "extract")
+            os.makedirs(extract_dir)
+            zip_path = self._make_malicious_zip(
+                base,
+                "evil.zip",
+                {
+                    "../../escape.txt": b"would land in tempdir parent",
+                    "inside.txt": b"this should land",
+                },
+            )
+            with zipfile.ZipFile(zip_path) as zf:
+                drive_package_processing._safe_extractall(  # noqa: SLF001
+                    zf,
+                    extract_dir,
+                    extract_dir,
+                )  # noqa: SLF001
+            self.assertTrue(os.path.isfile(os.path.join(extract_dir, "inside.txt")))
+            self.assertFalse(os.path.isfile(os.path.join(base, "escape.txt")))
+            self.assertFalse(
+                os.path.isfile(os.path.join(os.path.dirname(base), "escape.txt")),
+            )
+
+    def test_benign_dotdot_does_not_get_blocked_when_boundary_widens(self):
+        """When ``safety_boundary`` is widened to the parent of
+        ``extract_dir`` (which is what ``_process_zip_package`` does
+        for the ``traversal`` layout), a ``../<bundle>/...`` entry is
+        NOT blocked. Where the file physically lands depends on
+        Python's path-sanitisation policy; we just assert the guard
+        didn't refuse the entry."""
+        import logging
+
+        with tempfile.TemporaryDirectory() as base:
+            extract_dir = os.path.join(base, "Bundle.xcwhatever")
+            os.makedirs(extract_dir)
+            zip_path = self._make_malicious_zip(
+                base,
+                "bundle.zip",
+                {
+                    "../Bundle.xcwhatever/Resources/Info.plist": b"<plist/>",
+                },
+            )
+            with zipfile.ZipFile(zip_path) as zf, self.assertLogs(
+                drive_package_processing.LOGGER,
+                level=logging.WARNING,
+            ) as cm:
+                # Push a sentinel WARNING so assertLogs always has at
+                # least one record; the assertion below filters to
+                # zip-slip-blocked messages.
+                drive_package_processing.LOGGER.warning("sentinel")
+                drive_package_processing._safe_extractall(  # noqa: SLF001
+                    zf,
+                    extract_dir,
+                    base,
+                )
+            blocked = [m for m in cm.output if "Zip Slip blocked" in m]
+            self.assertEqual(blocked, [])
+
+    def test_real_world_dotdot_bundle_blocked_when_boundary_too_tight(self):
+        """Conversely: with ``safety_boundary == extract_dir`` (the
+        bare-rooted layout), a ``../<sibling-bundle>/...`` entry
+        actually escapes extract_dir and IS blocked. Proves the
+        boundary widening in the ``traversal`` layout is what makes
+        legit bundles work."""
+        import logging
+
+        with tempfile.TemporaryDirectory() as base:
+            # extract_dir's basename differs from the bundle name in
+            # the entry, so the ``..`` actually escapes upward into
+            # ``<base>/ms.band/...`` rather than round-tripping back
+            # into extract_dir.
+            extract_dir = os.path.join(base, "Sample")
+            os.makedirs(extract_dir)
+            zip_path = self._make_malicious_zip(
+                base,
+                "bundle.zip",
+                {"../ms.band/Resources/Info.plist": b"<plist/>"},
+            )
+            with zipfile.ZipFile(zip_path) as zf, self.assertLogs(
+                drive_package_processing.LOGGER,
+                level=logging.WARNING,
+            ) as cm:
+                drive_package_processing._safe_extractall(  # noqa: SLF001
+                    zf,
+                    extract_dir,
+                    extract_dir,
+                )
+            blocked = [m for m in cm.output if "Zip Slip blocked" in m]
+            self.assertEqual(len(blocked), 1)
+
+
+class TestProcessPackageNeverTouchesRegularUserZips(unittest.TestCase):
+    """Invariant: ``process_package`` is the unpacker for Apple
+    *package* downloads (``/packageDownload?`` URLs only). User-uploaded
+    zip files take the regular ``data_token`` download path and never
+    reach this function. This test class lives at the unit level to
+    lock the invariant in -- the URL gate is a string check in
+    ``drive_file_download.py``, but mistakes have happened (CWE-22
+    upstream) and the cost of accidentally unpacking a user's .zip is
+    high (irrecoverable: the .zip file on iCloud is replaced by a
+    directory tree on disk, dedup breaks, restore is manual)."""
+
+    def test_url_gate_is_the_only_caller(self):
+        """Audit: ``process_package`` has exactly one external caller
+        in the codebase, and that call site has the URL gate."""
+        import re
+        from pathlib import Path as _Path
+
+        callers = []
+        for src_file in _Path("src").rglob("*.py"):
+            if src_file.name == "drive_package_processing.py":
+                continue  # ignore the recursive self-call inside the module
+            text = src_file.read_text()
+            if "process_package(" in text:
+                callers.append(src_file)
+
+        self.assertEqual(
+            len(callers),
+            1,
+            f"process_package should have exactly 1 external caller "
+            f"(the URL-gated one in drive_file_download); found {len(callers)}: "
+            f"{[str(c) for c in callers]}",
+        )
+        # And that caller is gated on the packageDownload URL substring.
+        caller_text = callers[0].read_text()
+        gate_pattern = re.compile(
+            r"if[^\n]*packageDownload\?[^\n]*in[^\n]*response\.url[\s\S]*?process_package\(",
+        )
+        self.assertRegex(
+            caller_text,
+            gate_pattern,
+            "process_package call must be gated on a `/packageDownload?` "
+            "URL substring check so user-uploaded .zip files (which come "
+            "via data_token URLs without that segment) are never passed "
+            "to the unpacker.",
+        )
