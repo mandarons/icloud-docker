@@ -14,7 +14,12 @@ from src.config_parser import get_usage_tracking_enabled, prepare_root_destinati
 
 LOGGER = get_logger()
 
-CACHE_FILE_NAME = "/config/.data"
+# Same ICLOUD_DOCKER_CONFIG_DIR override as ``DEFAULT_COOKIE_DIRECTORY``
+# in ``src/__init__.py`` — lets the test suite on non-container hosts
+# (macOS, sandboxes) redirect the usage cache to a writable tempdir
+# instead of the read-only ``/config`` mount point. Defaults to
+# ``/config/.data`` so production container deployments are unchanged.
+CACHE_FILE_NAME = os.path.join(os.environ.get("ICLOUD_DOCKER_CONFIG_DIR", "/config"), ".data")
 NEW_INSTALLATION_ENDPOINT = os.environ.get("NEW_INSTALLATION_ENDPOINT", None)
 NEW_HEARTBEAT_ENDPOINT = os.environ.get("NEW_HEARTBEAT_ENDPOINT", None)
 APP_NAME = "icloud-docker"

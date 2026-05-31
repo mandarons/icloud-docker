@@ -63,7 +63,11 @@ class TestSync(unittest.TestCase):
         if ENV_ICLOUD_PASSWORD_KEY in os.environ:
             del os.environ[ENV_ICLOUD_PASSWORD_KEY]
         self.assertIsNone(sync.sync())
-        self.assertTrue(os.path.isdir("/config/session_data"))
+        # Resolves to the conftest's tempdir on non-container hosts;
+        # ``/config/session_data`` in a real container deployment.
+        from src import DEFAULT_COOKIE_DIRECTORY
+
+        self.assertTrue(os.path.isdir(DEFAULT_COOKIE_DIRECTORY))
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
