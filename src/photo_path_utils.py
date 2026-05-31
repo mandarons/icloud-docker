@@ -47,7 +47,9 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
         if filetype in _get_original_alt_filetype_mapping():
             extension = _get_original_alt_filetype_mapping()[filetype]
         else:
-            LOGGER.warning(f"Unknown filetype {filetype} for original_alt version of {filename}")
+            LOGGER.warning(
+                f"Unknown filetype {filetype} for original_alt version of {filename}",
+            )
 
     return name, extension
 
@@ -66,7 +68,19 @@ def set_default_filename_format(filename_format: str) -> None:
         _DEFAULT_FILENAME_FORMAT = filename_format
 
 
-def generate_photo_filename_with_metadata(photo, file_size: str, filename_format: str | None = None) -> str:
+def get_default_filename_format() -> str:
+    """Read the current module-level default filename format.
+
+    Public accessor so callers in other modules can observe live updates
+    from ``set_default_filename_format`` without reaching into the
+    underscore-prefixed module global (which violates SLF001).
+    """
+    return _DEFAULT_FILENAME_FORMAT
+
+
+def generate_photo_filename_with_metadata(
+    photo, file_size: str, filename_format: str | None = None,
+) -> str:
     """Generate filename for a photo asset.
 
     Two conventions supported (controlled by ``filename_format`` or the
@@ -102,7 +116,9 @@ def generate_photo_filename_with_metadata(photo, file_size: str, filename_format
         return f"{'__'.join([name, file_size, photo_id_encoded])}.{extension}"
 
 
-def create_folder_path_if_needed(destination_path: str, folder_format: str | None, photo) -> str:
+def create_folder_path_if_needed(
+    destination_path: str, folder_format: str | None, photo,
+) -> str:
     """Create folder path based on folder format and photo creation date.
 
     Args:

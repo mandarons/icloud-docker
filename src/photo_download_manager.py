@@ -16,6 +16,7 @@ from src.photo_file_utils import create_hardlink, download_photo_from_server
 from src.photo_path_utils import (
     create_folder_path_if_needed,
     generate_photo_filename_with_metadata,
+    get_default_filename_format,
     normalize_file_path,
     rename_legacy_file_if_exists,
 )
@@ -29,9 +30,14 @@ files_lock = Lock()
 class DownloadTaskInfo:
     """Information about a photo download task."""
 
-    def __init__(self, photo, file_size: str, photo_path: str,
-                 hardlink_source: str | None = None,
-                 hardlink_registry: HardlinkRegistry | None = None):
+    def __init__(
+        self,
+        photo,
+        file_size: str,
+        photo_path: str,
+        hardlink_source: str | None = None,
+        hardlink_registry: HardlinkRegistry | None = None,
+    ):
         """Initialize download task info.
 
         Args:
@@ -60,8 +66,9 @@ def get_max_threads_for_download(config) -> int:
     return config_parser.get_app_max_threads(config)
 
 
-def generate_photo_path(photo, file_size: str, destination_path: str,
-                       folder_format: str | None) -> str:
+def generate_photo_path(
+    photo, file_size: str, destination_path: str, folder_format: str | None,
+) -> str:
     """Generate full file path for photo with legacy file renaming.
 
     This function combines path generation, folder creation, and legacy
@@ -80,7 +87,9 @@ def generate_photo_path(photo, file_size: str, destination_path: str,
     filename_with_metadata = generate_photo_filename_with_metadata(photo, file_size)
 
     # Create folder path if needed
-    final_destination = create_folder_path_if_needed(destination_path, folder_format, photo)
+    final_destination = create_folder_path_if_needed(
+        destination_path, folder_format, photo,
+    )
 
     # Generate paths for legacy file format handling
     filename = photo.filename
@@ -90,7 +99,11 @@ def generate_photo_path(photo, file_size: str, destination_path: str,
     file_path = os.path.join(destination_path, filename)
     file_size_path = os.path.join(
         destination_path,
-        f"{'__'.join([name, file_size])}" if extension == "" else f"{'__'.join([name, file_size])}.{extension}",
+        (
+            f"{'__'.join([name, file_size])}"
+            if extension == ""
+            else f"{'__'.join([name, file_size])}.{extension}"
+        ),
     )
 
     # Final path with normalization
@@ -108,9 +121,14 @@ def generate_photo_path(photo, file_size: str, destination_path: str,
     return normalized_path
 
 
-def collect_download_task(photo, file_size: str, destination_path: str,
-                         files: set[str] | None, folder_format: str | None,
-                         hardlink_registry: HardlinkRegistry | None) -> DownloadTaskInfo | None:
+def collect_download_task(
+    photo,
+    file_size: str,
+    destination_path: str,
+    files: set[str] | None,
+    folder_format: str | None,
+    hardlink_registry: HardlinkRegistry | None,
+) -> DownloadTaskInfo | None:
     """Collect photo info for parallel download without immediately downloading.
 
     Args:
@@ -126,8 +144,12 @@ def collect_download_task(photo, file_size: str, destination_path: str,
     """
     # Check if file size exists on server
     if file_size not in photo.versions:
-        photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)
-        LOGGER.warning(f"File size {file_size} not found on server. Skipping the photo {photo_path} ...")
+        photo_path = generate_photo_path(
+            photo, file_size, destination_path, folder_format,
+        )
+        LOGGER.warning(
+            f"File size {file_size} not found on server. Skipping the photo {photo_path} ...",
+        )
         return None
 
     # Generate photo path
@@ -135,29 +157,44 @@ def collect_download_task(photo, file_size: str, destination_path: str,
 
     # Check if photo already exists with correct size
     from src.photo_file_utils import check_photo_exists
+
     if check_photo_exists(photo, file_size, photo_path):
         if files is not None:
             with files_lock:
                 files.add(photo_path)
         return None
 
-    # Filename-collision fallback: in ``simple`` mode, a plain ``IMG_1234.HEIC``
-    # path may already be occupied by a DIFFERENT iCloud photo that happens to
-    # share the human filename. ``check_photo_exists`` returned False for this
-    # photo even though the path exists — meaning size mismatch — so treat as
-    # a collision and route this photo to the metadata-suffix filename instead.
-    # The earlier-claimed plain name belongs to the first photo we saw;
-    # subsequent colliders get unique suffix names. Both photos coexist on disk
-    # and both round-trip stably on future syncs.
-    from src.photo_path_utils import (
-        _DEFAULT_FILENAME_FORMAT,
-        create_folder_path_if_needed,
-        generate_photo_filename_with_metadata,
-        normalize_file_path,
-    )
-    if _DEFAULT_FILENAME_FORMAT == "simple" and os.path.isfile(photo_path):
-        suffix_folder = create_folder_path_if_needed(destination_path, folder_format, photo)
-        suffix_basename = generate_photo_filename_with_metadata(photo, file_size, "metadata")
+    # Filename-collision fallback (``simple`` mode only): a plain
+    # ``IMG_1234.HEIC`` path may already be claimed by a DIFFERENT iCloud
+    # photo that happens to share the human filename. Two collision sources:
+    #
+    #   1. On-disk collision: ``check_photo_exists`` returned False but the
+    #      path is occupied -- size mismatch with a photo from a prior sync.
+    #   2. In-flight collision: an earlier call in this same
+    #      ``_collect_album_download_tasks`` pass already claimed this plain
+    #      path. Without this check the later parallel download silently
+    #      overwrites the earlier one and we lose data. ``collect_download_task``
+    #      runs sequentially during collection so a plain ``in files`` membership
+    #      test under ``files_lock`` is sufficient; we hold the lock only long
+    #      enough to read.
+    #
+    # In either case we route this photo to the metadata-suffix filename so
+    # both files coexist and both round-trip stably on future syncs. We use
+    # the ``get_default_filename_format()`` accessor (rather than importing
+    # the module-level constant) so ``set_default_filename_format`` updates
+    # are observed live on every call.
+    is_simple = get_default_filename_format() == "simple"
+    in_flight_collision = False
+    if is_simple and files is not None:
+        with files_lock:
+            in_flight_collision = photo_path in files
+    if is_simple and (os.path.isfile(photo_path) or in_flight_collision):
+        suffix_folder = create_folder_path_if_needed(
+            destination_path, folder_format, photo,
+        )
+        suffix_basename = generate_photo_filename_with_metadata(
+            photo, file_size, "metadata",
+        )
         photo_path = normalize_file_path(os.path.join(suffix_folder, suffix_basename))
         LOGGER.info(
             f"Filename collision for {photo.filename} (id={photo.id}); "
@@ -206,14 +243,20 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
                 return True
             else:
                 # Fallback to download if hard link creation fails
-                LOGGER.warning(f"Hard link creation failed, downloading {task_info.photo_path} instead")
+                LOGGER.warning(
+                    f"Hard link creation failed, downloading {task_info.photo_path} instead",
+                )
 
         # Download the photo
-        result = download_photo_from_server(task_info.photo, task_info.file_size, task_info.photo_path)
+        result = download_photo_from_server(
+            task_info.photo, task_info.file_size, task_info.photo_path,
+        )
         if result and task_info.hardlink_registry is not None:
             # Register for future hard links if enabled
             task_info.hardlink_registry.register_photo_path(
-                task_info.photo.id, task_info.file_size, task_info.photo_path,
+                task_info.photo.id,
+                task_info.file_size,
+                task_info.photo_path,
             )
             LOGGER.debug(f"[Thread] Completed download of {task_info.photo_path}")
 
@@ -224,7 +267,9 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
         return False
 
 
-def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -> tuple[int, int]:
+def execute_parallel_downloads(
+    download_tasks: list[DownloadTaskInfo], config,
+) -> tuple[int, int]:
     """Execute download tasks in parallel using thread pool.
 
     Args:
@@ -258,7 +303,10 @@ def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -
 
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         # Submit all download tasks
-        future_to_task = {executor.submit(execute_download_task, task): task for task in download_tasks}
+        future_to_task = {
+            executor.submit(execute_download_task, task): task
+            for task in download_tasks
+        }
 
         # Process completed downloads
         for future in as_completed(future_to_task):
@@ -272,5 +320,7 @@ def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -
                 LOGGER.error(f"Unexpected error during photo download: {e!s}")
                 failed_downloads += 1
 
-    LOGGER.info(f"Photo processing complete: {successful_downloads} successful, {failed_downloads} failed")
+    LOGGER.info(
+        f"Photo processing complete: {successful_downloads} successful, {failed_downloads} failed",
+    )
     return successful_downloads, failed_downloads
