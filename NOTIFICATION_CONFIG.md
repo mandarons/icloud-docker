@@ -267,11 +267,14 @@ app:
 ### Testing Configuration
 
 #### Dry Run Mode
-Use dry run to test notifications without sending:
-```bash
-# This will test notification configuration without actually sending
-docker exec -it icloud /bin/sh -c "su-exec abc python src/main.py --dry-run"
-```
+Note: ``--dry-run`` (added in this PR / feat/dry-run) is a sync-side
+pre-flight that authenticates, summarises what *would* be synced, and
+exits without writing files or sending notifications. It is NOT a
+notification-test mode — notifications are intentionally suppressed
+in dry-run.
+
+To test notification delivery, use the manual-testing helpers below
+(``notify._send_discord_no_throttle`` etc.) rather than ``--dry-run``.
 
 #### Manual Testing
 Test individual notification services:
