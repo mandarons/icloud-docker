@@ -1,0 +1,72 @@
+[38;21m2026-05-31 19:26:57,589 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-05-31 19:26:57,589 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-05-31 19:26:57,590 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-05-31 19:26:57,598 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2026-05-31 19:26:57,601 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-05-31 19:26:57,601 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-31 19:26:57,601 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data[0m
+[38;21m2026-05-31 19:26:57,601 :: DEBUG :: root :: usage.py :: 98 :: Loaded and validated usage cache from: /tmp/icloud_test_config_zg8lorxr/.data[0m
+[38;21m2026-05-31 19:26:57,601 :: DEBUG :: root :: usage.py :: 415 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-05-31 19:26:57,601 :: DEBUG :: root :: usage.py :: 355 :: Time since last heartbeat: 0:00:00.242044[0m
+[38;21m2026-05-31 19:26:57,602 :: DEBUG :: root :: usage.py :: 367 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-05-31 19:26:57,602 :: DEBUG :: root :: usage.py :: 422 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2026-05-31 19:26:57,602 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every -1 seconds.[0m
+[38;21m2026-05-31 19:26:57,602 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloud_test_config_zg8lorxr/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-05-31 19:26:57,602 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-05-31 19:26:57,603 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-05-31 19:26:57,611 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2026-05-31 19:26:57,611 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-05-31 19:26:57,611 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-05-31 19:26:57,611 :: INFO :: root :: sync.py :: 203 :: Syncing drive...[0m
+[38;21m2026-05-31 19:26:57,611 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-05-31 19:26:57,612 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-31 19:26:57,612 :: DEBUG :: root :: config_logging.py :: 44 :: Removing obsolete files and folders ...[0m
+[38;21m2026-05-31 19:26:57,613 :: DEBUG :: root :: drive_folder_processing.py :: 52 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Numbers ...[0m
+[38;21m2026-05-31 19:26:57,614 :: DEBUG :: root :: drive_folder_processing.py :: 52 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Pages ...[0m
+[38;21m2026-05-31 19:26:57,615 :: DEBUG :: root :: drive_folder_processing.py :: 52 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Preview ...[0m
+[38;21m2026-05-31 19:26:57,617 :: DEBUG :: root :: config_logging.py :: 44 :: max_threads is not found in app > max_threads. Using default max_threads: 4 (auto) ...[0m
+[38;5;39m2026-05-31 19:26:57,617 :: INFO :: root :: drive_parallel_download.py :: 158 :: Starting parallel downloads with 4 threads for 2 files...[0m
+[38;21m2026-05-31 19:26:57,618 :: DEBUG :: root :: drive_parallel_download.py :: 122 :: [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/icloudpy/Test/Document scanne 2.pdf[0m
+[38;5;39m2026-05-31 19:26:57,618 :: INFO :: root :: drive_file_download.py :: 38 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/icloudpy/Test/Document scanne 2.pdf ...[0m
+[38;21m2026-05-31 19:26:57,618 :: DEBUG :: root :: drive_parallel_download.py :: 122 :: [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/icloudpy/Test/Scanned document 1.pdf[0m
+[38;5;39m2026-05-31 19:26:57,619 :: INFO :: root :: drive_file_download.py :: 38 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/icloudpy/Test/Scanned document 1.pdf ...[0m
+[38;21m2026-05-31 19:26:57,619 :: DEBUG :: root :: drive_parallel_download.py :: 138 :: [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/icloudpy/Test/Document scanne 2.pdf[0m
+[38;21m2026-05-31 19:26:57,620 :: DEBUG :: root :: drive_parallel_download.py :: 138 :: [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/icloudpy/Test/Scanned document 1.pdf[0m
+[38;5;39m2026-05-31 19:26:57,620 :: INFO :: root :: drive_parallel_download.py :: 179 :: Parallel downloads completed: 2 successful, 0 failed[0m
+[38;21m2026-05-31 19:26:57,621 :: DEBUG :: root :: drive_folder_processing.py :: 52 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/unwanted ...[0m
+[38;21m2026-05-31 19:26:57,625 :: DEBUG :: root :: config_logging.py :: 44 :: max_threads is not found in app > max_threads. Using default max_threads: 4 (auto) ...[0m
+[38;5;39m2026-05-31 19:26:57,625 :: INFO :: root :: drive_parallel_download.py :: 158 :: Starting parallel downloads with 4 threads for 4 files...[0m
+[38;21m2026-05-31 19:26:57,625 :: DEBUG :: root :: drive_parallel_download.py :: 122 :: [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/This is a title.md[0m
+[38;5;39m2026-05-31 19:26:57,625 :: INFO :: root :: drive_file_download.py :: 38 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/This is a title.md ...[0m
+[38;21m2026-05-31 19:26:57,626 :: DEBUG :: root :: drive_parallel_download.py :: 122 :: [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Project.band[0m
+[38;5;39m2026-05-31 19:26:57,626 :: INFO :: root :: drive_file_download.py :: 38 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Project.band ...[0m
+[38;21m2026-05-31 19:26:57,627 :: DEBUG :: root :: drive_parallel_download.py :: 122 :: [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/ms.band[0m
+[38;5;39m2026-05-31 19:26:57,627 :: INFO :: root :: drive_file_download.py :: 38 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/ms.band ...[0m
+[38;21m2026-05-31 19:26:57,627 :: DEBUG :: root :: drive_parallel_download.py :: 122 :: [Thread] Starting download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf[0m
+[38;5;39m2026-05-31 19:26:57,627 :: INFO :: root :: drive_file_download.py :: 38 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf ...[0m
+[38;21m2026-05-31 19:26:57,629 :: DEBUG :: root :: drive_parallel_download.py :: 138 :: [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/This is a title.md[0m
+[38;5;39m2026-05-31 19:26:57,630 :: INFO :: root :: drive_package_processing.py :: 65 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample[0m
+[38;5;39m2026-05-31 19:26:57,630 :: INFO :: root :: drive_package_processing.py :: 65 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Project.band.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample[0m
+[38;5;39m2026-05-31 19:26:57,631 :: INFO :: root :: drive_package_processing.py :: 91 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/ms.band.gz to /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample[0m
+[38;5;39m2026-05-31 19:26:57,636 :: INFO :: root :: drive_package_processing.py :: 75 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf.zip.[0m
+[38;5;39m2026-05-31 19:26:57,637 :: INFO :: root :: drive_package_processing.py :: 65 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/ms.band.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample[0m
+[38;21m2026-05-31 19:26:57,639 :: DEBUG :: root :: drive_parallel_download.py :: 138 :: [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf[0m
+[38;5;39m2026-05-31 19:26:57,641 :: INFO :: root :: drive_package_processing.py :: 75 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Project.band.zip.[0m
+[38;21m2026-05-31 19:26:57,643 :: DEBUG :: root :: drive_parallel_download.py :: 138 :: [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Project.band[0m
+[38;5;39m2026-05-31 19:26:57,644 :: INFO :: root :: drive_package_processing.py :: 75 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/ms.band.zip.[0m
+[38;21m2026-05-31 19:26:57,645 :: DEBUG :: root :: drive_parallel_download.py :: 138 :: [Thread] Completed download of /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/ms.band[0m
+[38;5;39m2026-05-31 19:26:57,646 :: INFO :: root :: drive_parallel_download.py :: 179 :: Parallel downloads completed: 4 successful, 0 failed[0m
+[38;5;39m2026-05-31 19:26:57,646 :: INFO :: root :: drive_cleanup.py :: 37 :: Removing /home/runner/work/icloud-docker/icloud-docker/tests/temp/drive/Obsidian/Sample/Fotoksiążka-Wzór.xmcf ...[0m
+[38;5;39m2026-05-31 19:26:57,648 :: INFO :: root :: sync.py :: 205 :: Drive synced[0m
+[38;21m2026-05-31 19:26:57,648 :: DEBUG :: root :: config_logging.py :: 44 :: Removing obsolete files and folders ...[0m
+[38;21m2026-05-31 19:26:57,648 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-05-31 19:26:57,648 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-31 19:26:57,649 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data[0m
+[38;21m2026-05-31 19:26:57,649 :: DEBUG :: root :: usage.py :: 98 :: Loaded and validated usage cache from: /tmp/icloud_test_config_zg8lorxr/.data[0m
+[38;21m2026-05-31 19:26:57,649 :: DEBUG :: root :: usage.py :: 415 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-05-31 19:26:57,649 :: DEBUG :: root :: usage.py :: 355 :: Time since last heartbeat: 0:00:00.289699[0m
+[38;21m2026-05-31 19:26:57,649 :: DEBUG :: root :: usage.py :: 367 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-05-31 19:26:57,649 :: DEBUG :: root :: usage.py :: 422 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-05-31 19:26:57,649 :: DEBUG :: root :: notify.py :: 599 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;5;39m2026-05-31 19:26:57,650 :: INFO :: root :: sync.py :: 514 :: Resyncing at Sun May 31 19:26:56 2026 ...[0m
+[38;5;39m2026-05-31 19:26:57,650 :: INFO :: root :: sync.py :: 638 :: All configured sync intervals are negative, exiting oneshot mode...[0m

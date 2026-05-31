@@ -1,0 +1,7 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+INFO     root:config_logging.py:35 Using configured max_threads: 1.
+INFO     root:photo_download_manager.py:222 Starting parallel photo downloads with 1 threads for 1 photos...
+INFO     root:photo_download_manager.py:245 Photo processing complete: 0 successful, 1 failed

@@ -1,0 +1,6 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:usage.py:355 Time since last heartbeat: 1 day, 0:00:00
+DEBUG    root:usage.py:359 Sending heartbeat (different UTC day)
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data

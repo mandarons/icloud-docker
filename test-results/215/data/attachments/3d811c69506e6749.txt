@@ -1,0 +1,7 @@
+[38;21m2026-05-31 19:27:08,451 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-31 19:27:08,452 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data[0m
+[38;21m2026-05-31 19:27:08,452 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-31 19:27:08,452 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data[0m
+[38;5;196m2026-05-31 19:27:08,453 :: ERROR :: root :: usage.py :: 140 :: Failed to save usage cache to /tmp/icloud_test_config_zg8lorxr/.data: Permission denied[0m
+[38;21m2026-05-31 19:27:08,453 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-31 19:27:08,453 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data[0m

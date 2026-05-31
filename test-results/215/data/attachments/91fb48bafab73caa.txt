@@ -1,0 +1,16 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:usage.py:107 Usage cache file not found, creating: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:usage.py:137 Atomically saved usage cache to: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:usage.py:276 Installing new instance
+DEBUG    root:usage.py:220 Posting new installation to: None
+DEBUG    root:usage.py:226 Successfully registered new installation: c79e4841-cb7a-4763-b6d0-bfe8ff2a7840
+DEBUG    root:usage.py:282 Installation completed with ID: c79e4841-cb7a-4763-b6d0-bfe8ff2a7840
+DEBUG    root:usage.py:274 Upgrading existing installation: c79e4841-cb7a-4763-b6d0-bfe8ff2a7840
+DEBUG    root:usage.py:220 Posting new installation to: None
+DEBUG    root:usage.py:226 Successfully registered new installation: c9fa1dcd-0d56-4a39-b8ee-4d4699c18532
+DEBUG    root:usage.py:282 Installation completed with ID: c9fa1dcd-0d56-4a39-b8ee-4d4699c18532
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data

@@ -1,0 +1,6 @@
+[38;21m2026-05-31 19:27:07,965 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-31 19:27:07,965 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data[0m
+[38;21m2026-05-31 19:27:07,967 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: http://test.com[0m
+[38;21m2026-05-31 19:27:07,967 :: DEBUG :: root :: usage.py :: 226 :: Successfully registered new installation: 866a27e4-c5f3-4560-9210-927cf0a04162[0m
+[38;21m2026-05-31 19:27:07,967 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-05-31 19:27:07,968 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data[0m

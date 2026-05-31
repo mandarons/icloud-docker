@@ -1,0 +1,16 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:usage.py:399 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:usage.py:107 Usage cache file not found, creating: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:usage.py:137 Atomically saved usage cache to: /tmp/icloud_test_config_zg8lorxr/.data
+DEBUG    root:usage.py:405 New installation detected, registering...
+DEBUG    root:usage.py:276 Installing new instance
+DEBUG    root:usage.py:220 Posting new installation to: None
+ERROR    root:usage.py:194 Unexpected error during request: Network error
+ERROR    root:usage.py:230 Installation registration failed: no response
+ERROR    root:usage.py:285 Installation failed
+ERROR    root:usage.py:412 Installation registration failed
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_zg8lorxr/.data
