@@ -121,11 +121,13 @@ def _extract_sync_intervals(config, log_messages: bool = False):
 
     if config and "drive" in config:
         drive_sync_interval = config_parser.get_drive_sync_interval(
-            config=config, log_messages=log_messages,
+            config=config,
+            log_messages=log_messages,
         )
     if config and "photos" in config:
         photos_sync_interval = config_parser.get_photos_sync_interval(
-            config=config, log_messages=log_messages,
+            config=config,
+            log_messages=log_messages,
         )
 
     return drive_sync_interval, photos_sync_interval
@@ -169,7 +171,9 @@ def _authenticate_and_get_api(config, username: str):
     server_region = config_parser.get_region(config=config)
     password = _retrieve_password(username)
     return get_api_instance(
-        username=username, password=password, server_region=server_region,
+        username=username,
+        password=password,
+        server_region=server_region,
     )
 
 
@@ -340,29 +344,8 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         # Mount-marker failsafe (see _check_mount_marker). Skip this cycle
         # without advancing the countdown so the next interval re-checks
         # once the user fixes the mount + touches the marker file.
-        #
-        # If ``photos.library_destinations`` is configured, EACH mapped
-        # subdir is a separate write target (often a separate bind mount
-        # — that's the whole reason users map libraries to subdirs).
-        # Check the marker in each: the failed-mount one could be any of
-        # them. Root is still checked because libraries with no explicit
-        # mapping fall through to it via ``_library_destination``.
-        # Read defensively so this PR is independent of the
-        # library_destinations PR being merged first.
-        # The outer `if config and "photos" in config` guard already proves
-        # config["photos"] is reachable; trust the dict shape here. Bad
-        # subdir VALUES (empty string, non-string) are still skipped
-        # below — that defends against mis-configured YAML, which is the
-        # actual failure mode we care about.
-        library_destinations = config["photos"].get("library_destinations")
-        marker_destinations = [destination_path]
-        if isinstance(library_destinations, dict):
-            for subdir in library_destinations.values():
-                if not isinstance(subdir, str) or not subdir:
-                    continue
-                marker_destinations.append(os.path.join(destination_path, subdir))
         if not _check_mount_marker(
-            destinations=marker_destinations,
+            destinations=[destination_path],
             marker_filename=config_parser.get_mount_marker_filename(config=config),
             required=config_parser.get_photos_require_mount_marker(config=config),
             service_name="Photos",
@@ -406,11 +389,13 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
 
         # Estimate hardlinked photos (approximate)
         use_hardlinks = config_parser.get_photos_use_hardlinks(
-            config=config, log_messages=False,
+            config=config,
+            log_messages=False,
         )
         if use_hardlinks:
             stats.photos_hardlinked = max(
-                0, len(files_after) - len(files_before) - stats.photos_downloaded,
+                0,
+                len(files_after) - len(files_before) - stats.photos_downloaded,
             )
 
         # Count skipped photos
@@ -714,7 +699,8 @@ def sync():
             startup_logged = True
 
         drive_sync_interval, photos_sync_interval = _extract_sync_intervals(
-            config, log_messages=False,
+            config,
+            log_messages=False,
         )
         username = config_parser.get_username(config=config) if config else None
 
@@ -728,10 +714,16 @@ def sync():
 
                     # Perform syncs and collect statistics
                     drive_stats = _perform_drive_sync(
-                        config, api, sync_state, drive_sync_interval,
+                        config,
+                        api,
+                        sync_state,
+                        drive_sync_interval,
                     )
                     photos_stats = _perform_photos_sync(
-                        config, api, sync_state, photos_sync_interval,
+                        config,
+                        api,
+                        sync_state,
+                        photos_sync_interval,
                     )
 
                     # Populate summary with statistics
