@@ -1,0 +1,7 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_kczju452/.data
+DEBUG    root:usage.py:220 Posting new installation to: Invalid
+DEBUG    root:usage.py:177 Non-retriable error (status 404)
+ERROR    root:usage.py:230 Installation registration failed: 404
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_kczju452/.data
