@@ -240,13 +240,17 @@ class TestDriveSyncSkippedWhenMarkerMissing(unittest.TestCase):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def test_drive_sync_returns_none_when_marker_missing(self):
-        """The Drive marker-missing branch sets the early return that
-        keeps the countdown from advancing. Without this test the early
-        return is unexecuted code."""
+        """The Drive marker-missing branch returns early without doing
+        any sync work. The countdown is reset to the configured
+        interval so the next loop iteration waits properly instead of
+        busy-looping (the bug Copilot caught: without the reset, on
+        startup ``drive_time_remaining`` is 0 and the next pass would
+        spin at zero sleep)."""
         from unittest.mock import MagicMock, patch
 
         state = sync.SyncState()
         state.enable_sync_drive = True
+        state.drive_time_remaining = 0  # startup value
         config = {
             "drive": {
                 "destination": self.tmp,
@@ -265,6 +269,38 @@ class TestDriveSyncSkippedWhenMarkerMissing(unittest.TestCase):
                 drive_sync_interval=300,
             )
         self.assertIsNone(result)
+        # Critical: countdown reset to full interval, NOT left at 0
+        # (which would cause _calculate_next_sync_schedule to busy-loop).
+        self.assertEqual(state.drive_time_remaining, 300)
+
+    def test_photos_sync_resets_countdown_when_marker_missing(self):
+        """Same busy-loop guard on the Photos branch -- on startup
+        ``photos_time_remaining`` is 0; the marker-missing return
+        must reset it to the configured interval."""
+        from unittest.mock import MagicMock, patch
+
+        state = sync.SyncState()
+        state.enable_sync_photos = True
+        state.photos_time_remaining = 0
+        config = {
+            "photos": {
+                "destination": self.tmp,
+                "require_mount_marker": True,
+            },
+        }
+        with patch.object(
+            sync.config_parser,
+            "prepare_photos_destination",
+            return_value=self.tmp,
+        ):
+            result = sync._perform_photos_sync(  # noqa: SLF001
+                config=config,
+                api=MagicMock(),
+                sync_state=state,
+                photos_sync_interval=600,
+            )
+        self.assertIsNone(result)
+        self.assertEqual(state.photos_time_remaining, 600)
 
 
 class TestPhotosCheckCoversLibraryDestinations(unittest.TestCase):
