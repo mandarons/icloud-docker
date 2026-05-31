@@ -21,7 +21,12 @@ ENV_CONFIG_FILE_PATH_KEY = "ENV_CONFIG_FILE_PATH"
 DEFAULT_LOGGER_LEVEL = "info"
 DEFAULT_LOG_FILE_NAME = "icloud.log"
 DEFAULT_CONFIG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME)
-DEFAULT_COOKIE_DIRECTORY = "/config/session_data"
+# Operator-overridable via ICLOUD_DOCKER_CONFIG_DIR. Default ``/config`` is the
+# in-container mount point users bind their config volume to. The override
+# lets the test suite run on hosts where ``/config`` isn't writable (macOS,
+# sandboxes).
+_CONFIG_DIR = os.environ.get("ICLOUD_DOCKER_CONFIG_DIR", "/config")
+DEFAULT_COOKIE_DIRECTORY = os.path.join(_CONFIG_DIR, "session_data")
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
