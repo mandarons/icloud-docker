@@ -144,6 +144,7 @@ photos:
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.
   folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
+  filename_format: metadata # optional, default "metadata". "metadata" = name__filesize__base64id.ext (legacy). "simple" = plain name.ext (boredazfcuk/Apple-style; lets you migrate without re-downloading)
   filters:
     # List of libraries to download. If omitted (default), photos from all libraries (own and shared) are downloaded. If included, photos only
     # from the listed libraries are downloaded.

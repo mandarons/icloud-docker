@@ -152,6 +152,40 @@ class TestCollisionFallback(unittest.TestCase):
         # Both photos are already on disk — no work needed.
         assert task is None
 
+    def test_in_flight_collision_within_single_sync(self):
+        """The same-sync, both-new race: two distinct iCloud photos with
+        identical human filename, neither on disk yet. Without the in-flight
+        check, both ``collect_download_task`` calls return tasks pointing at
+        the SAME plain path; the later parallel download silently overwrites
+        the earlier one and we lose data (CWE-200-ish for a backup tool).
+
+        Models the scenario by passing the FIRST task's plain path as a
+        pre-populated entry in the shared ``files`` set (which is what the
+        real collection loop does between sequential calls), then asserting
+        the SECOND call sees the in-flight collision and routes to a suffix.
+        """
+        from src.photo_download_manager import collect_download_task
+
+        # First photo's plain path is already in the in-flight set from a
+        # prior collect_download_task call earlier in this same sync.
+        plain_path = os.path.join(self.tmp, "IMG_INFLIGHT.HEIC")
+        in_flight = {plain_path}
+
+        # Second photo, same human name, different iCloud id — must NOT
+        # produce a task pointing at the same plain path.
+        photo_b = _fake_photo("IMG_INFLIGHT.HEIC", "second-photo-id", 9876)
+        task = collect_download_task(
+            photo_b,
+            "original",
+            self.tmp,
+            in_flight,
+            folder_format=None,
+            hardlink_registry=None,
+        )
+        assert task is not None
+        assert task.photo_path != plain_path  # NOT overwriting the first
+        assert "__original__" in task.photo_path
+
     def test_metadata_mode_no_collision_logic(self):
         """In metadata (default) mode, collision logic is bypassed — already-
         unique suffix names cannot collide."""
