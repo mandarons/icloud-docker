@@ -254,15 +254,20 @@ def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval:
 
         destination_path = config_parser.prepare_drive_destination(config=config)
 
-        # Mount-marker failsafe (see _check_mount_marker). Skip this cycle
-        # without advancing the countdown so the next interval re-checks
-        # once the user fixes the mount + touches the marker file.
+        # Mount-marker failsafe (see _check_mount_marker). Skip this
+        # cycle when the marker isn't present. Reset the countdown to
+        # the full interval so ``_calculate_next_sync_schedule`` waits
+        # before re-checking -- without the reset, on startup
+        # ``drive_time_remaining`` is 0 and the next iteration spins
+        # at zero sleep into a tight busy loop that floods logs and
+        # burns CPU until the user touches the marker.
         if not _check_mount_marker(
             destinations=[destination_path],
             marker_filename=config_parser.get_mount_marker_filename(config=config),
             required=config_parser.get_drive_require_mount_marker(config=config),
             service_name="Drive",
         ):
+            sync_state.drive_time_remaining = drive_sync_interval
             return None
 
         # Count files before sync
@@ -362,6 +367,10 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
             required=config_parser.get_photos_require_mount_marker(config=config),
             service_name="Photos",
         ):
+            # Same busy-loop guard as the Drive branch above: reset the
+            # countdown so the next cycle waits the configured interval
+            # before re-checking the marker.
+            sync_state.photos_time_remaining = photos_sync_interval
             return None
 
         # Count files before sync
