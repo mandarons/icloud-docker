@@ -35,16 +35,25 @@ def _redirect_config_dir():
     ``ICLOUD_DOCKER_CONFIG_DIR`` at import time MUST add a matching
     reassignment here.
     """
-    if _CONFIG_DIR_KEY in os.environ:
-        # Honor explicit caller override (e.g. CI integration tests
-        # that mount their own writable ``/config``). The override path
-        # is expected to be already-resolved upstream of pytest.
-        yield
-        return
+    # Resolve the target config dir: external override if the caller
+    # set it (e.g. CI integration tests), otherwise a fresh tempdir.
+    # Note the cleanup contract differs: we never rmtree an externally
+    # supplied dir, only the tempdir we created ourselves.
+    external = _CONFIG_DIR_KEY in os.environ
+    tmpdir = (
+        os.environ[_CONFIG_DIR_KEY]
+        if external
+        else tempfile.mkdtemp(prefix="icloud_test_config_")
+    )
+    if not external:
+        os.environ[_CONFIG_DIR_KEY] = tmpdir
 
-    tmpdir = tempfile.mkdtemp(prefix="icloud_test_config_")
-    os.environ[_CONFIG_DIR_KEY] = tmpdir
-
+    # The constants were captured at import time; re-sync them to the
+    # resolved dir whether it came from env override or the tempdir.
+    # Without this re-sync on the override path, the same
+    # FileNotFoundError chain this fixture exists to prevent would
+    # resurface (callers would still read /config-resolved paths from
+    # the captured constants).
     import src
     import src.usage
 
@@ -58,7 +67,10 @@ def _redirect_config_dir():
     try:
         yield
     finally:
-        import shutil
+        # Only clean up if WE owned the tempdir — leave externally-
+        # supplied dirs (CI mounts, user-managed paths) intact.
+        if not external:
+            import shutil
 
-        shutil.rmtree(tmpdir, ignore_errors=True)
-        os.environ.pop(_CONFIG_DIR_KEY, None)
+            shutil.rmtree(tmpdir, ignore_errors=True)
+            os.environ.pop(_CONFIG_DIR_KEY, None)
