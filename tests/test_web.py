@@ -16,6 +16,35 @@ import tests  # noqa: F401  — sets ENV_CONFIG_FILE_PATH via tests/__init__
 from src import web
 
 
+def _csrf_post(client, path, data=None, **kwargs):
+    """POST helper that injects the CSRF cookie + form token.
+
+    The web app's CSRF middleware (double-submit cookie pattern) rejects
+    state-changing POSTs without a matching cookie + ``csrf_token`` form
+    field. Tests should use this wrapper so they exercise the real
+    middleware rather than bypassing it -- a regression in CSRF
+    enforcement would otherwise hide behind tests that quietly skip the
+    check.
+    """
+    token = web._get_csrf_token()  # noqa: SLF001
+    client.set_cookie(web._CSRF_COOKIE_NAME, token)  # noqa: SLF001
+    data = dict(data or {})
+    data.setdefault("csrf_token", token)
+    return client.post(path, data=data, **kwargs)
+
+
+def _reset_pending_auth():
+    """Test helper: clear ``_PENDING_AUTH`` under ``_AUTH_LOCK``.
+
+    Several tests mutate the module-level dict directly during setUp /
+    tearDown. Funneling through this helper guarantees the lock is
+    always acquired -- otherwise the lock-usage convention is half-on
+    half-off, which becomes a real bug if the suite ever runs in
+    parallel."""
+    with web._AUTH_LOCK:  # noqa: SLF001
+        web._PENDING_AUTH.clear()  # noqa: SLF001
+
+
 class TestStatus(unittest.TestCase):
     """``/api/status`` returns the live payload that powers the dashboard
     and any external consumer."""
@@ -136,11 +165,15 @@ class TestWebUiConfig(unittest.TestCase):
         )
 
     def test_host_default(self):
+        """Default host is 127.0.0.1 -- safer-by-default. Users who
+        want LAN exposure (behind a reverse proxy / Authelia) set
+        ``app.web_ui.host: 0.0.0.0`` consciously."""
         from src import config_parser
 
         self.assertEqual(
-            config_parser.get_web_ui_host(config={}), "0.0.0.0",
-        )  # noqa: S104
+            config_parser.get_web_ui_host(config={}),
+            "127.0.0.1",
+        )
 
     def test_host_when_configured(self):
         from src import config_parser
@@ -196,7 +229,9 @@ class TestMainRun(unittest.TestCase):
 
                 with patch("src.web.start_in_thread") as start, patch("src.sync.sync"):
                     main.run()
-                start.assert_called_once_with(host="0.0.0.0", port=9999)
+                # Default host follows the safer-by-default 127.0.0.1.
+                # LAN exposure requires opt-in via app.web_ui.host: 0.0.0.0.
+                start.assert_called_once_with(host="127.0.0.1", port=9999)
             finally:
                 if previous is None:
                     del os.environ["ENV_CONFIG_FILE_PATH"]
@@ -351,7 +386,7 @@ class TestAuthPasswordPost(unittest.TestCase):
 
     def test_empty_password_returns_400(self):
         client = web.create_app(testing=True).test_client()
-        response = client.post("/auth/password", data={"password": ""})
+        response = _csrf_post(client, "/auth/password", data={"password": ""})
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"Password is required", response.data)
 
@@ -369,7 +404,7 @@ class TestAuthPasswordPost(unittest.TestCase):
             os.environ["ENV_CONFIG_FILE_PATH"] = cfg_path
             try:
                 client = web.create_app(testing=True).test_client()
-                response = client.post("/auth/password", data={"password": "x"})
+                response = _csrf_post(client, "/auth/password", data={"password": "x"})
                 self.assertEqual(response.status_code, 400)
                 self.assertIn(b"app.credentials.username", response.data)
             finally:
@@ -397,7 +432,7 @@ class TestAuthPasswordPost(unittest.TestCase):
             patch("icloudpy.utils.store_password_in_keyring"),
         ):
             client = web.create_app(testing=True).test_client()
-            response = client.post("/auth/password", data={"password": "x"})
+            response = _csrf_post(client, "/auth/password", data={"password": "x"})
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.location.endswith("/auth"))
@@ -405,8 +440,9 @@ class TestAuthPasswordPost(unittest.TestCase):
         with web._AUTH_LOCK:  # noqa: SLF001
             self.assertIn("api", web._PENDING_AUTH)  # noqa: SLF001
             self.assertEqual(
-                web._PENDING_AUTH["username"], "user@test.com",  # noqa: SLF001
-            )  # noqa: SLF001
+                web._PENDING_AUTH["username"],  # noqa: SLF001
+                "user@test.com",
+            )
 
     def test_no_2fa_required_stores_keyring_and_redirects(self):
         """Resumed-session case: ICloudPyService picks up the existing
@@ -422,7 +458,7 @@ class TestAuthPasswordPost(unittest.TestCase):
             patch("icloudpy.utils.store_password_in_keyring") as keyring,
         ):
             client = web.create_app(testing=True).test_client()
-            response = client.post("/auth/password", data={"password": "secret"})
+            response = _csrf_post(client, "/auth/password", data={"password": "secret"})
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.location.endswith("/"))
@@ -435,10 +471,11 @@ class TestAuthPasswordPost(unittest.TestCase):
         from unittest.mock import patch
 
         with patch(
-            "icloudpy.ICloudPyService", side_effect=RuntimeError("Apple said no"),
+            "icloudpy.ICloudPyService",
+            side_effect=RuntimeError("Apple said no"),
         ):
             client = web.create_app(testing=True).test_client()
-            response = client.post("/auth/password", data={"password": "x"})
+            response = _csrf_post(client, "/auth/password", data={"password": "x"})
 
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"Apple said no", response.data)
@@ -463,13 +500,13 @@ class TestAuthCodePost(unittest.TestCase):
             web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
             web._PENDING_AUTH["password"] = "secret"  # noqa: SLF001
         client = web.create_app(testing=True).test_client()
-        response = client.post("/auth/code", data={"code": ""})
+        response = _csrf_post(client, "/auth/code", data={"code": ""})
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"Enter the 6-digit code", response.data)
 
     def test_no_pending_auth_returns_400(self):
         client = web.create_app(testing=True).test_client()
-        response = client.post("/auth/code", data={"code": "123456"})
+        response = _csrf_post(client, "/auth/code", data={"code": "123456"})
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"No pending auth", response.data)
 
@@ -484,12 +521,15 @@ class TestAuthCodePost(unittest.TestCase):
             web._PENDING_AUTH["password"] = "secret"  # noqa: SLF001
 
         client = web.create_app(testing=True).test_client()
-        response = client.post("/auth/code", data={"code": "000000"})
+        response = _csrf_post(client, "/auth/code", data={"code": "000000"})
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"Code rejected", response.data)
-        # Pending preserved so user can retry.
+        # Pending is now cleared on ALL exit paths -- including rejection
+        # -- so the user's password doesn't linger in process memory if
+        # they walked away mid-flow. Retry path is /auth (re-enter
+        # password) or /auth/refresh-trust if the keyring has it cached.
         with web._AUTH_LOCK:  # noqa: SLF001
-            self.assertIn("api", web._PENDING_AUTH)  # noqa: SLF001
+            self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
     def test_accepted_code_trusts_persists_clears_redirects(self):
         from unittest.mock import MagicMock, patch
@@ -503,7 +543,7 @@ class TestAuthCodePost(unittest.TestCase):
 
         with patch("icloudpy.utils.store_password_in_keyring") as keyring:
             client = web.create_app(testing=True).test_client()
-            response = client.post("/auth/code", data={"code": "123456"})
+            response = _csrf_post(client, "/auth/code", data={"code": "123456"})
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.location.endswith("/"))
@@ -529,7 +569,7 @@ class TestAuthCodePost(unittest.TestCase):
 
         with patch("icloudpy.utils.store_password_in_keyring"):
             client = web.create_app(testing=True).test_client()
-            response = client.post("/auth/code", data={"code": "123456"})
+            response = _csrf_post(client, "/auth/code", data={"code": "123456"})
 
         self.assertEqual(response.status_code, 302)
         with web._AUTH_LOCK:  # noqa: SLF001
@@ -546,7 +586,7 @@ class TestAuthReset(unittest.TestCase):
             web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
 
         client = web.create_app(testing=True).test_client()
-        response = client.post("/auth/reset")
+        response = _csrf_post(client, "/auth/reset")
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.location.endswith("/auth"))
         with web._AUTH_LOCK:  # noqa: SLF001
@@ -608,7 +648,8 @@ class TestLogs(unittest.TestCase):
                 content = src_cfg.read()
             # Point the logger at a file that doesn't exist.
             content = content.replace(
-                "filename: icloud.log", "filename: /nonexistent/icloud.log",
+                "filename: icloud.log",
+                "filename: /nonexistent/icloud.log",
             )
             with open(cfg_path, "w") as f:
                 f.write(content)
@@ -701,10 +742,10 @@ class TestAuthRefreshTrust(unittest.TestCase):
 
     def setUp(self):
         # Reset the pending-auth dict between tests.
-        web._PENDING_AUTH.clear()  # noqa: SLF001
+        _reset_pending_auth()
 
     def tearDown(self):
-        web._PENDING_AUTH.clear()  # noqa: SLF001
+        _reset_pending_auth()
 
     def _client(self):
         return web.create_app(testing=True).test_client()
@@ -715,14 +756,15 @@ class TestAuthRefreshTrust(unittest.TestCase):
         from unittest.mock import patch
 
         with patch.object(web, "_load_current_config", return_value={"app": {}}):
-            response = self._client().post("/auth/refresh-trust")
+            response = _csrf_post(self._client(), "/auth/refresh-trust")
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"No app.credentials.username", response.data)
 
     def test_refresh_trust_handles_no_keyring_password(self):
         """No cached password → some user-visible response (not 5xx)."""
         with patch("icloudpy.utils.get_password_from_keyring", return_value=None):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/refresh-trust",
                 follow_redirects=False,
             )
@@ -737,7 +779,8 @@ class TestAuthRefreshTrust(unittest.TestCase):
             "icloudpy.utils.get_password_from_keyring",
             side_effect=RuntimeError("keyring boom"),
         ):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/refresh-trust",
                 follow_redirects=False,
             )
@@ -762,7 +805,8 @@ class TestAuthRefreshTrust(unittest.TestCase):
                 return_value=fake_service,
             ),
         ):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/refresh-trust",
                 follow_redirects=False,
             )
@@ -783,7 +827,8 @@ class TestAuthRefreshTrust(unittest.TestCase):
                 side_effect=RuntimeError("ctor boom"),
             ),
         ):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/refresh-trust",
                 follow_redirects=False,
             )
@@ -801,7 +846,8 @@ class TestApiSync(unittest.TestCase):
         return web.create_app(testing=True).test_client()
 
     def test_api_sync_rejects_unknown_service(self):
-        response = self._client().post(
+        response = _csrf_post(
+            self._client(),
             "/api/sync",
             data={"service": "calendar"},
         )
@@ -812,7 +858,8 @@ class TestApiSync(unittest.TestCase):
         from unittest.mock import patch
 
         with patch.object(web, "_load_current_config", return_value={"app": {}}):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/api/sync",
                 data={"service": "drive"},
                 headers={"Accept": "application/json"},
@@ -827,7 +874,8 @@ class TestApiSync(unittest.TestCase):
             "request_force_sync",
             return_value=True,
         ) as fake_req:
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/api/sync",
                 data={"service": "drive"},
                 headers={"Accept": "application/json"},
@@ -845,7 +893,8 @@ class TestApiSync(unittest.TestCase):
             "request_force_sync",
             return_value=True,
         ) as fake_req:
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/api/sync",
                 data={"service": "all"},
                 headers={"Accept": "application/json"},
@@ -866,7 +915,11 @@ class TestApiSync(unittest.TestCase):
             "request_force_sync",
             return_value=True,
         ):
-            response = self._client().post("/api/sync", data={"service": "drive"})
+            response = _csrf_post(
+                self._client(),
+                "/api/sync",
+                data={"service": "drive"},
+            )
         self.assertEqual(response.status_code, 302)
 
     def test_api_sync_service_via_query_string_also_works(self):
@@ -878,7 +931,8 @@ class TestApiSync(unittest.TestCase):
             "request_force_sync",
             return_value=True,
         ):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/api/sync?service=drive",
                 headers={"Accept": "application/json"},
             )
@@ -1038,7 +1092,9 @@ class TestHelperExceptionPaths(unittest.TestCase):
             return_value=True,
             create=True,
         ):
-            self.assertTrue(web._get_require_mount_marker({"drive": {}}, "drive"))  # noqa: SLF001
+            self.assertTrue(
+                web._get_require_mount_marker({"drive": {}}, "drive"),  # noqa: SLF001
+            )
 
     def test_get_library_destinations_attr_error_in_direct_read(self):
         """When PR 3 helper is absent AND the config shape causes
@@ -1082,10 +1138,10 @@ class TestAuthPasswordExceptionPaths(unittest.TestCase):
     """Cover the exception paths in ``/auth/password``."""
 
     def setUp(self):
-        web._PENDING_AUTH.clear()  # noqa: SLF001
+        _reset_pending_auth()
 
     def tearDown(self):
-        web._PENDING_AUTH.clear()  # noqa: SLF001
+        _reset_pending_auth()
 
     def _client(self):
         return web.create_app(testing=True).test_client()
@@ -1106,7 +1162,8 @@ class TestAuthPasswordExceptionPaths(unittest.TestCase):
         fake_api.requires_2fa = True
         fake_api.trigger_2fa_push_notification.side_effect = RuntimeError("boom")
         with patch("icloudpy.ICloudPyService", return_value=fake_api):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/password",
                 data={"password": "hunter2"},
             )
@@ -1130,7 +1187,8 @@ class TestAuthPasswordExceptionPaths(unittest.TestCase):
                 side_effect=RuntimeError("keyring boom"),
             ),
         ):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/password",
                 data={"password": "hunter2"},
             )
@@ -1142,10 +1200,10 @@ class TestAuthCodeExceptionPaths(unittest.TestCase):
     """Cover the exception paths in ``/auth/code``."""
 
     def setUp(self):
-        web._PENDING_AUTH.clear()  # noqa: SLF001
+        _reset_pending_auth()
 
     def tearDown(self):
-        web._PENDING_AUTH.clear()  # noqa: SLF001
+        _reset_pending_auth()
 
     def _client(self):
         return web.create_app(testing=True).test_client()
@@ -1161,7 +1219,8 @@ class TestAuthCodeExceptionPaths(unittest.TestCase):
         web._PENDING_AUTH["username"] = "u@example.com"  # noqa: SLF001
         web._PENDING_AUTH["password"] = "hunter2"  # noqa: SLF001
 
-        response = self._client().post(
+        response = _csrf_post(
+            self._client(),
             "/auth/code",
             data={"code": "123456"},
         )
@@ -1184,7 +1243,8 @@ class TestAuthCodeExceptionPaths(unittest.TestCase):
             "icloudpy.utils.store_password_in_keyring",
             side_effect=RuntimeError("keyring boom"),
         ):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/code",
                 data={"code": "123456"},
             )
@@ -1196,10 +1256,10 @@ class TestAuthRefreshTrustExceptionPaths(unittest.TestCase):
     """Cover the remaining exception paths inside /auth/refresh-trust."""
 
     def setUp(self):
-        web._PENDING_AUTH.clear()  # noqa: SLF001
+        _reset_pending_auth()
 
     def tearDown(self):
-        web._PENDING_AUTH.clear()  # noqa: SLF001
+        _reset_pending_auth()
 
     def _client(self):
         return web.create_app(testing=True).test_client()
@@ -1223,7 +1283,8 @@ class TestAuthRefreshTrustExceptionPaths(unittest.TestCase):
             ),
             patch("icloudpy.ICloudPyService", return_value=fake_api),
         ):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/refresh-trust",
                 follow_redirects=False,
             )
@@ -1243,12 +1304,121 @@ class TestAuthRefreshTrustExceptionPaths(unittest.TestCase):
             ),
             patch("icloudpy.ICloudPyService", return_value=fake_api),
         ):
-            response = self._client().post(
+            response = _csrf_post(
+                self._client(),
                 "/auth/refresh-trust",
                 follow_redirects=False,
             )
         # 302 redirect to dashboard.
         self.assertIn(response.status_code, (200, 302))
+
+
+class TestCsrfEnforcement(unittest.TestCase):
+    """Every state-changing POST rejects requests without a valid CSRF
+    token + matching cookie. Defends against same-LAN CSRF when the
+    user has opted into ``host: 0.0.0.0``."""
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def test_post_without_cookie_returns_403(self):
+        """Cookie missing -> 403. Form field present but cookie absent
+        is the case a cross-site POST would produce (SameSite=Strict
+        blocks the cookie send)."""
+        for path in (
+            "/auth/password",
+            "/auth/code",
+            "/auth/reset",
+            "/auth/refresh-trust",
+            "/api/sync",
+        ):
+            client = self._client()
+            # No set_cookie -> CSRF cookie absent.
+            response = client.post(
+                path,
+                data={"csrf_token": "anything", "service": "drive"},
+            )
+            self.assertEqual(response.status_code, 403, msg=path)
+
+    def test_post_with_cookie_but_mismatched_token_returns_403(self):
+        """Cookie present but form token doesn't match -> 403. Covers
+        the second leg of the double-submit check."""
+        for path in (
+            "/auth/password",
+            "/auth/code",
+            "/auth/reset",
+            "/auth/refresh-trust",
+            "/api/sync",
+        ):
+            client = self._client()
+            cookie_name = web._CSRF_COOKIE_NAME  # noqa: SLF001
+            valid_token = web._get_csrf_token()  # noqa: SLF001
+            client.set_cookie(cookie_name, valid_token)
+            response = client.post(
+                path,
+                data={"csrf_token": "wrong-token", "service": "drive"},
+            )
+            self.assertEqual(response.status_code, 403, msg=path)
+
+    def test_post_with_stale_cookie_returns_403(self):
+        """Cookie value doesn't match the live process token -> 403.
+        Models the case where a tab from a previous process restart
+        tries to POST."""
+        client = self._client()
+        cookie_name = web._CSRF_COOKIE_NAME  # noqa: SLF001
+        client.set_cookie(cookie_name, "stale-token-from-prior-run")
+        response = client.post(
+            "/api/sync",
+            data={"csrf_token": "stale-token-from-prior-run", "service": "drive"},
+        )
+        self.assertEqual(response.status_code, 403)
+
+
+class TestPendingAuthTtl(unittest.TestCase):
+    """``_PENDING_AUTH`` stash expires after ``_PENDING_AUTH_TTL_SECONDS``.
+    Defence-in-depth: if the user walks away from a 2FA prompt, the
+    submitted Apple ID password doesn't sit in process memory forever."""
+
+    def setUp(self):
+        _reset_pending_auth()
+
+    def tearDown(self):
+        _reset_pending_auth()
+
+    def test_stale_pending_auth_is_cleared_on_new_stash(self):
+        """A fresh /auth/password POST while a stale entry sits in
+        ``_PENDING_AUTH`` expires the stale one first."""
+        import time as _time
+
+        # Plant a "stale" entry whose stashed_at is well past the TTL.
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = object()  # noqa: SLF001
+            web._PENDING_AUTH["username"] = "old@stale.com"  # noqa: SLF001
+            web._PENDING_AUTH["password"] = "leaked"  # noqa: SLF001
+            web._PENDING_AUTH["stashed_at"] = (  # noqa: SLF001
+                _time.monotonic() - web._PENDING_AUTH_TTL_SECONDS - 1  # noqa: SLF001
+            )
+            self.assertTrue(web._pending_auth_is_stale())  # noqa: SLF001
+
+        # The expire helper wipes it.
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._expire_stale_pending_auth_unlocked()  # noqa: SLF001
+            self.assertEqual(web._PENDING_AUTH, {})  # noqa: SLF001
+
+    def test_fresh_pending_auth_is_not_stale(self):
+        """An entry stashed just now is not stale; expire is a no-op."""
+        import time as _time
+
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = object()  # noqa: SLF001
+            web._PENDING_AUTH["stashed_at"] = _time.monotonic()  # noqa: SLF001
+            self.assertFalse(web._pending_auth_is_stale())  # noqa: SLF001
+            web._expire_stale_pending_auth_unlocked()  # noqa: SLF001
+            self.assertIn("api", web._PENDING_AUTH)  # noqa: SLF001
+
+    def test_empty_pending_auth_is_not_stale(self):
+        """Nothing to expire -> not stale."""
+        self.assertFalse(web._pending_auth_is_stale())  # noqa: SLF001
 
 
 if __name__ == "__main__":

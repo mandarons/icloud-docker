@@ -315,15 +315,19 @@ def get_web_ui_enabled(config: dict) -> bool:
 def get_web_ui_host(config: dict) -> str:
     """Web UI bind address.
 
-    Default ``0.0.0.0`` (all interfaces) — appropriate for the LAN /
-    reverse-proxy use case. Pin to ``127.0.0.1`` if exposing only via
-    docker's port mapping to localhost.
+    Default ``127.0.0.1`` — the web UI accepts the user's Apple ID
+    password on POST /auth/password with no built-in authentication and
+    no CSRF token (the feature assumes a reverse-proxy trust boundary
+    in front of it). Defaulting to loopback means the credential-
+    accepting form is never exposed to LAN/public on a vanilla install.
+    Users who run behind a reverse proxy or want explicit LAN exposure
+    set ``app.web_ui.host: 0.0.0.0`` consciously.
     """
     return str(
         get_config_value_or_default(
             config=config,
             config_path=["app", "web_ui", "host"],
-            default="0.0.0.0",  # noqa: S104
+            default="127.0.0.1",
         ),
     )
 

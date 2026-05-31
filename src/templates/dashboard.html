@@ -12,6 +12,7 @@
   <div class="status-text"><strong>{{ status.username }}</strong> — keyring populated, sync loop authenticated</div>
   <div class="status-actions">
     <form action="/auth/refresh-trust" method="post" style="display:contents">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <button type="submit" class="status-cta secondary"
               title="Re-trigger Apple 2FA using the keyring-stored password — no re-typing.">
         Refresh trust
@@ -41,6 +42,7 @@
 {% if status.services %}
 <div class="global-actions">
   <form action="/api/sync" method="post" style="display:contents">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
     <input type="hidden" name="service" value="all">
     <button type="submit" class="btn btn-primary">Sync all now</button>
   </form>
@@ -129,6 +131,7 @@
 
     <div class="card-actions">
       <form action="/api/sync" method="post" style="display:contents">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="service" value="{{ service.name | lower }}">
         <button type="submit" class="btn btn-small btn-primary"
                 {% if service.force_sync_pending %}disabled{% endif %}>

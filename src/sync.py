@@ -749,4 +749,41 @@ def sync():
             )
             break
 
-        sleep(sleep_for)
+        # Interruptible sleep -- poll the web-signal force-sync sentinels
+        # every few seconds so the "Sync now" button stays responsive even
+        # mid-long-interval. Without this, a user tap during a multi-hour
+        # drive sleep would wait the full remaining duration.
+        _interruptible_sleep(sleep_for)
+
+
+def _interruptible_sleep(total_seconds: int) -> None:
+    """Sleep up to ``total_seconds`` in short chunks, returning early
+    when ``web_signals.pending_force_syncs()`` reports any sentinel.
+
+    The ``import src.web_signals`` is best-effort so a vanilla mandarons
+    build without the web-UI module still runs (it falls back to a
+    single ``sleep(total_seconds)``).
+    """
+    _CHUNK = 2  # seconds — tradeoff: shorter = more responsive, more wakeups
+    try:
+        from src import web_signals as _ws
+    except ImportError:  # pragma: no cover — vanilla-mandarons fallback
+        sleep(total_seconds)
+        return
+
+    # Short intervals (<= one chunk) sleep in a single call so the
+    # existing tests that count sleep invocations still match. The
+    # chunking only matters for long intervals where the user might
+    # tap "Sync now" mid-sleep -- those become multiple short sleeps
+    # with a sentinel poll between each.
+    if total_seconds <= _CHUNK:
+        sleep(total_seconds)
+        return
+
+    remaining = total_seconds
+    while remaining > 0:
+        chunk = min(_CHUNK, remaining)
+        sleep(chunk)
+        remaining -= chunk
+        if _ws.pending_force_syncs():
+            return
