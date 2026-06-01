@@ -320,6 +320,25 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         )
 
     username = config_parser.get_username(config=config)
+    trust = web_signals.get_trust_state()
+    trust_expires_at = trust.get("expires_at")
+    trust_days_remaining: int | None = None
+    if trust_expires_at:
+        try:
+            import datetime
+
+            exp = datetime.datetime.fromisoformat(trust_expires_at)
+            now = (
+                datetime.datetime.now(tz=exp.tzinfo)
+                if exp.tzinfo
+                else datetime.datetime.now()
+            )
+            trust_days_remaining = (exp - now).days
+        except (
+            ValueError,
+            TypeError,
+        ):  # pragma: no cover -- defensive against malformed iso
+            trust_days_remaining = None
     return {
         "config_loaded": True,
         "config_path": _current_config_path(),
@@ -329,6 +348,8 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         "services": services,
         "auth_state": _detect_auth_state(username=username),
         "force_sync_pending": web_signals.pending_force_syncs(),
+        "trust_expires_at": trust_expires_at,
+        "trust_days_remaining": trust_days_remaining,
     }
 
 

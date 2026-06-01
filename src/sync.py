@@ -28,6 +28,109 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
+_TRUST_COOKIE_NAME = "X-APPLE-WEBAUTH-HSA-TRUST"
+
+
+def _read_trust_cookie_expiry(api) -> datetime.datetime | None:
+    """Return the expiry datetime of Apple's HSA trust cookie, or None.
+
+    The trust window is carried by ``X-APPLE-WEBAUTH-HSA-TRUST`` in
+    icloudpy's cookie jar (persisted to ``session_data/<username>`` as
+    LWPCookieJar). Reading it directly avoids hardcoding Apple's trust
+    duration -- the cookie's own ``expires`` field is the source of
+    truth, set per-cookie by Apple's server. Returns None if the cookie
+    isn't present (e.g. account never auth'd with 2FA, or trust cookie
+    cleared).
+    """
+    try:
+        cookies = api.session.cookies
+    except AttributeError:
+        return None
+    for cookie in cookies:
+        if cookie.name == _TRUST_COOKIE_NAME and cookie.expires:
+            return datetime.datetime.fromtimestamp(
+                cookie.expires,
+                tz=datetime.timezone.utc,
+            )
+    return None
+
+
+def _resolve_dashboard_url(config) -> str | None:
+    """Compute the web UI URL to embed in notifications, or None.
+
+    Returns ``None`` when ``app.web_ui.enabled`` is False -- callers
+    fall back to the legacy docker-exec instruction. Otherwise prefers
+    the explicit ``app.web_ui.public_url`` (e.g. the reverse-proxy
+    URL); falls back to ``http://{host}:{port}`` with a warning logged
+    once at startup if the public URL isn't set.
+    """
+    if not config_parser.get_web_ui_enabled(config=config):
+        return None
+    public_url = config_parser.get_web_ui_public_url(config=config)
+    if public_url:
+        return public_url
+    host = config_parser.get_web_ui_host(config=config)
+    port = config_parser.get_web_ui_port(config=config)
+    LOGGER.warning(
+        "app.web_ui.public_url not set -- notification URLs will use "
+        "http://%s:%s/, which won't work from outside the container. "
+        "Set app.web_ui.public_url to your reverse-proxy URL.",
+        host,
+        port,
+    )
+    return f"http://{host}:{port}"
+
+
+def _maybe_warn_trust_expiring(config, api, username: str) -> None:
+    """Fire the trust-expiring notification once when crossing threshold.
+
+    Reads the live trust cookie expiry, compares against
+    ``app.trust_expiry_warn_days``, and -- if days_remaining is below
+    the threshold AND we haven't already warned for THIS cookie value --
+    fans the warning out through ``notify.send_trust_expiring``.
+
+    Debounce key is the cookie expiry ISO string itself. When Apple
+    refreshes the trust cookie (new expires_at), the stored
+    ``warned_for_expires_at`` no longer matches and warning eligibility
+    rearms automatically -- no manual reset needed.
+
+    Best-effort: any exception is logged and swallowed so a notification
+    bug never breaks the sync loop.
+    """
+    try:
+        from src import notify, web_signals
+
+        expires_at = _read_trust_cookie_expiry(api)
+        expires_at_iso = expires_at.isoformat() if expires_at else None
+        prior = web_signals.get_trust_state()
+        web_signals.record_trust_state(
+            expires_at_iso=expires_at_iso,
+            warned_for_expires_at=prior.get("warned_for_expires_at"),
+        )
+        if expires_at is None:
+            return
+        days_remaining = (
+            expires_at - datetime.datetime.now(tz=datetime.timezone.utc)
+        ).days
+        threshold = config_parser.get_trust_expiry_warn_days(config=config)
+        if days_remaining >= threshold:
+            return
+        if prior.get("warned_for_expires_at") == expires_at_iso:
+            return  # already warned for this cookie value
+        notify.send_trust_expiring(
+            config=config,
+            username=username,
+            days_remaining=days_remaining,
+            dashboard_url=_resolve_dashboard_url(config),
+        )
+        web_signals.record_trust_state(
+            expires_at_iso=expires_at_iso,
+            warned_for_expires_at=expires_at_iso,
+        )
+    except Exception as e:  # pragma: no cover - guarded so notify bugs don't break sync
+        LOGGER.warning(f"trust-expiring check failed: {e!s}")
+
+
 def get_api_instance(
     username: str,
     password: str,
@@ -434,6 +537,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         username=username,
         last_send=sync_state.last_send,
         region=server_region,
+        dashboard_url=_resolve_dashboard_url(config),
     )
     sleep(sleep_for)
     return True
@@ -467,6 +571,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         username=username,
         last_send=sync_state.last_send,
         region=server_region,
+        dashboard_url=_resolve_dashboard_url(config),
     )
     sleep(sleep_for)
     return True
@@ -639,6 +744,11 @@ def sync():
                 api = _authenticate_and_get_api(config, username)
 
                 if not api.requires_2sa:
+                    # Trust-window check: record current cookie expiry and
+                    # fire a pre-emptive warning once if it's about to lapse.
+                    # Best-effort: any failure is logged + swallowed inside.
+                    _maybe_warn_trust_expiring(config, api, username)
+
                     # Create summary for this sync cycle
                     summary = SyncSummary()
 
