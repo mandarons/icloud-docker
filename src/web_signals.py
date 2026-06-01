@@ -186,6 +186,38 @@ def _save_state(state: dict[str, dict[str, Any]]) -> None:
             pass
 
 
+_TRUST_STATE_KEY = "_trust"
+
+
+def record_trust_state(
+    *,
+    expires_at_iso: str | None,
+    warned_for_expires_at: str | None = None,
+) -> None:
+    """Persist Apple trust-cookie expiry + whether we've warned for it.
+
+    Stored under a reserved ``_trust`` key in the same JSON file as
+    per-service sync state. ``warned_for_expires_at`` carries the iso
+    timestamp the most recent threshold-cross warning was fired for, so
+    a cookie refresh (new expires_at) automatically rearms warning
+    eligibility -- compare ``warned_for_expires_at`` against the live
+    ``expires_at_iso`` to decide whether to fire again.
+    """
+    state = _load_state()
+    entry = state.get(_TRUST_STATE_KEY, {})
+    entry["expires_at"] = expires_at_iso
+    entry["last_updated"] = time.time()
+    if warned_for_expires_at is not None:
+        entry["warned_for_expires_at"] = warned_for_expires_at
+    state[_TRUST_STATE_KEY] = entry
+    _save_state(state)
+
+
+def get_trust_state() -> dict[str, Any]:
+    """Return persisted trust state. Empty dict if never recorded."""
+    return _load_state().get(_TRUST_STATE_KEY, {})
+
+
 def format_relative_time(epoch_seconds: float, *, now: float | None = None) -> str:
     """Human-friendly relative time for dashboard display.
 
