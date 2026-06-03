@@ -3,6 +3,7 @@
 __author__ = "Mandar Patil <mandarons@pm.me>"
 import datetime
 import os
+import re
 from time import sleep
 
 from icloudpy import ICloudPyService, exceptions, utils
@@ -371,7 +372,7 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
     alive(config=config, data=usage_data)
 
 
-def _handle_2fa_required(config, username: str, sync_state: SyncState):
+def _handle_2fa_required(config, username: str, sync_state: SyncState, api=None):
     """
     Handle 2FA authentication requirement.
 
@@ -379,6 +380,11 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         config: Configuration dictionary
         username: iCloud username
         sync_state: Current sync state
+        api: Live ``ICloudPyService`` instance still in its 2FA-required state.
+            When provided AND ``app.telegram.listen`` is true, the retry sleep is
+            replaced with a Telegram poll: the user replies the auth keyword to
+            have Apple push a code to their devices, then replies the 6 digits --
+            completing re-authentication from a phone, headless, with no web UI.
 
     Returns:
         bool: True if should continue (retry), False if should exit
@@ -392,14 +398,120 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
 
     _log_retry_time(sleep_for)
     server_region = config_parser.get_region(config=config)
+    # notify.send is throttled (once per 24h) and listen-aware: in listen mode the
+    # Telegram channel gets the actionable reply prompt, other channels the standard
+    # alert. Throttling here is what prevents a "reply auth" message every retry cycle.
     sync_state.last_send = notify.send(
         config=config,
         username=username,
         last_send=sync_state.last_send,
         region=server_region,
     )
-    sleep(sleep_for)
+    if api is not None and config_parser.get_telegram_listen_enabled(config=config):
+        _wait_for_telegram_code(config=config, api=api, timeout_seconds=sleep_for)
+    else:
+        sleep(sleep_for)
     return True
+
+
+def _wait_for_telegram_code(config, api, timeout_seconds: int) -> bool:
+    """Drive 2FA over Telegram with a manual, user-initiated trigger.
+
+    The reply prompt itself is sent by ``notify.send`` (throttled); this function
+    drains any stale replies, then polls for the user's actions:
+      1. On the auth keyword -> ``api.trigger_2fa_push_notification()`` so Apple
+         actually pushes a code to the trusted devices. (The headless path
+         previously waited for a code it never requested -- this missing trigger
+         is the core bug this fixes.)
+      2. On a 6-digit reply (spaces/dashes tolerated) -> ``validate_2fa_code``
+         + ``trust_session``.
+
+    Returns True once a code validates and trust succeeds within
+    ``timeout_seconds``; False on timeout. Best-effort throughout. The Telegram
+    ``getUpdates`` offset is held in-memory for the duration of this wait.
+    """
+    poll_interval = 5
+    bot_token = config_parser.get_telegram_bot_token(config=config)
+    chat_id = config_parser.get_telegram_chat_id(config=config)
+    auth_keyword = config_parser.get_telegram_auth_keyword(config=config)
+    if not bot_token or not chat_id:
+        LOGGER.warning(
+            "Telegram listen enabled but bot_token/chat_id not configured; falling back to plain sleep.",
+        )
+        sleep(timeout_seconds)
+        return False
+
+    # Drain any messages already pending so a stale reply from a previous
+    # session does not get acted on; start listening for genuinely new replies.
+    _, offset = notify.poll_telegram_for_text(bot_token=bot_token, chat_id=chat_id, offset=0)
+    while True:
+        _, drained = notify.poll_telegram_for_text(bot_token=bot_token, chat_id=chat_id, offset=offset)
+        if drained == offset:
+            break
+        offset = drained
+
+    LOGGER.info(
+        f"Listening on Telegram for '{auth_keyword}' trigger or 6-digit code (timeout {timeout_seconds}s).",
+    )
+    elapsed = 0
+    while elapsed < timeout_seconds:
+        chunk = min(poll_interval, timeout_seconds - elapsed)
+        sleep(chunk)
+        elapsed += chunk
+        text, offset = notify.poll_telegram_for_text(
+            bot_token=bot_token,
+            chat_id=chat_id,
+            offset=offset,
+        )
+        if not text:
+            continue
+        norm = text.strip().lower()
+        if norm == auth_keyword:
+            LOGGER.info("Telegram auth trigger received -- requesting 2FA push.")
+            try:
+                pushed = api.trigger_2fa_push_notification()
+            except Exception as e:  # noqa: BLE001
+                LOGGER.warning(f"trigger_2fa_push_notification raised: {e!s}")
+                pushed = False
+            notify.post_message_to_telegram(
+                bot_token,
+                chat_id,
+                (
+                    "✅ 2FA code sent to your Apple devices -- reply the 6-digit code here."
+                    if pushed
+                    else "⚠️ Couldn't request a code (no trusted device, or auth state off). Try again shortly."
+                ),
+            )
+            continue
+        code = norm.replace(" ", "").replace("-", "")
+        if re.fullmatch(r"\d{6}", code):
+            LOGGER.info("Received 6-digit code via Telegram -- validating.")
+            try:
+                accepted = api.validate_2fa_code(code)
+            except Exception as e:  # noqa: BLE001
+                LOGGER.warning(f"validate_2fa_code raised: {e!s} -- waiting for another code.")
+                continue
+            if not accepted:
+                notify.post_message_to_telegram(
+                    bot_token,
+                    chat_id,
+                    "❌ Apple rejected that code -- reply a fresh one.",
+                )
+                LOGGER.warning("Apple rejected the Telegram-supplied code -- waiting for another.")
+                continue
+            try:
+                api.trust_session()
+            except Exception as e:  # noqa: BLE001
+                LOGGER.warning(f"trust_session raised (non-fatal): {e!s}")
+            notify.post_message_to_telegram(
+                bot_token,
+                chat_id,
+                "✅ Re-authenticated. iCloud sync resumed.",
+            )
+            LOGGER.info("Telegram-driven 2FA succeeded; resuming sync.")
+            return True
+    LOGGER.info("Telegram listen timeout reached with no usable code; retrying auth.")
+    return False
 
 
 def _handle_password_error(config, username: str, sync_state: SyncState):
@@ -609,7 +721,7 @@ def sync():
                     if not _check_services_configured(config):
                         LOGGER.warning("Nothing to sync. Please add drive: and/or photos: section in config.yaml file.")
                 else:
-                    if not _handle_2fa_required(config, username, sync_state):
+                    if not _handle_2fa_required(config, username, sync_state, api=api):
                         break
                     continue
 

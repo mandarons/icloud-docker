@@ -224,6 +224,28 @@ Automatic notifications are sent when your iCloud authentication expires and 2FA
 - **Multi-Channel**: Sent to all configured notification services simultaneously
 - **Critical Priority**: Ensures you're promptly notified when manual authentication is needed
 
+#### Re-authenticate over Telegram (headless 2FA)
+
+If you run headless (no console, no web UI), you can complete 2FA straight from
+Telegram. Set `app.telegram.bot_token` + `chat_id`, then enable `app.telegram.listen: true`.
+When iCloud needs re-authentication the container messages your chat and waits:
+
+1. Reply the **auth keyword** (default `auth`, set via `app.telegram.auth_keyword`).
+   The container calls Apple to push a 2FA code to your trusted devices.
+2. Reply the **6-digit code** Apple sent (spaces/dashes are tolerated, so `123 456`
+   works). The container validates it and trusts the session, and sync resumes — no
+   console or web UI needed.
+
+Only messages from your configured `chat_id` are honoured. Other configured channels
+(email, Discord, Pushover) still receive the standard 2FA alert.
+
+**Notes:**
+- **Multiple containers:** give each its own **bot token** (a `getUpdates` poll consumes
+  updates for the whole bot, so containers sharing one token would steal each other's
+  replies). A distinct `auth_keyword` per container is still useful for clarity.
+- **Use a 1:1 chat with the bot.** In group chats, Telegram bot privacy mode hides plain
+  `auth`/code messages from the bot.
+
 ### Sync Summary Notifications
 
 Get detailed reports after each sync cycle with comprehensive statistics:

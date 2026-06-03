@@ -34,6 +34,13 @@ app:
   telegram:
   # bot_token: <your Telegram bot token>
   # chat_id: <your Telegram user or chat ID>
+  # listen: true        # also poll Telegram for replies so you can re-auth 2FA from your phone:
+  #                      # reply the auth keyword to have a code pushed to your Apple devices,
+  #                      # then reply the 6-digit code. Off by default. Requires bot_token + chat_id.
+  #                      # Use a 1:1 chat with the bot (group privacy mode hides plain messages).
+  # auth_keyword: auth   # reply word that triggers the 2FA push (default "auth", case-insensitive).
+  #                      # Running multiple containers? Give each its own bot token (a getUpdates
+  #                      # poll consumes the whole bot's updates), plus a distinct auth_keyword.
   pushover:
   # user_key: <your Pushover user key>
   # api_token: <your Pushover api token>

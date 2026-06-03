@@ -50,6 +50,21 @@ def _create_2fa_message(username: str, region: str = "global") -> tuple[str, str
     return message, subject
 
 
+def _create_telegram_reply_prompt(config) -> str:
+    """Build the actionable Telegram reply-2FA prompt (used when listen is on).
+
+    Replaces the generic "run docker exec" instructions with steps the user can
+    complete from their phone: reply the auth keyword to request a code, then
+    reply the 6-digit code.
+    """
+    auth_keyword = config_parser.get_telegram_auth_keyword(config=config)
+    return (
+        "\U0001f510 iCloud needs re-authentication. Reply "
+        f"'{auth_keyword}' and a 2FA code will be sent to your Apple devices; "
+        "then reply the 6-digit code here."
+    )
+
+
 def _get_current_timestamp() -> datetime.datetime:
     """
     Get the current timestamp for notification tracking.
@@ -128,6 +143,61 @@ def post_message_to_telegram(bot_token: str, chat_id: str, message: str) -> bool
     # Log error message
     LOGGER.error(f"Failed to send telegram notification. Response: {response.text}")
     return False
+
+
+def poll_telegram_for_text(
+    bot_token: str,
+    chat_id: str,
+    offset: int = 0,
+    request_timeout: int = 10,
+) -> tuple[str | None, int]:
+    """Poll Telegram ``getUpdates`` for the next text message from ``chat_id``.
+
+    Returns ``(text, new_offset)`` where ``text`` is the first stripped text
+    message from the user's chat (the caller classifies it as an auth keyword
+    vs a 6-digit code) and ``new_offset`` is that message's ``update_id`` so the
+    next poll continues to the following message -- important when a keyword and
+    the code arrive close together. Non-text / foreign-chat updates are skipped
+    and still advance the offset past them. Network / API failures are logged
+    and swallowed, returning ``(None, offset)`` so the caller keeps trying.
+    """
+    url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+    params = {
+        "offset": str(offset + 1),
+        "allowed_updates": '["message"]',
+        "timeout": "0",
+    }
+    try:
+        response = requests.post(url, params=params, timeout=request_timeout)
+    except (requests.RequestException, OSError) as e:
+        LOGGER.warning(f"telegram getUpdates failed: {e!s}")
+        return None, offset
+    if response.status_code != 200:
+        LOGGER.warning(
+            f"telegram getUpdates returned {response.status_code}: {response.text[:200]}",
+        )
+        return None, offset
+    try:
+        payload = response.json()
+    except ValueError as e:
+        LOGGER.warning(f"telegram getUpdates: malformed JSON: {e!s}")
+        return None, offset
+    updates = payload.get("result") or []
+    new_offset = offset
+    for update in updates:
+        update_id = update.get("update_id")
+        message = update.get("message") or {}
+        chat = message.get("chat") or {}
+        if str(chat.get("id")) != str(chat_id):
+            if isinstance(update_id, int) and update_id > new_offset:
+                new_offset = update_id
+            continue
+        text = (message.get("text") or "").strip()
+        if text:
+            return text, (update_id if isinstance(update_id, int) else new_offset)
+        if isinstance(update_id, int) and update_id > new_offset:
+            new_offset = update_id
+    return None, new_offset
 
 
 def _get_discord_config(config) -> tuple[str | None, str | None, bool]:
@@ -329,8 +399,15 @@ def send(config, username, last_send=None, dry_run=False, region="global"):
     """
     message, subject = _create_2fa_message(username, region)
 
+    # When Telegram reply-2FA is enabled, send the actionable reply prompt to
+    # Telegram instead of the generic "run docker exec" message; the other
+    # channels still get the standard alert.
+    telegram_message = message
+    if config_parser.get_telegram_listen_enabled(config=config):
+        telegram_message = _create_telegram_reply_prompt(config)
+
     # Send to all notification services
-    telegram_sent = notify_telegram(config=config, message=message, last_send=last_send, dry_run=dry_run)
+    telegram_sent = notify_telegram(config=config, message=telegram_message, last_send=last_send, dry_run=dry_run)
     discord_sent = notify_discord(config=config, message=message, last_send=last_send, dry_run=dry_run)
     pushover_sent = notify_pushover(config=config, message=message, last_send=last_send, dry_run=dry_run)
     email_sent = notify_email(config=config, message=message, subject=subject, last_send=last_send, dry_run=dry_run)
