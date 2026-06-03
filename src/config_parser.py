@@ -635,6 +635,34 @@ def get_photos_filename_format(config: dict) -> str:
     return value
 
 
+def get_photos_file_format(config: dict) -> str | None:
+    """Single filename template applied to all versions (``photos.file_format``).
+
+    Mirrors ``folder_format`` but for the filename. Uses ``${photo.*}`` tokens
+    (see ``photo_path_utils.render_filename_template``). When set it overrides
+    ``filename_format``. Returns ``None`` (use ``filename_format``) when unset.
+    """
+    config_path = ["photos", "file_format"]
+    value = get_config_value_or_none(config=config, config_path=config_path)
+    if value is None:
+        return None
+    if not isinstance(value, str) or not value.strip():
+        log_config_not_found_warning(config_path, "must be a non-empty template string; ignoring")
+        return None
+    return value
+
+
+def get_photos_variant_separator(config: dict) -> str:
+    """Separator inserted before the variant in ``${photo.variant_suffix}``.
+
+    Defaults to ``"_"``. Only appears when a version is non-primary (not
+    original/full), so primaries stay un-suffixed.
+    """
+    config_path = ["photos", "variant_separator"]
+    value = get_config_value_or_none(config=config, config_path=config_path)
+    return str(value) if value is not None else "_"
+
+
 def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
     """Get libraries filter from photos config.
 

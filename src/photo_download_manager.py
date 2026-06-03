@@ -17,6 +17,7 @@ from src.photo_path_utils import (
     create_folder_path_if_needed,
     generate_photo_filename_with_metadata,
     get_default_filename_format,
+    get_file_format,
     normalize_file_path,
     rename_legacy_file_if_exists,
 )
@@ -183,12 +184,14 @@ def collect_download_task(
     # the ``get_default_filename_format()`` accessor (rather than importing
     # the module-level constant) so ``set_default_filename_format`` updates
     # are observed live on every call.
-    is_simple = get_default_filename_format() == "simple"
+    # Non-unique naming (simple mode, or a photos.file_format template that may
+    # omit a unique component) can collide; the metadata format cannot.
+    is_non_unique = get_default_filename_format() == "simple" or get_file_format() is not None
     in_flight_collision = False
-    if is_simple and files is not None:
+    if is_non_unique and files is not None:
         with files_lock:
             in_flight_collision = photo_path in files
-    if is_simple and (os.path.isfile(photo_path) or in_flight_collision):
+    if is_non_unique and (os.path.isfile(photo_path) or in_flight_collision):
         suffix_folder = create_folder_path_if_needed(
             destination_path, folder_format, photo,
         )
