@@ -1,16 +1,16 @@
-"""Live Photo .mov pair auto-append tests.
+"""Live Photo .mov via explicit ``file_sizes``.
 
-Added 2026-05-27 as part of feat/per-library-destinations-and-live-photos.
-
-When a photo is a Live Photo (icloudpy exposes ``live_video_original`` in
-``photo.versions``) and the user has requested the ``original`` file_size,
-the orchestrator should automatically collect a second download task for
-the paired ``.mov`` so the Live Photo round-trips intact.
+Users add ``live_video_original`` (or ``live_video_medium`` / ``live_video_thumb``)
+to ``photos.filters.file_sizes`` to download the paired ``.mov`` of a Live Photo.
+It flows through the normal download loop like any other version; photos that
+aren't Live Photos lack the version and are skipped quietly (DEBUG, not WARNING).
 """
 
+import logging
 import unittest
 from unittest.mock import MagicMock, patch
 
+from src import config_parser, photo_download_manager
 from src.album_sync_orchestrator import _collect_photo_download_tasks
 
 
@@ -23,193 +23,100 @@ def _fake_photo(filename, versions):
     return photo
 
 
-class TestLivePhotoPairDownload(unittest.TestCase):
-    """Live Photo .mov auto-append behaviour."""
+class TestLiveVideoFileSize(unittest.TestCase):
+    """``live_video_*`` is a valid, explicit file_size."""
 
-    def setUp(self):
-        # Patch is_photo_wanted to always pass; we're testing task collection,
-        # not the wantedness filter.
-        self._wanted_patcher = patch(
-            "src.album_sync_orchestrator.is_photo_wanted",
-            return_value=True,
+    def test_validate_accepts_live_video_keys(self):
+        validated = config_parser.validate_file_sizes(
+            ["original", "live_video_original", "live_video_medium"],
         )
-        self._wanted_patcher.start()
+        self.assertIn("live_video_original", validated)
+        self.assertIn("live_video_medium", validated)
 
-    def tearDown(self):
-        self._wanted_patcher.stop()
-
+    @patch("src.album_sync_orchestrator.is_photo_wanted", return_value=True)
     @patch("src.album_sync_orchestrator.collect_download_task")
-    def test_live_photo_with_original_yields_two_tasks(self, fake_collect):
+    def test_live_video_original_collected_for_live_photo(self, fake_collect, _wanted):
+        """A Live Photo with live_video_original requested yields both tasks."""
         photo = _fake_photo(
             "IMG_1234.HEIC",
             {"original": {"url": "x"}, "live_video_original": {"url": "y"}},
         )
-        # Each call returns a unique MagicMock — non-None so tasks list grows
         fake_collect.side_effect = lambda *a, **kw: MagicMock(name=f"task-{a[1]}")
-
         tasks = _collect_photo_download_tasks(
             photo,
             destination_path="/tmp/dest",
-            file_sizes=["original"],
+            file_sizes=["original", "live_video_original"],
             extensions=None,
             files=set(),
             folder_format=None,
             hardlink_registry=None,
         )
+        self.assertEqual(len(tasks), 2)
+        called = [c.args[1] for c in fake_collect.call_args_list]
+        self.assertIn("live_video_original", called)
 
-        assert len(tasks) == 2
-        # Inspect which file_sizes got requested
-        called_sizes = [call.args[1] for call in fake_collect.call_args_list]
-        assert "original" in called_sizes
-        assert "live_video_original" in called_sizes
-
+    @patch("src.album_sync_orchestrator.is_photo_wanted", return_value=True)
     @patch("src.album_sync_orchestrator.collect_download_task")
-    def test_still_photo_yields_only_one_task(self, fake_collect):
-        photo = _fake_photo("IMG_5678.HEIC", {"original": {"url": "x"}})
-        fake_collect.side_effect = lambda *a, **kw: MagicMock(name=f"task-{a[1]}")
-
-        tasks = _collect_photo_download_tasks(
-            photo,
-            destination_path="/tmp/dest",
-            file_sizes=["original"],
-            extensions=None,
-            files=set(),
-            folder_format=None,
-            hardlink_registry=None,
-        )
-
-        assert len(tasks) == 1
-        called_sizes = [call.args[1] for call in fake_collect.call_args_list]
-        assert called_sizes == ["original"]
-
-    @patch("src.album_sync_orchestrator.collect_download_task")
-    def test_live_photo_without_original_request_does_not_append_mov(
-        self,
-        fake_collect,
-    ):
-        """If the user asked only for medium/thumb (not original), the .mov is not appended.
-
-        The Live Photo .mov is the *original* video resource; users who explicitly
-        want only smaller variants shouldn't get the original .mov bundled.
-        """
-        photo = _fake_photo(
-            "IMG_1234.HEIC",
-            {
-                "medium": {"url": "m"},
-                "thumb": {"url": "t"},
-                "live_video_original": {"url": "y"},
-            },
-        )
-        fake_collect.side_effect = lambda *a, **kw: MagicMock(name=f"task-{a[1]}")
-
-        _collect_photo_download_tasks(
-            photo,
-            destination_path="/tmp/dest",
-            file_sizes=["medium", "thumb"],
-            extensions=None,
-            files=set(),
-            folder_format=None,
-            hardlink_registry=None,
-        )
-
-        called_sizes = [call.args[1] for call in fake_collect.call_args_list]
-        assert called_sizes == ["medium", "thumb"]
-        assert "live_video_original" not in called_sizes
-
-    @patch("src.album_sync_orchestrator.collect_download_task")
-    def test_versions_access_failure_is_non_fatal(self, fake_collect):
-        """If photo.versions raises (partial CloudKit record), still emit
-        the still tasks. The pairing failure is logged at DEBUG (verified
-        in test_versions_access_failure_logs_debug below) and the still
-        path proceeds normally."""
-
-        # Use a dedicated stub class rather than ``type(photo).versions = property(...)``
-        # which mutates the global ``MagicMock`` class and pollutes every
-        # later test that touches ``MagicMock().versions``.
-        class _BrokenPhoto:
-            filename = "IMG_x.HEIC"
-            id = "x"
-
-            @property
-            def versions(self):
-                msg = "CloudKit broken"
-                raise RuntimeError(msg)
-
-        fake_collect.side_effect = lambda *a, **kw: MagicMock(name="task")
-
-        tasks = _collect_photo_download_tasks(
-            _BrokenPhoto(),
-            destination_path="/tmp/dest",
-            file_sizes=["original"],
-            extensions=None,
-            files=set(),
-            folder_format=None,
-            hardlink_registry=None,
-        )
-
-        # Original still task was collected; the broken .versions read
-        # was caught and the .mov path emitted nothing.
-        assert len(tasks) == 1
-
-    @patch("src.album_sync_orchestrator.collect_download_task")
-    def test_versions_access_failure_logs_debug(self, fake_collect):
-        """Operators investigating "why is the .mov missing for this
-        photo?" should see a DEBUG line. Verifies the swallow-and-skip
-        path is observable, not silent."""
-        import logging
-
-        class _BrokenPhoto:
-            filename = "IMG_y.HEIC"
-            id = "y"
-
-            @property
-            def versions(self):
-                msg = "CloudKit broken"
-                raise RuntimeError(msg)
-
-        fake_collect.side_effect = lambda *a, **kw: MagicMock(name="task")
-
-        from src import album_sync_orchestrator
-
-        with self.assertLogs(album_sync_orchestrator.LOGGER, level=logging.DEBUG) as cm:
-            _collect_photo_download_tasks(
-                _BrokenPhoto(),
-                destination_path="/tmp/dest",
-                file_sizes=["original"],
-                extensions=None,
-                files=set(),
-                folder_format=None,
-                hardlink_registry=None,
-            )
-        joined = "\n".join(cm.output)
-        assert "Live Photo pairing skipped for IMG_y.HEIC" in joined, joined
-
-    @patch("src.album_sync_orchestrator.collect_download_task")
-    def test_live_video_original_with_none_collect_result_is_skipped(
-        self,
-        fake_collect,
-    ):
-        """If collect_download_task returns None for the .mov, it's not appended."""
-        photo = _fake_photo(
-            "IMG_1234.HEIC",
-            {"original": {"url": "x"}, "live_video_original": {"url": "y"}},
-        )
+    def test_still_photo_skips_absent_live_video(self, fake_collect, _wanted):
+        """A still (no live_video_original) yields no .mov task; the still still emits."""
 
         def side_effect(*args, **kwargs):
-            if args[1] == "live_video_original":
-                return None  # e.g. file already exists locally
-            return MagicMock(name=f"task-{args[1]}")
+            return None if args[1] == "live_video_original" else MagicMock(name=f"task-{args[1]}")
 
         fake_collect.side_effect = side_effect
-
+        photo = _fake_photo("IMG_5678.HEIC", {"original": {"url": "x"}})
         tasks = _collect_photo_download_tasks(
             photo,
             destination_path="/tmp/dest",
-            file_sizes=["original"],
+            file_sizes=["original", "live_video_original"],
             extensions=None,
             files=set(),
             folder_format=None,
             hardlink_registry=None,
         )
+        self.assertEqual(len(tasks), 1)
 
-        assert len(tasks) == 1
+
+class TestCollectDownloadTaskMissingVersion(unittest.TestCase):
+    """A version absent from photo.versions is skipped; live_video_* logs DEBUG."""
+
+    @patch(
+        "src.photo_download_manager.generate_photo_path",
+        return_value="/tmp/dest/IMG.HEIC",
+    )
+    def test_missing_live_video_logs_debug_not_warning(self, _gp):
+        photo = _fake_photo("IMG.HEIC", {"original": {"url": "x"}})
+        with self.assertLogs(photo_download_manager.LOGGER, level=logging.DEBUG) as cm:
+            result = photo_download_manager.collect_download_task(
+                photo,
+                "live_video_original",
+                "/tmp/dest",
+                set(),
+                None,
+                None,
+            )
+        self.assertIsNone(result)
+        self.assertTrue(any("live_video_original" in line for line in cm.output))
+        self.assertFalse(any("WARNING" in line for line in cm.output))
+
+    @patch(
+        "src.photo_download_manager.generate_photo_path",
+        return_value="/tmp/dest/IMG.HEIC",
+    )
+    def test_missing_regular_size_logs_warning(self, _gp):
+        photo = _fake_photo("IMG.HEIC", {"original": {"url": "x"}})
+        with self.assertLogs(photo_download_manager.LOGGER, level=logging.WARNING) as cm:
+            result = photo_download_manager.collect_download_task(
+                photo,
+                "medium",
+                "/tmp/dest",
+                set(),
+                None,
+                None,
+            )
+        self.assertIsNone(result)
+        self.assertTrue(any("WARNING" in line for line in cm.output))
+
+
+if __name__ == "__main__":
+    unittest.main()
