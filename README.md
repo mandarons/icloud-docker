@@ -159,6 +159,10 @@ photos:
       - "original"
       # - "medium"
       # - "thumb"
+      # For Live Photos, add live_video_original to also download the paired .mov
+      # (live_video_medium / live_video_thumb for smaller variants). Non-Live
+      # Photos lack these versions and are skipped.
+      # - "live_video_original"
     extensions: # Optional, media extensions to be included in syncing iCloud Photos content
       # - jpg
       # - heic

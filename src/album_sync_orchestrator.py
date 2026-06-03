@@ -137,43 +137,10 @@ def _collect_photo_download_tasks(
             )
             if download_info:
                 tasks.append(download_info)
-
-        # Live Photo .mov pair — auto-included when the user asked for
-        # the "original" still and the asset is actually a Live Photo
-        # (icloudpy exposes the paired .mov under the "live_video_original"
-        # version key). Mirrors how Apple's Photos.app pairs the two files.
-        # Requires icloudpy with the Live Photo patch (PHOTO_VERSION_LOOKUP
-        # contains "live_video_*") — falls through gracefully on older
-        # icloudpy versions where the key is absent from photo.versions.
-        if "original" in file_sizes:
-            # photo.versions can raise on partial CloudKit records — swallow
-            # so the still tasks still emit. ``getattr`` default doesn't help
-            # against a property that raises, so an explicit try/except is
-            # required.
-            try:
-                live_versions = photo.versions
-            except Exception as e:
-                # Treat-as-no-Live-Photo soft path. Logged at DEBUG so
-                # users investigating "why is the .mov missing for this
-                # photo?" can spot CloudKit-record-read failures without
-                # noise at INFO/WARNING for the common case.
-                photo_id = getattr(photo, "filename", "?")
-                LOGGER.debug(
-                    f"Live Photo pairing skipped for {photo_id}: "
-                    f"photo.versions read failed: {type(e).__name__}: {e!s}",
-                )
-                live_versions = {}
-            if "live_video_original" in live_versions:
-                live_task = collect_download_task(
-                    photo,
-                    "live_video_original",
-                    destination_path,
-                    files,
-                    folder_format,
-                    hardlink_registry,
-                )
-                if live_task:
-                    tasks.append(live_task)
+        # Live Photos: add "live_video_original" (or _medium/_thumb) to
+        # photos.filters.file_sizes to pull the paired .mov. It flows through
+        # the loop above like any other version; non-Live-Photos don't have
+        # those versions and are skipped (quietly -- see collect_download_task).
         return tasks
     except Exception as e:
         try:

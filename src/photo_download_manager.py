@@ -29,9 +29,14 @@ files_lock = Lock()
 class DownloadTaskInfo:
     """Information about a photo download task."""
 
-    def __init__(self, photo, file_size: str, photo_path: str,
-                 hardlink_source: str | None = None,
-                 hardlink_registry: HardlinkRegistry | None = None):
+    def __init__(
+        self,
+        photo,
+        file_size: str,
+        photo_path: str,
+        hardlink_source: str | None = None,
+        hardlink_registry: HardlinkRegistry | None = None,
+    ):
         """Initialize download task info.
 
         Args:
@@ -60,8 +65,7 @@ def get_max_threads_for_download(config) -> int:
     return config_parser.get_app_max_threads(config)
 
 
-def generate_photo_path(photo, file_size: str, destination_path: str,
-                       folder_format: str | None) -> str:
+def generate_photo_path(photo, file_size: str, destination_path: str, folder_format: str | None) -> str:
     """Generate full file path for photo with legacy file renaming.
 
     This function combines path generation, folder creation, and legacy
@@ -90,7 +94,7 @@ def generate_photo_path(photo, file_size: str, destination_path: str,
     file_path = os.path.join(destination_path, filename)
     file_size_path = os.path.join(
         destination_path,
-        f"{'__'.join([name, file_size])}" if extension == "" else f"{'__'.join([name, file_size])}.{extension}",
+        (f"{'__'.join([name, file_size])}" if extension == "" else f"{'__'.join([name, file_size])}.{extension}"),
     )
 
     # Final path with normalization
@@ -108,9 +112,14 @@ def generate_photo_path(photo, file_size: str, destination_path: str,
     return normalized_path
 
 
-def collect_download_task(photo, file_size: str, destination_path: str,
-                         files: set[str] | None, folder_format: str | None,
-                         hardlink_registry: HardlinkRegistry | None) -> DownloadTaskInfo | None:
+def collect_download_task(
+    photo,
+    file_size: str,
+    destination_path: str,
+    files: set[str] | None,
+    folder_format: str | None,
+    hardlink_registry: HardlinkRegistry | None,
+) -> DownloadTaskInfo | None:
     """Collect photo info for parallel download without immediately downloading.
 
     Args:
@@ -127,7 +136,14 @@ def collect_download_task(photo, file_size: str, destination_path: str,
     # Check if file size exists on server
     if file_size not in photo.versions:
         photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)
-        LOGGER.warning(f"File size {file_size} not found on server. Skipping the photo {photo_path} ...")
+        # A missing live_video_* version just means this isn't a Live Photo --
+        # expected for most assets, so log at DEBUG to avoid warning-spam when
+        # live_video_original is in file_sizes. Other sizes warn as before.
+        msg = f"File size {file_size} not found on server. Skipping the photo {photo_path} ..."
+        if file_size.startswith("live_video_"):
+            LOGGER.debug(msg)
+        else:
+            LOGGER.warning(msg)
         return None
 
     # Generate photo path
@@ -140,6 +156,7 @@ def collect_download_task(photo, file_size: str, destination_path: str,
 
     # Check if photo already exists with correct size
     from src.photo_file_utils import check_photo_exists
+
     if check_photo_exists(photo, file_size, photo_path):
         return None
 
@@ -183,7 +200,9 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
         if result and task_info.hardlink_registry is not None:
             # Register for future hard links if enabled
             task_info.hardlink_registry.register_photo_path(
-                task_info.photo.id, task_info.file_size, task_info.photo_path,
+                task_info.photo.id,
+                task_info.file_size,
+                task_info.photo_path,
             )
             LOGGER.debug(f"[Thread] Completed download of {task_info.photo_path}")
 
