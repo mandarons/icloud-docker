@@ -10,7 +10,6 @@ from icloudpy import ICloudPyService, exceptions, utils
 
 from src import (
     DEFAULT_CONFIG_FILE_PATH,
-    DEFAULT_COOKIE_DIRECTORY,
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
     config_parser,
@@ -33,7 +32,7 @@ LOGGER = get_logger()
 def get_api_instance(
     username: str,
     password: str,
-    cookie_directory: str = DEFAULT_COOKIE_DIRECTORY,
+    cookie_directory: str | None = None,
     server_region: str = "global",
 ) -> ICloudPyService:
     """
@@ -42,12 +41,26 @@ def get_api_instance(
     Args:
         username: iCloud username/Apple ID
         password: iCloud password
-        cookie_directory: Directory to store authentication cookies
+        cookie_directory: Directory to store authentication cookies.
+            When ``None`` (the default), resolved late from
+            ``src.DEFAULT_COOKIE_DIRECTORY`` so test fixtures that
+            redirect the constant at runtime take effect — the previous
+            ``= DEFAULT_COOKIE_DIRECTORY`` default-arg capture made the
+            constant unmockable post-import.
         server_region: Server region ("china" or "global")
 
     Returns:
         Configured ICloudPyService instance
     """
+    if cookie_directory is None:
+        # Read through the src module so monkey-patches of
+        # ``src.DEFAULT_COOKIE_DIRECTORY`` (e.g. by tests/conftest.py)
+        # are honoured. ``src`` is this function's parent package and
+        # already imported; using ``sys.modules`` avoids a per-call
+        # ``import src`` and makes the data flow explicit.
+        import sys
+
+        cookie_directory = sys.modules["src"].DEFAULT_COOKIE_DIRECTORY
     return (
         ICloudPyService(
             apple_id=username,
@@ -349,7 +362,7 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
         "has_drive_activity": bool(summary.drive_stats and summary.drive_stats.has_activity()),
         "has_photos_activity": bool(summary.photo_stats and summary.photo_stats.has_activity()),
         "has_errors": summary.has_errors(),
-        "timestamp": summary.sync_end_time.isoformat() if summary.sync_end_time else None,
+        "timestamp": (summary.sync_end_time.isoformat() if summary.sync_end_time else None),
     }
 
     # Add aggregated statistics (no personal data)

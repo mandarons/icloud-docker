@@ -27,7 +27,21 @@ if [ -f /build_version ]; then
 fi
 
 # Create necessary directories
-mkdir -p /icloud /config/session_data /home/abc
+mkdir -p /icloud /config/session_data /home/abc /config/python_keyring
+
+# Persist python-keyring across container recreations.
+# python-keyring's `keyrings.alt` file backend stores its passwords in
+# `$XDG_DATA_HOME/python_keyring/keyring_pass.cfg`. Default $XDG_DATA_HOME
+# is `$HOME/.local/share` — inside the container, so every `docker compose up`
+# (or PUID change, or image bump) wipes the cached Apple ID password and
+# the user has to re-authenticate. Pointing XDG_DATA_HOME at the bind-mounted
+# /config makes the keyring file persist for the life of the volume.
+export XDG_DATA_HOME=/config
+# /config/python_keyring is created above as root; the conditional chown
+# block below skips /config when it's already owned by abc (common on
+# bind-mounted hosts) and would leave the new subdir root-owned and
+# unwritable. Always chown the keyring dir specifically.
+chown abc:abc /config/python_keyring 2>/dev/null || true
 
 # Set ownership if not already correct
 for dir in /app /config /icloud /home/abc; do
