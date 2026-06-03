@@ -190,12 +190,9 @@ def _check_mount_marker(
     share, wrong permissions) that would otherwise dump iCloud data into
     an empty container-internal directory.
 
-    Takes a list of destinations because a single sync may write to
-    multiple bind-mounted directories — e.g. Photos with
-    ``library_destinations`` mapping the personal library to
-    ``/photos/personal`` and the shared library to ``/photos/shared``,
-    each potentially a separate mount. The marker is required in EACH
-    write destination because any one of them could be the failed mount.
+    Takes a list of destinations because a single sync may write to more
+    than one bind-mounted directory; the marker is required in EACH write
+    destination because any one of them could be the failed mount.
 
     Returns True when it is safe to proceed (marker not required, or
     marker required and present in every destination). Returns False when
@@ -461,9 +458,7 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
     # Create anonymized usage data
     usage_data = {
         "sync_duration": (
-            (summary.sync_end_time - summary.sync_start_time).total_seconds()
-            if summary.sync_end_time
-            else 0
+            (summary.sync_end_time - summary.sync_start_time).total_seconds() if summary.sync_end_time else 0
         ),
         "has_drive_activity": bool(
             summary.drive_stats and summary.drive_stats.has_activity(),
@@ -472,9 +467,7 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
             summary.photo_stats and summary.photo_stats.has_activity(),
         ),
         "has_errors": summary.has_errors(),
-        "timestamp": (
-            summary.sync_end_time.isoformat() if summary.sync_end_time else None
-        ),
+        "timestamp": (summary.sync_end_time.isoformat() if summary.sync_end_time else None),
     }
 
     # Add aggregated statistics (no personal data)
@@ -568,9 +561,7 @@ def _log_retry_time(sleep_for: int):
     Args:
         sleep_for: Sleep duration in seconds
     """
-    next_sync = (
-        datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
-    ).strftime("%c")
+    next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
     LOGGER.info(f"Retrying login at {next_sync} ...")
 
 
@@ -599,24 +590,15 @@ def _calculate_next_sync_schedule(config, sync_state: SyncState):
         sleep_for = sync_state.drive_time_remaining
         sync_state.enable_sync_drive = True
         sync_state.enable_sync_photos = False
-    elif (
-        has_drive
-        and has_photos
-        and sync_state.drive_time_remaining <= sync_state.photos_time_remaining
-    ):
+    elif has_drive and has_photos and sync_state.drive_time_remaining <= sync_state.photos_time_remaining:
         # Special case: if both timers are equal and large (> 10 seconds), wait for the full interval
         # This fixes the bug where equal large intervals cause immediate re-sync
-        if (
-            sync_state.drive_time_remaining == sync_state.photos_time_remaining
-            and sync_state.drive_time_remaining > 10
-        ):
+        if sync_state.drive_time_remaining == sync_state.photos_time_remaining and sync_state.drive_time_remaining > 10:
             sleep_for = sync_state.drive_time_remaining
             sync_state.enable_sync_drive = True
             sync_state.enable_sync_photos = True
         else:
-            sleep_for = (
-                sync_state.photos_time_remaining - sync_state.drive_time_remaining
-            )
+            sleep_for = sync_state.photos_time_remaining - sync_state.drive_time_remaining
             sync_state.photos_time_remaining -= sync_state.drive_time_remaining
             sync_state.enable_sync_drive = True
             sync_state.enable_sync_photos = False
@@ -636,9 +618,7 @@ def _log_next_sync_time(sleep_for: int):
     Args:
         sleep_for: Sleep duration in seconds
     """
-    next_sync = (
-        datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
-    ).strftime("%c")
+    next_sync = (datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)).strftime("%c")
     LOGGER.info(f"Resyncing at {next_sync} ...")
 
 
@@ -746,9 +726,7 @@ def sync():
                     should_send_notification = False
                     if has_drive_config and has_photos_config:
                         # Both services configured - send notification only when both have synced
-                        should_send_notification = (
-                            drive_stats is not None and photos_stats is not None
-                        )
+                        should_send_notification = drive_stats is not None and photos_stats is not None
                     elif has_drive_config and not has_photos_config:
                         # Only drive configured - send when drive synced
                         should_send_notification = drive_stats is not None
