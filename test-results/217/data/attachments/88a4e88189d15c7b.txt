@@ -1,0 +1,6 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_ydcyloip/.data
+DEBUG    root:usage.py:220 Posting new installation to: http://test.com
+ERROR    root:usage.py:230 Installation registration failed: no response
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_ydcyloip/.data

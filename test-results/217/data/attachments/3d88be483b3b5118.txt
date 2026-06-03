@@ -1,0 +1,27 @@
+[38;21m2026-06-03 02:00:09,881 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 02:00:09,882 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_ydcyloip/.data[0m
+[38;21m2026-06-03 02:00:09,883 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-06-03 02:00:09,883 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 02:00:09,883 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_ydcyloip/.data[0m
+[38;21m2026-06-03 02:00:09,883 :: DEBUG :: root :: usage.py :: 107 :: Usage cache file not found, creating: /tmp/icloud_test_config_ydcyloip/.data[0m
+[38;21m2026-06-03 02:00:09,883 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_ydcyloip/.data[0m
+[38;21m2026-06-03 02:00:09,883 :: DEBUG :: root :: usage.py :: 405 :: New installation detected, registering...[0m
+[38;21m2026-06-03 02:00:09,884 :: DEBUG :: root :: usage.py :: 276 :: Installing new instance[0m
+[38;21m2026-06-03 02:00:09,884 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: None[0m
+[38;21m2026-06-03 02:00:09,884 :: DEBUG :: root :: usage.py :: 226 :: Successfully registered new installation: 364f17b0-4530-46fd-ae64-5d742a043167[0m
+[38;21m2026-06-03 02:00:09,884 :: DEBUG :: root :: usage.py :: 282 :: Installation completed with ID: 364f17b0-4530-46fd-ae64-5d742a043167[0m
+[38;21m2026-06-03 02:00:09,884 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_ydcyloip/.data[0m
+[38;21m2026-06-03 02:00:09,884 :: DEBUG :: root :: usage.py :: 409 :: Installation registration completed[0m
+[38;21m2026-06-03 02:00:09,885 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-06-03 02:00:09,885 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 02:00:09,885 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_ydcyloip/.data[0m
+[38;21m2026-06-03 02:00:09,885 :: DEBUG :: root :: usage.py :: 98 :: Loaded and validated usage cache from: /tmp/icloud_test_config_ydcyloip/.data[0m
+[38;21m2026-06-03 02:00:09,885 :: DEBUG :: root :: usage.py :: 415 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-06-03 02:00:09,885 :: DEBUG :: root :: usage.py :: 374 :: Sending first heartbeat[0m
+[38;21m2026-06-03 02:00:09,885 :: DEBUG :: root :: usage.py :: 300 :: Posting heartbeat to: None[0m
+[38;21m2026-06-03 02:00:09,886 :: DEBUG :: root :: usage.py :: 304 :: Heartbeat sent successfully[0m
+[38;21m2026-06-03 02:00:09,886 :: DEBUG :: root :: usage.py :: 377 :: First heartbeat sent successfully[0m
+[38;21m2026-06-03 02:00:09,886 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_ydcyloip/.data[0m
+[38;21m2026-06-03 02:00:09,886 :: DEBUG :: root :: usage.py :: 419 :: Heartbeat completed successfully[0m
+[38;21m2026-06-03 02:00:09,886 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 02:00:09,887 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_ydcyloip/.data[0m
