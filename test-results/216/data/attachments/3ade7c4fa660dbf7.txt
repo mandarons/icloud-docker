@@ -1,0 +1,24 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+DEBUG    root:usage.py:399 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data
+DEBUG    root:usage.py:98 Loaded and validated usage cache from: /tmp/icloud_test_config_6ze6fitn/.data
+DEBUG    root:usage.py:415 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:355 Time since last heartbeat: 0:00:00.697783
+DEBUG    root:usage.py:367 Heartbeat throttled (same UTC day)
+DEBUG    root:usage.py:422 No heartbeat required or heartbeat failed
+INFO     root:config_logging.py:35 Syncing drive every -1 seconds.
+INFO     root:config_logging.py:35 Syncing photos every -1 seconds.
+DEBUG    root:usage.py:399 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data
+DEBUG    root:usage.py:98 Loaded and validated usage cache from: /tmp/icloud_test_config_6ze6fitn/.data
+DEBUG    root:usage.py:415 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:355 Time since last heartbeat: 0:00:00.699071
+DEBUG    root:usage.py:367 Heartbeat throttled (same UTC day)
+DEBUG    root:usage.py:422 No heartbeat required or heartbeat failed
+INFO     root:sync.py:514 Resyncing at Wed Jun  3 01:50:25 2026 ...
+INFO     root:sync.py:638 All configured sync intervals are negative, exiting oneshot mode...

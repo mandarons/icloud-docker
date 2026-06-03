@@ -1,0 +1,9 @@
+[38;21m2026-06-03 01:50:34,257 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:34,257 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m
+[38;21m2026-06-03 01:50:34,258 :: DEBUG :: root :: usage.py :: 374 :: Sending first heartbeat[0m
+[38;5;226m2026-06-03 01:50:34,258 :: WARNING :: root :: usage.py :: 380 :: First heartbeat send failed[0m
+[38;21m2026-06-03 01:50:34,258 :: DEBUG :: root :: usage.py :: 355 :: Time since last heartbeat: 1 day, 1:00:00.000020[0m
+[38;21m2026-06-03 01:50:34,258 :: DEBUG :: root :: usage.py :: 359 :: Sending heartbeat (different UTC day)[0m
+[38;5;226m2026-06-03 01:50:34,258 :: WARNING :: root :: usage.py :: 364 :: Heartbeat send failed[0m
+[38;21m2026-06-03 01:50:34,258 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:34,258 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m

@@ -1,0 +1,6 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data
+DEBUG    root:usage.py:300 Posting heartbeat to: http://test.com
+ERROR    root:usage.py:310 Failed to post heartbeat: Error
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data

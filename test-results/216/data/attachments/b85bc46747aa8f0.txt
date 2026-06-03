@@ -1,0 +1,5 @@
+[38;21m2026-06-03 01:50:35,149 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:35,149 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m
+[38;5;196m2026-06-03 01:50:35,150 :: ERROR :: root :: usage.py :: 194 :: Unexpected error during request: Unexpected error[0m
+[38;21m2026-06-03 01:50:35,150 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:35,150 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m

@@ -1,0 +1,14 @@
+[38;21m2026-06-03 01:50:34,627 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:34,627 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m
+[38;21m2026-06-03 01:50:34,627 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:34,628 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m
+[38;21m2026-06-03 01:50:34,628 :: DEBUG :: root :: usage.py :: 107 :: Usage cache file not found, creating: /tmp/icloud_test_config_6ze6fitn/.data[0m
+[38;21m2026-06-03 01:50:34,628 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_6ze6fitn/.data[0m
+[38;21m2026-06-03 01:50:34,628 :: DEBUG :: root :: usage.py :: 276 :: Installing new instance[0m
+[38;21m2026-06-03 01:50:34,628 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: None[0m
+[38;21m2026-06-03 01:50:34,628 :: DEBUG :: root :: usage.py :: 226 :: Successfully registered new installation: e58aef15-9c18-422e-97d0-52a1ed2fde1f[0m
+[38;21m2026-06-03 01:50:34,628 :: DEBUG :: root :: usage.py :: 282 :: Installation completed with ID: e58aef15-9c18-422e-97d0-52a1ed2fde1f[0m
+[38;21m2026-06-03 01:50:34,629 :: DEBUG :: root :: usage.py :: 300 :: Posting heartbeat to: None[0m
+[38;21m2026-06-03 01:50:34,629 :: DEBUG :: root :: usage.py :: 304 :: Heartbeat sent successfully[0m
+[38;21m2026-06-03 01:50:34,629 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:34,629 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m

@@ -1,0 +1,16 @@
+[38;21m2026-06-03 01:50:35,032 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:35,033 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m
+[38;5;226m2026-06-03 01:50:35,034 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 500, attempt 1/2[0m
+[38;21m2026-06-03 01:50:35,034 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;5;226m2026-06-03 01:50:35,034 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 500, attempt 2/2[0m
+[38;5;226m2026-06-03 01:50:35,035 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 502, attempt 1/2[0m
+[38;21m2026-06-03 01:50:35,035 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;5;226m2026-06-03 01:50:35,035 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 502, attempt 2/2[0m
+[38;5;226m2026-06-03 01:50:35,035 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 503, attempt 1/2[0m
+[38;21m2026-06-03 01:50:35,036 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;5;226m2026-06-03 01:50:35,036 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 503, attempt 2/2[0m
+[38;5;226m2026-06-03 01:50:35,036 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 504, attempt 1/2[0m
+[38;21m2026-06-03 01:50:35,036 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;5;226m2026-06-03 01:50:35,036 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 504, attempt 2/2[0m
+[38;21m2026-06-03 01:50:35,036 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-03 01:50:35,037 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ze6fitn/.data[0m
