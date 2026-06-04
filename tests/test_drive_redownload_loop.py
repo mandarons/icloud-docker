@@ -90,6 +90,18 @@ class TestPackageBundleUnchanged(unittest.TestCase):
         self.assertFalse(drive_file_existence.package_bundle_unchanged(item=None, local_file="x"))
         self.assertFalse(drive_file_existence.package_bundle_unchanged(item=_bundle_item(), local_file=None))
 
+    def test_true_for_timezone_aware_item(self):
+        # download_file stamps mtime via .timestamp() and the check reads via
+        # .timestamp(), so a timezone-aware date_modified round-trips correctly.
+        # Regression guard for the old time.mktime(timetuple()) write that
+        # misread tz-aware datetimes as local time and desynced the mtime.
+        item = _bundle_item(
+            modified=datetime.datetime(2021, 3, 7, 12, 0, 0, tzinfo=datetime.timezone.utc),
+        )
+        path = os.path.join(self.tmp, "tz.key")
+        _write_bundle(path, item)
+        self.assertTrue(drive_file_existence.package_bundle_unchanged(item=item, local_file=path))
+
 
 class TestCollectSkipsUnchangedBundle(unittest.TestCase):
     """The active parallel-download path must skip an unchanged flat bundle."""
