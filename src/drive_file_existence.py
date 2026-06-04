@@ -86,6 +86,35 @@ def package_exists(item: Any, local_package_path: str) -> bool:
     return False
 
 
+def package_bundle_unchanged(item: Any, local_file: str) -> bool:
+    """Freshness check for a package stored as a flat single-file bundle.
+
+    A flattened package -- an unrecognised-mime package kept as-is, or any
+    package downloaded with ``flatten_packages: true`` -- lands on disk as a
+    single file whose byte count is the size of the package-download archive,
+    NOT ``item.size`` (the package's *logical* size that iCloud reports). So
+    ``file_exists`` always sees a spurious size mismatch for these and
+    re-downloads the bundle on every sync.
+
+    ``download_file`` stamps the bundle's mtime to ``item.date_modified`` via
+    ``os.utime``, and iCloud bumps ``date_modified`` whenever a package's
+    contents change, so the mtime is the reliable change signal. Match on mtime
+    alone (the same mtime comparison ``file_exists`` uses), skipping the
+    unusable size check.
+
+    Args:
+        item: iCloud package item with a ``date_modified`` attribute
+        local_file: Path to the local single-file bundle
+
+    Returns:
+        True if the bundle is present and its mtime matches the remote
+        (unchanged -- skip the re-download), False otherwise.
+    """
+    if not (item and local_file and os.path.isfile(local_file)):
+        return False
+    return int(os.path.getmtime(local_file)) == int(item.date_modified.timestamp())
+
+
 def is_package(item: Any, timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC) -> bool:
     """Determine if an iCloud item is a package that needs special handling.
 

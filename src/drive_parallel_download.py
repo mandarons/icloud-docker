@@ -16,7 +16,7 @@ from urllib.parse import unquote
 
 from src import config_parser, configure_icloudpy_logging, get_logger
 from src.drive_file_download import download_file
-from src.drive_file_existence import file_exists, is_package, package_exists
+from src.drive_file_existence import file_exists, is_package, package_bundle_unchanged, package_exists
 from src.drive_filtering import wanted_file
 
 # Configure icloudpy logging immediately after import
@@ -102,6 +102,16 @@ def collect_file_for_download(
     # re-download) — make the network call to determine the item type
     timeout = config_parser.get_drive_request_timeout(config)
     item_is_package = is_package(item=item, timeout=timeout)
+
+    # A package stored as a flat single-file bundle (unrecognised-mime package,
+    # or flatten_packages=true) reports item.size as the package's *logical*
+    # size, which never equals the on-disk bundle's byte count -- so file_exists()
+    # above sees a spurious size mismatch and we'd re-download the bundle on every
+    # sync. When it IS a package and the on-disk bundle's mtime already matches the
+    # remote, the bytes are unchanged; skip the wasteful re-download. is_package()
+    # was just called above, so this adds no extra network round-trip.
+    if item_is_package and package_bundle_unchanged(item=item, local_file=local_file):
+        return None
 
     # Return download task info
     return {
