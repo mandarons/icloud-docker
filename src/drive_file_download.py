@@ -7,6 +7,7 @@ separating download logic from sync operations per SRP.
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
+import time
 from typing import Any
 
 from src import configure_icloudpy_logging, get_logger
@@ -68,13 +69,7 @@ def download_file(
                 local_file = processed_file
 
         # Set the file modification time to match the remote file
-        # Use .timestamp() (true epoch) to match the read side in
-        # file_exists() / package_bundle_unchanged(). time.mktime(timetuple())
-        # misreads a timezone-aware date_modified as local time, desyncing the
-        # stamped mtime from the freshness check. For the naive datetimes
-        # iCloudPy returns today the two are numerically identical, so existing
-        # on-disk files are unaffected.
-        item_modified_time = item.date_modified.timestamp()
+        item_modified_time = time.mktime(item.date_modified.timetuple())
         os.utime(local_file, (item_modified_time, item_modified_time))
 
     except Exception as e:
