@@ -9,7 +9,7 @@ ___author___ = "Mandar Patil <mandarons@pm.me>"
 import os
 import shutil
 import threading
-import time
+from datetime import timezone
 
 from src import get_logger
 
@@ -97,8 +97,11 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
             with open(destination_path, "wb") as file_out:
                 shutil.copyfileobj(download.raw, file_out)
 
-            # Set file modification time to photo's added date
-            local_modified_time = time.mktime(photo.added_date.timetuple())
+            # Set file modification time to photo's added date.
+            # iCloudPy returns added_date as an aware UTC datetime; replace() is a
+            # safe no-op here because tzinfo is already UTC. If it ever returns a
+            # naive datetime, replace(tzinfo=utc) correctly treats it as UTC.
+            local_modified_time = photo.added_date.replace(tzinfo=timezone.utc).timestamp()
             os.utime(destination_path, (local_modified_time, local_modified_time))
 
             return True
