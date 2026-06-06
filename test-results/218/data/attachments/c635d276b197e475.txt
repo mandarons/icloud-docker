@@ -1,0 +1,16 @@
+[38;21m2026-06-06 02:49:28,969 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-06 02:49:28,970 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_k8wex_gs/.data[0m
+[38;21m2026-06-06 02:49:28,970 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-06-06 02:49:28,970 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-06 02:49:28,971 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_k8wex_gs/.data[0m
+[38;21m2026-06-06 02:49:28,971 :: DEBUG :: root :: usage.py :: 107 :: Usage cache file not found, creating: /tmp/icloud_test_config_k8wex_gs/.data[0m
+[38;21m2026-06-06 02:49:28,971 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_k8wex_gs/.data[0m
+[38;21m2026-06-06 02:49:28,971 :: DEBUG :: root :: usage.py :: 405 :: New installation detected, registering...[0m
+[38;21m2026-06-06 02:49:28,971 :: DEBUG :: root :: usage.py :: 276 :: Installing new instance[0m
+[38;21m2026-06-06 02:49:28,971 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: None[0m
+[38;5;196m2026-06-06 02:49:28,971 :: ERROR :: root :: usage.py :: 194 :: Unexpected error during request: Network error[0m
+[38;5;196m2026-06-06 02:49:28,972 :: ERROR :: root :: usage.py :: 230 :: Installation registration failed: no response[0m
+[38;5;196m2026-06-06 02:49:28,972 :: ERROR :: root :: usage.py :: 285 :: Installation failed[0m
+[38;5;196m2026-06-06 02:49:28,972 :: ERROR :: root :: usage.py :: 412 :: Installation registration failed[0m
+[38;21m2026-06-06 02:49:28,972 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-06 02:49:28,972 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_k8wex_gs/.data[0m

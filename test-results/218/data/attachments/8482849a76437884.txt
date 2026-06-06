@@ -1,0 +1,9 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_k8wex_gs/.data
+DEBUG    root:usage.py:374 Sending first heartbeat
+WARNING  root:usage.py:380 First heartbeat send failed
+DEBUG    root:usage.py:355 Time since last heartbeat: 1 day, 1:00:00.000019
+DEBUG    root:usage.py:359 Sending heartbeat (different UTC day)
+WARNING  root:usage.py:364 Heartbeat send failed
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_k8wex_gs/.data

@@ -1,0 +1,6 @@
+[38;21m2026-06-06 02:49:29,770 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-06 02:49:29,770 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_k8wex_gs/.data[0m
+[38;21m2026-06-06 02:49:29,772 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: http://test.com[0m
+[38;21m2026-06-06 02:49:29,772 :: DEBUG :: root :: usage.py :: 226 :: Successfully registered new installation: db82788a-7818-4679-aea3-0b8dc5e5fa0e[0m
+[38;21m2026-06-06 02:49:29,772 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-06-06 02:49:29,773 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_k8wex_gs/.data[0m
