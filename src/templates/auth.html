@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}iCloud Docker · Authenticate{% endblock %}
+{% block content %}
+
+{% set auth = status.auth_state | default('not_configured') %}
+<h1 class="page-title">Authenticate</h1>
+<p class="page-sub">
+  {% if pending %}
+    Step 2 of 2 — enter the 6-digit code Apple just sent to your trusted device.
+  {% elif auth == 'ready' %}
+    <strong>{{ status.username }}</strong> is already signed in. The sync loop will pick up the trusted session on its next interval. Hit "Re-authenticate" below to start a fresh flow (clears the keyring and prompts Apple for a new 2FA push).
+  {% else %}
+    Step 1 of 2 — your Apple ID password. We never log or persist it.
+    A 6-digit code will then arrive on your trusted iPhone/iPad/Mac.
+  {% endif %}
+</p>
+
+{% if message %}
+<div class="status-row">
+  <div class="status-dot {{ message_kind }}"></div>
+  <div class="status-text">{{ message }}</div>
+</div>
+{% endif %}
+
+<div class="card" style="max-width: 480px;">
+  {% if not pending and auth == 'ready' %}
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
+      <div class="status-dot"></div>
+      <div class="status-text"><strong>{{ status.username }}</strong> — keyring populated</div>
+    </div>
+    <form method="post" action="/auth/password">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label for="password" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">Re-authenticate with password</label>
+      <input
+        type="password"
+        name="password"
+        id="password"
+        autocomplete="current-password"
+        required
+        style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
+               font-size: 15px; background: #fafafa;">
+      <button type="submit" class="status-cta" style="display: block; width: 100%; margin-top: 14px; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+        Re-authenticate
+      </button>
+    </form>
+  {% elif pending %}
+    <form method="post" action="/auth/code">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <div style="margin-bottom: 16px;">
+        <label for="code" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">6-digit code</label>
+        <input
+          type="text"
+          name="code"
+          id="code"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="6"
+          autocomplete="one-time-code"
+          autofocus
+          required
+          style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
+                 font-size: 22px; letter-spacing: 0.15em; font-family: 'SF Mono', ui-monospace, Menlo, monospace;
+                 text-align: center; background: #fafafa;">
+      </div>
+      <button type="submit" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+        Verify code
+      </button>
+    </form>
+    <form method="post" action="/auth/reset" style="margin-top: 12px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" style="width: 100%; padding: 9px 14px; font-size: 13px; background: transparent; border: 1px solid var(--divider); border-radius: 999px; color: var(--text-secondary); cursor: pointer;">
+        Start over
+      </button>
+    </form>
+  {% else %}
+    <form method="post" action="/auth/password">
+      {% if status.username %}
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">Apple ID</label>
+        <div class="mono" style="padding: 10px 14px; background: #fafafa; border: 1px solid var(--divider); border-radius: 8px; color: var(--text);">
+          {{ status.username }}
+        </div>
+      </div>
+      {% endif %}
+      <div style="margin-bottom: 16px;">
+        <label for="password" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">Password</label>
+        <input
+          type="password"
+          name="password"
+          id="password"
+          autocomplete="current-password"
+          autofocus
+          required
+          style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
+                 font-size: 15px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+                 background: #fafafa;">
+      </div>
+      <button type="submit" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+        Continue
+      </button>
+    </form>
+  {% endif %}
+</div>
+
+<p style="color: var(--text-tertiary); font-size: 12px; margin-top: 24px;">
+  This form posts directly to the container — credentials never leave your host.
+  The 2FA code is delivered by Apple to your trusted devices.
+</p>
+
+{% endblock %}

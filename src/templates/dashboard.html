@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block title %}iCloud Docker · Status{% endblock %}
+{% block content %}
+
+<h1 class="page-title">Status</h1>
+<p class="page-sub mono">{{ status.config_path }}</p>
+
+{% set auth = status.auth_state | default('not_configured') %}
+{% if auth == 'ready' %}
+<div class="status-row">
+  <div class="status-dot {% if status.trust_days_remaining is not none and status.trust_days_remaining < 7 %}warn{% endif %}"></div>
+  <div class="status-text">
+    <strong>{{ status.username }}</strong> — keyring populated, sync loop authenticated
+    {% if status.trust_days_remaining is not none %}
+      <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
+        Trusted session: {% if status.trust_days_remaining <= 0 %}expired — refresh now{% else %}{{ status.trust_days_remaining }} day{{ '' if status.trust_days_remaining == 1 else 's' }} remaining{% endif %}
+      </span>
+    {% endif %}
+  </div>
+  <div class="status-actions">
+    <form action="/auth/refresh-trust" method="post" style="display:contents">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="status-cta secondary"
+              title="Re-trigger Apple 2FA using the keyring-stored password — no re-typing.">
+        Refresh trust
+      </button>
+    </form>
+    <a class="status-cta" href="/auth">Re-authenticate</a>
+  </div>
+</div>
+{% elif auth == 'setup_needed' %}
+<div class="status-row">
+  <div class="status-dot warn"></div>
+  <div class="status-text"><strong>{{ status.username }}</strong> — first-time 2FA not yet completed (sync loop is waiting)</div>
+  <div class="status-actions">
+    <a class="status-cta" href="/auth">Authenticate now →</a>
+  </div>
+</div>
+{% else %}
+<div class="status-row">
+  <div class="status-dot warn"></div>
+  <div class="status-text">No <strong>app.credentials.username</strong> in config.yaml</div>
+  <div class="status-actions">
+    <a class="status-cta" href="/auth">Set up</a>
+  </div>
+</div>
+{% endif %}
+
+{% if status.services %}
+<div class="global-actions">
+  <form action="/api/sync" method="post" style="display:contents">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="hidden" name="service" value="all">
+    <button type="submit" class="btn btn-primary">Sync all now</button>
+  </form>
+  {% if status.force_sync_pending %}
+    <span style="font-size: 13px; color: var(--text-tertiary); align-self: center;">
+      &nbsp;Queued: <strong style="color: var(--text);">{{ status.force_sync_pending | join(', ') }}</strong>
+    </span>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="grid">
+{% for service in status.services %}
+  <div class="card">
+    <div class="card-head">
+      <div class="card-icon {{ service.name | lower }}">{{ service.name[0] }}</div>
+      <div class="card-title-wrap">
+        <div class="card-title">{{ service.name }}</div>
+        <div class="card-subtitle">every {{ (service.sync_interval_s // 3600) }} h</div>
+      </div>
+    </div>
+    <dl class="kv">
+      <dt>Destination</dt>
+      <dd class="mono">
+        {{ service.destination }}
+        <span class="path-hint">container-internal path — maps from your <code>volumes:</code> in docker-compose.yml</span>
+      </dd>
+      <dt>Interval</dt><dd>{{ service.sync_interval_s }} s</dd>
+      <dt>Mount marker</dt>
+      <dd>
+        {% if service.require_mount_marker %}
+          {% if service.marker_present %}
+            <span class="pill success">required · present</span>
+          {% else %}
+            <span class="pill err">required · missing</span>
+          {% endif %}
+        {% else %}
+          {% if service.marker_present %}
+            <span class="pill success">present (optional)</span>
+          {% else %}
+            <span class="pill warn">not required</span>
+          {% endif %}
+        {% endif %}
+        <div class="mono" style="color: var(--text-tertiary); margin-top: 4px; font-size: 12px;">{{ service.marker_path }}</div>
+      </dd>
+    </dl>
+    {% if service.library_destinations %}
+    <div class="section-label">Library destinations</div>
+    {% for lib_name, subdir in service.library_destinations.items() %}
+      <div class="lib-row mono">
+        <span>{{ lib_name }}</span>
+        <span class="arrow">→</span>
+        <span>{{ subdir }}/</span>
+      </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if service.stats %}
+    <div class="stats">
+      {% if service.stats.last_sync_relative %}
+      <div class="stat">
+        <div class="stat-value">{{ service.stats.last_sync_relative }}</div>
+        <div class="stat-label">Last sync</div>
+      </div>
+      {% endif %}
+      {% if service.stats.files_downloaded is not none %}
+      <div class="stat">
+        <div class="stat-value">{{ service.stats.files_downloaded }}</div>
+        <div class="stat-label">New</div>
+      </div>
+      {% endif %}
+      {% if service.stats.files_skipped is not none %}
+      <div class="stat">
+        <div class="stat-value">{{ service.stats.files_skipped }}</div>
+        <div class="stat-label">Skipped</div>
+      </div>
+      {% endif %}
+      {% if service.stats.files_on_disk is not none %}
+      <div class="stat">
+        <div class="stat-value">{{ "{:,}".format(service.stats.files_on_disk) }}</div>
+        <div class="stat-label">On disk</div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="card-actions">
+      <form action="/api/sync" method="post" style="display:contents">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="hidden" name="service" value="{{ service.name | lower }}">
+        <button type="submit" class="btn btn-small btn-primary"
+                {% if service.force_sync_pending %}disabled{% endif %}>
+          {% if service.force_sync_pending %}Queued ✓{% else %}Sync now{% endif %}
+        </button>
+      </form>
+    </div>
+  </div>
+{% endfor %}
+</div>
+
+<div class="logs-card">
+  <div class="logs-head">
+    <h2>Recent log</h2>
+    <a href="/api/logs" class="mono" style="font-size: 12px;">/api/logs</a>
+  </div>
+  {% if log_lines %}
+    <pre class="logs">{% for line in log_lines %}{{ line }}
+{% endfor %}</pre>
+  {% else %}
+    <div class="logs-empty">No log file found at <span class="mono">{{ log_path or "(unset)" }}</span>.</div>
+  {% endif %}
+</div>
+
+{% endblock %}
