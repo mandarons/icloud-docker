@@ -117,7 +117,9 @@ def package_bundle_unchanged(item: Any, local_file: str) -> bool:
     """
     if not (item and local_file and os.path.isfile(local_file)):
         return False
-    return int(os.path.getmtime(local_file)) == int(item.date_modified.timestamp())
+    # iCloudPy produces date_modified as naive UTC (strptime ...Z); replace(tzinfo=UTC)
+    # matches the convention file_exists/package_exists use so mtimes are TZ-invariant.
+    return int(os.path.getmtime(local_file)) == int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
 
 
 def is_package(item: Any, timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC) -> bool:
