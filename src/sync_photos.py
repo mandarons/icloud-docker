@@ -385,6 +385,15 @@ def sync_photos(config, photos):
     """
     # Parse configuration using centralized config parser
     destination_path = config_parser.prepare_photos_destination(config=config)
+    # Apply the requested filename convention for this sync run. The module-level
+    # default in photo_path_utils flows down through generate_photo_path -> all
+    # downloads without requiring a per-call signature change.
+    from src.photo_path_utils import set_default_filename_format, set_file_format
+    set_default_filename_format(config_parser.get_photos_filename_format(config=config))
+    set_file_format(
+        config_parser.get_photos_file_format(config=config),
+        config_parser.get_photos_variant_separator(config=config),
+    )
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
