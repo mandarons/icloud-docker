@@ -599,6 +599,28 @@ def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     return validated_sizes if validated_sizes else ["original"]
 
 
+def get_photos_preserve_originals_as_bak(config: dict) -> bool:
+    """Whether to hide untouched-original copies of edited photos via ``.original.bak``.
+
+    When True AND ``photos.filters.file_sizes`` contains BOTH ``original``
+    AND ``original_alt``, an edited photo lands as TWO files on disk:
+
+      - ``IMG_1234.JPG``               — the edited "current view" (visible)
+      - ``IMG_1234.HEIC.original.bak`` — the untouched original (invisible
+        to Plex / Photos.app / Synology Photos / any photo browser, since
+        no app recognises ``.bak`` as an image extension), but filesystem-
+        recoverable
+
+    Unedited photos (no ``original_alt`` for them) are unaffected.
+
+    Default False (backward-compatible — no behaviour change for existing
+    mandarons users).
+    """
+    config_path = ["photos", "preserve_originals_as_bak"]
+    value = get_config_value_or_none(config=config, config_path=config_path)
+    return bool(value) if value is not None else False
+
+
 def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
     """Get libraries filter from photos config.
 

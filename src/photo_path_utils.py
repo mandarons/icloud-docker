@@ -52,23 +52,75 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
     return name, extension
 
 
+# Module-level toggle for hiding untouched originals of edited photos via
+# the ``.original.bak`` suffix convention. ``sync_photos`` sets this once
+# per sync run from ``photos.preserve_originals_as_bak``.
+_PRESERVE_ORIGINALS_AS_BAK = False
+
+
+def set_preserve_originals_as_bak(value: bool) -> None:
+    """Set the module-level toggle for hiding untouched originals via .original.bak."""
+    global _PRESERVE_ORIGINALS_AS_BAK
+    _PRESERVE_ORIGINALS_AS_BAK = bool(value)
+
+
+def _photo_has_alt_version(photo) -> bool:
+    """Check whether the asset has an edited (``original_alt``) version on iCloud.
+
+    Soft check — exceptions reading ``photo.versions`` are treated as "no alt"
+    so a partial CloudKit record cannot break the filename pipeline.
+    """
+    try:
+        return "original_alt" in photo.versions
+    except Exception:
+        return False
+
+
 def generate_photo_filename_with_metadata(photo, file_size: str) -> str:
     """Generate filename with file size and photo ID metadata.
+
+    When the ``_PRESERVE_ORIGINALS_AS_BAK`` toggle is on AND this file is the
+    ``original`` size AND the asset has an ``original_alt`` version on iCloud
+    (i.e. the user has edited it in Photos.app), the filename ends with
+    ``.original.bak`` so photo browsers skip it but the file remains
+    filesystem-recoverable. This pairs with downloading ``original_alt``
+    separately to give the user a visible "current view" file plus a hidden
+    "untouched original" sidecar.
+
+    This function produces only the metadata-style filename:
+    ``name__filesize__base64id.ext``. The ``.original.bak`` suffix is
+    appended to that base when the preservation toggle applies. A
+    separate ``simple``-format codepath (introduced by the
+    feat/photos-filename-format-simple PR) handles its own filename
+    composition; it does NOT flow through this function.
 
     Args:
         photo: Photo object from iCloudPy
         file_size: File size variant (original, medium, thumb, etc.)
 
     Returns:
-        Filename string with format: name__filesize__base64id.extension
+        Filename string in the chosen format, plus ``.original.bak`` suffix
+        when the bak-preservation toggle applies to this file.
     """
     name, extension = get_photo_name_and_extension(photo, file_size)
     photo_id_encoded = base64.urlsafe_b64encode(photo.id.encode()).decode()
 
     if extension == "":
-        return f"{'__'.join([name, file_size, photo_id_encoded])}"
+        result = f"{'__'.join([name, file_size, photo_id_encoded])}"
     else:
-        return f"{'__'.join([name, file_size, photo_id_encoded])}.{extension}"
+        result = f"{'__'.join([name, file_size, photo_id_encoded])}.{extension}"
+
+    # Apply .original.bak hide-suffix when applicable. Runs after the base
+    # filename is composed, so it works the same regardless of which naming
+    # convention generated the base.
+    if (
+        _PRESERVE_ORIGINALS_AS_BAK
+        and file_size == "original"
+        and _photo_has_alt_version(photo)
+    ):
+        result = f"{result}.original.bak"
+
+    return result
 
 
 def create_folder_path_if_needed(destination_path: str, folder_format: str | None, photo) -> str:
