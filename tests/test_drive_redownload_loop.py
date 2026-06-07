@@ -42,7 +42,7 @@ def _write_bundle(path, item, on_disk_bytes=b"x" * 50):
     (as download_file does) and a byte count that differs from item.size."""
     with open(path, "wb") as f:
         f.write(on_disk_bytes)
-    mtime = int(item.date_modified.timestamp())
+    mtime = int(item.date_modified.replace(tzinfo=datetime.timezone.utc).timestamp())
     os.utime(path, (mtime, mtime))
     # Sanity: this is exactly the pathological condition — size differs.
     assert os.path.getsize(path) != item.size
