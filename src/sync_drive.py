@@ -15,7 +15,7 @@ from urllib.parse import unquote
 from src import config_parser, configure_icloudpy_logging, get_logger
 from src.drive_cleanup import remove_obsolete  # noqa: F401
 from src.drive_file_download import download_file  # noqa: F401
-from src.drive_file_existence import file_exists, is_package, package_exists  # noqa: F401
+from src.drive_file_existence import file_exists, is_package, package_bundle_unchanged, package_exists  # noqa: F401
 from src.drive_filtering import ignored_path, wanted_file, wanted_folder, wanted_parent_folder  # noqa: F401
 from src.drive_folder_processing import process_folder  # noqa: F401
 from src.drive_package_processing import process_package  # noqa: F401
@@ -100,6 +100,12 @@ def process_file(
         # File exists locally but is outdated; need to determine type for re-download
         timeout = config_parser.get_drive_request_timeout(config)
         item_is_package = is_package(item=item, timeout=timeout)
+        # A flat single-file package bundle reports item.size as the package's
+        # logical size (never the on-disk byte count), so file_exists() above
+        # spuriously fails the size check and re-downloads every sync. If it's a
+        # package whose mtime already matches the remote, skip the re-download.
+        if item_is_package and package_bundle_unchanged(item=item, local_file=local_file):
+            return False
     elif os.path.isdir(local_file):
         # A directory at this path means the item was previously downloaded as a
         # package. iCloud Drive items do not change type between file and package,
