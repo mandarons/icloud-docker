@@ -878,6 +878,42 @@ def get_telegram_chat_id(config: dict) -> str | None:
     return get_notification_config_value(config, "telegram", "chat_id")
 
 
+def get_telegram_listen_enabled(config: dict) -> bool:
+    """Whether to poll Telegram for inbound replies during a 2FA wait.
+
+    Opt-in (default False). When True, the 2FA wait gap is replaced with a
+    Telegram ``getUpdates`` poll: the user replies the auth keyword to have a
+    code pushed to their Apple devices, then replies the 6-digit code -- so
+    re-authentication can be completed from a phone, headless.
+
+    Reuses ``app.telegram.bot_token`` / ``chat_id`` from the existing outbound
+    config; ``chat_id`` filtering means only messages from the user's own chat
+    are honoured (no separate auth surface).
+    """
+    return bool(
+        get_config_value_or_none(
+            config=config,
+            config_path=["app", "telegram", "listen"],
+        ),
+    )
+
+
+def get_telegram_auth_keyword(config: dict) -> str:
+    """The reply keyword that triggers a 2FA push (default ``auth``).
+
+    Customisable via ``app.telegram.auth_keyword`` so users running multiple
+    containers in one chat can target a specific one (e.g. ``auth-photos``).
+    Matched case-insensitively; returns the lowercased word.
+    """
+    # Optional key with a sane default -- quiet lookup so the absent case does
+    # not log a "not found" warning on every 2FA wait.
+    value = get_config_value_or_none(
+        config=config,
+        config_path=["app", "telegram", "auth_keyword"],
+    )
+    return str(value).strip().lower() if value else "auth"
+
+
 def get_discord_webhook_url(config: dict) -> str | None:
     """Return discord webhook_url from config.
 
@@ -924,6 +960,7 @@ def get_pushover_api_token(config: dict) -> str | None:
         Pushover API token if configured, None otherwise
     """
     return get_notification_config_value(config, "pushover", "api_token")
+
 
 def get_pushover_notification_priority(config: dict) -> int | None:
     """Return Pushover notification priority from config.
