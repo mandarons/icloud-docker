@@ -385,6 +385,7 @@ def sync_photos(config, photos):
     """
     # Parse configuration using centralized config parser
     destination_path = config_parser.prepare_photos_destination(config=config)
+    library_destinations = config_parser.get_photos_library_destinations(config=config)
     filters = config_parser.get_photos_filters(config=config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
@@ -408,6 +409,7 @@ def sync_photos(config, photos):
             folder_format,
             hardlink_registry,
             config,
+            library_destinations=library_destinations,
         )
         total_successful += sub_successful
         total_failed += sub_failed
@@ -423,15 +425,55 @@ def sync_photos(config, photos):
         folder_format,
         hardlink_registry,
         config,
+        library_destinations=library_destinations,
     )
     total_successful += sub_successful
     total_failed += sub_failed
 
-    # Clean up obsolete files if enabled
+    # Clean up obsolete files if enabled. When per-library destinations are
+    # configured we walk each library's subdir independently, otherwise the
+    # legacy single-destination walk preserves backward compatibility.
     if config_parser.get_photos_remove_obsolete(config=config):
-        remove_obsolete_files(destination_path, files)
+        if library_destinations:
+            for library in libraries:
+                lib_dest = _library_destination(destination_path, library, library_destinations)
+                remove_obsolete_files(lib_dest, files)
+        else:
+            remove_obsolete_files(destination_path, files)
 
     return total_successful, total_failed
+
+
+def _library_destination(base_destination: str, library: str, library_destinations: dict) -> str:
+    """Resolve the on-disk destination for a given iCloud photo library.
+
+    When ``library_destinations`` provides a mapping for ``library``, joins
+    the configured subdirectory under ``base_destination`` and ensures the
+    directory exists. Otherwise returns ``base_destination`` unchanged
+    (preserving mandarons' legacy single-destination behaviour).
+
+    Library-name matching has three rules, in priority order:
+
+    1. **Exact match.** ``library_destinations[library]`` if present.
+    2. **Role alias for `SharedLibrary`.** Apple's modern iCloud Shared
+       Photo Library is exposed by icloudpy under a GUID-based zone name
+       like ``SharedSync-3C977B4A-C15A-46E4-9854-585B9342C409``. A config
+       key of ``SharedLibrary`` matches any zone whose name starts with
+       ``SharedSync-`` so users don't need to discover and hardcode the
+       per-account GUID. (Configs that already use the literal current
+       Apple zone name still work via rule 1.)
+    3. **Fallthrough.** Returns ``base_destination`` unchanged.
+    """
+    if not library_destinations:
+        return base_destination
+    subdir = library_destinations.get(library)
+    if not subdir and library.startswith("SharedSync-"):
+        subdir = library_destinations.get("SharedLibrary")
+    if not subdir:
+        return base_destination
+    dest = os.path.join(base_destination, subdir)
+    os.makedirs(dest, exist_ok=True)
+    return dest
 
 
 def _sync_all_photos_first_for_hardlinks(
@@ -443,6 +485,7 @@ def _sync_all_photos_first_for_hardlinks(
     folder_format,
     hardlink_registry,
     config,
+    library_destinations: dict | None = None,
 ) -> tuple[int, int]:
     """Sync 'All Photos' album first to populate hardlink registry.
 
@@ -462,9 +505,10 @@ def _sync_all_photos_first_for_hardlinks(
     for library in libraries:
         if library == "PrimarySync" and "All Photos" in photos.libraries[library].albums:
             LOGGER.info("Syncing 'All Photos' album first for hard link reference...")
+            lib_dest = _library_destination(destination_path, library, library_destinations or {})
             result = sync_album_photos(
                 album=photos.libraries[library].albums["All Photos"],
-                destination_path=os.path.join(destination_path, "All Photos"),
+                destination_path=os.path.join(lib_dest, "All Photos"),
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
                 files=files,
@@ -493,6 +537,7 @@ def _sync_albums_by_configuration(
     folder_format,
     hardlink_registry,
     config,
+    library_destinations: dict | None = None,
 ) -> tuple[int, int]:
     """Sync albums based on configuration settings.
 
@@ -512,12 +557,13 @@ def _sync_albums_by_configuration(
     """
     total_successful, total_failed = 0, 0
     for library in libraries:
+        lib_dest = _library_destination(destination_path, library, library_destinations or {})
         if download_all and library == "PrimarySync":
             sub_successful, sub_failed = _sync_all_albums_except_filtered(
                 photos,
                 library,
                 filters,
-                destination_path,
+                lib_dest,
                 files,
                 folder_format,
                 hardlink_registry,
@@ -528,7 +574,7 @@ def _sync_albums_by_configuration(
                 photos,
                 library,
                 filters,
-                destination_path,
+                lib_dest,
                 files,
                 folder_format,
                 hardlink_registry,
@@ -539,7 +585,7 @@ def _sync_albums_by_configuration(
                 photos,
                 library,
                 filters,
-                destination_path,
+                lib_dest,
                 files,
                 folder_format,
                 hardlink_registry,
@@ -549,7 +595,7 @@ def _sync_albums_by_configuration(
             sub_successful, sub_failed = _sync_all_photos_in_library(
                 photos,
                 library,
-                destination_path,
+                lib_dest,
                 filters,
                 files,
                 folder_format,
