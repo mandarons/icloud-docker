@@ -210,7 +210,12 @@ def get_drive_sync_interval(config: dict, log_messages: bool = True) -> int:
         Drive sync interval in seconds
     """
     config_path = ["drive", "sync_interval"]
-    return get_sync_interval(config=config, config_path=config_path, service_name="drive", log_messages=log_messages)
+    return get_sync_interval(
+        config=config,
+        config_path=config_path,
+        service_name="drive",
+        log_messages=log_messages,
+    )
 
 
 def get_drive_request_timeout(config: dict) -> int:
@@ -241,7 +246,12 @@ def get_photos_sync_interval(config: dict, log_messages: bool = True) -> int:
         Photos sync interval in seconds
     """
     config_path = ["photos", "sync_interval"]
-    return get_sync_interval(config=config, config_path=config_path, service_name="photos", log_messages=log_messages)
+    return get_sync_interval(
+        config=config,
+        config_path=config_path,
+        service_name="photos",
+        log_messages=log_messages,
+    )
 
 
 # =============================================================================
@@ -576,6 +586,12 @@ def get_photos_folder_format(config: dict) -> str | None:
 
 def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     """Validate and filter file sizes against valid options.
+
+    Accepts any key in ``PhotoAsset.PHOTO_VERSION_LOOKUP``, including the
+    ``live_video_*`` keys: add ``live_video_original`` to ``file_sizes`` to
+    download the paired ``.mov`` of a Live Photo (and ``live_video_medium`` /
+    ``live_video_thumb`` for smaller variants). Photos that aren't Live Photos
+    simply don't have those versions and are skipped.
 
     Args:
         file_sizes: List of file size strings to validate
@@ -924,6 +940,7 @@ def get_pushover_api_token(config: dict) -> str | None:
         Pushover API token if configured, None otherwise
     """
     return get_notification_config_value(config, "pushover", "api_token")
+
 
 def get_pushover_notification_priority(config: dict) -> int | None:
     """Return Pushover notification priority from config.

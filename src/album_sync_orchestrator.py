@@ -137,6 +137,10 @@ def _collect_photo_download_tasks(
             )
             if download_info:
                 tasks.append(download_info)
+        # Live Photos: add "live_video_original" (or _medium/_thumb) to
+        # photos.filters.file_sizes to pull the paired .mov. It flows through
+        # the loop above like any other version; non-Live-Photos don't have
+        # those versions and are skipped (quietly -- see collect_download_task).
         return tasks
     except Exception as e:
         try:
