@@ -1,0 +1,6 @@
+[38;21m2026-07-12 16:00:10,956 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-12 16:00:10,956 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fp3jbks2/.data[0m
+[38;5;226m2026-07-12 16:00:10,958 :: WARNING :: root :: usage.py :: 191 :: Network error: Request timeout, attempt 1/3[0m
+[38;21m2026-07-12 16:00:10,958 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;21m2026-07-12 16:00:10,959 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-12 16:00:10,959 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fp3jbks2/.data[0m
