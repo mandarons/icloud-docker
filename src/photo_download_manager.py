@@ -14,6 +14,7 @@ from src import config_parser, get_logger
 from src.hardlink_registry import HardlinkRegistry
 from src.photo_file_utils import create_hardlink, download_photo_from_server
 from src.photo_path_utils import (
+    _LIVE_VIDEO_SIZES,
     create_folder_path_if_needed,
     generate_photo_filename_with_metadata,
     normalize_file_path,
@@ -104,6 +105,18 @@ def generate_photo_path(photo, file_size: str, destination_path: str, folder_for
     # Rename legacy files if they exist
     rename_legacy_file_if_exists(file_path, normalized_path)
     rename_legacy_file_if_exists(file_size_path, normalized_path)
+
+    # Self-heal the earlier .HEIC mislabeling of Live Photo videos: an older
+    # version wrote the paired video with the still's extension. Rename that
+    # file to the corrected path instead of re-downloading it (which would also
+    # leave the broken duplicate behind).
+    if file_size in _LIVE_VIDEO_SIZES and extension:
+        root, _ = os.path.splitext(filename_with_metadata)
+        legacy_mislabeled = normalize_file_path(
+            os.path.join(final_destination, f"{root}.{extension}"),
+        )
+        if legacy_mislabeled != normalized_path:
+            rename_legacy_file_if_exists(legacy_mislabeled, normalized_path)
 
     # Handle existing file with different normalization
     if os.path.isfile(final_file_path) and final_file_path != normalized_path:

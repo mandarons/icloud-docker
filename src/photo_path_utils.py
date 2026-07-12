@@ -24,6 +24,10 @@ from src import get_logger
 
 LOGGER = get_logger()
 
+# The Live Photo paired-video file_size variants. These are QuickTime movies,
+# not images, even though the parent asset's filename ends in .HEIC/.JPG.
+_LIVE_VIDEO_SIZES = frozenset({"live_video_original", "live_video_medium", "live_video_thumb"})
+
 
 def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
     """Extract filename and extension from photo.
@@ -48,6 +52,16 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
             extension = _get_original_alt_filetype_mapping()[filetype]
         else:
             LOGGER.warning(f"Unknown filetype {filetype} for original_alt version of {filename}")
+
+    # Handle Live Photo paired-video versions. photo.filename is the STILL
+    # (e.g. IMG_1234.HEIC), but the live_video_* versions are the QuickTime
+    # movie half of the Live Photo. Without this the .mov is written with the
+    # still's extension (IMG_1234__live_video_original__<id>.HEIC), which every
+    # downstream image tool then rejects as "unsupported image format" because
+    # it is really a video. Map to the real container extension instead.
+    elif file_size in _LIVE_VIDEO_SIZES and file_size in photo.versions:
+        filetype = photo.versions[file_size].get("type")
+        extension = _get_video_filetype_mapping().get(filetype, "MOV")
 
     return name, extension
 
@@ -114,6 +128,22 @@ def rename_legacy_file_if_exists(old_path: str, new_path: str) -> None:
 
     if os.path.isfile(old_path):
         os.rename(old_path, new_path)
+
+
+def _get_video_filetype_mapping() -> dict:
+    """Get mapping of Live Photo paired-video Apple UTI types to extensions.
+
+    Live Photo videos are QuickTime movies; iCloud reports the UTI in the
+    version's ``type`` field. Anything not listed falls back to ``MOV`` (the
+    only container Apple has ever used for the Live Photo motion component).
+
+    Returns:
+        Dictionary mapping Apple UTI type strings to file extensions
+    """
+    return {
+        "com.apple.quicktime-movie": "MOV",
+        "public.mpeg-4": "MP4",
+    }
 
 
 def _get_original_alt_filetype_mapping() -> dict:
