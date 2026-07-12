@@ -1,0 +1,10 @@
+[38;21m2026-07-12 15:45:50,232 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-12 15:45:50,232 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_q0f1vqh8/.data[0m
+[38;5;226m2026-07-12 15:45:50,233 :: WARNING :: root :: usage.py :: 191 :: Network error: Network error, attempt 1/3[0m
+[38;21m2026-07-12 15:45:50,233 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;5;226m2026-07-12 15:45:50,233 :: WARNING :: root :: usage.py :: 191 :: Network error: Network error, attempt 2/3[0m
+[38;21m2026-07-12 15:45:50,233 :: DEBUG :: root :: usage.py :: 200 :: Waiting 2.0s before retry...[0m
+[38;5;226m2026-07-12 15:45:50,234 :: WARNING :: root :: usage.py :: 191 :: Network error: Network error, attempt 3/3[0m
+[38;5;196m2026-07-12 15:45:50,234 :: ERROR :: root :: usage.py :: 205 :: All retry attempts failed: Network error[0m
+[38;21m2026-07-12 15:45:50,234 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-12 15:45:50,234 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_q0f1vqh8/.data[0m
