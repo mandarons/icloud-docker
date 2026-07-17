@@ -5,8 +5,8 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import glob
 import os
 import shutil
-import time
 import unittest
+from datetime import timezone
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -730,7 +730,7 @@ class TestSyncPhotos(unittest.TestCase):
             f.write(b"A" * 1000)  # Write same content size as mock
 
         # Set modification time to match photo
-        local_modified_time = time.mktime(photo.added_date.timetuple())
+        local_modified_time = photo.added_date.replace(tzinfo=timezone.utc).timestamp()
         os.utime(photo_path, (local_modified_time, local_modified_time))
 
         download_info = sync_photos.collect_photo_for_download(
@@ -1866,6 +1866,7 @@ class TestSyncPhotos(unittest.TestCase):
 
     def test_download_photo_from_server_http_410_error_with_retry(self):
         """Test download_photo_from_server with HTTP 410 error and successful retry."""
+        import datetime
         import tempfile
         from io import BytesIO
         from unittest.mock import MagicMock, Mock
@@ -1894,15 +1895,16 @@ class TestSyncPhotos(unittest.TestCase):
                 return mock_response
 
             mock_photo.download.side_effect = download_side_effect
-            mock_photo.added_date = MagicMock()
-            mock_photo.added_date.timetuple.return_value = time.struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0))
+            mock_photo.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
 
             # Test that download succeeds after retry
             result = download_photo_from_server(mock_photo, "original", destination_path)
             self.assertTrue(result)
             self.assertEqual(mock_photo.download.call_count, 2)
-            # Verify file was created
+            # Verify file was created and mtime is set correctly
             self.assertTrue(os.path.exists(destination_path))
+            expected_mtime = datetime.datetime(2021, 1, 1, 12, 0, 0, tzinfo=timezone.utc).timestamp()
+            self.assertAlmostEqual(os.path.getmtime(destination_path), expected_mtime, delta=1)
 
     def test_download_photo_from_server_http_410_error_max_retries_exceeded(self):
         """Test download_photo_from_server with HTTP 410 error exceeding max retries."""
@@ -1926,6 +1928,7 @@ class TestSyncPhotos(unittest.TestCase):
 
     def test_download_photo_from_server_http_410_error_without_versions_attribute(self):
         """Test download_photo_from_server with HTTP 410 error when photo has no _versions attribute."""
+        import datetime
         import tempfile
         from io import BytesIO
         from unittest.mock import MagicMock, Mock
@@ -1951,15 +1954,16 @@ class TestSyncPhotos(unittest.TestCase):
                 return mock_response
 
             mock_photo.download.side_effect = download_side_effect
-            mock_photo.added_date = MagicMock()
-            mock_photo.added_date.timetuple.return_value = time.struct_time((2021, 1, 1, 0, 0, 0, 0, 0, 0))
+            mock_photo.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
 
             # Test that download succeeds even without _versions attribute
             result = download_photo_from_server(mock_photo, "original", destination_path)
             self.assertTrue(result)
             self.assertEqual(mock_photo.download.call_count, 2)
-            # Verify file was created
+            # Verify file was created and mtime is set correctly
             self.assertTrue(os.path.exists(destination_path))
+            expected_mtime = datetime.datetime(2021, 1, 1, 12, 0, 0, tzinfo=timezone.utc).timestamp()
+            self.assertAlmostEqual(os.path.getmtime(destination_path), expected_mtime, delta=1)
 
     def test_download_photo_from_server_http_410_error_zero_retries(self):
         """Test download_photo_from_server with HTTP 410 error and max_retries=0."""
