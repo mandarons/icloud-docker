@@ -1,0 +1,8 @@
+[38;21m2026-07-17 18:05:56,454 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-17 18:05:56,454 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_4k7ssqlo/.data[0m
+[38;5;226m2026-07-17 18:05:56,455 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 503, attempt 1/3[0m
+[38;21m2026-07-17 18:05:56,456 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;5;226m2026-07-17 18:05:56,456 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 503, attempt 2/3[0m
+[38;21m2026-07-17 18:05:56,456 :: DEBUG :: root :: usage.py :: 200 :: Waiting 2.0s before retry...[0m
+[38;21m2026-07-17 18:05:56,456 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-17 18:05:56,457 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_4k7ssqlo/.data[0m
