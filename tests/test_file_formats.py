@@ -225,3 +225,37 @@ class TestFileFormatCollisionFallback(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestTemplateReproducesLegacyFormats(unittest.TestCase):
+    """A photos.file_format template reproduces the built-in simple/metadata names byte-for-byte."""
+
+    def tearDown(self):
+        photo_path_utils.set_file_format(None)
+        photo_path_utils.set_default_filename_format("metadata")
+
+    def test_template_reproduces_simple(self):
+        """`${photo.filename}.${photo.ext}` == filename_format: simple (the boredazfcuk/iCloudPD name)."""
+        photo = _photo()
+        photo_path_utils.set_file_format(None)
+        photo_path_utils.set_default_filename_format("simple")
+        baseline = photo_path_utils.generate_photo_filename_with_metadata(photo, "original")
+
+        photo_path_utils.set_default_filename_format("metadata")
+        photo_path_utils.set_file_format("${photo.filename}.${photo.ext}")
+        templated = photo_path_utils.generate_photo_filename_with_metadata(photo, "original")
+
+        self.assertEqual(templated, baseline)
+        self.assertEqual(templated, "IMG_1234.HEIC")
+
+    def test_template_reproduces_metadata(self):
+        """The full token template == the legacy filename_format: metadata name."""
+        photo = _photo()
+        photo_path_utils.set_file_format(None)
+        photo_path_utils.set_default_filename_format("metadata")
+        baseline = photo_path_utils.generate_photo_filename_with_metadata(photo, "original")
+
+        photo_path_utils.set_file_format("${photo.filename}__${photo.file_size}__${photo.id}.${photo.ext}")
+        templated = photo_path_utils.generate_photo_filename_with_metadata(photo, "original")
+
+        self.assertEqual(templated, baseline)
