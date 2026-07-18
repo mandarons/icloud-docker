@@ -1,6 +1,11 @@
 [run]
- include =
+include =
     src/*
- [report]
- include =
+omit =
+    src/templates/*
+
+[report]
+include =
     src/*
+omit =
+    src/templates/*
