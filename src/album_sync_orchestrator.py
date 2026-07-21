@@ -9,7 +9,7 @@ ___author___ = "Mandar Patil <mandarons@pm.me>"
 import os
 from typing import Any
 
-from src import config_parser, get_logger
+from src import DEFAULT_ENUMERATION_CHUNK_SIZE, config_parser, get_logger
 from src.hardlink_registry import HardlinkRegistry
 from src.photo_download_manager import (
     DownloadTaskInfo,
@@ -21,12 +21,12 @@ from src.photo_path_utils import normalize_file_path
 
 LOGGER = get_logger()
 
-# Default chunk size for streaming photo enumeration. Picked to keep peak
-# RSS bounded at ~10–20 MB of DownloadTaskInfo objects per chunk on
-# typical iCloud libraries while still giving execute_parallel_downloads
-# enough work to amortize HTTP connection setup. Users can override via
-# ``photos.enumeration_chunk_size`` in config.yaml.
-DEFAULT_ENUMERATION_CHUNK_SIZE = 1000
+# DEFAULT_ENUMERATION_CHUNK_SIZE lives in src/__init__.py (with the other
+# DEFAULT_* config constants) and is re-exported here for backward-compat.
+# Picked to keep peak RSS bounded at ~10–20 MB of DownloadTaskInfo objects
+# per chunk on typical iCloud libraries while still giving
+# execute_parallel_downloads enough work to amortize HTTP connection setup.
+# Users can override via ``photos.enumeration_chunk_size`` in config.yaml.
 
 
 def sync_album_photos(
@@ -155,59 +155,12 @@ def _collect_photo_download_tasks(
     except Exception as e:
         try:
             photo_id = photo.id
-        except Exception:
+        except AttributeError:
             photo_id = "<unknown>"
         LOGGER.warning(
             f"Error processing photo (id: {photo_id}), skipping: {type(e).__name__}: {e!s}",
         )
         return []
-
-
-def _collect_album_download_tasks(
-    album,
-    destination_path: str,
-    file_sizes: list[str],
-    extensions: list[str] | None,
-    files: set[str] | None,
-    folder_format: str | None,
-    hardlink_registry: HardlinkRegistry | None,
-) -> list:
-    """Collect download tasks for all photos in an album.
-
-    .. deprecated::
-        Materializes the full task list — unbounded memory on large
-        libraries. Kept as a thin wrapper for test backward-compat
-        only. Production code path goes through
-        ``_collect_and_execute_album_in_chunks`` which streams instead.
-
-    Args:
-        album: Album object from iCloudPy
-        destination_path: Path where photos should be saved
-        file_sizes: List of file size variants to download
-        extensions: List of allowed file extensions
-        files: Set to track downloaded files
-        folder_format: strftime format string for folder organization
-        hardlink_registry: Registry for tracking downloaded files
-
-    Returns:
-        List of download tasks to execute
-    """
-    download_tasks = []
-
-    for photo in album:
-        download_tasks.extend(
-            _collect_photo_download_tasks(
-                photo,
-                destination_path,
-                file_sizes,
-                extensions,
-                files,
-                folder_format,
-                hardlink_registry,
-            ),
-        )
-
-    return download_tasks
 
 
 def _collect_and_execute_album_in_chunks(
@@ -267,9 +220,11 @@ def _collect_and_execute_album_in_chunks(
         succ, fail = execute_parallel_downloads(buffer, config)
         total_successful += succ
         total_failed += fail
-        # Explicit reassign-to-empty so the chunk's task objects (and
-        # the photo references they hold) become collectable as soon
-        # as the parallel-download call returns.
+        # Rebind to a fresh list rather than clearing in place: the old
+        # list was just handed to execute_parallel_downloads, so a fresh
+        # object gives each chunk an independent buffer (no aliasing of
+        # an already-passed list) and lets the old chunk's task objects
+        # (and the photo refs they hold) be collected immediately.
         buffer = []
 
     for photo in album:

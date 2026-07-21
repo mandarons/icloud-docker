@@ -14,6 +14,7 @@ from icloudpy.services.photos import PhotoAsset
 
 from src import (
     DEFAULT_DRIVE_DESTINATION,
+    DEFAULT_ENUMERATION_CHUNK_SIZE,
     DEFAULT_PHOTOS_DESTINATION,
     DEFAULT_REQUEST_TIMEOUT_SEC,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
@@ -494,11 +495,6 @@ def get_photos_enumeration_chunk_size(config: dict | None) -> int:
     Returns:
         Positive integer chunk size, defaulting to 1000.
     """
-    # Local import to avoid a circular import: album_sync_orchestrator
-    # imports config_parser, and the module-level DEFAULT constant
-    # already lives in album_sync_orchestrator.
-    from src.album_sync_orchestrator import DEFAULT_ENUMERATION_CHUNK_SIZE
-
     raw = get_config_value_or_default(
         config=config or {},
         config_path=["photos", "enumeration_chunk_size"],
