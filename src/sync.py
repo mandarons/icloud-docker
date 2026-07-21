@@ -121,11 +121,13 @@ def _extract_sync_intervals(config, log_messages: bool = False):
 
     if config and "drive" in config:
         drive_sync_interval = config_parser.get_drive_sync_interval(
-            config=config, log_messages=log_messages,
+            config=config,
+            log_messages=log_messages,
         )
     if config and "photos" in config:
         photos_sync_interval = config_parser.get_photos_sync_interval(
-            config=config, log_messages=log_messages,
+            config=config,
+            log_messages=log_messages,
         )
 
     return drive_sync_interval, photos_sync_interval
@@ -169,7 +171,9 @@ def _authenticate_and_get_api(config, username: str):
     server_region = config_parser.get_region(config=config)
     password = _retrieve_password(username)
     return get_api_instance(
-        username=username, password=password, server_region=server_region,
+        username=username,
+        password=password,
+        server_region=server_region,
     )
 
 
@@ -296,11 +300,13 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
 
         # Estimate hardlinked photos (approximate)
         use_hardlinks = config_parser.get_photos_use_hardlinks(
-            config=config, log_messages=False,
+            config=config,
+            log_messages=False,
         )
         if use_hardlinks:
             stats.photos_hardlinked = max(
-                0, len(files_after) - len(files_before) - stats.photos_downloaded,
+                0,
+                len(files_after) - len(files_before) - stats.photos_downloaded,
             )
 
         # Count skipped photos
@@ -370,7 +376,13 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
 
     if config and "drive" in config:
         try:
-            drive_destination = config_parser.get_drive_destination_path(config=config)
+            # Resolved absolute path (root + destination), computed without
+            # creating anything, so users can verify the mount point. Mirrors
+            # how migration_check builds its base path.
+            drive_destination = os.path.join(
+                config_parser.get_root_destination_path(config=config),
+                config_parser.get_drive_destination_path(config=config),
+            )
             LOGGER.info(f"DRY RUN: Drive destination: {drive_destination}")
             root_items = list(api.drive.dir())
             LOGGER.info(
@@ -386,8 +398,9 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
 
     if config and "photos" in config:
         try:
-            photos_destination = config_parser.get_photos_destination_path(
-                config=config,
+            photos_destination = os.path.join(
+                config_parser.get_root_destination_path(config=config),
+                config_parser.get_photos_destination_path(config=config),
             )
             LOGGER.info(f"DRY RUN: Photos destination: {photos_destination}")
             libraries = (
@@ -420,7 +433,9 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
                     f"(--check-files={'all' if check_files == 0 else check_files} per library) ...",
                 )
                 results = migration_check.check_migration(
-                    api=api, config=config, sample=check_files,
+                    api=api,
+                    config=config,
+                    sample=check_files,
                 )
                 for library_name, result in results.items():
                     stats = result["stats"]
@@ -453,7 +468,9 @@ def _perform_dry_run(config, api, check_files: int | None = None) -> None:
         if config and "drive" in config:
             try:
                 drive_result = migration_check.check_drive_migration(
-                    api=api, config=config, sample=check_files,
+                    api=api,
+                    config=config,
+                    sample=check_files,
                 )
                 if drive_result is not None:
                     stats = drive_result["stats"]
@@ -764,7 +781,8 @@ def sync(dry_run: bool = False, check_files: int | None = None):
             startup_logged = True
 
         drive_sync_interval, photos_sync_interval = _extract_sync_intervals(
-            config, log_messages=False,
+            config,
+            log_messages=False,
         )
         username = config_parser.get_username(config=config) if config else None
 
@@ -790,10 +808,16 @@ def sync(dry_run: bool = False, check_files: int | None = None):
 
                     # Perform syncs and collect statistics
                     drive_stats = _perform_drive_sync(
-                        config, api, sync_state, drive_sync_interval,
+                        config,
+                        api,
+                        sync_state,
+                        drive_sync_interval,
                     )
                     photos_stats = _perform_photos_sync(
-                        config, api, sync_state, photos_sync_interval,
+                        config,
+                        api,
+                        sync_state,
+                        photos_sync_interval,
                     )
 
                     # Populate summary with statistics

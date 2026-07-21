@@ -51,7 +51,9 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
         if filetype in _get_original_alt_filetype_mapping():
             extension = _get_original_alt_filetype_mapping()[filetype]
         else:
-            LOGGER.warning(f"Unknown filetype {filetype} for original_alt version of {filename}")
+            LOGGER.warning(
+                f"Unknown filetype {filetype} for original_alt version of {filename}",
+            )
 
     # Handle Live Photo paired-video versions. photo.filename is the STILL
     # (e.g. IMG_1234.HEIC), but the live_video_* versions are the QuickTime
@@ -85,8 +87,31 @@ def generate_photo_filename_with_metadata(photo, file_size: str) -> str:
         return f"{'__'.join([name, file_size, photo_id_encoded])}.{extension}"
 
 
-def create_folder_path_if_needed(destination_path: str, folder_format: str | None, photo) -> str:
-    """Create folder path based on folder format and photo creation date.
+def resolve_folder_path(destination_path: str, folder_format: str | None, photo) -> str:
+    """Compute the folder path for a photo WITHOUT touching the filesystem.
+
+    Same result as ``create_folder_path_if_needed`` but never creates the
+    directory. Read-only callers (e.g. the ``--dry-run`` migration checker)
+    use this so a preview never writes to disk.
+
+    Args:
+        destination_path: Base destination path
+        folder_format: strftime format string for folder creation (e.g., "%Y/%m")
+        photo: Photo object with created date
+
+    Returns:
+        Full destination path including the created-date folder if folder_format is set
+    """
+    if folder_format is None:
+        return destination_path
+    folder = photo.created.strftime(folder_format)
+    return os.path.join(destination_path, folder)
+
+
+def create_folder_path_if_needed(
+    destination_path: str, folder_format: str | None, photo,
+) -> str:
+    """Resolve the folder path and create it on disk if folder_format is set.
 
     Args:
         destination_path: Base destination path
@@ -96,12 +121,9 @@ def create_folder_path_if_needed(destination_path: str, folder_format: str | Non
     Returns:
         Full destination path including created folder if folder_format is specified
     """
-    if folder_format is None:
-        return destination_path
-
-    folder = photo.created.strftime(folder_format)
-    full_destination = os.path.join(destination_path, folder)
-    os.makedirs(full_destination, exist_ok=True)
+    full_destination = resolve_folder_path(destination_path, folder_format, photo)
+    if folder_format is not None:
+        os.makedirs(full_destination, exist_ok=True)
     return full_destination
 
 
