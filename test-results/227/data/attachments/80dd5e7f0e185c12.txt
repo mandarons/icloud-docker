@@ -1,0 +1,8 @@
+[38;21m2026-07-21 23:31:02,601 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-07-21 23:31:02,602 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-07-21 23:31:02,602 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-07-21 23:31:02,611 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2026-07-21 23:31:02,613 :: DEBUG :: root :: drive_folder_processing.py :: 52 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Numbers ...[0m
+[38;21m2026-07-21 23:31:02,614 :: DEBUG :: root :: drive_folder_processing.py :: 52 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Pages ...[0m
+[38;21m2026-07-21 23:31:02,615 :: DEBUG :: root :: drive_folder_processing.py :: 52 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Preview ...[0m
+[38;21m2026-07-21 23:31:02,617 :: DEBUG :: root :: drive_folder_processing.py :: 52 :: Skipping the unwanted folder /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/unwanted ...[0m
