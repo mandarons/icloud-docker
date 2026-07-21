@@ -175,6 +175,26 @@ class TestCheckLibrary(unittest.TestCase):
             )
             self.assertEqual(result["checked"], 10)
 
+    def test_folder_format_creates_no_directories_on_disk(self):
+        """--dry-run must never write to disk. With folder_format set the walk
+        computes date-based paths but creates no directories (regression: the
+        checker used to call create_folder_path_if_needed -> os.makedirs)."""
+        with tempfile.TemporaryDirectory() as base:
+            result = migration_check.check_library(
+                library=_fake_library([_fake_photo("IMG_1.HEIC", 100, year=2024, month=1)]),
+                library_name="PrimarySync",
+                photos_base=base,
+                mapping={},
+                folder_format="%Y/%m",
+                sample=0,
+            )
+            # Nothing was created anywhere under the destination base.
+            self.assertEqual(list(os.walk(base)), [(base, [], [])])
+            # The computed path still includes /all/ and the date folder.
+            self.assertEqual(result["stats"]["not_found"], 1)
+            reported_path = result["samples"]["not_found"][0][0]
+            self.assertIn(os.path.join("all", "2024", "01"), reported_path)
+
 
 def _fake_drive_file(name: str, size: int):
     """Build a MagicMock that quacks like an icloudpy Drive file node."""
@@ -309,9 +329,7 @@ class TestCheckDrive(unittest.TestCase):
 
     def test_sample_caps_drive_walk_at_N(self):
         with tempfile.TemporaryDirectory() as base:
-            children = {
-                f"f{i}.txt": _fake_drive_file(f"f{i}.txt", 100) for i in range(20)
-            }
+            children = {f"f{i}.txt": _fake_drive_file(f"f{i}.txt", 100) for i in range(20)}
             drive = _fake_drive_folder("root", children)
             result = migration_check.check_drive(
                 drive=drive,

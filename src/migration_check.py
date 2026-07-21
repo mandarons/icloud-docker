@@ -29,8 +29,8 @@ from urllib.parse import unquote
 
 from src import config_parser, get_logger
 from src.photo_path_utils import (
-    create_folder_path_if_needed,
     generate_photo_filename_with_metadata,
+    resolve_folder_path,
 )
 
 # These two symbols ship in companion PRs (``feat/photos-filename-format-simple``
@@ -88,7 +88,7 @@ def _check_one_photo(
         file_size = "original"
         if file_size not in photo.versions:
             return "error", "", 0, 0
-        folder_path = create_folder_path_if_needed(library_dest, folder_format, photo)
+        folder_path = resolve_folder_path(library_dest, folder_format, photo)
         filename = generate_photo_filename_with_metadata(photo, file_size)
         target_path = os.path.join(folder_path, filename)
         expected = int(photo.versions[file_size]["size"])
