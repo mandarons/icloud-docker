@@ -1,0 +1,16 @@
+[38;21m2026-07-21 05:06:48,877 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-21 05:06:48,878 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vgzk74g9/.data[0m
+[38;21m2026-07-21 05:06:48,878 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-21 05:06:48,878 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vgzk74g9/.data[0m
+[38;21m2026-07-21 05:06:48,879 :: DEBUG :: root :: usage.py :: 107 :: Usage cache file not found, creating: /tmp/icloud_test_config_vgzk74g9/.data[0m
+[38;21m2026-07-21 05:06:48,879 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_vgzk74g9/.data[0m
+[38;21m2026-07-21 05:06:48,879 :: DEBUG :: root :: usage.py :: 276 :: Installing new instance[0m
+[38;21m2026-07-21 05:06:48,879 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: None[0m
+[38;21m2026-07-21 05:06:48,879 :: DEBUG :: root :: usage.py :: 226 :: Successfully registered new installation: 99421309-0941-43d0-adf4-4dbc84e8be9c[0m
+[38;21m2026-07-21 05:06:48,879 :: DEBUG :: root :: usage.py :: 282 :: Installation completed with ID: 99421309-0941-43d0-adf4-4dbc84e8be9c[0m
+[38;21m2026-07-21 05:06:48,879 :: DEBUG :: root :: usage.py :: 274 :: Upgrading existing installation: 99421309-0941-43d0-adf4-4dbc84e8be9c[0m
+[38;21m2026-07-21 05:06:48,880 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: None[0m
+[38;21m2026-07-21 05:06:48,880 :: DEBUG :: root :: usage.py :: 226 :: Successfully registered new installation: 52bb8797-32a7-4555-8379-121a8fec028b[0m
+[38;21m2026-07-21 05:06:48,880 :: DEBUG :: root :: usage.py :: 282 :: Installation completed with ID: 52bb8797-32a7-4555-8379-121a8fec028b[0m
+[38;21m2026-07-21 05:06:48,880 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-21 05:06:48,880 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vgzk74g9/.data[0m

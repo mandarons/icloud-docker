@@ -1,0 +1,8 @@
+[38;21m2026-07-21 05:06:49,518 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-21 05:06:49,518 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vgzk74g9/.data[0m
+[38;5;226m2026-07-21 05:06:49,520 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 503, attempt 1/3[0m
+[38;21m2026-07-21 05:06:49,520 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;5;226m2026-07-21 05:06:49,521 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 503, attempt 2/3[0m
+[38;21m2026-07-21 05:06:49,521 :: DEBUG :: root :: usage.py :: 200 :: Waiting 2.0s before retry...[0m
+[38;21m2026-07-21 05:06:49,521 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-21 05:06:49,522 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vgzk74g9/.data[0m

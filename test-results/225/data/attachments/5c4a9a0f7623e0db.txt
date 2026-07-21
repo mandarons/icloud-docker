@@ -1,0 +1,6 @@
+[38;21m2026-07-21 05:06:49,132 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-21 05:06:49,132 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vgzk74g9/.data[0m
+[38;21m2026-07-21 05:06:49,133 :: DEBUG :: root :: usage.py :: 300 :: Posting heartbeat to: http://test.com[0m
+[38;5;196m2026-07-21 05:06:49,134 :: ERROR :: root :: usage.py :: 310 :: Failed to post heartbeat: Error[0m
+[38;21m2026-07-21 05:06:49,134 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-21 05:06:49,134 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vgzk74g9/.data[0m
