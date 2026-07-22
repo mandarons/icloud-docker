@@ -35,6 +35,7 @@ LABEL maintainer="mandarons"
 
 # Set environment variables
 ENV HOME="/app"
+ENV XDG_DATA_HOME="/config"
 ENV PUID=911
 ENV PGID=911
 
