@@ -9,7 +9,7 @@ ___author___ = "Mandar Patil <mandarons@pm.me>"
 import os
 from typing import Any
 
-from src import get_logger
+from src import DEFAULT_ENUMERATION_CHUNK_SIZE, config_parser, get_logger
 from src.hardlink_registry import HardlinkRegistry
 from src.photo_download_manager import (
     DownloadTaskInfo,
@@ -20,6 +20,13 @@ from src.photo_filter_utils import is_photo_wanted
 from src.photo_path_utils import normalize_file_path
 
 LOGGER = get_logger()
+
+# DEFAULT_ENUMERATION_CHUNK_SIZE lives in src/__init__.py (with the other
+# DEFAULT_* config constants) and is re-exported here for backward-compat.
+# Picked to keep peak RSS bounded at ~10–20 MB of DownloadTaskInfo objects
+# per chunk on typical iCloud libraries while still giving
+# execute_parallel_downloads enough work to amortize HTTP connection setup.
+# Users can override via ``photos.enumeration_chunk_size`` in config.yaml.
 
 
 def sync_album_photos(
@@ -61,8 +68,14 @@ def sync_album_photos(
     os.makedirs(normalized_destination, exist_ok=True)
     LOGGER.info(f"Syncing {album.title}")
 
-    # Collect download tasks for photos
-    download_tasks = _collect_album_download_tasks(
+    # Stream the album in fixed-size chunks: collect → download →
+    # release → next chunk. Memory is bounded by chunk_size × per-task
+    # size (~10 MB at chunk=1000) instead of len(album) × per-task size
+    # (which OOM-kills containers on ~100K+ libraries: empirically a
+    # 111K-photo library peaks at ~4 GB RSS without chunking, kernel-
+    # confirmed via cgroup OOM at the 4 GB cap).
+    chunk_size = config_parser.get_photos_enumeration_chunk_size(config=config)
+    total_successful, total_failed = _collect_and_execute_album_in_chunks(
         album,
         normalized_destination,
         file_sizes,
@@ -70,12 +83,9 @@ def sync_album_photos(
         files,
         folder_format,
         hardlink_registry,
+        config,
+        chunk_size=chunk_size,
     )
-
-    # Execute downloads in parallel if there are tasks
-    total_successful, total_failed = 0, 0
-    if download_tasks:
-        total_successful, total_failed = execute_parallel_downloads(download_tasks, config)
 
     # Recursively sync subalbums and aggregate counts
     sub_successful, sub_failed = _sync_subalbums(
@@ -145,13 +155,15 @@ def _collect_photo_download_tasks(
     except Exception as e:
         try:
             photo_id = photo.id
-        except Exception:
+        except AttributeError:
             photo_id = "<unknown>"
-        LOGGER.warning(f"Error processing photo (id: {photo_id}), skipping: {type(e).__name__}: {e!s}")
+        LOGGER.warning(
+            f"Error processing photo (id: {photo_id}), skipping: {type(e).__name__}: {e!s}",
+        )
         return []
 
 
-def _collect_album_download_tasks(
+def _collect_and_execute_album_in_chunks(
     album,
     destination_path: str,
     file_sizes: list[str],
@@ -159,8 +171,18 @@ def _collect_album_download_tasks(
     files: set[str] | None,
     folder_format: str | None,
     hardlink_registry: HardlinkRegistry | None,
-) -> list:
-    """Collect download tasks for all photos in an album.
+    config,
+    chunk_size: int = DEFAULT_ENUMERATION_CHUNK_SIZE,
+) -> tuple[int, int]:
+    """Stream album → fixed-size chunks → download → release.
+
+    Buffers up to ``chunk_size`` download tasks, then drains them via
+    ``execute_parallel_downloads`` and clears the buffer before
+    collecting the next chunk. Memory is bounded by chunk_size, not by
+    len(album). Semantically equivalent to building the full task list
+    and downloading once — same total counts, same per-photo
+    side-effects — but resident-set stays flat instead of growing
+    monotonically through enumeration.
 
     Args:
         album: Album object from iCloudPy
@@ -170,14 +192,43 @@ def _collect_album_download_tasks(
         files: Set to track downloaded files
         folder_format: strftime format string for folder organization
         hardlink_registry: Registry for tracking downloaded files
+        config: Configuration dictionary (passed through to
+            ``execute_parallel_downloads`` for per-album thread count)
+        chunk_size: Tasks to buffer before draining. Smaller = lower
+            peak memory but more per-chunk HTTP setup overhead.
 
     Returns:
-        List of download tasks to execute
+        Tuple of (total_successful, total_failed) summed across chunks.
     """
-    download_tasks = []
+    if chunk_size <= 0:
+        # Degenerate config; fall back to default rather than refusing
+        # to sync. Logging is at INFO so operators see the fallback.
+        LOGGER.info(
+            f"Invalid photos.enumeration_chunk_size={chunk_size!r}; "
+            f"using default {DEFAULT_ENUMERATION_CHUNK_SIZE}.",
+        )
+        chunk_size = DEFAULT_ENUMERATION_CHUNK_SIZE
+
+    buffer: list[DownloadTaskInfo] = []
+    total_successful = 0
+    total_failed = 0
+
+    def _drain():
+        nonlocal total_successful, total_failed, buffer
+        if not buffer:
+            return
+        succ, fail = execute_parallel_downloads(buffer, config)
+        total_successful += succ
+        total_failed += fail
+        # Rebind to a fresh list rather than clearing in place: the old
+        # list was just handed to execute_parallel_downloads, so a fresh
+        # object gives each chunk an independent buffer (no aliasing of
+        # an already-passed list) and lets the old chunk's task objects
+        # (and the photo refs they hold) be collected immediately.
+        buffer = []
 
     for photo in album:
-        download_tasks.extend(
+        buffer.extend(
             _collect_photo_download_tasks(
                 photo,
                 destination_path,
@@ -188,8 +239,12 @@ def _collect_album_download_tasks(
                 hardlink_registry,
             ),
         )
+        if len(buffer) >= chunk_size:
+            _drain()
 
-    return download_tasks
+    _drain()  # final partial chunk
+
+    return total_successful, total_failed
 
 
 def _sync_subalbums(

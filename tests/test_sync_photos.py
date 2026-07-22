@@ -971,7 +971,7 @@ class TestSyncPhotos(unittest.TestCase):
             # Verify the exception handler was triggered
             mock_execute.assert_called()
 
-    def test_collect_album_download_tasks_skips_photo_with_invalid_base64(self):
+    def test_collect_photo_download_tasks_skips_photo_with_invalid_base64(self):
         """Test that photos with invalid base64-encoded filenames are skipped gracefully.
 
         Regression test for: binascii.Error: Invalid base64-encoded string:
@@ -979,7 +979,7 @@ class TestSyncPhotos(unittest.TestCase):
         """
         import binascii
 
-        from src.album_sync_orchestrator import _collect_album_download_tasks
+        from src.album_sync_orchestrator import _collect_photo_download_tasks
 
         class MockBadPhoto:
             """Intentionally attribute-free; the patched collect_download_task raises binascii.Error for it."""
@@ -1014,15 +1014,19 @@ class TestSyncPhotos(unittest.TestCase):
         with patch("src.album_sync_orchestrator.collect_download_task",
                    side_effect=collect_side_effect) as mock_collect:
             with self.assertLogs("root", level="WARNING") as log_ctx:
-                tasks = _collect_album_download_tasks(
-                    album=album,
-                    destination_path=self.destination_path,
-                    file_sizes=["original"],
-                    extensions=None,
-                    files=set(),
-                    folder_format=None,
-                    hardlink_registry=None,
-                )
+                tasks = []
+                for photo in album:
+                    tasks.extend(
+                        _collect_photo_download_tasks(
+                            photo,
+                            self.destination_path,
+                            ["original"],
+                            None,
+                            set(),
+                            None,
+                            None,
+                        ),
+                    )
 
         # The bad photo should be skipped; no tasks should be collected
         self.assertEqual(tasks, [])

@@ -14,6 +14,7 @@ from icloudpy.services.photos import PhotoAsset
 
 from src import (
     DEFAULT_DRIVE_DESTINATION,
+    DEFAULT_ENUMERATION_CHUNK_SIZE,
     DEFAULT_PHOTOS_DESTINATION,
     DEFAULT_REQUEST_TIMEOUT_SEC,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
@@ -514,6 +515,33 @@ def get_drive_flatten_packages(config: dict | None) -> bool:
 # =============================================================================
 # Photos Configuration Functions
 # =============================================================================
+
+
+def get_photos_enumeration_chunk_size(config: dict | None) -> int:
+    """Tasks to buffer before draining via execute_parallel_downloads.
+
+    Smaller = lower peak memory, more per-chunk HTTP setup overhead.
+    Larger = higher peak memory, fewer chunks. Default 1000 keeps
+    resident set at ~10 MB on typical libraries while still amortising
+    connection setup. Tested empirically on a 111K-photo library:
+    1000 sustained < 1 GB resident through the full enumeration.
+
+    Args:
+        config: Configuration dictionary (None falls back to default).
+
+    Returns:
+        Positive integer chunk size, defaulting to 1000.
+    """
+    raw = get_config_value_or_default(
+        config=config or {},
+        config_path=["photos", "enumeration_chunk_size"],
+        default=DEFAULT_ENUMERATION_CHUNK_SIZE,
+    )
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_ENUMERATION_CHUNK_SIZE
+    return value if value > 0 else DEFAULT_ENUMERATION_CHUNK_SIZE
 
 
 def get_photos_destination_path(config: dict) -> str:
