@@ -1,0 +1,6 @@
+[38;21m2026-07-22 00:32:20,071 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:32:20,071 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vx4nb65s/.data[0m
+[38;21m2026-07-22 00:32:20,072 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: http://test.com[0m
+[38;5;196m2026-07-22 00:32:20,072 :: ERROR :: root :: usage.py :: 230 :: Installation registration failed: no response[0m
+[38;21m2026-07-22 00:32:20,072 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:32:20,072 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_vx4nb65s/.data[0m
