@@ -65,11 +65,8 @@ def collect_file_for_download(
     with files_lock:
         files.add(local_file)
 
-    flatten_packages = (
-        bool(config_parser.get_drive_flatten_packages(config))
-        if config
-        else False
-    )
+    # get_drive_flatten_packages already returns False for a None config.
+    flatten_packages = config_parser.get_drive_flatten_packages(config)
 
     # Check local existence FIRST to avoid unnecessary network requests.
     # is_package() makes an HTTP call for every file, which is very slow
@@ -155,7 +152,8 @@ def download_file_task(download_info: dict[str, Any]) -> bool:
 
 
 def execute_parallel_downloads(
-    download_tasks: list[dict[str, Any]], max_threads: int,
+    download_tasks: list[dict[str, Any]],
+    max_threads: int,
 ) -> tuple[int, int]:
     """Execute multiple file downloads in parallel.
 

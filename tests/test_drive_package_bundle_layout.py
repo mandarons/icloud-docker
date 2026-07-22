@@ -20,6 +20,7 @@ Covers the second half of PR 11's package-handling rework:
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import gzip
 import io
 import os
 import tempfile
@@ -461,3 +462,39 @@ class TestProcessPackageNeverTouchesRegularUserZips(unittest.TestCase):
             "via data_token URLs without that segment) are never passed "
             "to the unpacker.",
         )
+
+
+class TestPackageRecursionDepth(unittest.TestCase):
+    """A hostile nested-archive chain must not recurse without bound.
+
+    ZIP entries are sanitised by zipfile, but gzip streams carry no depth
+    signal, so ``process_package`` recurses through gzip layers. The depth
+    ceiling stops a decompression-bomb chain before it hits RecursionError.
+    """
+
+    def test_depth_guard_stops_unpacking(self):
+        """Past the depth ceiling, unpacking stops and the bytes are kept."""
+        with tempfile.TemporaryDirectory() as d:
+            f = os.path.join(d, "deep.bin")
+            with open(f, "wb") as fh:
+                fh.write(b"data")
+            with self.assertLogs(drive_package_processing.LOGGER, level="WARNING") as cm:
+                result = drive_package_processing.process_package(
+                    local_file=f,
+                    _depth=drive_package_processing._MAX_PACKAGE_DEPTH + 1,  # noqa: SLF001
+                )
+            self.assertEqual(result, f)
+            self.assertTrue(any("nesting exceeded" in m for m in cm.output))
+
+    def test_deeply_nested_gzip_chain_does_not_recurse_forever(self):
+        """A gzip chain deeper than the ceiling stops gracefully (no crash)."""
+        payload = b"innermost bytes"
+        for _ in range(drive_package_processing._MAX_PACKAGE_DEPTH + 4):  # noqa: SLF001
+            payload = gzip.compress(payload)
+        with tempfile.TemporaryDirectory() as d:
+            f = os.path.join(d, "bomb.bin")
+            with open(f, "wb") as fh:
+                fh.write(payload)
+            # Must return a path without raising RecursionError.
+            result = drive_package_processing.process_package(local_file=f)
+            self.assertIsNotNone(result)

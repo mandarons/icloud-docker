@@ -21,8 +21,18 @@ configure_icloudpy_logging()
 
 LOGGER = get_logger()
 
+# Guard against a crafted archive chain (gzip wrapping gzip wrapping ...)
+# recursing without bound. Real iCloud packages are one archive deep (gzip of
+# a zip, at most). Past this depth we stop unpacking and keep the bytes as-is
+# rather than risk a RecursionError on hostile input. gzip streams -- unlike
+# ZIP entries, which zipfile sanitises -- carry no path info, so the only
+# defence against a decompression-bomb chain is a depth ceiling.
+_MAX_PACKAGE_DEPTH = 8
 
-def process_package(local_file: str, flatten: bool = False) -> str | None:
+
+def process_package(
+    local_file: str, flatten: bool = False, _depth: int = 0,
+) -> str | None:
     """Process and extract a downloaded package file.
 
     This function handles different archive types (ZIP, gzip) and extracts them
@@ -61,13 +71,20 @@ def process_package(local_file: str, flatten: bool = False) -> str | None:
         )
         return local_file
 
+    if _depth > _MAX_PACKAGE_DEPTH:
+        LOGGER.warning(
+            f"Package nesting exceeded {_MAX_PACKAGE_DEPTH} levels for {local_file}; "
+            f"stopping unpack and keeping the current bytes as a single-file bundle.",
+        )
+        return local_file
+
     magic_object = magic.Magic(mime=True)
     file_mime_type = magic_object.from_file(filename=local_file)
 
     if file_mime_type == "application/zip":
         return _process_zip_package(local_file, archive_file)
     elif file_mime_type == "application/gzip":
-        return _process_gzip_package(local_file, archive_file)
+        return _process_gzip_package(local_file, archive_file, _depth=_depth)
     else:
         # NOT an error — many iCloud Drive "package" downloads are flat
         # binary bundles (Apple iWork .key/.pages/.numbers,
@@ -132,7 +149,9 @@ def _zip_entries_self_prefixed(zf: zipfile.ZipFile, bundle_basename: str) -> str
     return None
 
 
-def _safe_extractall(zf: zipfile.ZipFile, extract_dir: str, safety_boundary: str) -> None:
+def _safe_extractall(
+    zf: zipfile.ZipFile, extract_dir: str, safety_boundary: str,
+) -> None:
     """Path-validating wrapper around ``ZipFile.extractall``.
 
     Defends against Zip Slip (CWE-22): a malicious zip can embed entries
@@ -233,7 +252,9 @@ def _process_zip_package(local_file: str, archive_file: str) -> str:
     return local_file
 
 
-def _process_gzip_package(local_file: str, archive_file: str) -> str | None:
+def _process_gzip_package(
+    local_file: str, archive_file: str, _depth: int = 0,
+) -> str | None:
     """Process a gzip package file.
 
     Args:
@@ -253,5 +274,6 @@ def _process_gzip_package(local_file: str, archive_file: str) -> str | None:
 
     os.remove(archive_file)
 
-    # Recursively process the extracted file (might be another archive)
-    return process_package(local_file=local_file)
+    # Recursively process the extracted file (might be another archive).
+    # Thread the depth counter so a hostile gzip chain can't recurse forever.
+    return process_package(local_file=local_file, _depth=_depth + 1)
