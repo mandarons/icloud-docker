@@ -1,0 +1,7 @@
+[38;21m2026-07-22 00:12:39,406 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:39,406 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:39,409 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:39,409 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;5;196m2026-07-22 00:12:39,410 :: ERROR :: root :: usage.py :: 140 :: Failed to save usage cache to /tmp/icloud_test_config_fb6_goxj/.data: Rename failed[0m
+[38;21m2026-07-22 00:12:39,411 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:39,411 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m

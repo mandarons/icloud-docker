@@ -1,0 +1,46 @@
+[38;21m2026-07-22 00:12:38,150 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:38,150 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,151 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-07-22 00:12:38,151 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:38,151 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,151 :: DEBUG :: root :: usage.py :: 107 :: Usage cache file not found, creating: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,151 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,151 :: DEBUG :: root :: usage.py :: 405 :: New installation detected, registering...[0m
+[38;21m2026-07-22 00:12:38,151 :: DEBUG :: root :: usage.py :: 276 :: Installing new instance[0m
+[38;21m2026-07-22 00:12:38,152 :: DEBUG :: root :: usage.py :: 220 :: Posting new installation to: None[0m
+[38;21m2026-07-22 00:12:38,152 :: DEBUG :: root :: usage.py :: 226 :: Successfully registered new installation: 9faf5936-78be-4948-90d0-8345fb974f0f[0m
+[38;21m2026-07-22 00:12:38,152 :: DEBUG :: root :: usage.py :: 282 :: Installation completed with ID: 9faf5936-78be-4948-90d0-8345fb974f0f[0m
+[38;21m2026-07-22 00:12:38,152 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,152 :: DEBUG :: root :: usage.py :: 409 :: Installation registration completed[0m
+[38;21m2026-07-22 00:12:38,152 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-07-22 00:12:38,153 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:38,153 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,153 :: DEBUG :: root :: usage.py :: 98 :: Loaded and validated usage cache from: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,153 :: DEBUG :: root :: usage.py :: 415 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-07-22 00:12:38,153 :: DEBUG :: root :: usage.py :: 374 :: Sending first heartbeat[0m
+[38;21m2026-07-22 00:12:38,153 :: DEBUG :: root :: usage.py :: 300 :: Posting heartbeat to: None[0m
+[38;21m2026-07-22 00:12:38,153 :: DEBUG :: root :: usage.py :: 304 :: Heartbeat sent successfully[0m
+[38;21m2026-07-22 00:12:38,153 :: DEBUG :: root :: usage.py :: 377 :: First heartbeat sent successfully[0m
+[38;21m2026-07-22 00:12:38,154 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,154 :: DEBUG :: root :: usage.py :: 419 :: Heartbeat completed successfully[0m
+[38;21m2026-07-22 00:12:38,154 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-07-22 00:12:38,154 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:38,154 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,154 :: DEBUG :: root :: usage.py :: 98 :: Loaded and validated usage cache from: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,155 :: DEBUG :: root :: usage.py :: 415 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-07-22 00:12:38,155 :: DEBUG :: root :: usage.py :: 355 :: Time since last heartbeat: 0:00:00.001598[0m
+[38;21m2026-07-22 00:12:38,155 :: DEBUG :: root :: usage.py :: 367 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-07-22 00:12:38,155 :: DEBUG :: root :: usage.py :: 422 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-07-22 00:12:38,155 :: DEBUG :: root :: usage.py :: 399 :: Usage tracking alive check started[0m
+[38;21m2026-07-22 00:12:38,156 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:38,156 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,156 :: DEBUG :: root :: usage.py :: 98 :: Loaded and validated usage cache from: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,156 :: DEBUG :: root :: usage.py :: 415 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-07-22 00:12:38,156 :: DEBUG :: root :: usage.py :: 355 :: Time since last heartbeat: 1 day, 0:00:00.001916[0m
+[38;21m2026-07-22 00:12:38,156 :: DEBUG :: root :: usage.py :: 359 :: Sending heartbeat (different UTC day)[0m
+[38;21m2026-07-22 00:12:38,156 :: DEBUG :: root :: usage.py :: 300 :: Posting heartbeat to: None[0m
+[38;21m2026-07-22 00:12:38,156 :: DEBUG :: root :: usage.py :: 304 :: Heartbeat sent successfully[0m
+[38;21m2026-07-22 00:12:38,157 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_fb6_goxj/.data[0m
+[38;21m2026-07-22 00:12:38,157 :: DEBUG :: root :: usage.py :: 419 :: Heartbeat completed successfully[0m
+[38;21m2026-07-22 00:12:38,157 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-07-22 00:12:38,157 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_fb6_goxj/.data[0m
