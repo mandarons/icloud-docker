@@ -127,9 +127,8 @@ source .venv/bin/activate && ./run-ci.sh
 ### Container Integration
 - **User management**: Runs as `abc` user (PUID/PGID configurable via env vars)
 - **Volume mounts**:
-  - `/config` → config.yaml + session_data/
+  - `/config` → config.yaml + session_data/ + python_keyring/ (auto-persisted)
   - `/icloud` → synced content (drive/ and photos/)
-  - `/home/abc/.local` → Optional keyring persistence
 - **Session persistence**: Authentication tokens in `/config/session_data` (iCloudPy cookie directory)
 - **Init sequence**: `docker-entrypoint.sh` → sets UID/GID → `su-exec abc /app/init.sh` → `python src/main.py`
 

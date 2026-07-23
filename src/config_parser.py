@@ -14,6 +14,7 @@ from icloudpy.services.photos import PhotoAsset
 
 from src import (
     DEFAULT_DRIVE_DESTINATION,
+    DEFAULT_ENUMERATION_CHUNK_SIZE,
     DEFAULT_PHOTOS_DESTINATION,
     DEFAULT_REQUEST_TIMEOUT_SEC,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
@@ -148,10 +149,16 @@ def get_region(config: dict) -> str:
         Region string ('global' or 'china')
     """
     config_path = ["app", "region"]
-    region = get_config_value_or_default(config=config, config_path=config_path, default="global")
+    region = get_config_value_or_default(
+        config=config, config_path=config_path, default="global",
+    )
 
-    if region == "global" and not traverse_config_path(config=config, config_path=config_path):
-        log_config_not_found_warning(config_path, "not found. Using default value - global ...")
+    if region == "global" and not traverse_config_path(
+        config=config, config_path=config_path,
+    ):
+        log_config_not_found_warning(
+            config_path, "not found. Using default value - global ...",
+        )
     elif region not in ["global", "china"]:
         log_config_error(
             config_path,
@@ -167,7 +174,9 @@ def get_region(config: dict) -> str:
 # =============================================================================
 
 
-def get_sync_interval(config: dict, config_path: list[str], service_name: str, log_messages: bool = True) -> int:
+def get_sync_interval(
+    config: dict, config_path: list[str], service_name: str, log_messages: bool = True,
+) -> int:
     """Get sync interval for a service (drive or photos).
 
     Extracted common logic for retrieving sync intervals.
@@ -194,7 +203,9 @@ def get_sync_interval(config: dict, config_path: list[str], service_name: str, l
                 f"is not found. Using default sync_interval: {sync_interval} seconds ...",
             )
         else:
-            log_config_found_info(f"Syncing {service_name} every {sync_interval} seconds.")
+            log_config_found_info(
+                f"Syncing {service_name} every {sync_interval} seconds.",
+            )
 
     return sync_interval
 
@@ -281,9 +292,13 @@ def parse_max_threads_value(max_threads_config: Any, default_max_threads: int) -
     # Handle "auto" value
     if isinstance(max_threads_config, str) and max_threads_config.lower() == "auto":
         max_threads = default_max_threads
-        log_config_found_info(f"Using automatic thread count: {max_threads} threads (based on CPU cores).")
+        log_config_found_info(
+            f"Using automatic thread count: {max_threads} threads (based on CPU cores).",
+        )
     elif isinstance(max_threads_config, int) and max_threads_config >= 1:
-        max_threads = min(max_threads_config, 16)  # Cap at 16 to avoid overwhelming servers
+        max_threads = min(
+            max_threads_config, 16,
+        )  # Cap at 16 to avoid overwhelming servers
         log_config_found_info(f"Using configured max_threads: {max_threads}.")
     else:
         log_invalid_config_value(
@@ -317,6 +332,24 @@ def get_app_max_threads(config: dict) -> int:
 
     max_threads_config = get_config_value(config=config, config_path=config_path)
     return parse_max_threads_value(max_threads_config, default_max_threads)
+
+
+def get_mount_marker_filename(config: dict) -> str:
+    """Return the filename used as the mount-failsafe marker (default `.mounted`).
+
+    The marker is the empty/sentinel file the user touches in a destination
+    directory to assert "this path is correctly bind-mounted". The mount
+    checker (``sync._check_mount_marker``) refuses to sync into a destination
+    that lacks this file when ``require_mount_marker`` is enabled.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Filename string (relative to each destination directory).
+    """
+    config_path = ["app", "mount_marker_filename"]
+    return str(get_config_value_or_default(config=config, config_path=config_path, default=".mounted"))
 
 
 def get_usage_tracking_enabled(config: dict) -> bool:
@@ -443,7 +476,9 @@ def get_drive_remove_obsolete(config: dict) -> bool:
         True if obsolete files should be removed, False otherwise
     """
     config_path = ["drive", "remove_obsolete"]
-    drive_remove_obsolete = get_config_value_or_default(config=config, config_path=config_path, default=False)
+    drive_remove_obsolete = get_config_value_or_default(
+        config=config, config_path=config_path, default=False,
+    )
 
     if not drive_remove_obsolete:
         _log_config_warning_once(
@@ -451,14 +486,63 @@ def get_drive_remove_obsolete(config: dict) -> bool:
             "remove_obsolete is not found. Not removing the obsolete files and folders.",
         )
     else:
-        log_config_debug(f"{'R' if drive_remove_obsolete else 'Not R'}emoving obsolete files and folders ...")
+        log_config_debug(
+            f"{'R' if drive_remove_obsolete else 'Not R'}emoving obsolete files and folders ...",
+        )
 
     return drive_remove_obsolete
+
+
+def get_drive_require_mount_marker(config: dict) -> bool:
+    """Return whether Drive sync requires the mount-failsafe marker file.
+
+    When True, ``sync._check_mount_marker`` refuses to start a Drive sync
+    until the marker file (see ``get_mount_marker_filename``) exists in
+    the Drive destination directory. Protects against silent bind-mount
+    failures dumping iCloud Drive content into the wrong place.
+
+    Default: False (preserves historical behaviour — no breaking change).
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if the marker is required before each Drive sync.
+    """
+    config_path = ["drive", "require_mount_marker"]
+    return bool(get_config_value_or_default(config=config, config_path=config_path, default=False))
 
 
 # =============================================================================
 # Photos Configuration Functions
 # =============================================================================
+
+
+def get_photos_enumeration_chunk_size(config: dict | None) -> int:
+    """Tasks to buffer before draining via execute_parallel_downloads.
+
+    Smaller = lower peak memory, more per-chunk HTTP setup overhead.
+    Larger = higher peak memory, fewer chunks. Default 1000 keeps
+    resident set at ~10 MB on typical libraries while still amortising
+    connection setup. Tested empirically on a 111K-photo library:
+    1000 sustained < 1 GB resident through the full enumeration.
+
+    Args:
+        config: Configuration dictionary (None falls back to default).
+
+    Returns:
+        Positive integer chunk size, defaulting to 1000.
+    """
+    raw = get_config_value_or_default(
+        config=config or {},
+        config_path=["photos", "enumeration_chunk_size"],
+        default=DEFAULT_ENUMERATION_CHUNK_SIZE,
+    )
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return DEFAULT_ENUMERATION_CHUNK_SIZE
+    return value if value > 0 else DEFAULT_ENUMERATION_CHUNK_SIZE
 
 
 def get_photos_destination_path(config: dict) -> str:
@@ -511,7 +595,9 @@ def get_photos_all_albums(config: dict) -> bool:
         True if all albums should be synced, False otherwise
     """
     config_path = ["photos", "all_albums"]
-    download_all = get_config_value_or_default(config=config, config_path=config_path, default=False)
+    download_all = get_config_value_or_default(
+        config=config, config_path=config_path, default=False,
+    )
 
     if download_all:
         log_config_found_info("Syncing all albums.")
@@ -530,7 +616,9 @@ def get_photos_use_hardlinks(config: dict, log_messages: bool = True) -> bool:
         True if hard links should be used, False otherwise
     """
     config_path = ["photos", "use_hardlinks"]
-    use_hardlinks = get_config_value_or_default(config=config, config_path=config_path, default=False)
+    use_hardlinks = get_config_value_or_default(
+        config=config, config_path=config_path, default=False,
+    )
 
     if use_hardlinks and log_messages:
         log_config_found_info("Using hard links for duplicate photos.")
@@ -548,7 +636,9 @@ def get_photos_remove_obsolete(config: dict) -> bool:
         True if obsolete files should be removed, False otherwise
     """
     config_path = ["photos", "remove_obsolete"]
-    photos_remove_obsolete = get_config_value_or_default(config=config, config_path=config_path, default=False)
+    photos_remove_obsolete = get_config_value_or_default(
+        config=config, config_path=config_path, default=False,
+    )
 
     if not photos_remove_obsolete:
         _log_config_warning_once(
@@ -556,9 +646,31 @@ def get_photos_remove_obsolete(config: dict) -> bool:
             "remove_obsolete is not found. Not removing the obsolete files and folders.",
         )
     else:
-        log_config_debug(f"{'R' if photos_remove_obsolete else 'Not R'}emoving obsolete files and folders ...")
+        log_config_debug(
+            f"{'R' if photos_remove_obsolete else 'Not R'}emoving obsolete files and folders ...",
+        )
 
     return photos_remove_obsolete
+
+
+def get_photos_require_mount_marker(config: dict) -> bool:
+    """Return whether Photos sync requires the mount-failsafe marker file.
+
+    When True, ``sync._check_mount_marker`` refuses to start a Photos sync
+    until the marker file (see ``get_mount_marker_filename``) exists in
+    the Photos destination directory. Protects against silent bind-mount
+    failures dumping the entire iCloud photo library into the wrong place.
+
+    Default: False (preserves historical behaviour — no breaking change).
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if the marker is required before each Photos sync.
+    """
+    config_path = ["photos", "require_mount_marker"]
+    return bool(get_config_value_or_default(config=config, config_path=config_path, default=False))
 
 
 def get_photos_folder_format(config: dict) -> str | None:
@@ -651,13 +763,17 @@ def get_photos_libraries_filter(config: dict, base_config_path: list[str]) -> li
     libraries = get_config_value_or_none(config=config, config_path=config_path)
 
     if not libraries or len(libraries) == 0:
-        log_config_not_found_warning(config_path, "not found. Downloading all libraries ...")
+        log_config_not_found_warning(
+            config_path, "not found. Downloading all libraries ...",
+        )
         return None
 
     return libraries
 
 
-def get_photos_albums_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
+def get_photos_albums_filter(
+    config: dict, base_config_path: list[str],
+) -> list[str] | None:
     """Get albums filter from photos config.
 
     Args:
@@ -671,13 +787,17 @@ def get_photos_albums_filter(config: dict, base_config_path: list[str]) -> list[
     albums = get_config_value_or_none(config=config, config_path=config_path)
 
     if not albums or len(albums) == 0:
-        log_config_not_found_warning(config_path, "not found. Downloading all albums ...")
+        log_config_not_found_warning(
+            config_path, "not found. Downloading all albums ...",
+        )
         return None
 
     return albums
 
 
-def get_photos_file_sizes_filter(config: dict, base_config_path: list[str]) -> list[str]:
+def get_photos_file_sizes_filter(
+    config: dict, base_config_path: list[str],
+) -> list[str]:
     """Get file sizes filter from photos config.
 
     Args:
@@ -690,14 +810,18 @@ def get_photos_file_sizes_filter(config: dict, base_config_path: list[str]) -> l
     config_path = base_config_path + ["file_sizes"]
 
     if not traverse_config_path(config=config, config_path=config_path):
-        log_config_not_found_warning(config_path, "not found. Downloading original size photos ...")
+        log_config_not_found_warning(
+            config_path, "not found. Downloading original size photos ...",
+        )
         return ["original"]
 
     file_sizes = get_config_value(config=config, config_path=config_path)
     return validate_file_sizes(file_sizes)
 
 
-def get_photos_extensions_filter(config: dict, base_config_path: list[str]) -> list[str] | None:
+def get_photos_extensions_filter(
+    config: dict, base_config_path: list[str],
+) -> list[str] | None:
     """Get extensions filter from photos config.
 
     Args:
@@ -711,7 +835,9 @@ def get_photos_extensions_filter(config: dict, base_config_path: list[str]) -> l
     extensions = get_config_value_or_none(config=config, config_path=config_path)
 
     if not extensions or len(extensions) == 0:
-        log_config_not_found_warning(config_path, "not found. Downloading all extensions ...")
+        log_config_not_found_warning(
+            config_path, "not found. Downloading all extensions ...",
+        )
         return None
 
     return extensions
@@ -746,8 +872,12 @@ def get_photos_filters(config: dict) -> dict[str, Any]:
     # Parse individual filter components
     photos_filters["libraries"] = get_photos_libraries_filter(config, base_config_path)
     photos_filters["albums"] = get_photos_albums_filter(config, base_config_path)
-    photos_filters["file_sizes"] = get_photos_file_sizes_filter(config, base_config_path)
-    photos_filters["extensions"] = get_photos_extensions_filter(config, base_config_path)
+    photos_filters["file_sizes"] = get_photos_file_sizes_filter(
+        config, base_config_path,
+    )
+    photos_filters["extensions"] = get_photos_extensions_filter(
+        config, base_config_path,
+    )
 
     return photos_filters
 
@@ -757,7 +887,9 @@ def get_photos_filters(config: dict) -> dict[str, Any]:
 # =============================================================================
 
 
-def get_smtp_config_value(config: dict, key: str, warn_if_missing: bool = True) -> str | None:
+def get_smtp_config_value(
+    config: dict, key: str, warn_if_missing: bool = True,
+) -> str | None:
     """Get SMTP configuration value with optional warning.
 
     Common helper for SMTP config retrieval to reduce duplication.
