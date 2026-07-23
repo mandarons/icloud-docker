@@ -177,6 +177,61 @@ def _authenticate_and_get_api(config, username: str):
     )
 
 
+def _check_mount_marker(
+    destinations: list[str],
+    marker_filename: str,
+    required: bool,
+    service_name: str,
+) -> bool:
+    """Verify the failsafe marker file is present in every write destination.
+
+    Mirrors boredazfcuk/docker-icloudpd's ``.mounted`` pattern: protects
+    against silent bind-mount failures (typo in the host path, missing
+    share, wrong permissions) that would otherwise dump iCloud data into
+    an empty container-internal directory.
+
+    Takes a list of destinations because a single sync may write to more
+    than one bind-mounted directory; the marker is required in EACH write
+    destination because any one of them could be the failed mount.
+
+    Returns True when it is safe to proceed (marker not required, or
+    marker required and present in every destination). Returns False when
+    the marker is required and is missing from at least one destination —
+    in which case the caller should skip this sync cycle without
+    advancing the countdown so the next interval re-checks. Every
+    missing-marker failure is logged so the user can fix all of them in
+    one pass rather than discovering them one cycle at a time.
+
+    Args:
+        destinations: List of sync destination directories to check. Each
+            directory is checked independently. An empty list returns
+            True (nothing to check).
+        marker_filename: Filename to look for inside each destination
+            (e.g. ``.mounted``).
+        required: Whether the marker is required at all. When False this
+            is a no-op that always returns True.
+        service_name: Human-readable label used in the error log
+            (``Drive`` / ``Photos``).
+
+    Returns:
+        True if it is safe to proceed; False to skip this sync cycle.
+    """
+    if not required:
+        return True
+    all_present = True
+    for destination_path in destinations:
+        marker_path = os.path.join(destination_path, marker_filename)
+        if not os.path.isfile(marker_path):
+            LOGGER.error(
+                f"{service_name} mount marker missing: {marker_path} not found — "
+                f"refusing to sync. Create the marker file (`touch {marker_path}`) "
+                f"after confirming the destination is correctly mounted, then the "
+                f"next sync cycle will proceed.",
+            )
+            all_present = False
+    return all_present
+
+
 def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval: int):
     """
     Execute drive synchronization if enabled.
