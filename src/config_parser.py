@@ -334,6 +334,24 @@ def get_app_max_threads(config: dict) -> int:
     return parse_max_threads_value(max_threads_config, default_max_threads)
 
 
+def get_mount_marker_filename(config: dict) -> str:
+    """Return the filename used as the mount-failsafe marker (default `.mounted`).
+
+    The marker is the empty/sentinel file the user touches in a destination
+    directory to assert "this path is correctly bind-mounted". The mount
+    checker (``sync._check_mount_marker``) refuses to sync into a destination
+    that lacks this file when ``require_mount_marker`` is enabled.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Filename string (relative to each destination directory).
+    """
+    config_path = ["app", "mount_marker_filename"]
+    return str(get_config_value_or_default(config=config, config_path=config_path, default=".mounted"))
+
+
 def get_usage_tracking_enabled(config: dict) -> bool:
     """Get usage tracking enabled setting from configuration.
 
@@ -475,6 +493,26 @@ def get_drive_remove_obsolete(config: dict) -> bool:
     return drive_remove_obsolete
 
 
+def get_drive_require_mount_marker(config: dict) -> bool:
+    """Return whether Drive sync requires the mount-failsafe marker file.
+
+    When True, ``sync._check_mount_marker`` refuses to start a Drive sync
+    until the marker file (see ``get_mount_marker_filename``) exists in
+    the Drive destination directory. Protects against silent bind-mount
+    failures dumping iCloud Drive content into the wrong place.
+
+    Default: False (preserves historical behaviour — no breaking change).
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if the marker is required before each Drive sync.
+    """
+    config_path = ["drive", "require_mount_marker"]
+    return bool(get_config_value_or_default(config=config, config_path=config_path, default=False))
+
+
 # =============================================================================
 # Photos Configuration Functions
 # =============================================================================
@@ -613,6 +651,26 @@ def get_photos_remove_obsolete(config: dict) -> bool:
         )
 
     return photos_remove_obsolete
+
+
+def get_photos_require_mount_marker(config: dict) -> bool:
+    """Return whether Photos sync requires the mount-failsafe marker file.
+
+    When True, ``sync._check_mount_marker`` refuses to start a Photos sync
+    until the marker file (see ``get_mount_marker_filename``) exists in
+    the Photos destination directory. Protects against silent bind-mount
+    failures dumping the entire iCloud photo library into the wrong place.
+
+    Default: False (preserves historical behaviour — no breaking change).
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if the marker is required before each Photos sync.
+    """
+    config_path = ["photos", "require_mount_marker"]
+    return bool(get_config_value_or_default(config=config, config_path=config_path, default=False))
 
 
 def get_photos_folder_format(config: dict) -> str | None:
