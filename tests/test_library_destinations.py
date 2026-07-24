@@ -114,6 +114,17 @@ class TestLibraryDestinationHelper(unittest.TestCase):
             result = _library_destination(base, guid_name, mapping)
             assert result == os.path.join(base, "Exact")
 
+    def test_explicit_empty_subdir_wins_over_shared_library_alias(self):
+        """An explicit empty mapping resolves to the base (root of the
+        photos tree), NOT the ``SharedLibrary`` alias. The resolver keys
+        on ``is None`` (key absent) rather than falsiness, so a configured
+        value always takes priority over the alias fallthrough."""
+        with tempfile.TemporaryDirectory() as base:
+            guid_name = "SharedSync-DEADBEEF-1234-5678-9ABC-DEF012345678"
+            mapping = {guid_name: "", "SharedLibrary": "Aliased"}
+            result = _library_destination(base, guid_name, mapping)
+            assert result == os.path.join(base, "")
+
 
 class TestSyncPhotosRemoveObsoletePerLibrary(unittest.TestCase):
     """When ``library_destinations`` is configured AND

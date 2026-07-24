@@ -466,10 +466,15 @@ def _library_destination(base_destination: str, library: str, library_destinatio
     """
     if not library_destinations:
         return base_destination
+    # ``get`` returns None only when the key is absent -- the config parser
+    # coerces every configured value to str, so an explicit "" stays "".
+    # Key on ``is None`` (not falsiness) so an explicitly-mapped library
+    # always wins over the SharedLibrary alias and the default, honouring
+    # the rule 1 > rule 2 > rule 3 priority documented above.
     subdir = library_destinations.get(library)
-    if not subdir and library.startswith("SharedSync-"):
+    if subdir is None and library.startswith("SharedSync-"):
         subdir = library_destinations.get("SharedLibrary")
-    if not subdir:
+    if subdir is None:
         return base_destination
     dest = os.path.join(base_destination, subdir)
     os.makedirs(dest, exist_ok=True)
