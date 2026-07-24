@@ -1096,6 +1096,33 @@ class TestHelperExceptionPaths(unittest.TestCase):
                 web._get_require_mount_marker({"drive": {}}, "drive"),  # noqa: SLF001
             )
 
+    def test_get_marker_filename_falls_back_when_pr8_helper_absent(self):
+        """Standalone (vanilla mandarons, no PR 8 helpers): the getter is
+        absent, so the helper falls back to the ``.mounted`` default."""
+        original = getattr(web.config_parser, "get_mount_marker_filename", None)
+        if original is not None:
+            delattr(web.config_parser, "get_mount_marker_filename")
+        try:
+            result = web._get_marker_filename({"app": {}})  # noqa: SLF001
+            self.assertEqual(result, ".mounted")
+        finally:
+            if original is not None:
+                web.config_parser.get_mount_marker_filename = original
+
+    def test_get_require_mount_marker_falls_back_when_pr8_helper_absent(self):
+        """Standalone (no PR 8 helpers): the getter is absent, so the
+        wrapper returns False (marker never required)."""
+        original = getattr(web.config_parser, "get_drive_require_mount_marker", None)
+        if original is not None:
+            delattr(web.config_parser, "get_drive_require_mount_marker")
+        try:
+            self.assertFalse(
+                web._get_require_mount_marker({"drive": {}}, "drive"),  # noqa: SLF001
+            )
+        finally:
+            if original is not None:
+                web.config_parser.get_drive_require_mount_marker = original
+
     def test_get_library_destinations_attr_error_in_direct_read(self):
         """When PR 3 helper is absent AND the config shape causes
         AttributeError in the fallback direct read, return {}."""
