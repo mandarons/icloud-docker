@@ -2008,6 +2008,245 @@ class TestSyncPhotos(unittest.TestCase):
             self.assertFalse(result)
             self.assertEqual(mock_photo.download.call_count, 1)  # Only initial attempt, no retries
 
+    def test_refresh_photo_download_url_success(self):
+        """Test _refresh_photo_download_url successfully refreshes master record."""
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock()
+        mock_photo._master_record = {  # noqa: SLF001
+            "recordName": "test-record-123",
+            "recordType": "CPLMaster",
+            "fields": {},
+        }
+        mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+
+        # Mock service with required attributes
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+
+        # Mock API response with fresh record
+        fresh_record = {
+            "recordName": "test-record-123",
+            "recordType": "CPLMaster",
+            "fields": {
+                "resOriginalRes": {
+                    "value": {
+                        "downloadURL": "https://fresh-url.example.com/photo.jpg",
+                        "size": 12345,
+                    },
+                },
+            },
+        }
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"records": [fresh_record]}
+        mock_service.session.post.return_value = mock_response
+
+        result = _refresh_photo_download_url(mock_photo)
+
+        self.assertTrue(result)
+        # Verify master record was updated
+        self.assertEqual(mock_photo._master_record, fresh_record)  # noqa: SLF001
+        # Verify _versions was cleared
+        self.assertIsNone(mock_photo._versions)  # noqa: SLF001
+        # Verify API was called
+        mock_service.session.post.assert_called_once()
+
+    def test_refresh_photo_download_url_missing_master_record(self):
+        """Test _refresh_photo_download_url when photo has no _master_record."""
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        # Photo without _master_record attribute
+        mock_photo = Mock(spec=["_service"])
+        result = _refresh_photo_download_url(mock_photo)
+        self.assertFalse(result)
+
+    def test_refresh_photo_download_url_missing_record_name(self):
+        """Test _refresh_photo_download_url when _master_record has no recordName."""
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock()
+        mock_photo._master_record = {"recordType": "CPLMaster"}  # No recordName  # noqa: SLF001
+        result = _refresh_photo_download_url(mock_photo)
+        self.assertFalse(result)
+
+    def test_refresh_photo_download_url_missing_service(self):
+        """Test _refresh_photo_download_url when photo has no _service."""
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock(spec=["_master_record"])
+        mock_photo._master_record = {"recordName": "test-123", "recordType": "CPLMaster"}  # noqa: SLF001
+        result = _refresh_photo_download_url(mock_photo)
+        self.assertFalse(result)
+
+    def test_refresh_photo_download_url_missing_service_attributes(self):
+        """Test _refresh_photo_download_url when service is missing required attributes."""
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock()
+        mock_photo._master_record = {"recordName": "test-123", "recordType": "CPLMaster"}  # noqa: SLF001
+        # Service missing zone_id (not in spec)
+        mock_service = Mock(spec=["_service_endpoint", "session", "params"])
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+        result = _refresh_photo_download_url(mock_photo)
+        self.assertFalse(result)
+
+    def test_refresh_photo_download_url_api_failure(self):
+        """Test _refresh_photo_download_url when API call raises exception."""
+        from unittest.mock import Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock()
+        mock_photo._master_record = {"recordName": "test-123", "recordType": "CPLMaster"}  # noqa: SLF001
+
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_service.session.post.side_effect = ConnectionError("Network error")  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+
+        result = _refresh_photo_download_url(mock_photo)
+        self.assertFalse(result)
+
+    def test_refresh_photo_download_url_record_not_in_response(self):
+        """Test _refresh_photo_download_url when requested record is not in API response."""
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock()
+        mock_photo._master_record = {"recordName": "test-123", "recordType": "CPLMaster"}  # noqa: SLF001
+
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+
+        # API returns a different record
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "records": [{"recordName": "different-record", "recordType": "CPLMaster", "fields": {}}],
+        }
+        mock_service.session.post.return_value = mock_response
+
+        result = _refresh_photo_download_url(mock_photo)
+        self.assertFalse(result)
+
+    def test_refresh_photo_download_url_empty_records(self):
+        """Test _refresh_photo_download_url when API returns empty records list."""
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock()
+        mock_photo._master_record = {"recordName": "test-123", "recordType": "CPLMaster"}  # noqa: SLF001
+
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"records": []}
+        mock_service.session.post.return_value = mock_response
+
+        result = _refresh_photo_download_url(mock_photo)
+        self.assertFalse(result)
+
+    @patch("src.photo_file_utils._refresh_photo_download_url")
+    def test_download_photo_from_server_410_calls_refresh(self, mock_refresh):
+        """Test that download_photo_from_server calls _refresh_photo_download_url on 410."""
+        import datetime
+        import tempfile
+        from io import BytesIO
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            mock_photo = Mock()
+            mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+
+            mock_response = MagicMock()
+            mock_response.raw = BytesIO(b"fake image data")
+
+            call_count = [0]
+
+            def download_side_effect(*args, **kwargs):
+                call_count[0] += 1
+                if call_count[0] == 1:
+                    raise Exception("Gone (410)")  # noqa: EM101
+                return mock_response
+
+            mock_photo.download.side_effect = download_side_effect
+            mock_photo.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+
+            # Make refresh return True (simulates successful refresh)
+            mock_refresh.return_value = True
+
+            result = download_photo_from_server(mock_photo, "original", destination_path)
+            self.assertTrue(result)
+            # Verify refresh was called on 410
+            mock_refresh.assert_called_once_with(mock_photo)
+
+    @patch("src.photo_file_utils._refresh_photo_download_url")
+    def test_download_photo_from_server_410_refresh_failure_still_retries(self, mock_refresh):
+        """Test that download retries even when _refresh_photo_download_url fails."""
+        import datetime
+        import tempfile
+        from io import BytesIO
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import download_photo_from_server
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            destination_path = os.path.join(tmpdir, "test_photo.jpg")
+
+            mock_photo = Mock()
+            mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+
+            mock_response = MagicMock()
+            mock_response.raw = BytesIO(b"fake image data")
+
+            call_count = [0]
+
+            def download_side_effect(*args, **kwargs):
+                call_count[0] += 1
+                if call_count[0] == 1:
+                    raise Exception("Gone (410)")  # noqa: EM101
+                return mock_response
+
+            mock_photo.download.side_effect = download_side_effect
+            mock_photo.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
+
+            # Make refresh return False (simulates refresh failure)
+            mock_refresh.return_value = False
+
+            result = download_photo_from_server(mock_photo, "original", destination_path)
+            # Should still succeed because download_photo_from_server retries regardless
+            self.assertTrue(result)
+            mock_refresh.assert_called_once_with(mock_photo)
+
     def test_generate_photo_path_different_normalization(self):
         """Test generate_photo_path with different normalization (line 107)."""
         from src.photo_download_manager import generate_photo_path

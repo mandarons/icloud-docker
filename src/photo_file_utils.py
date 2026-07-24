@@ -6,10 +6,12 @@ downloading, hardlink creation, and file existence checking.
 
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
+import json
 import os
 import shutil
 import threading
 from datetime import timezone
+from urllib.parse import urlencode
 
 from src import get_logger
 
@@ -17,6 +19,194 @@ LOGGER = get_logger()
 
 # Module-level lock to protect thread-safe mutation of photo._versions during retries
 _versions_refresh_lock = threading.Lock()
+
+# CloudKit fields to request when re-fetching a photo record for fresh download URLs.
+# Mirrors the desiredKeys list used by icloudpy's PhotoAlbum._list_query_gen().
+_DESIRED_KEYS = [
+    "resJPEGFullWidth",
+    "resJPEGFullHeight",
+    "resJPEGFullFileType",
+    "resJPEGFullFingerprint",
+    "resJPEGFullRes",
+    "resJPEGLargeWidth",
+    "resJPEGLargeHeight",
+    "resJPEGLargeFileType",
+    "resJPEGLargeFingerprint",
+    "resJPEGLargeRes",
+    "resJPEGMedWidth",
+    "resJPEGMedHeight",
+    "resJPEGMedFileType",
+    "resJPEGMedFingerprint",
+    "resJPEGMedRes",
+    "resJPEGThumbWidth",
+    "resJPEGThumbHeight",
+    "resJPEGThumbFileType",
+    "resJPEGThumbFingerprint",
+    "resJPEGThumbRes",
+    "resVidFullWidth",
+    "resVidFullHeight",
+    "resVidFullFileType",
+    "resVidFullFingerprint",
+    "resVidFullRes",
+    "resVidMedWidth",
+    "resVidMedHeight",
+    "resVidMedFileType",
+    "resVidMedFingerprint",
+    "resVidMedRes",
+    "resVidSmallWidth",
+    "resVidSmallHeight",
+    "resVidSmallFileType",
+    "resVidSmallFingerprint",
+    "resVidSmallRes",
+    "resSidecarWidth",
+    "resSidecarHeight",
+    "resSidecarFileType",
+    "resSidecarFingerprint",
+    "resSidecarRes",
+    "itemType",
+    "dataClassType",
+    "filenameEnc",
+    "originalOrientation",
+    "resOriginalWidth",
+    "resOriginalHeight",
+    "resOriginalFileType",
+    "resOriginalFingerprint",
+    "resOriginalRes",
+    "resOriginalAltWidth",
+    "resOriginalAltHeight",
+    "resOriginalAltFileType",
+    "resOriginalAltFingerprint",
+    "resOriginalAltRes",
+    "resOriginalVidComplWidth",
+    "resOriginalVidComplHeight",
+    "resOriginalVidComplFileType",
+    "resOriginalVidComplFingerprint",
+    "resOriginalVidComplRes",
+    "isDeleted",
+    "isExpunged",
+    "dateExpunged",
+    "remappedRef",
+    "recordName",
+    "recordType",
+    "recordChangeTag",
+    "masterRef",
+    "adjustmentRenderType",
+    "assetDate",
+    "addedDate",
+    "isFavorite",
+    "isHidden",
+    "orientation",
+    "duration",
+    "assetSubtype",
+    "assetSubtypeV2",
+    "assetHDRType",
+    "burstFlags",
+    "burstFlagsExt",
+    "burstId",
+    "captionEnc",
+    "extendedDescEnc",
+    "locationEnc",
+    "locationV2Enc",
+    "locationLatitude",
+    "locationLongitude",
+    "adjustmentType",
+    "timeZoneOffset",
+    "vidComplDurValue",
+    "vidComplDurScale",
+    "vidComplDispValue",
+    "vidComplDispScale",
+    "vidComplVisibilityState",
+    "customRenderedValue",
+    "containerId",
+    "itemId",
+    "position",
+    "isKeyAsset",
+    "importedByBundleIdentifierEnc",
+    "importedByDisplayNameEnc",
+    "importedBy",
+]
+
+
+def _refresh_photo_download_url(photo) -> bool:
+    """Re-fetch the photo's master record from iCloud to obtain fresh download URLs.
+
+    iCloud download URLs are signed CDN tokens that expire after ~30–40 minutes.
+    When a URL expires (HTTP 410 Gone), clearing ``photo._versions`` alone is
+    insufficient because icloudpy re-parses the same stale ``_master_record``
+    which still contains the expired URL.  This function makes a new
+    ``records/query`` API call to get an updated master record with fresh URLs,
+    then updates ``photo._master_record`` in place and clears ``_versions`` so
+    the next ``download()`` call uses the fresh URL.
+
+    Args:
+        photo: PhotoAsset object from icloudpy
+
+    Returns:
+        True if the master record was successfully refreshed, False otherwise.
+    """
+    try:
+        record_name = photo._master_record["recordName"]  # noqa: SLF001
+        record_type = photo._master_record.get("recordType", "CPLMaster")  # noqa: SLF001
+    except (AttributeError, KeyError, TypeError):
+        LOGGER.debug("Cannot refresh download URL: photo missing _master_record or recordName")
+        return False
+
+    service = getattr(photo, "_service", None)
+    if service is None:
+        LOGGER.debug("Cannot refresh download URL: photo missing _service")
+        return False
+
+    endpoint = getattr(service, "_service_endpoint", None)
+    session = getattr(service, "session", None)
+    params = getattr(service, "params", None)
+    zone_id = getattr(service, "zone_id", None)
+
+    if not all([endpoint, session, params, zone_id]):
+        LOGGER.debug("Cannot refresh download URL: photo._service missing required attributes")
+        return False
+
+    try:
+        url = f"{endpoint}/records/query?{urlencode(params)}"
+        query = {
+            "query": {
+                "recordType": record_type,
+                "filterBy": [
+                    {
+                        "fieldName": "recordName",
+                        "comparator": "IN",
+                        "fieldValue": {
+                            "type": "STRING_LIST",
+                            "value": [record_name],
+                        },
+                    },
+                ],
+            },
+            "resultsLimit": 1,
+            "desiredKeys": _DESIRED_KEYS,
+            "zoneID": zone_id,
+        }
+        request = session.post(
+            url,
+            data=json.dumps(query),
+            headers={"Content-type": "text/plain"},
+        )
+        response = request.json()
+        records = response.get("records", [])
+
+        for rec in records:
+            if rec.get("recordName") == record_name:
+                photo._master_record = rec  # noqa: SLF001
+                with _versions_refresh_lock:
+                    photo._versions = None  # noqa: SLF001
+                LOGGER.debug(f"Refreshed download URL for {record_name}")
+                return True
+
+        LOGGER.debug(f"Record {record_name} not found in iCloud response during URL refresh")
+        return False
+
+    except Exception as e:  # noqa: BLE001
+        LOGGER.debug(f"Failed to refresh download URL for {record_name}: {e!s}")
+        return False
 
 
 def check_photo_exists(photo, file_size: str, local_path: str) -> bool:
@@ -71,7 +261,8 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
 
     This function implements automatic retry logic for HTTP 410 (Gone) errors,
     which occur when iCloud download URLs expire. When a 410 error is detected,
-    the function clears the cached URLs and retries the download.
+    the function re-fetches the photo's master record from iCloud to obtain
+    fresh download URLs, then retries the download.
 
     Args:
         photo: Photo object from iCloudPy
@@ -121,12 +312,10 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
                         f"Download URL expired (410) for {destination_path}. "
                         f"Refreshing URL and retrying (attempt {attempt}/{max_attempts})...",
                     )
-                    # Clear cached versions to force URL refresh on next download attempt
-                    # This is necessary because iCloudPy caches the download URLs in _versions
-                    # Lock is used to prevent concurrent _versions mutation from parallel threads
-                    with _versions_refresh_lock:
-                        if hasattr(photo, "_versions"):
-                            photo._versions = None  # noqa: SLF001
+                    # Re-fetch the master record from iCloud to obtain fresh download URLs.
+                    # Simply clearing _versions is insufficient because icloudpy re-parses
+                    # the same stale _master_record which still contains the expired URL.
+                    _refresh_photo_download_url(photo)
                     continue
                 else:
                     LOGGER.error(
