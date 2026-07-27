@@ -1,0 +1,6 @@
+INFO     root:sync.py:461 DRY RUN: authentication succeeded — verifying configured services.
+INFO     root:sync.py:472 DRY RUN: Drive destination: /home/runner/work/icloud-docker/icloud-docker/tests/temp/./drive
+INFO     root:sync.py:474 DRY RUN: Drive root contains 0 item(s) — real sync would walk this tree per `drive.filters`.
+INFO     root:sync.py:491 DRY RUN: Photos destination: /home/runner/work/icloud-docker/icloud-docker/tests/temp/photos
+INFO     root:sync.py:502 DRY RUN: Photos libraries: (none reported by iCloud)
+INFO     root:sync.py:586 DRY RUN complete — no files were written. Re-run without --dry-run to sync.
