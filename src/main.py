@@ -74,19 +74,20 @@ if __name__ == "__main__":  # pragma: no cover -- script entry, not test-callabl
             "Only meaningful with --dry-run. Walks N photos per library "
             "and reports per-library counts of would_skip / size_mismatch "
             "/ not_found / error against your on-disk tree. Use this "
-            "BEFORE a real sync to confirm a boredazfcuk -> mandarons (or "
+            "BEFORE a real sync to confirm a boredazfcuk → mandarons (or "
             "any cross-tool) migration will recognise existing files "
             "instead of re-downloading them. Pass 0 to walk every photo "
-            "(slow on large libraries -- recommend 50-200 first)."
+            "(slow on large libraries — recommend 50–200 first)."
         ),
     )
     args = parser.parse_args()
 
     # Validate the --check-files / --dry-run combination before handing off
-    # to run(). Without these guards, `--check-files 10` (no --dry-run)
-    # starts the normal sync loop and silently ignores the flag, and
-    # `--check-files -1` is treated as "walk everything" by the migration
-    # walkers -- both of which trip up users expecting fail-fast feedback.
+    # to run(). Without these guards, `--check-files 10` (no
+    # --dry-run) starts the normal sync loop and silently ignores the
+    # flag, and `--check-files -1` is treated as "walk everything" by
+    # the migration walkers (since `if sample > 0` is the cap-check) —
+    # both of which trip up users expecting fail-fast feedback.
     if args.check_files is not None:
         if not args.dry_run:
             parser.error("--check-files requires --dry-run")

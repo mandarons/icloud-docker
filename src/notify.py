@@ -28,9 +28,7 @@ def _is_throttled(last_send) -> bool:
         return False
     if not isinstance(last_send, datetime.datetime):
         return False
-    return last_send > datetime.datetime.now() - datetime.timedelta(
-        hours=THROTTLE_HOURS,
-    )
+    return last_send > datetime.datetime.now() - datetime.timedelta(hours=THROTTLE_HOURS)
 
 
 def _create_2fa_message(
@@ -151,9 +149,7 @@ def notify_telegram(config, message, last_send=None, dry_run=False):
 
     bot_token, chat_id, is_configured = _get_telegram_config(config)
     if not is_configured:
-        LOGGER.warning(
-            "Not sending 2FA notification because Telegram is not configured.",
-        )
+        LOGGER.warning("Not sending 2FA notification because Telegram is not configured.")
         return None
 
     sent_on = _get_current_timestamp()
@@ -244,9 +240,7 @@ def notify_discord(config, message, last_send=None, dry_run=False):
 
     webhook_url, username, is_configured = _get_discord_config(config)
     if not is_configured:
-        LOGGER.warning(
-            "Not sending 2FA notification because Discord is not configured.",
-        )
+        LOGGER.warning("Not sending 2FA notification because Discord is not configured.")
         return None
 
     sent_on = _get_current_timestamp()
@@ -272,12 +266,7 @@ def _get_pushover_config(config) -> tuple[str | None, str | None, int | None, bo
     return user_key, api_token, priority, is_configured
 
 
-def post_message_to_pushover(
-    api_token: str,
-    user_key: str,
-    priority: int | None,
-    message: str,
-) -> bool:
+def post_message_to_pushover(api_token: str, user_key: str, priority: int | None, message: str) -> bool:
     """
     Post message to Pushover API.
 
@@ -320,9 +309,7 @@ def notify_pushover(config, message, last_send=None, dry_run=False):
 
     user_key, api_token, priority, is_configured = _get_pushover_config(config)
     if not is_configured:
-        LOGGER.warning(
-            "Not sending 2FA notification because Pushover is not configured.",
-        )
+        LOGGER.warning("Not sending 2FA notification because Pushover is not configured.")
         return None
 
     sent_on = _get_current_timestamp()
@@ -520,16 +507,7 @@ def send_trust_expiring(
 
 def _get_smtp_config(
     config,
-) -> tuple[
-    str | None,
-    str | None,
-    str | None,
-    int | None,
-    bool,
-    str | None,
-    str | None,
-    bool,
-]:
+) -> tuple[str | None, str | None, str | None, int | None, bool, str | None, str | None, bool]:
     """
     Extract SMTP configuration from config.
 
@@ -570,12 +548,7 @@ def _create_smtp_connection(host: str, port: int, no_tls: bool) -> smtplib.SMTP:
     return smtp
 
 
-def _authenticate_smtp(
-    smtp: smtplib.SMTP,
-    email: str,
-    username: str | None,
-    password: str,
-) -> None:
+def _authenticate_smtp(smtp: smtplib.SMTP, email: str, username: str | None, password: str) -> None:
     """
     Authenticate SMTP connection.
 
@@ -591,12 +564,7 @@ def _authenticate_smtp(
         smtp.login(email, password)
 
 
-def _send_email_message(
-    smtp: smtplib.SMTP,
-    email: str,
-    to_email: str,
-    message_obj: Message,
-) -> None:
+def _send_email_message(smtp: smtplib.SMTP, email: str, to_email: str, message_obj: Message) -> None:
     """
     Send email message through SMTP connection.
 
@@ -675,13 +643,9 @@ def _format_sync_summary_message(summary) -> tuple[str, str]:
         message_lines.append("📁 Drive:")
         if drive.files_downloaded > 0:
             size_str = format_bytes(drive.bytes_downloaded)
-            message_lines.append(
-                f"  • Downloaded: {drive.files_downloaded} files ({size_str})",
-            )
+            message_lines.append(f"  • Downloaded: {drive.files_downloaded} files ({size_str})")
         if drive.files_skipped > 0:
-            message_lines.append(
-                f"  • Skipped: {drive.files_skipped} files (up-to-date)",
-            )
+            message_lines.append(f"  • Skipped: {drive.files_skipped} files (up-to-date)")
         if drive.files_removed > 0:
             message_lines.append(f"  • Removed: {drive.files_removed} obsolete files")
         if drive.duration_seconds > 0:
@@ -697,9 +661,7 @@ def _format_sync_summary_message(summary) -> tuple[str, str]:
         message_lines.append("📷 Photos:")
         if photos.photos_downloaded > 0:
             size_str = format_bytes(photos.bytes_downloaded)
-            message_lines.append(
-                f"  • Downloaded: {photos.photos_downloaded} photos ({size_str})",
-            )
+            message_lines.append(f"  • Downloaded: {photos.photos_downloaded} photos ({size_str})")
         if photos.photos_hardlinked > 0:
             message_lines.append(f"  • Hard-linked: {photos.photos_hardlinked} photos")
         if photos.bytes_saved_by_hardlinks > 0:
@@ -835,7 +797,7 @@ def _send_telegram_no_throttle(config, message: str, dry_run: bool) -> bool:
     if dry_run:
         return True
 
-    return post_message_to_telegram(bot_token, chat_id, message)  # type: ignore[arg-type]
+    return post_message_to_telegram(bot_token, chat_id, message)
 
 
 def _send_discord_no_throttle(config, message: str, dry_run: bool) -> bool:
@@ -856,7 +818,7 @@ def _send_discord_no_throttle(config, message: str, dry_run: bool) -> bool:
     if dry_run:
         return True
 
-    return post_message_to_discord(webhook_url, username, message)  # type: ignore[arg-type]
+    return post_message_to_discord(webhook_url, username, message)
 
 
 def _send_pushover_no_throttle(config, message: str, dry_run: bool) -> bool:
@@ -877,7 +839,7 @@ def _send_pushover_no_throttle(config, message: str, dry_run: bool) -> bool:
     if dry_run:
         return True
 
-    return post_message_to_pushover(api_token, user_key, priority, message)  # type: ignore[arg-type]
+    return post_message_to_pushover(api_token, user_key, priority, message)
 
 
 def _send_email_no_throttle(config, message: str, subject: str, dry_run: bool) -> bool:
