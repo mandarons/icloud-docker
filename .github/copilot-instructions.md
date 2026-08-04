@@ -43,6 +43,7 @@ This is a containerized iCloud sync client that downloads files/photos from iClo
 - **`photo_filter_utils.py`**: Photo filtering by extensions and album preferences
 - **`photo_path_utils.py`**: Path normalization and folder format handling
 - **`photo_file_utils.py`**: File operations and metadata handling
+  - `_refresh_photo_download_url(photo)`: Re-fetches master record from iCloud on HTTP 410 Gone errors, obtaining fresh download URLs before retrying. Called during 410 retry path in `download_photo_from_server()`.
 - **`hardlink_registry.py`**: `HardlinkRegistry` class for deduplication across albums
 - **File sizes**: `original`, `original_alt` (RAW fallback), `medium`, `thumb`
 - **Hardlink deduplication**: `use_hardlinks` mode with registry tracking across albums
