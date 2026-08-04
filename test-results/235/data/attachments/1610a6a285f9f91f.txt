@@ -1,0 +1,7 @@
+[38;21m2026-08-04 05:02:44,803 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-04 05:02:44,803 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_awt2g3ys/.data[0m
+[38;5;196m2026-08-04 05:02:44,803 :: ERROR :: root :: usage.py :: 370 :: Invalid heartbeat timestamp format: time data 'invalid-timestamp' does not match format '%Y-%m-%d %H:%M:%S.%f'[0m
+[38;21m2026-08-04 05:02:44,803 :: DEBUG :: root :: usage.py :: 374 :: Sending first heartbeat[0m
+[38;21m2026-08-04 05:02:44,804 :: DEBUG :: root :: usage.py :: 377 :: First heartbeat sent successfully[0m
+[38;21m2026-08-04 05:02:44,804 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-04 05:02:44,804 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_awt2g3ys/.data[0m

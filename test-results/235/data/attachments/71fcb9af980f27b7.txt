@@ -1,0 +1,6 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_awt2g3ys/.data
+DEBUG    root:usage.py:220 Posting new installation to: http://test.com
+DEBUG    root:usage.py:226 Successfully registered new installation: 330d73a0-51d7-40a2-8c73-ce92f0cea9b1
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:45 Initialized usage cache at: /tmp/icloud_test_config_awt2g3ys/.data

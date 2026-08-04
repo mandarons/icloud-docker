@@ -1,0 +1,1 @@
+[38;5;196m2026-08-04 05:02:35,237 :: ERROR :: root :: sync.py :: 225 :: Drive mount marker missing: /tmp/tmphdzpger3/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmphdzpger3/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m
