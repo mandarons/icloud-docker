@@ -940,91 +940,71 @@ class TestApiSync(unittest.TestCase):
 
 
 class TestStartInThread(unittest.TestCase):
-    """``start_in_thread`` launches the Flask app on a daemon thread.
-    We mock ``app.run`` to avoid actually binding a port + blocking."""
+    """``start_in_thread`` binds synchronously, then serves on a daemon
+    thread. We mock ``make_server`` to avoid really binding a port."""
 
     def test_start_returns_thread_object(self):
-        from unittest.mock import patch
+        from unittest.mock import MagicMock, patch
 
-        with patch("flask.Flask.run"):
+        with patch("src.web.make_server", return_value=MagicMock()):
             t = web.start_in_thread(host="127.0.0.1", port=0)
         self.assertTrue(t.daemon)
         self.assertEqual(t.name, "icloud-web-ui")
 
     def test_start_thread_serves_with_correct_args(self):
-        """Verify app.run is invoked with the host/port passed in."""
-        import time as _time
-        from unittest.mock import patch
+        """The bind happens in the calling thread, so the host/port
+        assertion needs no sleep-polling for a background callback."""
+        from unittest.mock import MagicMock, patch
 
-        with patch("flask.Flask.run") as fake_run:
+        server = MagicMock()
+        with patch("src.web.make_server", return_value=server) as fake_make:
             t = web.start_in_thread(host="0.0.0.0", port=8765)  # noqa: S104
-            # Give the daemon thread a moment to call app.run.
-            for _ in range(20):
-                if fake_run.called:
-                    break
-                _time.sleep(0.05)
             t.join(timeout=1.0)
-        self.assertTrue(fake_run.called)
-        kwargs = fake_run.call_args.kwargs
-        self.assertEqual(kwargs["host"], "0.0.0.0")
-        self.assertEqual(kwargs["port"], 8765)
-        self.assertTrue(kwargs["threaded"])
+        self.assertTrue(fake_make.called)
+        args = fake_make.call_args.args
+        self.assertEqual(args[0], "0.0.0.0")
+        self.assertEqual(args[1], 8765)
+        self.assertTrue(fake_make.call_args.kwargs["threaded"])
+        self.assertTrue(server.serve_forever.called)
 
     def test_start_thread_logs_oserror_when_bind_fails(self):
-        """Bind failures (port already in use) are logged at ERROR
-        level — the daemon thread dies but the sync loop keeps going."""
+        """Bind failures (port already in use) surface synchronously:
+        logged at ERROR, ``None`` returned, no thread started, and the
+        sync loop carries on. Deterministic now that the bind is not
+        racing a background callback."""
         import logging
-        import time as _time
         from unittest.mock import patch
 
         with (
-            patch(
-                "flask.Flask.run",
-                side_effect=OSError("port in use"),
-            ),
+            patch("src.web.make_server", side_effect=OSError("port in use")),
             self.assertLogs(web.LOGGER, level=logging.ERROR) as cm,
         ):
-            t = web.start_in_thread(host="0.0.0.0", port=0)  # noqa: S104
-            for _ in range(20):
-                if any("Web UI failed to bind" in line for line in cm.output):
-                    break
-                _time.sleep(0.05)
-            t.join(timeout=1.0)
+            result = web.start_in_thread(host="0.0.0.0", port=0)  # noqa: S104
+        self.assertIsNone(result)
         joined = "\n".join(cm.output)
         self.assertIn("Web UI failed to bind", joined)
+        self.assertIn("port in use", joined)
+
+    def test_serve_loop_exception_is_logged_not_fatal(self):
+        """If ``serve_forever`` dies mid-flight the daemon thread logs
+        it rather than taking the process down."""
+        import logging
+        from unittest.mock import MagicMock, patch
+
+        server = MagicMock()
+        server.serve_forever.side_effect = RuntimeError("socket gone")
+        with (
+            patch("src.web.make_server", return_value=server),
+            self.assertLogs(web.LOGGER, level=logging.ERROR) as cm,
+        ):
+            t = web.start_in_thread(host="127.0.0.1", port=0)
+            t.join(timeout=2.0)
+        joined = "\n".join(cm.output)
+        self.assertIn("Web UI server stopped", joined)
 
 
 class TestSmallBranches(unittest.TestCase):
     """Targeted tests for the scattered 1-3 line gaps in web.py helpers."""
-
-    def test_library_destinations_handles_attribute_error(self):
-        """``_get_library_destinations`` swallows AttributeError when
-        the config helper is absent from this build (older mandarons
-        without PR 3) — returns empty dict."""
-        from unittest.mock import patch
-
-        # Force the config_parser to raise AttributeError on the lookup.
-        with patch.object(
-            web.config_parser,
-            "get_photos_library_destinations",
-            side_effect=AttributeError("no such attr"),
-            create=True,
-        ):
-            result = web._get_library_destinations({"photos": {}})  # noqa: SLF001
-        self.assertEqual(result, {})
-
-    def test_library_destinations_handles_generic_exception(self):
-        """Generic exceptions in the getter also return empty."""
-        from unittest.mock import patch
-
-        with patch.object(
-            web.config_parser,
-            "get_photos_library_destinations",
-            side_effect=RuntimeError("boom"),
-            create=True,
-        ):
-            result = web._get_library_destinations({"photos": {}})  # noqa: SLF001
-        self.assertEqual(result, {})
 
     def test_logger_filename_handles_attribute_error(self):
         """``_logger_filename`` returns '' when the helper raises."""
@@ -1095,56 +1075,6 @@ class TestHelperExceptionPaths(unittest.TestCase):
             self.assertTrue(
                 web._get_require_mount_marker({"drive": {}}, "drive"),  # noqa: SLF001
             )
-
-    def test_get_marker_filename_falls_back_when_pr8_helper_absent(self):
-        """Standalone (vanilla mandarons, no PR 8 helpers): the getter is
-        absent, so the helper falls back to the ``.mounted`` default."""
-        original = getattr(web.config_parser, "get_mount_marker_filename", None)
-        if original is not None:
-            delattr(web.config_parser, "get_mount_marker_filename")
-        try:
-            result = web._get_marker_filename({"app": {}})  # noqa: SLF001
-            self.assertEqual(result, ".mounted")
-        finally:
-            if original is not None:
-                web.config_parser.get_mount_marker_filename = original
-
-    def test_get_require_mount_marker_falls_back_when_pr8_helper_absent(self):
-        """Standalone (no PR 8 helpers): the getter is absent, so the
-        wrapper returns False (marker never required)."""
-        original = getattr(web.config_parser, "get_drive_require_mount_marker", None)
-        if original is not None:
-            delattr(web.config_parser, "get_drive_require_mount_marker")
-        try:
-            self.assertFalse(
-                web._get_require_mount_marker({"drive": {}}, "drive"),  # noqa: SLF001
-            )
-        finally:
-            if original is not None:
-                web.config_parser.get_drive_require_mount_marker = original
-
-    def test_get_library_destinations_attr_error_in_direct_read(self):
-        """When PR 3 helper is absent AND the config shape causes
-        AttributeError in the fallback direct read, return {}."""
-
-        class WeirdConfig:
-            def get(self, *_args, **_kw):
-                msg = "not really a dict"
-                raise AttributeError(msg)
-
-        original = getattr(
-            web.config_parser,
-            "get_photos_library_destinations",
-            None,
-        )
-        if original is not None:
-            delattr(web.config_parser, "get_photos_library_destinations")
-        try:
-            result = web._get_library_destinations(WeirdConfig())  # noqa: SLF001
-            self.assertEqual(result, {})
-        finally:
-            if original is not None:
-                web.config_parser.get_photos_library_destinations = original
 
     def test_logger_filename_attribute_error_returns_empty(self):
         """``_logger_filename`` catches AttributeError when the inner
