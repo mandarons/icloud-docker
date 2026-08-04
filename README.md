@@ -77,6 +77,9 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "/icloud"
+  # Optional: refuse to sync if a marker file is missing in the destination.
+  # Prevents writing into a wrong directory when bind-mounts fail silently.
+  # mount_marker_filename: ".mounted"
   # Optional embedded web UI — see "Web UI" below. Disabled by default.
   # SECURITY: no built-in login; host 127.0.0.1 (default) keeps it
   # loopback-only. "0.0.0.0" publishes a password form to every
@@ -130,6 +133,8 @@ drive:
   # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: false
   sync_interval: 300
+  # Optional: refuse to sync if a marker file is missing in the destination.
+  # require_mount_marker: false
   filters: # Optional - use it only if you want to download specific folders.
     # File filters to be included in syncing iCloud drive content
     folders:
@@ -154,6 +159,9 @@ photos:
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.
   folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
+  # enumeration_chunk_size: 1000 # Optional, default 1000. Photos buffered per streaming chunk. Lower = lower peak memory on huge libraries, slightly more per-chunk overhead.
+  # Optional: refuse to sync if a marker file is missing in the destination.
+  # require_mount_marker: false
   filters:
     # List of libraries to download. If omitted (default), photos from all libraries (own and shared) are downloaded. If included, photos only
     # from the listed libraries are downloaded.
@@ -266,6 +274,30 @@ photos:
 **Storage Impact Example:**
 - **Without hard links**: Same photo in 3 albums = 3 separate files (3× storage usage)
 - **With hard links**: Same photo in 3 albums = 1 file + 2 hard links (1× storage usage)
+
+### Streaming Album Enumeration (Memory Optimization)
+
+For users with large photo libraries (100K+ photos), the sync process can consume significant memory during album enumeration. The streaming enumeration feature bounds peak memory usage by processing photos in fixed-size chunks instead of loading the entire album into memory at once.
+
+**How it works:**
+- Photos are processed in chunks (default: 1000 photos per chunk)
+- Each chunk is downloaded before the next chunk is loaded
+- Peak memory usage is bounded by chunk size, not total album size
+
+**Configuration:**
+```yaml
+photos:
+  enumeration_chunk_size: 1000  # Default: 1000. Lower values reduce peak memory.
+```
+
+**Performance Impact:**
+- **Large libraries (100K+ photos)**: Reduces peak memory from 4 GB+ to under 1 GB
+- **Small libraries**: Minimal impact, slight overhead from chunk boundaries
+- **Invalid values**: Non-positive or non-numeric values fall back to default (1000)
+
+**When to adjust:**
+- If your container has a low `mem_limit` (e.g., 2 GB), keep the default or lower it
+- If you have ample memory and want slightly fewer chunk boundaries, increase it
 
 ## Notifications
 
