@@ -1315,21 +1315,31 @@ class TestWebSignalsSyncIntegration(unittest.TestCase):
         mock_read_config.return_value = cfg
         os.environ.pop(ENV_ICLOUD_PASSWORD_KEY, None)
 
+        # Force ``drive_stats`` non-None so the ``record_sync_completion``
+        # branch is guaranteed to execute -- otherwise the mock chain can
+        # leave both stats None, the call never happens, and the assertion
+        # below would pass without ever exercising the path under test.
         with (
+            patch(
+                "src.sync._perform_drive_sync",
+                return_value=DriveStats(files_downloaded=1),
+            ) as mock_drive,
             patch.object(
                 web_signals,
                 "record_sync_completion",
                 side_effect=RuntimeError("disk full"),
-            ),
+            ) as mock_record,
             self.assertLogs(sync.LOGGER, level=logging.DEBUG) as cm,
         ):
             sync.sync()
 
+        # The branch really ran ...
+        self.assertTrue(mock_drive.called)
+        self.assertTrue(mock_record.called)
+        # ... the raise was swallowed to DEBUG ...
         joined = "\n".join(cm.output)
-        # The path may or may not have fired depending on the mock chain;
-        # the contract is just that sync() didn't raise.
-        if "record_sync_completion" in joined:
-            self.assertIn("record_sync_completion raised", joined)
+        self.assertIn("record_sync_completion raised", joined)
+        self.assertIn("disk full", joined)
 
 
 class TestInterruptibleSleep(unittest.TestCase):

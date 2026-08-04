@@ -55,6 +55,12 @@ def _read_trust_cookie_expiry(api) -> datetime.datetime | None:
     return None
 
 
+# Set once the missing-public_url guidance has been logged (see
+# ``_resolve_dashboard_url``) so the advice appears once per process,
+# not once per sync-loop iteration.
+_WEB_UI_PUBLIC_URL_WARNED = False
+
+
 def _resolve_dashboard_url(config) -> str | None:
     """Compute the web UI URL to embed in notifications, or None.
 
@@ -71,13 +77,20 @@ def _resolve_dashboard_url(config) -> str | None:
         return public_url
     host = config_parser.get_web_ui_host(config=config)
     port = config_parser.get_web_ui_port(config=config)
-    LOGGER.warning(
-        "app.web_ui.public_url not set -- notification URLs will use "
-        "http://%s:%s/, which won't work from outside the container. "
-        "Set app.web_ui.public_url to your reverse-proxy URL.",
-        host,
-        port,
-    )
+    # Latch: this resolves on every sync-loop iteration, and while the
+    # container sits 2FA-pending (default 600s retry) that is ~144x/day
+    # of identical guidance in the exact scenario the user is watching
+    # the logs. The advice only needs saying once per process.
+    global _WEB_UI_PUBLIC_URL_WARNED
+    if not _WEB_UI_PUBLIC_URL_WARNED:
+        LOGGER.warning(
+            "app.web_ui.public_url not set -- notification URLs will use "
+            "http://%s:%s/, which won't work from outside the container. "
+            "Set app.web_ui.public_url to your reverse-proxy URL.",
+            host,
+            port,
+        )
+        _WEB_UI_PUBLIC_URL_WARNED = True
     return f"http://{host}:{port}"
 
 

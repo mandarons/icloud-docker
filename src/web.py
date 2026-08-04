@@ -25,6 +25,7 @@ import time
 from typing import Any
 
 from flask import Flask, jsonify, redirect, render_template, request, url_for
+from werkzeug.serving import make_server
 
 from src import (
     DEFAULT_CONFIG_FILE_PATH,
@@ -106,6 +107,20 @@ def _require_csrf() -> tuple[Any, int] | None:
         rejection = _require_csrf()
         if rejection is not None:
             return rejection
+
+    **Calling from a script / monitor.** Every state-changing endpoint
+    needs BOTH the CSRF cookie and a matching token, so a bare
+    ``curl -X POST /api/sync -d service=drive`` gets a 403. The cookie
+    is only set by a prior page load, so fetch it first and echo it
+    back in the ``X-CSRF-Token`` header::
+
+        curl -c jar -s http://127.0.0.1:8080/ >/dev/null
+        TOKEN=$(awk '/csrf_token/ {print $7}' jar)
+        curl -b jar -H "X-CSRF-Token: $TOKEN" \
+             -X POST http://127.0.0.1:8080/api/sync -d service=drive
+
+    The 403 bodies name which leg failed ("CSRF cookie missing or
+    stale" vs "CSRF token mismatch") so the fix is obvious.
     """
     cookie = request.cookies.get(_CSRF_COOKIE_NAME)
     submitted = request.form.get("csrf_token") or request.headers.get("X-CSRF-Token")
@@ -151,48 +166,34 @@ def _load_current_config() -> dict | None:
 
 
 def _get_marker_filename(config: dict) -> str:
-    """Marker filename from ``app.mount_marker_filename`` if PR 8 helpers
-    are available, falling back to ``.mounted`` otherwise.
-
-    Keeps PR 9 standalone — works on both vanilla mandarons and the
-    combined fork."""
-    getter = getattr(config_parser, "get_mount_marker_filename", None)
-    if getter is None:
-        return ".mounted"
-    return getter(config=config)
+    """Marker filename from ``app.mount_marker_filename`` (default ``.mounted``)."""
+    return config_parser.get_mount_marker_filename(config=config)
 
 
 def _get_require_mount_marker(config: dict, service: str) -> bool:
-    """``{drive,photos}.require_mount_marker`` if PR 8 helpers are
-    available, falling back to False otherwise."""
-    getter = getattr(config_parser, f"get_{service}_require_mount_marker", None)
-    if getter is None:
-        return False
+    """``{drive,photos}.require_mount_marker`` for the given service."""
+    getter = getattr(config_parser, f"get_{service}_require_mount_marker")
     return bool(getter(config=config))
 
 
 def _get_library_destinations(config: dict) -> dict[str, str]:
-    """``photos.library_destinations`` mapping (PR 3 helper) — best-effort
-    standalone-safe getter so PR 9 works on vanilla mandarons too."""
-    getter = getattr(config_parser, "get_photos_library_destinations", None)
-    if getter is None:
-        # Direct read fallback so the dashboard still surfaces the mapping
-        # even without PR 3's helper merged.
-        try:
-            raw = config.get("photos", {}).get("library_destinations", {}) or {}
-            return {str(k): str(v) for k, v in raw.items()}
-        except AttributeError:
-            return {}
-    try:
-        return getter(config=config) or {}
-    except Exception:
-        return {}
+    """``photos.library_destinations`` mapping (empty dict when unset)."""
+    return config_parser.get_photos_library_destinations(config=config) or {}
 
 
 def _build_service(config: dict, service: str, marker_filename: str) -> dict[str, Any]:
     """Compose a single service entry (Photos or Drive) for /api/status."""
     if service == "photos":
-        destination = config_parser.prepare_photos_destination(config=config)
+        # Read-only on purpose: ``prepare_*_destination`` calls
+        # ``join_and_ensure_path`` (mkdir), so a plain ``GET /api/status``
+        # would write to disk -- and 500 the whole dashboard on a
+        # read-only destination mount. Composing the non-mutating getters
+        # lets a read-only or absent destination degrade to
+        # ``destination_exists: false`` instead.
+        destination = os.path.join(
+            config_parser.get_root_destination_path(config=config),
+            config_parser.get_photos_destination_path(config=config),
+        )
         interval = config_parser.get_photos_sync_interval(
             config=config,
             log_messages=False,
@@ -200,7 +201,10 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
         name = "Photos"
         library_destinations = _get_library_destinations(config=config)
     else:
-        destination = config_parser.prepare_drive_destination(config=config)
+        destination = os.path.join(
+            config_parser.get_root_destination_path(config=config),
+            config_parser.get_drive_destination_path(config=config),
+        )
         interval = config_parser.get_drive_sync_interval(
             config=config,
             log_messages=False,
@@ -220,7 +224,11 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
             "files_downloaded": state.get("files_downloaded"),
             "files_skipped": state.get("files_skipped"),
             "files_removed": state.get("files_removed"),
-            "files_on_disk": (
+            # Named for what it is: the last COMPLETED cycle's
+            # downloaded+skipped total. The state record overwrites per
+            # cycle rather than accumulating, so this is not a running
+            # count of files on disk.
+            "last_cycle_total": (
                 (state.get("files_downloaded") or 0) + (state.get("files_skipped") or 0)
                 if (
                     state.get("files_downloaded") is not None
@@ -387,9 +395,11 @@ def create_app(testing: bool = False) -> Flask:
     """
     from werkzeug.middleware.proxy_fix import ProxyFix
 
+    # No ``static_folder``: templates are single-file with inline CSS and
+    # nothing ships under src/static, so wiring it would only add a 404
+    # route for /static/*.
     template_dir = os.path.join(os.path.dirname(__file__), "templates")
-    static_dir = os.path.join(os.path.dirname(__file__), "static")
-    app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
+    app = Flask(__name__, template_folder=template_dir)
     app.config["TESTING"] = testing
 
     # Trust X-Forwarded-* from a single reverse-proxy hop (Cloudflare Tunnel,
@@ -875,33 +885,34 @@ def start_in_thread(
     """Launch the Flask app on a daemon thread.
 
     The main sync loop owns the process; the web thread dies when the
-    parent process exits.
+    parent process exits. Returns the thread, or ``None`` if the port
+    could not be bound (the sync loop continues regardless).
+
+    Uses ``werkzeug.serving.make_server`` rather than ``Flask.run()``:
+    binding happens synchronously here so a port conflict is reported
+    as an error instead of a false "listening" line, and it avoids the
+    dev-server banner. Deliberately dependency-free (no gunicorn) --
+    this is a single-user, behind-a-proxy operator console (default
+    host 127.0.0.1), not a public-facing API.
     """
     app = create_app()
 
-    def _serve():
-        # NOTE on the server: ``Flask.app.run()`` uses Werkzeug's dev
-        # server. Choice is intentional -- this UI is a single-user,
-        # behind-a-proxy operator console (default host 127.0.0.1, no
-        # CSRF, no authn of its own), not a public-facing API. Zero
-        # extra runtime deps (no gunicorn) keeps the docker image
-        # small. ``threaded=True`` lets Cloudflare's edge health-checks
-        # overlap with the user's tab. Werkzeug will emit its
-        # "WARNING: This is a development server" banner at startup --
-        # that's expected, leaving it visible so anyone repurposing
-        # this for unattended public exposure sees it.
-        try:
-            app.run(
-                host=host,
-                port=port,
-                debug=False,
-                use_reloader=False,
-                threaded=True,
-            )
-        except OSError as e:
-            LOGGER.error(f"Web UI failed to bind {host}:{port} — {e!s}")
+    # Bind in the main thread so the "listening" log is truthful: a port
+    # conflict raises here and is reported as a failure, instead of the
+    # old optimistic log racing a background bind error.
+    try:
+        server = make_server(host, port, app, threaded=True)
+    except OSError as e:
+        LOGGER.error(f"Web UI failed to bind {host}:{port} — {e!s}")
+        return None
 
-    thread = threading.Thread(target=_serve, name="icloud-web-ui", daemon=True)
+    def _serve_bound():
+        try:
+            server.serve_forever()
+        except Exception as e:  # noqa: BLE001 -- daemon thread, never crash the sync loop
+            LOGGER.error(f"Web UI server stopped: {e!s}")
+
+    thread = threading.Thread(target=_serve_bound, name="icloud-web-ui", daemon=True)
     thread.start()
-    LOGGER.info(f"Web UI listening on http://{host}:{port}/")
+    LOGGER.info(f"Web UI listening on http://{host}:{port}/ (host={host}, port={port})")
     return thread

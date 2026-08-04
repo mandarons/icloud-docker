@@ -127,10 +127,10 @@
         <div class="stat-label">Skipped</div>
       </div>
       {% endif %}
-      {% if service.stats.files_on_disk is not none %}
+      {% if service.stats.last_cycle_total is not none %}
       <div class="stat">
-        <div class="stat-value">{{ "{:,}".format(service.stats.files_on_disk) }}</div>
-        <div class="stat-label">On disk</div>
+        <div class="stat-value">{{ "{:,}".format(service.stats.last_cycle_total) }}</div>
+        <div class="stat-label">Last cycle</div>
       </div>
       {% endif %}
     </div>

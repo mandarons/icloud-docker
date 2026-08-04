@@ -11,6 +11,23 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "/icloud"
+  # Optional embedded web UI — dashboard + on-device 2FA re-auth flow.
+  # Disabled by default. SECURITY: the UI has no login of its own; it
+  # accepts your Apple ID password on POST /auth/password. The default
+  # host (127.0.0.1) keeps it reachable only from inside the container /
+  # via `docker exec`. Setting host: "0.0.0.0" publishes a
+  # credential-accepting form to every interface in plaintext HTTP —
+  # only do that behind a trusted reverse proxy (Cloudflare Access,
+  # Tailscale, Authelia) that supplies authentication and TLS.
+  # web_ui:
+  #   enabled: false            # default false
+  #   host: "127.0.0.1"         # default 127.0.0.1 (loopback only). "0.0.0.0" = all interfaces — proxy required
+  #   port: 8080                # default 8080
+  #   public_url: ""            # default unset. Your externally reachable URL (e.g. https://icloud.example.com)
+                                # — embedded in notifications so the re-auth link works from your phone
+  # Warn this many days before Apple's ~90-day trust cookie expires, so a
+  # re-auth can be scheduled instead of discovered mid-sync. Default 7.
+  # trust_expiry_warn_days: 7
   # Maximum number of parallel download threads for both drive and photos
   # auto: automatically set based on CPU cores (default, max 8)
   # integer: specific number of threads (max 16)

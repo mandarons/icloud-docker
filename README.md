@@ -77,6 +77,17 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "/icloud"
+  # Optional embedded web UI — see "Web UI" below. Disabled by default.
+  # SECURITY: no built-in login; host 127.0.0.1 (default) keeps it
+  # loopback-only. "0.0.0.0" publishes a password form to every
+  # interface — put a trusted reverse proxy in front if you do that.
+  # web_ui:
+  #   enabled: false
+  #   host: "127.0.0.1"
+  #   port: 8080
+  #   public_url: ""     # externally reachable URL, embedded in notifications
+  # Warn this many days before Apple's ~90-day trust cookie expires (default 7)
+  # trust_expiry_warn_days: 7
   discord:
   # webhook_url: <your server webhook URL here>
   # username: icloud-docker #or any other name you prefer
@@ -169,6 +180,46 @@ photos:
 ```
 
 **_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
+
+## Web UI
+
+An optional embedded dashboard that shows sync status and lets you complete
+2FA re-authentication from a browser — useful on a headless box where
+`docker exec` isn't convenient. Disabled by default; enable with:
+
+```yaml
+app:
+  web_ui:
+    enabled: true
+    host: "127.0.0.1"   # default — loopback only
+    port: 8080
+    public_url: "https://icloud.example.com"   # used in notification links
+```
+
+| key | default | meaning |
+|---|---|---|
+| `app.web_ui.enabled` | `false` | Master switch. When false nothing is served and no thread is started. |
+| `app.web_ui.host` | `127.0.0.1` | Bind address. Loopback-only by default. |
+| `app.web_ui.port` | `8080` | TCP port. |
+| `app.web_ui.public_url` | *(unset)* | Externally reachable URL embedded in notifications, so the re-auth link works from your phone. Falls back to `http://host:port` with a one-time warning. |
+| `app.trust_expiry_warn_days` | `7` | Warn this many days before Apple's ~90-day trust cookie expires, so re-auth can be scheduled rather than discovered mid-sync. |
+
+### Security model — read before exposing it
+
+The UI **has no authentication of its own** and accepts your Apple ID
+password at `POST /auth/password`. The trust boundary is the network, so:
+
+- **Default (`host: 127.0.0.1`)** — reachable only from inside the
+  container. Safe.
+- **`host: "0.0.0.0"`** — publishes a credential-accepting form over
+  plaintext HTTP to every interface. Only do this behind a reverse proxy
+  that supplies authentication and TLS (Cloudflare Access, Tailscale,
+  Authelia, Traefik + forward-auth). The app trusts a single
+  `X-Forwarded-*` hop for correct scheme/URL generation.
+
+State-changing endpoints require a CSRF cookie plus a matching token, so
+scripted callers must load a page first to obtain the cookie and echo the
+token back in an `X-CSRF-Token` header.
 
 ## Performance Optimization
 
