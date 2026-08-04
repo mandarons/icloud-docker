@@ -16,6 +16,10 @@ app:
   # integer: specific number of threads (max 16)
   # max_threads: auto
   # max_threads: 4
+  # Optional: filename for the mount marker file (default: ".mounted")
+  # When require_mount_marker is enabled in drive or photos, sync refuses
+  # to proceed until this file exists in the destination directory.
+  # mount_marker_filename: ".mounted"
   notifications:
     # Sync summary notifications - sent after each sync cycle with statistics
     sync_summary:
@@ -60,6 +64,9 @@ drive:
   # HTTP read timeout in seconds for iCloud API requests (default: 30)
   # Prevents the sync process from hanging indefinitely on stalled connections
   # request_timeout: 30
+  # Optional: refuse to sync if a marker file is missing in the destination.
+  # Prevents writing into a wrong directory when bind-mounts fail silently.
+  # require_mount_marker: false
   filters:
     # File filters to be included in syncing iCloud drive content
     folders:
@@ -87,6 +94,8 @@ photos:
   #   Example (keeps plain Apple/boredazfcuk names for originals -> no re-download): "${photo.filename}${photo.variant_suffix}.${photo.ext}"
   # variant_separator: "_" # optional, separator before the variant in ${photo.variant_suffix} (default "_")
   # enumeration_chunk_size: 1000 # optional, default 1000. Photos buffered per streaming chunk when downloading. Lower = lower peak memory on huge libraries, slightly more per-chunk overhead. Invalid/<=0 falls back to default.
+  # Optional: refuse to sync if a marker file is missing in the destination.
+  # require_mount_marker: false
   filters:
     # List of libraries to download. If omitted (default), photos from all libraries (own and shared) are downloaded. If included, photos only
     # from the listed libraries are downloaded.
