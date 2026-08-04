@@ -92,6 +92,10 @@ class SyncState:
         self.enable_sync_drive = True
         self.enable_sync_photos = True
         self.last_send = None
+        # Whether a 2FA push has already been requested for the current
+        # re-auth episode. Reset to False on each successful authentication so
+        # a fresh episode triggers exactly one push (see _handle_2fa_required).
+        self.two_fa_triggered = False
 
 
 def _load_configuration():
@@ -649,7 +653,7 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
     alive(config=config, data=usage_data)
 
 
-def _handle_2fa_required(config, username: str, sync_state: SyncState):
+def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     Handle 2FA authentication requirement.
 
@@ -657,6 +661,8 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         config: Configuration dictionary
         username: iCloud username
         sync_state: Current sync state
+        api: Live ``ICloudPyService`` still in its 2FA-required state, used to
+            request a push notification to the user's trusted devices.
 
     Returns:
         bool: True if should continue (retry), False if should exit
@@ -667,6 +673,20 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
         return False
+
+    # Ask Apple to actually push a 2FA code to the trusted devices. Without this
+    # call the loop notified the user that re-auth was needed but never requested
+    # a code, so nothing was ever sent. Fire once per episode (two_fa_triggered is
+    # reset on successful auth) to avoid re-pushing every retry cycle -- the
+    # default interval is 600s -- and tripping Apple's rate limits. Best-effort:
+    # a failure here must not stop the retry loop.
+    if not sync_state.two_fa_triggered:
+        try:
+            api.trigger_2fa_push_notification()
+            LOGGER.info("Requested a 2FA push notification to your trusted devices.")
+        except Exception as e:  # noqa: BLE001
+            LOGGER.warning(f"Failed to request 2FA push notification: {e!s}")
+        sync_state.two_fa_triggered = True
 
     _log_retry_time(sleep_for)
     server_region = config_parser.get_region(config=config)
@@ -889,6 +909,10 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     return
 
                 if not api.requires_2sa:
+                    # Authenticated: clear the 2FA trigger latch so a future
+                    # re-auth episode requests a fresh push exactly once.
+                    sync_state.two_fa_triggered = False
+
                     # Create summary for this sync cycle
                     summary = SyncSummary()
 
@@ -949,7 +973,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                             "Nothing to sync. Please add drive: and/or photos: section in config.yaml file.",
                         )
                 else:
-                    if not _handle_2fa_required(config, username, sync_state):
+                    if not _handle_2fa_required(config, username, sync_state, api):
                         break
                     continue
 
