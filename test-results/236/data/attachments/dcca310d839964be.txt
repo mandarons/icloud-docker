@@ -1,0 +1,1 @@
+[38;5;196m2026-08-05 00:26:08,763 :: ERROR :: root :: sync.py :: 341 :: Photos mount marker missing: /tmp/tmp4484_xlx/shared/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmp4484_xlx/shared/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

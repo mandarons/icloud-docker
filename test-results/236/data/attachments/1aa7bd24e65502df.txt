@@ -1,0 +1,6 @@
+[38;21m2026-08-05 00:26:23,370 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-05 00:26:23,370 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ogze19a/.data[0m
+[38;5;226m2026-08-05 00:26:23,372 :: WARNING :: root :: usage.py :: 185 :: Request failed with status 429, attempt 1/3[0m
+[38;21m2026-08-05 00:26:23,372 :: DEBUG :: root :: usage.py :: 200 :: Waiting 1.0s before retry...[0m
+[38;21m2026-08-05 00:26:23,372 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-05 00:26:23,372 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ogze19a/.data[0m

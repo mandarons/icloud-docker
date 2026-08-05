@@ -1,0 +1,7 @@
+[38;21m2026-08-05 00:26:23,697 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-05 00:26:23,697 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ogze19a/.data[0m
+[38;21m2026-08-05 00:26:23,699 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-05 00:26:23,699 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ogze19a/.data[0m
+[38;5;196m2026-08-05 00:26:23,700 :: ERROR :: root :: usage.py :: 140 :: Failed to save usage cache to /tmp/icloud_test_config_6ogze19a/.data: Rename failed[0m
+[38;21m2026-08-05 00:26:23,700 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-05 00:26:23,701 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_6ogze19a/.data[0m
