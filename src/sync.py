@@ -28,6 +28,122 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
+_TRUST_COOKIE_NAME = "X-APPLE-WEBAUTH-HSA-TRUST"
+
+
+def _read_trust_cookie_expiry(api) -> datetime.datetime | None:
+    """Return the expiry datetime of Apple's HSA trust cookie, or None.
+
+    The trust window is carried by ``X-APPLE-WEBAUTH-HSA-TRUST`` in
+    icloudpy's cookie jar (persisted to ``session_data/<username>`` as
+    LWPCookieJar). Reading it directly avoids hardcoding Apple's trust
+    duration -- the cookie's own ``expires`` field is the source of
+    truth, set per-cookie by Apple's server. Returns None if the cookie
+    isn't present (e.g. account never auth'd with 2FA, or trust cookie
+    cleared).
+    """
+    try:
+        cookies = api.session.cookies
+    except AttributeError:
+        return None
+    for cookie in cookies:
+        if cookie.name == _TRUST_COOKIE_NAME and cookie.expires:
+            return datetime.datetime.fromtimestamp(
+                cookie.expires,
+                tz=datetime.timezone.utc,
+            )
+    return None
+
+
+# Set once the missing-public_url guidance has been logged (see
+# ``_resolve_dashboard_url``) so the advice appears once per process,
+# not once per sync-loop iteration.
+_WEB_UI_PUBLIC_URL_WARNED = False
+
+
+def _resolve_dashboard_url(config) -> str | None:
+    """Compute the web UI URL to embed in notifications, or None.
+
+    Returns ``None`` when ``app.web_ui.enabled`` is False -- callers
+    fall back to the legacy docker-exec instruction. Otherwise prefers
+    the explicit ``app.web_ui.public_url`` (e.g. the reverse-proxy
+    URL); falls back to ``http://{host}:{port}`` with a warning logged
+    once at startup if the public URL isn't set.
+    """
+    if not config_parser.get_web_ui_enabled(config=config):
+        return None
+    public_url = config_parser.get_web_ui_public_url(config=config)
+    if public_url:
+        return public_url
+    host = config_parser.get_web_ui_host(config=config)
+    port = config_parser.get_web_ui_port(config=config)
+    # Latch: this resolves on every sync-loop iteration, and while the
+    # container sits 2FA-pending (default 600s retry) that is ~144x/day
+    # of identical guidance in the exact scenario the user is watching
+    # the logs. The advice only needs saying once per process.
+    global _WEB_UI_PUBLIC_URL_WARNED
+    if not _WEB_UI_PUBLIC_URL_WARNED:
+        LOGGER.warning(
+            "app.web_ui.public_url not set -- notification URLs will use "
+            "http://%s:%s/, which won't work from outside the container. "
+            "Set app.web_ui.public_url to your reverse-proxy URL.",
+            host,
+            port,
+        )
+        _WEB_UI_PUBLIC_URL_WARNED = True
+    return f"http://{host}:{port}"
+
+
+def _maybe_warn_trust_expiring(config, api, username: str) -> None:
+    """Fire the trust-expiring notification once when crossing threshold.
+
+    Reads the live trust cookie expiry, compares against
+    ``app.trust_expiry_warn_days``, and -- if days_remaining is below
+    the threshold AND we haven't already warned for THIS cookie value --
+    fans the warning out through ``notify.send_trust_expiring``.
+
+    Debounce key is the cookie expiry ISO string itself. When Apple
+    refreshes the trust cookie (new expires_at), the stored
+    ``warned_for_expires_at`` no longer matches and warning eligibility
+    rearms automatically -- no manual reset needed.
+
+    Best-effort: any exception is logged and swallowed so a notification
+    bug never breaks the sync loop.
+    """
+    try:
+        from src import notify, web_signals
+
+        expires_at = _read_trust_cookie_expiry(api)
+        expires_at_iso = expires_at.isoformat() if expires_at else None
+        prior = web_signals.get_trust_state()
+        web_signals.record_trust_state(
+            expires_at_iso=expires_at_iso,
+            warned_for_expires_at=prior.get("warned_for_expires_at"),
+        )
+        if expires_at is None:
+            return
+        days_remaining = (
+            expires_at - datetime.datetime.now(tz=datetime.timezone.utc)
+        ).days
+        threshold = config_parser.get_trust_expiry_warn_days(config=config)
+        if days_remaining >= threshold:
+            return
+        if prior.get("warned_for_expires_at") == expires_at_iso:
+            return  # already warned for this cookie value
+        notify.send_trust_expiring(
+            config=config,
+            username=username,
+            days_remaining=days_remaining,
+            dashboard_url=_resolve_dashboard_url(config),
+        )
+        web_signals.record_trust_state(
+            expires_at_iso=expires_at_iso,
+            warned_for_expires_at=expires_at_iso,
+        )
+    except Exception as e:  # pragma: no cover - guarded so notify bugs don't break sync
+        LOGGER.warning(f"trust-expiring check failed: {e!s}")
+
+
 def get_api_instance(
     username: str,
     password: str,
@@ -675,6 +791,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         username=username,
         last_send=sync_state.last_send,
         region=server_region,
+        dashboard_url=_resolve_dashboard_url(config),
     )
     sleep(sleep_for)
     return True
@@ -708,6 +825,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         username=username,
         last_send=sync_state.last_send,
         region=server_region,
+        dashboard_url=_resolve_dashboard_url(config),
     )
     sleep(sleep_for)
     return True
@@ -872,6 +990,25 @@ def sync(dry_run: bool = False, check_files: int | None = None):
         )
         username = config_parser.get_username(config=config) if config else None
 
+        # Web UI "Sync now" requests: ``src.web_signals`` writes a
+        # sentinel file when the user taps the button; we delete it and
+        # zero the countdown so the next pass through the sync calls
+        # runs immediately. Best-effort import so vanilla mandarons
+        # builds without the web-UI module still work.
+        try:
+            from src import web_signals as _ws
+
+            if _ws.consume_force_sync("drive"):
+                LOGGER.info("Force-sync requested for Drive — running immediately")
+                sync_state.drive_time_remaining = 0
+            if _ws.consume_force_sync("photos"):
+                LOGGER.info("Force-sync requested for Photos — running immediately")
+                sync_state.photos_time_remaining = 0
+        except (
+            ImportError
+        ):  # pragma: no cover — best-effort fallback for builds without web_signals
+            pass
+
         if username:
             try:
                 api = _authenticate_and_get_api(config, username)
@@ -889,6 +1026,11 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     return
 
                 if not api.requires_2sa:
+                    # Trust-window check: record current cookie expiry and
+                    # fire a pre-emptive warning once if it's about to lapse.
+                    # Best-effort: any failure is logged + swallowed inside.
+                    _maybe_warn_trust_expiring(config, api, username)
+
                     # Create summary for this sync cycle
                     summary = SyncSummary()
 
@@ -910,6 +1052,38 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     summary.drive_stats = drive_stats
                     summary.photo_stats = photos_stats
                     summary.sync_end_time = datetime.datetime.now()
+
+                    # Persist per-service last-sync state for the web
+                    # dashboard. Best-effort — if the JSON write fails
+                    # the sync itself is unaffected.
+                    try:
+                        from src import web_signals as _ws
+
+                        if drive_stats is not None:
+                            _ws.record_sync_completion(
+                                service="drive",
+                                files_downloaded=drive_stats.files_downloaded,
+                                files_skipped=drive_stats.files_skipped,
+                                files_removed=drive_stats.files_removed,
+                                errors=len(drive_stats.errors),
+                                duration_seconds=drive_stats.duration_seconds,
+                            )
+                        if photos_stats is not None:
+                            _ws.record_sync_completion(
+                                service="photos",
+                                files_downloaded=photos_stats.photos_downloaded,
+                                files_skipped=photos_stats.photos_skipped,
+                                errors=len(photos_stats.errors),
+                                duration_seconds=photos_stats.duration_seconds,
+                            )
+                    except (
+                        ImportError
+                    ):  # pragma: no cover — best-effort fallback for builds without web_signals
+                        pass
+                    except Exception as e:
+                        LOGGER.debug(
+                            f"web_signals: record_sync_completion raised: {e!s}",
+                        )
 
                     # Send usage statistics (anonymized summary data)
                     try:
@@ -967,4 +1141,41 @@ def sync(dry_run: bool = False, check_files: int | None = None):
             )
             break
 
-        sleep(sleep_for)
+        # Interruptible sleep -- poll the web-signal force-sync sentinels
+        # every few seconds so the "Sync now" button stays responsive even
+        # mid-long-interval. Without this, a user tap during a multi-hour
+        # drive sleep would wait the full remaining duration.
+        _interruptible_sleep(sleep_for)
+
+
+def _interruptible_sleep(total_seconds: int) -> None:
+    """Sleep up to ``total_seconds`` in short chunks, returning early
+    when ``web_signals.pending_force_syncs()`` reports any sentinel.
+
+    The ``import src.web_signals`` is best-effort so a vanilla mandarons
+    build without the web-UI module still runs (it falls back to a
+    single ``sleep(total_seconds)``).
+    """
+    _CHUNK = 2  # seconds — tradeoff: shorter = more responsive, more wakeups
+    try:
+        from src import web_signals as _ws
+    except ImportError:  # pragma: no cover — vanilla-mandarons fallback
+        sleep(total_seconds)
+        return
+
+    # Short intervals (<= one chunk) sleep in a single call so the
+    # existing tests that count sleep invocations still match. The
+    # chunking only matters for long intervals where the user might
+    # tap "Sync now" mid-sleep -- those become multiple short sleeps
+    # with a sentinel poll between each.
+    if total_seconds <= _CHUNK:
+        sleep(total_seconds)
+        return
+
+    remaining = total_seconds
+    while remaining > 0:
+        chunk = min(_CHUNK, remaining)
+        sleep(chunk)
+        remaining -= chunk
+        if _ws.pending_force_syncs():
+            return

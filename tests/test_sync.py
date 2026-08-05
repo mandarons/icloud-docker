@@ -1053,3 +1053,167 @@ class TestSync(unittest.TestCase):
         self.assertEqual(sleep_for, 0, "Should have 0 sleep for small equal timers")
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
         self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled")
+
+
+class TestWebSignalsSyncIntegration(unittest.TestCase):
+    """Cover sync.sync() ↔ web_signals integration paths.
+    Existing tests don't exercise the consume_force_sync TRUE branches
+    or the record_sync_completion exception fallback."""
+
+    def setUp(self):
+        config = read_config(config_path=tests.CONFIG_PATH)
+        assert isinstance(config, dict)
+        self.config = config
+        self.config["app"]["root"] = tests.TEMP_DIR
+        os.makedirs(tests.TEMP_DIR, exist_ok=True)
+
+    def tearDown(self):
+        if os.path.exists(tests.TEMP_DIR):
+            shutil.rmtree(tests.TEMP_DIR)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_consume_force_sync_logs_when_signals_present(
+        self,
+        _mock_post,
+        mock_read_config,
+        _mock_service,
+        _mock_un,
+        _mock_pw,
+    ):
+        """consume_force_sync returns True for both drive + photos →
+        each is logged as a force-sync request before the cycle runs."""
+        import logging
+
+        from src import web_signals
+
+        cfg = deepcopy(self.config)
+        mock_read_config.return_value = cfg
+        os.environ.pop(ENV_ICLOUD_PASSWORD_KEY, None)
+
+        calls = {"drive": 0, "photos": 0}
+
+        def fake_consume(service):
+            calls[service] += 1
+            return calls[service] == 1
+
+        with (
+            patch.object(
+                web_signals,
+                "consume_force_sync",
+                side_effect=fake_consume,
+            ),
+            self.assertLogs(sync.LOGGER, level=logging.INFO) as cm,
+        ):
+            sync.sync()
+
+        joined = "\n".join(cm.output)
+        self.assertIn("Force-sync requested for Drive", joined)
+        self.assertIn("Force-sync requested for Photos", joined)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_record_sync_completion_exception_is_logged_not_fatal(
+        self,
+        _mock_post,
+        mock_read_config,
+        _mock_service,
+        _mock_un,
+        _mock_pw,
+    ):
+        """record_sync_completion raising an unexpected exception (not
+        ImportError) is logged at DEBUG and the sync loop continues."""
+        import logging
+
+        from src import web_signals
+
+        cfg = deepcopy(self.config)
+        mock_read_config.return_value = cfg
+        os.environ.pop(ENV_ICLOUD_PASSWORD_KEY, None)
+
+        # Force ``drive_stats`` non-None so the ``record_sync_completion``
+        # branch is guaranteed to execute -- otherwise the mock chain can
+        # leave both stats None, the call never happens, and the assertion
+        # below would pass without ever exercising the path under test.
+        with (
+            patch(
+                "src.sync._perform_drive_sync",
+                return_value=DriveStats(files_downloaded=1),
+            ) as mock_drive,
+            patch.object(
+                web_signals,
+                "record_sync_completion",
+                side_effect=RuntimeError("disk full"),
+            ) as mock_record,
+            self.assertLogs(sync.LOGGER, level=logging.DEBUG) as cm,
+        ):
+            sync.sync()
+
+        # The branch really ran ...
+        self.assertTrue(mock_drive.called)
+        self.assertTrue(mock_record.called)
+        # ... the raise was swallowed to DEBUG ...
+        joined = "\n".join(cm.output)
+        self.assertIn("record_sync_completion raised", joined)
+        self.assertIn("disk full", joined)
+
+
+class TestInterruptibleSleep(unittest.TestCase):
+    """``_interruptible_sleep`` chunks long sleeps and polls the
+    web-signal sentinels so the "Sync now" button feels responsive
+    even mid-multi-hour interval."""
+
+    def test_short_interval_uses_single_sleep_call(self):
+        """``<= _CHUNK`` should produce exactly one ``sleep`` call so
+        existing tests counting sleep invocations stay correct."""
+        from unittest.mock import patch
+
+        with patch("src.sync.sleep") as mock_sleep:
+            sync._interruptible_sleep(2)  # noqa: SLF001 -- module-private helper
+        mock_sleep.assert_called_once_with(2)
+
+    def test_long_interval_chunks_and_polls_sentinels(self):
+        """``> _CHUNK`` should produce multiple sleep calls AND call
+        ``pending_force_syncs()`` between each chunk."""
+        from unittest.mock import patch
+
+        with (
+            patch("src.sync.sleep") as mock_sleep,
+            patch(
+                "src.web_signals.pending_force_syncs",
+                return_value=[],
+            ) as mock_pending,
+        ):
+            sync._interruptible_sleep(5)  # noqa: SLF001
+        # Expect [sleep(2), sleep(2), sleep(1)] -- 3 calls.
+        self.assertEqual(mock_sleep.call_count, 3)
+        self.assertEqual(mock_pending.call_count, 3)
+
+    def test_long_interval_returns_early_when_sentinel_fires(self):
+        """If ``pending_force_syncs`` reports any sentinel mid-loop,
+        the helper exits without consuming the remaining chunks."""
+        from unittest.mock import patch
+
+        with (
+            patch("src.sync.sleep") as mock_sleep,
+            patch(
+                "src.web_signals.pending_force_syncs",
+                side_effect=[[], ["drive"]],
+            ) as mock_pending,
+        ):
+            sync._interruptible_sleep(10)  # noqa: SLF001
+        # Exited after the second chunk -> 2 sleeps + 2 polls.
+        self.assertEqual(mock_sleep.call_count, 2)
+        self.assertEqual(mock_pending.call_count, 2)
