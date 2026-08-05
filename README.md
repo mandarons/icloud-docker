@@ -17,13 +17,38 @@ Primary use case of iCloud-docker is to periodically sync wanted or all of your 
 
 **_Please note that this application only downloads the files from server. It does not upload the local files to the server (yet)._**
 
+## What's New in v2.0
+
+### New Features
+- **Embedded Web UI** — dashboard with sync status and on-device 2FA re-authentication (`app.web_ui.enabled`)
+- **Per-library photo destinations** — route each photo library to its own subdirectory (`photos.library_destinations`)
+- **Mount marker failsafe** — refuse to sync when bind-mounts fail silently (`require_mount_marker`)
+- **`--dry-run` / `--check-files`** — verify config and validate migration readiness without downloading files
+- **Live Photo `.mov` auto-download** — optionally download paired video for Live Photos (`live_video_medium`, `live_video_thumb`)
+- **Streaming album enumeration** — bounds peak memory for 100K+ photo libraries (`enumeration_chunk_size`)
+- **Sync summary notifications** — optional per-cycle stats via Discord, Telegram, Pushover, or email
+
+### Upgrade Notes
+- **Config file** — no breaking changes; all new fields are optional with sensible defaults. Review `config.yaml` for new options.
+- **Web UI** — disabled by default. Enable and expose port 8080 only behind a reverse proxy if binding to `0.0.0.0`.
+- **Photos `file_sizes`** — add `live_video_original` (or `live_video_medium` / `live_video_thumb`) to download Live Photo `.mov` files.
+- **Environment variable `ICLOUD_DOCKER_CONFIG_DIR`** — overrides the default `/config` path if your mount layout differs.
+
 ## Installation
 
 ### Installation using Docker Hub
 
 ```
-docker run --name icloud -v ${PWD}/icloud:/icloud -v ${PWD}/config:/config -e ENV_CONFIG_FILE_PATH=/config/config.yaml mandarons/icloud-drive
+docker run --name icloud \
+  -v ${PWD}/icloud:/icloud \
+  -v ${PWD}/config:/config \
+  -e ENV_CONFIG_FILE_PATH=/config/config.yaml \
+  -p 8080:8080 \
+  mandarons/icloud-drive
 ```
+
+> The `-p 8080:8080` flag exposes the optional web UI. Remove it if you
+> are not enabling `app.web_ui.enabled` in `config.yaml`.
 
 ### Installation using docker-compose
 
@@ -38,6 +63,8 @@ services:
       - .env.icloud # Must contain ENV_CONFIG_FILE_PATH=/config/config.yaml and optionally, ENV_ICLOUD_PASSWORD=<password>
     container_name: icloud
     restart: unless-stopped
+    ports:
+      - "8080:8080" # Web UI — remove if not using app.web_ui.enabled
     volumes:
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
@@ -168,6 +195,13 @@ photos:
     # libraries:
     #   - PrimarySync # Name of the own library
 
+    # Per-library destination subdirectories (optional).
+    # When set, photos from each library are written to
+    # <photos.destination>/<subdirectory>/… instead of sharing one tree.
+    # library_destinations:
+    #   PrimarySync: personal
+    #   SharedLibrary: shared
+
     # if all_albums is false - albums list is used as filter-in, if all_albums is true - albums list is used as filter-out
     # if albums list is empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders
     albums:
@@ -177,10 +211,13 @@ photos:
       - "original"
       # - "medium"
       # - "thumb"
-      # For Live Photos, add live_video_original to also download the paired .mov
-      # (live_video_medium / live_video_thumb for smaller variants). Non-Live
-      # Photos lack these versions and are skipped.
-      # - "live_video_original"
+    # Live Photos: by default only the still image is downloaded.
+    # To also download the paired .mov video file, add one of:
+    #   live_video_original - full-resolution video (large)
+    #   live_video_medium   - medium-quality video
+    #   live_video_thumb    - thumbnail-quality video (smallest)
+    # Non-Live Photos do not have these versions and are skipped.
+    # - "live_video_original"
     extensions: # Optional, media extensions to be included in syncing iCloud Photos content
       # - jpg
       # - heic
@@ -188,6 +225,30 @@ photos:
 ```
 
 **_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
+
+## Dry Run and File Checking
+
+Before running a full sync (especially for the first time or after migrating from another tool), you can use `--dry-run` to verify that everything is configured correctly without downloading any files:
+
+```bash
+docker exec icloud icloud --username=<username> --session-directory=/config/session_data --dry-run
+```
+
+This authenticates, summarises what *would* be synced (Drive + Photos destinations, library names), then exits.
+
+### `--check-files N` (migration validation)
+
+Use `--check-files N` with `--dry-run` to walk N photos per library and report whether existing on-disk files would be recognised instead of re-downloaded. This is especially useful when migrating from another iCloud backup tool (e.g. boredazfcuk/iCloud-Docker):
+
+```bash
+# Spot-check 100 photos per library
+docker exec icloud icloud --username=<username> --session-directory=/config/session_data --dry-run --check-files 100
+
+# Walk every photo (slow on large libraries)
+docker exec icloud icloud --username=<username> --session-directory=/config/session_data --dry-run --check-files 0
+```
+
+The output reports per-library counts of: `would_skip` (already up-to-date), `size_mismatch`, `not_found`, and `error`. A high `would_skip` count means most files will not be re-downloaded during a real sync.
 
 ## Web UI
 
@@ -461,9 +522,9 @@ This guide helps you set up iCloud sync on a UGREEN NAS system using Docker.
          - ENV_CONFIG_FILE_PATH=/config/config.yaml
        container_name: icloud-<icloud_username>
        restart: unless-stopped
-       volumes:
-         - /etc/timezone:/etc/timezone:ro
-         - /etc/localtime:/etc/localtime:ro
+        volumes:
+          - /etc/timezone:/etc/timezone:ro
+          - /etc/localtime:/etc/localtime:ro
           - /home/<ugreen_username>/Cloud-Drives/iCloud/Data:/icloud
           - /home/<ugreen_username>/Cloud-Drives/iCloud/Config:/config
    ```
@@ -497,6 +558,17 @@ To set up multiple iCloud accounts, repeat these steps for each UGREEN user and 
 - This setup provides an iCloud backup solution on UGREEN NAS until official support is available in the UGREEN Cloud Drives App
 - The same approach can be adapted for other cloud services like Google Drive and OneDrive
 - Make sure to use unique container names for each iCloud account to avoid conflicts
+
+## Environment Variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `ENV_CONFIG_FILE_PATH` | `/config/config.yaml` | Path to the configuration file inside the container. |
+| `ENV_ICLOUD_PASSWORD` | *(unset)* | iCloud password for automatic login. If unset, manual `docker exec` login is required. |
+| `APP_VERSION` | `dev` | Application version, automatically set during Docker build. Used for usage tracking and displayed in the web UI. |
+| `ICLOUD_DOCKER_CONFIG_DIR` | `/config` | Overrides the base config directory. Session data and the usage cache are stored relative to this path. |
+| `PUID` | *(unset)* | User ID for file ownership. |
+| `PGID` | *(unset)* | Group ID for file ownership. |
 
 ## Usage Policy
 
