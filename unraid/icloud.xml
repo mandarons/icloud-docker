@@ -11,7 +11,7 @@
   <Project>https://github.com/mandarons/icloud-docker</Project>
   <Overview>Dockerized iCloud Client - make a local copy of your iCloud documents and photos, and keep it automatically up-to-date. </Overview>
   <Category>Backup: Cloud: Downloaders: HomeAutomation: Tools: Status:Stable</Category>
-  <WebUI/>
+  <WebUI>http://[IP]:[PORT:8080]</WebUI>
   <TemplateURL>https://raw.githubusercontent.com/mandarons/icloud-docker/main/unraid/icloud.xml</TemplateURL>
   <Icon>https://help.apple.com/assets/60AD31069883FC55AC222539/60AD310B9883FC55AC22254A/de_DE/712e44cf3701cf5bc9580c9367fa5526.png</Icon>
   <ExtraParams/>
@@ -23,11 +23,21 @@
   <Requires>To get started,&#xD;
 1. Create 'config' folder and put 'config.yaml' file (sample file available at: https://raw.githubusercontent.com/mandarons/icloud-docker/main/config.yaml)&#xD;
 2. Update the `config/config.yaml` file per your needs&#xD;
-3. Create 'icloud' folder to be used as local copy of your icloud (Drive and Photos)</Requires>
+3. Create 'icloud' folder to be used as local copy of your icloud (Drive and Photos)&#xD;
+&#xD;
+Optional embedded web UI (dashboard + on-device 2FA re-auth):&#xD;
+- Enable it in config.yaml with `app.web_ui.enabled: true` (default: false, port 8080)&#xD;
+- Keep the default `host: "127.0.0.1"` (reachable inside the container) or set `host: "0.0.0.0"` ONLY behind a trusted reverse proxy that provides authentication and TLS - the UI accepts your Apple ID password over plaintext HTTP&#xD;
+- The port below (default 8080) is pre-mapped; the 'Web UI' link opens the dashboard once enabled in config.yaml&#xD;
+&#xD;
+Other newer options (all configured in config.yaml, see commented examples):&#xD;
+- `app.max_threads`: parallel download threads (auto or integer, max 16)&#xD;
+- `app.mount_marker_filename` with `drive.require_mount_marker` / `photos.require_mount_marker`: failsafe that refuses to sync until a marker file exists in the destination</Requires>
   <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">99</Config>
   <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="" Type="Variable" Display="always" Required="false" Mask="false">100</Config>
   <Config Name="Configuration Files" Target="/config" Default="/mnt/user/appdata/icloud/config" Mode="rw" Description="Storage for all the configuration files (e.g. config.yaml, session_data directory etc.)" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/icloud/config</Config>
   <Config Name="iCloud data storage directory" Target="/icloud" Default="/mnt/user/backup/icloud" Mode="rw" Description="Target location to store your icloud data" Type="Path" Display="always" Required="true" Mask="false">&lt;provide location to icloud backup&gt;</Config>
   <Config Name="Your iCloud Password" Target="ENV_ICLOUD_PASSWORD" Default="" Mode="" Description="Your icloud.com password" Type="Variable" Display="always" Required="false" Mask="true">&lt;your icloud.com password&gt;</Config>
   <Config Name="Path to configuration file in container" Target="ENV_CONFIG_FILE_PATH" Default="/config/config.yaml" Mode="" Description="Path to configuration file in container - DO NOT CHANGE UNLESS YOU KNOW WHAT YOU'RE DOING!" Type="Variable" Display="advanced-hide" Required="true" Mask="false">/config/config.yaml</Config>
+  <Config Name="Web UI Port" Target="8080" Default="8080" Mode="tcp" Description="Optional embedded web UI port. Requires `app.web_ui.enabled: true` in config.yaml. The UI accepts your Apple ID password over plaintext HTTP - only expose behind a trusted reverse proxy." Type="Port" Display="always" Required="false" Mask="false">8080</Config>
 </Container>
