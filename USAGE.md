@@ -1,12 +1,12 @@
-### ICloud-Drive-Docker Usage Tracking
+### iCloud-Docker Usage Tracking
 
-We collect following information to analyze usage of `mandarons/icloud-drive-docker` project:
+We collect following information to analyze usage of `mandarons/icloud-docker` project:
 
-1. `Application version` - to track which versions of `mandarons/icloud-drive-docker` are currently in use
+1. `Application version` - to track which versions of `mandarons/icloud-docker` are currently in use
 2. `Sync statistics` - anonymized aggregated data about sync operations (file counts, sync duration, error indicators)
 3. `Installation events` - new installations and upgrades for usage analytics
 
-On server side, this project uses `IP address` to determine `country` of `mandarons/icloud-drive-docker` installation.
+On server side, this project uses `IP address` to determine `country` of `mandarons/icloud-docker` installation.
 
 Collecting this data helps keep supporting this project and drive future improvements. **No personally identifiable information is collected.** Aggregate data is made available at [Wapar](https://wapar.mandarons.com).
 

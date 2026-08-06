@@ -113,6 +113,14 @@ photos:
     # libraries:
     #   - PrimarySync # Name of the own library
 
+    # Per-library destination subdirectories (optional).
+    # When set, photos from each library are written to
+    #   <photos.destination>/<subdirectory>/…  instead of sharing one tree.
+    # When unset (default), all libraries share the single destination path.
+    # library_destinations:
+    #   PrimarySync: personal
+    #   SharedLibrary: shared
+
     # if all_albums is false - albums list is used as filter-in, if all_albums is true - albums list is used as filter-out
     # if albums list is empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders
     albums:
