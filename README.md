@@ -17,23 +17,6 @@ Primary use case of iCloud-docker is to periodically sync wanted or all of your 
 
 **_Please note that this application only downloads the files from server. It does not upload the local files to the server (yet)._**
 
-## What's New in v2.0
-
-### New Features
-- **Embedded Web UI** — dashboard with sync status and on-device 2FA re-authentication (`app.web_ui.enabled`)
-- **Per-library photo destinations** — route each photo library to its own subdirectory (`photos.library_destinations`)
-- **Mount marker failsafe** — refuse to sync when bind-mounts fail silently (`require_mount_marker`)
-- **`--dry-run` / `--check-files`** — verify config and validate migration readiness without downloading files
-- **Live Photo `.mov` auto-download** — optionally download paired video for Live Photos (`live_video_medium`, `live_video_thumb`)
-- **Streaming album enumeration** — bounds peak memory for 100K+ photo libraries (`enumeration_chunk_size`)
-- **Sync summary notifications** — optional per-cycle stats via Discord, Telegram, Pushover, or email
-
-### Upgrade Notes
-- **Config file** — no breaking changes; all new fields are optional with sensible defaults. Review `config.yaml` for new options.
-- **Web UI** — disabled by default. Enable and expose port 8080 only behind a reverse proxy if binding to `0.0.0.0`.
-- **Photos `file_sizes`** — add `live_video_original` (or `live_video_medium` / `live_video_thumb`) to download Live Photo `.mov` files.
-- **Environment variable `ICLOUD_DOCKER_CONFIG_DIR`** — overrides the default `/config` path if your mount layout differs.
-
 ## Installation
 
 ### Installation using Docker Hub
