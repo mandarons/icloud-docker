@@ -65,7 +65,7 @@ jobs:
       # - name: Setup tmate session
       #   uses: mxschmitt/action-tmate@v3
       - name: Generate Allure Report
-        uses: simple-elf/allure-report-action@master
+        uses: simple-elf/allure-report-action@v1.15
         if: always()
         with:
           allure_results: allure-results
@@ -135,7 +135,7 @@ jobs:
 
   #     - name: Build and push
   #       id: docker_build
-  #       uses: docker/build-push-action@v5
+  #       uses: docker/build-push-action@v7
   #       with:
   #         context: ./
   #         file: ./Dockerfile
