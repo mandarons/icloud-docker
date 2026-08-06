@@ -1,0 +1,7 @@
+[38;21m2026-08-06 01:01:17,341 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-06 01:01:17,342 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_50wvkohd/.data[0m
+[38;21m2026-08-06 01:01:17,342 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-06 01:01:17,342 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_50wvkohd/.data[0m
+[38;5;196m2026-08-06 01:01:17,342 :: ERROR :: root :: usage.py :: 140 :: Failed to save usage cache to /tmp/icloud_test_config_50wvkohd/.data: Cannot create temp file[0m
+[38;21m2026-08-06 01:01:17,343 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-06 01:01:17,343 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_50wvkohd/.data[0m

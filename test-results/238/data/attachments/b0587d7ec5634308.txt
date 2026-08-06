@@ -1,0 +1,1 @@
+[38;5;196m2026-08-06 01:01:01,688 :: ERROR :: root :: sync.py :: 341 :: Drive mount marker missing: /tmp/tmp30p2g370/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmp30p2g370/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

@@ -1,0 +1,8 @@
+[38;21m2026-08-06 01:01:16,387 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-06 01:01:16,388 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_50wvkohd/.data[0m
+[38;21m2026-08-06 01:01:16,388 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-06 01:01:16,388 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_50wvkohd/.data[0m
+[38;21m2026-08-06 01:01:16,388 :: DEBUG :: root :: usage.py :: 107 :: Usage cache file not found, creating: /tmp/icloud_test_config_50wvkohd/.data[0m
+[38;21m2026-08-06 01:01:16,389 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_50wvkohd/.data[0m
+[38;21m2026-08-06 01:01:16,389 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-06 01:01:16,389 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_50wvkohd/.data[0m
