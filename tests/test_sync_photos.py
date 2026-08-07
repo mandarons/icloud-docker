@@ -370,6 +370,38 @@ class TestSyncPhotos(unittest.TestCase):
 
         self.assertFalse(os.path.exists(os.path.join(album_1_path, "delete_me.JPG")))
 
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_remove_obsolete_preserves_mount_marker(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+    ):
+        """Mount marker must survive remove_obsolete cleanup (issue #508)."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["remove_obsolete"] = True
+        config.setdefault("app", {})["mount_marker_filename"] = ".backup_sentinel"
+        mock_read_config.return_value = config
+
+        # Create the mount marker file before sync
+        marker_path = os.path.join(self.destination_path, ".backup_sentinel")
+        with open(marker_path, "w") as f:
+            f.write("sentinel")
+
+        sync_photos.sync_photos(config=config, photos=mock_service.photos)
+
+        # Marker must still exist after sync with remove_obsolete
+        self.assertTrue(
+            os.path.exists(marker_path),
+            "Mount marker .backup_sentinel was deleted by remove_obsolete",
+        )
+
     def test_remove_obsolete_none_destination_path(self):
         """Test for destination path as None."""
         self.assertTrue(len(sync_photos.remove_obsolete(destination_path=None, files=set())) == 0)

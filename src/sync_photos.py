@@ -434,12 +434,14 @@ def sync_photos(config, photos):
     # configured we walk each library's subdir independently, otherwise the
     # legacy single-destination walk preserves backward compatibility.
     if config_parser.get_photos_remove_obsolete(config=config):
+        marker_filename = config_parser.get_mount_marker_filename(config=config)
+        exclude = {marker_filename}
         if library_destinations:
             for library in libraries:
                 lib_dest = _library_destination(destination_path, library, library_destinations)
-                remove_obsolete_files(lib_dest, files)
+                remove_obsolete_files(lib_dest, files, exclude_filenames=exclude)
         else:
-            remove_obsolete_files(destination_path, files)
+            remove_obsolete_files(destination_path, files, exclude_filenames=exclude)
 
     return total_successful, total_failed
 
