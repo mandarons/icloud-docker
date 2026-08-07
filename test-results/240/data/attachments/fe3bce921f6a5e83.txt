@@ -1,0 +1,12 @@
+[38;5;196m2026-08-07 17:11:25,228 :: ERROR :: root :: web.py :: 743 :: Web UI: keyring lookup raised[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 741, in auth_refresh_trust
+    password = icloudpy_utils.get_password_from_keyring(username)
+  File "/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/unittest/mock.py", line 1114, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/unittest/mock.py", line 1118, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.20/x64/lib/python3.10/unittest/mock.py", line 1173, in _execute_mock_call
+    raise effect
+RuntimeError: keyring boom
+[38;21m2026-08-07 17:11:25,247 :: DEBUG :: root :: web.py :: 386 :: Web UI auth-state check raised: keyring boom[0m

@@ -1,0 +1,8 @@
+[38;21m2026-08-07 17:11:23,105 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-07 17:11:23,105 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_l6rtr09d/.data[0m
+[38;21m2026-08-07 17:11:23,105 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-07 17:11:23,106 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_l6rtr09d/.data[0m
+[38;5;226m2026-08-07 17:11:23,106 :: WARNING :: root :: usage.py :: 100 :: Cache data validation failed for /tmp/icloud_test_config_l6rtr09d/.data, starting fresh[0m
+[38;21m2026-08-07 17:11:23,106 :: DEBUG :: root :: usage.py :: 137 :: Atomically saved usage cache to: /tmp/icloud_test_config_l6rtr09d/.data[0m
+[38;21m2026-08-07 17:11:23,106 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-07 17:11:23,106 :: DEBUG :: root :: usage.py :: 45 :: Initialized usage cache at: /tmp/icloud_test_config_l6rtr09d/.data[0m
