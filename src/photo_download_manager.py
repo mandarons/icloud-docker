@@ -17,6 +17,8 @@ from src.photo_path_utils import (
     _LIVE_VIDEO_SIZES,
     create_folder_path_if_needed,
     generate_photo_filename_with_metadata,
+    get_default_filename_format,
+    get_file_format,
     normalize_file_path,
     rename_legacy_file_if_exists,
 )
@@ -85,7 +87,9 @@ def generate_photo_path(photo, file_size: str, destination_path: str, folder_for
     filename_with_metadata = generate_photo_filename_with_metadata(photo, file_size)
 
     # Create folder path if needed
-    final_destination = create_folder_path_if_needed(destination_path, folder_format, photo)
+    final_destination = create_folder_path_if_needed(
+        destination_path, folder_format, photo,
+    )
 
     # Generate paths for legacy file format handling
     filename = photo.filename
@@ -162,16 +166,62 @@ def collect_download_task(
     # Generate photo path
     photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)
 
-    # Thread-safe file set update
-    if files is not None:
-        with files_lock:
-            files.add(photo_path)
-
     # Check if photo already exists with correct size
     from src.photo_file_utils import check_photo_exists
 
     if check_photo_exists(photo, file_size, photo_path):
+        if files is not None:
+            with files_lock:
+                files.add(photo_path)
         return None
+
+    # Filename-collision fallback (``simple`` mode only): a plain
+    # ``IMG_1234.HEIC`` path may already be claimed by a DIFFERENT iCloud
+    # photo that happens to share the human filename. Two collision sources:
+    #
+    #   1. On-disk collision: ``check_photo_exists`` returned False but the
+    #      path is occupied -- size mismatch with a photo from a prior sync.
+    #   2. In-flight collision: an earlier call in this same
+    #      ``_collect_album_download_tasks`` pass already claimed this plain
+    #      path. Without this check the later parallel download silently
+    #      overwrites the earlier one and we lose data. ``collect_download_task``
+    #      runs sequentially during collection so a plain ``in files`` membership
+    #      test under ``files_lock`` is sufficient; we hold the lock only long
+    #      enough to read.
+    #
+    # In either case we route this photo to the metadata-suffix filename so
+    # both files coexist and both round-trip stably on future syncs. We use
+    # the ``get_default_filename_format()`` accessor (rather than importing
+    # the module-level constant) so ``set_default_filename_format`` updates
+    # are observed live on every call.
+    # Non-unique naming (simple mode, or a photos.file_format template that may
+    # omit a unique component) can collide; the metadata format cannot.
+    is_non_unique = get_default_filename_format() == "simple" or get_file_format() is not None
+    in_flight_collision = False
+    if is_non_unique and files is not None:
+        with files_lock:
+            in_flight_collision = photo_path in files
+    if is_non_unique and (os.path.isfile(photo_path) or in_flight_collision):
+        suffix_folder = create_folder_path_if_needed(
+            destination_path, folder_format, photo,
+        )
+        suffix_basename = generate_photo_filename_with_metadata(
+            photo, file_size, "metadata",
+        )
+        photo_path = normalize_file_path(os.path.join(suffix_folder, suffix_basename))
+        LOGGER.info(
+            f"Filename collision for {photo.filename} (id={photo.id}); "
+            f"using suffix path {photo_path} to preserve both photos.",
+        )
+        if check_photo_exists(photo, file_size, photo_path):
+            if files is not None:
+                with files_lock:
+                    files.add(photo_path)
+            return None
+
+    if files is not None:
+        with files_lock:
+            files.add(photo_path)
 
     # Check for existing hardlink source
     hardlink_source = None
@@ -206,10 +256,14 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
                 return True
             else:
                 # Fallback to download if hard link creation fails
-                LOGGER.warning(f"Hard link creation failed, downloading {task_info.photo_path} instead")
+                LOGGER.warning(
+                    f"Hard link creation failed, downloading {task_info.photo_path} instead",
+                )
 
         # Download the photo
-        result = download_photo_from_server(task_info.photo, task_info.file_size, task_info.photo_path)
+        result = download_photo_from_server(
+            task_info.photo, task_info.file_size, task_info.photo_path,
+        )
         if result and task_info.hardlink_registry is not None:
             # Register for future hard links if enabled
             task_info.hardlink_registry.register_photo_path(
@@ -226,7 +280,9 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
         return False
 
 
-def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -> tuple[int, int]:
+def execute_parallel_downloads(
+    download_tasks: list[DownloadTaskInfo], config,
+) -> tuple[int, int]:
     """Execute download tasks in parallel using thread pool.
 
     Args:
@@ -260,7 +316,10 @@ def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -
 
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         # Submit all download tasks
-        future_to_task = {executor.submit(execute_download_task, task): task for task in download_tasks}
+        future_to_task = {
+            executor.submit(execute_download_task, task): task
+            for task in download_tasks
+        }
 
         # Process completed downloads
         for future in as_completed(future_to_task):
@@ -274,5 +333,7 @@ def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -
                 LOGGER.error(f"Unexpected error during photo download: {e!s}")
                 failed_downloads += 1
 
-    LOGGER.info(f"Photo processing complete: {successful_downloads} successful, {failed_downloads} failed")
+    LOGGER.info(
+        f"Photo processing complete: {successful_downloads} successful, {failed_downloads} failed",
+    )
     return successful_downloads, failed_downloads
