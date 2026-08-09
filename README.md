@@ -785,7 +785,7 @@ To set up multiple iCloud accounts, repeat these steps for each UGREEN user and 
 | `ENV_CONFIG_FILE_PATH` | `/config/config.yaml` | Path to the configuration file inside the container. |
 | `ENV_ICLOUD_PASSWORD` | *(unset)* | iCloud password for automatic login. If unset, manual `docker exec` login is required. |
 | `APP_VERSION` | `dev` | Application version, automatically set during Docker build. Used for usage tracking and displayed in the web UI. |
-| `ICLOUD_DOCKER_CONFIG_DIR` | `/config` | Overrides the base config directory. Session data and the usage cache are stored relative to this path. |
+| `ICLOUD_DOCKER_CONFIG_DIR` | `/config` | Overrides the base config directory. Session data and keyring are stored relative to this path. The usage cache (`.data`) lives under the root destination (`app.root`). |
 | `PUID` | *(unset)* | User ID for file ownership. |
 | `PGID` | *(unset)* | Group ID for file ownership. |
 
