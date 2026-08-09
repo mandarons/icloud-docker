@@ -72,7 +72,7 @@ def _redirect_config_dir():
     import src.usage
 
     src.DEFAULT_COOKIE_DIRECTORY = os.path.join(tmpdir, "session_data")
-    src.usage.CACHE_FILE_NAME = os.path.join(tmpdir, ".data")
+    src.usage.CACHE_FILE_NAME = ".data"
     # NOTE: we deliberately do NOT pre-create ``session_data/`` here.
     # ``tests/test_sync.py::test_sync`` asserts that ``sync.sync()``
     # itself creates the directory on first run; pre-creating would

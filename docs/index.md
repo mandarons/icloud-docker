@@ -54,6 +54,7 @@ iCloud Docker is a containerized sync client that downloads files from Apple iCl
 | Photos Sync | Photo downloading, albums, hardlinks | `src/sync_photos.py` + 6 helpers | [docs/systems/photos-sync.md](systems/photos-sync.md) |
 | Web UI | Flask dashboard, 2FA auth flow, CSRF | `src/web.py` | [docs/systems/web-ui.md](systems/web-ui.md) |
 | Notifications | Discord, Telegram, Pushover, SMTP | `src/notify.py` | [docs/systems/notifications.md](systems/notifications.md) |
+| Usage Tracking | Anonymized install/heartbeat telemetry, wapar-api contract | `src/usage.py` | [docs/systems/usage.md](systems/usage.md) |
 | Container | Docker build, entrypoint, user mgmt | `Dockerfile`, `docker-entrypoint.sh` | [docs/systems/container.md](systems/container.md) |
 
 ## Key Flows

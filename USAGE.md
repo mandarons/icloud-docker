@@ -1,9 +1,9 @@
 ### iCloud-Docker Usage Tracking
 
-We collect following information to analyze usage of `mandarons/icloud-docker` project:
+We collect following information to analyze usage of the `mandarons/icloud-docker` project:
 
 1. `Application version` - to track which versions of `mandarons/icloud-docker` are currently in use
-2. `Sync statistics` - anonymized aggregated data about sync operations (file counts, sync duration, error indicators)
+2. `Sync statistics` - anonymized aggregated data about sync operations (file counts, sync duration, error indicators), sent once per UTC day with the most recent sync cycle's data
 3. `Installation events` - new installations and upgrades for usage analytics
 
 On server side, this project uses `IP address` to determine `country` of `mandarons/icloud-docker` installation.
@@ -21,6 +21,8 @@ app:
 ```
 
 When disabled, no usage data will be collected or transmitted. The sync functionality remains completely unaffected.
+
+> For developers: the full wapar-api HTTP contract (endpoints, schemas, sample payloads, retry behavior) is documented in [docs/systems/usage.md](docs/systems/usage.md).
 
 ## Data Collected
 

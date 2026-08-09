@@ -35,7 +35,7 @@ The container system (`Dockerfile`, `docker-entrypoint.sh`, `init.sh`) manages t
 | Mount | Purpose | Default |
 |-------|---------|---------|
 | `/config` | config.yaml + session_data/ + python_keyring/ | Required |
-| `/icloud` | Synced content (drive/ + photos/) | Required |
+| `/icloud` | Synced content (drive/ + photos/) + usage cache (`.data`) | Required |
 
 ## Entrypoint Sequence
 

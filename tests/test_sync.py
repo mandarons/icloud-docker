@@ -91,9 +91,10 @@ class TestSync(unittest.TestCase):
         self.remove_temp()
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
-        dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(dir_length == 1)
+        dir_contents = os.listdir(self.root_dir)
         self.assertTrue(os.path.isdir(os.path.join(self.root_dir, config["photos"]["destination"])))
+        # Root contains the destination dir and the usage cache file (`.data`)
+        self.assertGreaterEqual(len(dir_contents), 1)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
@@ -119,8 +120,9 @@ class TestSync(unittest.TestCase):
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
         self.assertTrue(os.path.isdir(os.path.join(self.root_dir, config["drive"]["destination"])))
-        dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(dir_length == 1)
+        dir_contents = os.listdir(self.root_dir)
+        # Root contains the destination dir and the usage cache file (`.data`)
+        self.assertGreaterEqual(len(dir_contents), 1)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)

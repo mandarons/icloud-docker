@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 import requests
@@ -14,12 +14,10 @@ from src.config_parser import get_usage_tracking_enabled, prepare_root_destinati
 
 LOGGER = get_logger()
 
-# Same ICLOUD_DOCKER_CONFIG_DIR override as ``DEFAULT_COOKIE_DIRECTORY``
-# in ``src/__init__.py`` — lets the test suite on non-container hosts
-# (macOS, sandboxes) redirect the usage cache to a writable tempdir
-# instead of the read-only ``/config`` mount point. Defaults to
-# ``/config/.data`` so production container deployments are unchanged.
-CACHE_FILE_NAME = os.path.join(os.environ.get("ICLOUD_DOCKER_CONFIG_DIR", "/config"), ".data")
+# Filename for the usage cache.  Stored under the root destination
+# directory (``app.root``) via ``init_cache()``.  Kept as a bare
+# filename so that ``init_cache`` controls where the cache lives.
+CACHE_FILE_NAME = ".data"
 NEW_INSTALLATION_ENDPOINT = os.environ.get("NEW_INSTALLATION_ENDPOINT", None)
 NEW_HEARTBEAT_ENDPOINT = os.environ.get("NEW_HEARTBEAT_ENDPOINT", None)
 APP_NAME = "icloud-docker"
@@ -67,12 +65,21 @@ def validate_cache_data(data: dict) -> bool:
     if "app_version" in data and not isinstance(data["app_version"], str):
         return False
 
-    # If we have heartbeat timestamp, validate format
+    # If we have heartbeat timestamp, validate format.
+    # Accept both ``%Y-%m-%d %H:%M:%S.%f`` (current) and
+    # ``%Y-%m-%d %H:%M:%S`` (legacy, microsecond zero) to avoid
+    # wiping old caches that were written by the str() method.
     if "heartbeat_timestamp" in data:
-        try:
-            datetime.strptime(data["heartbeat_timestamp"], "%Y-%m-%d %H:%M:%S.%f")
-        except (ValueError, TypeError):
+        ts = data["heartbeat_timestamp"]
+        if not isinstance(ts, str):
             return False
+        try:
+            datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f")
+        except (ValueError, TypeError):
+            try:
+                datetime.strptime(ts, "%Y-%m-%d %H:%M:%S")
+            except (ValueError, TypeError):
+                return False
 
     return True
 
@@ -97,11 +104,11 @@ def load_cache(file_path: str) -> dict:
                 data = loaded_data
                 LOGGER.debug(f"Loaded and validated usage cache from: {file_path}")
             else:
-                LOGGER.warning(f"Cache data validation failed for {file_path}, starting fresh")
+                LOGGER.debug(f"Cache data validation failed for {file_path}, starting fresh")
                 save_cache(file_path=file_path, data={})
         except (json.JSONDecodeError, OSError) as e:
-            LOGGER.error(f"Failed to load usage cache from {file_path}: {e}")
-            LOGGER.info("Creating new empty cache file due to corruption")
+            LOGGER.debug(f"Failed to load usage cache from {file_path}: {e}")
+            LOGGER.debug("Creating new empty cache file due to corruption")
             save_cache(file_path=file_path, data={})
     else:
         LOGGER.debug(f"Usage cache file not found, creating: {file_path}")
@@ -137,7 +144,7 @@ def save_cache(file_path: str, data: dict) -> bool:
         LOGGER.debug(f"Atomically saved usage cache to: {file_path}")
         return True
     except OSError as e:
-        LOGGER.error(f"Failed to save usage cache to {file_path}: {e}")
+        LOGGER.debug(f"Failed to save usage cache to {file_path}: {e}")
         # Clean up temp file if it exists
         try:
             if "temp_path" in locals():
@@ -167,6 +174,7 @@ def post_with_retry(
         Response object if successful, None otherwise
     """
     last_exception = None
+    last_response = None
 
     for attempt in range(max_retries):
         try:
@@ -182,16 +190,17 @@ def post_with_retry(
                 return response
 
             # Rate limit (429) or server error (5xx) - retry
-            LOGGER.warning(
-                f"Request failed with status {response.status_code}, " f"attempt {attempt + 1}/{max_retries}",
+            last_response = response
+            LOGGER.debug(
+                f"Request failed with status {response.status_code}, attempt {attempt + 1}/{max_retries}",
             )
 
         except (requests.ConnectionError, requests.Timeout) as e:
             last_exception = e
-            LOGGER.warning(f"Network error: {e}, attempt {attempt + 1}/{max_retries}")
+            LOGGER.debug(f"Network error: {e}, attempt {attempt + 1}/{max_retries}")
         except Exception as e:
             # Catch other exceptions but don't retry
-            LOGGER.error(f"Unexpected error during request: {e}")
+            LOGGER.debug(f"Unexpected error during request: {e}")
             return None
 
         # Exponential backoff before next retry
@@ -200,9 +209,13 @@ def post_with_retry(
             LOGGER.debug(f"Waiting {wait_time}s before retry...")
             time.sleep(wait_time)
 
-    # All retries exhausted
+    # All retries exhausted — return the last response (if any) so callers
+    # can distinguish server errors from network failures.
+    if last_response is not None:
+        LOGGER.debug(f"All retry attempts failed: HTTP {last_response.status_code}")
+        return last_response
     if last_exception:
-        LOGGER.error(f"All retry attempts failed: {last_exception}")
+        LOGGER.debug(f"All retry attempts failed: {last_exception}")
     return None
 
 
@@ -227,9 +240,9 @@ def post_new_installation(data: dict, endpoint=NEW_INSTALLATION_ENDPOINT) -> str
             return installation_id
         else:
             status = response.status_code if response else "no response"
-            LOGGER.error(f"Installation registration failed: {status}")
+            LOGGER.debug(f"Installation registration failed: {status}")
     except Exception as e:
-        LOGGER.error(f"Failed to post new installation: {e}")
+        LOGGER.debug(f"Failed to post new installation: {e}")
     return None
 
 
@@ -282,7 +295,7 @@ def install(cached_data: dict) -> dict | None:
         LOGGER.debug(f"Installation completed with ID: {new_id}")
         return cached_data
 
-    LOGGER.error("Installation failed")
+    LOGGER.debug("Installation failed")
     return None
 
 
@@ -305,9 +318,9 @@ def post_new_heartbeat(data: dict, endpoint=NEW_HEARTBEAT_ENDPOINT) -> bool:
             return True
         else:
             status = response.status_code if response else "no response"
-            LOGGER.error(f"Heartbeat failed: {status}")
+            LOGGER.debug(f"Heartbeat failed: {status}")
     except Exception as e:
-        LOGGER.error(f"Failed to post heartbeat: {e}")
+        LOGGER.debug(f"Failed to post heartbeat: {e}")
     return False
 
 
@@ -325,13 +338,33 @@ def send_heartbeat(app_id: str | None, data: Any = None) -> bool:
     return post_new_heartbeat(data)
 
 
+def _format_timestamp(dt: datetime) -> str:
+    """Format a datetime as a cache-friendly string.
+
+    Uses explicit ``strftime`` so that the microsecond field is always
+    present (``str(datetime)`` omits it when microseconds are zero,
+    which would crash ``strptime`` with ``%f`` on load).
+    """
+    return dt.strftime("%Y-%m-%d %H:%M:%S.%f")
+
+
+def _parse_timestamp(ts: str) -> datetime:
+    """Parse a timestamp string produced by ``_format_timestamp``.
+
+    Accepts the ``%f``-fractional format.  Returns a timezone-aware UTC
+    datetime (``tzinfo=timezone.utc``) so it can be compared against
+    ``current_time()``'s output without naive/aware mismatches.
+    """
+    return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=timezone.utc)
+
+
 def current_time() -> datetime:
     """Get current UTC time.
 
     Returns:
-        Current UTC datetime object
+        Current UTC datetime object (timezone-aware)
     """
-    return datetime.utcnow()
+    return datetime.now(timezone.utc)
 
 
 def heartbeat(cached_data: dict, data: Any) -> dict | None:
@@ -350,7 +383,7 @@ def heartbeat(cached_data: dict, data: Any) -> dict | None:
 
     if previous_heartbeat:
         try:
-            previous = datetime.strptime(previous_heartbeat, "%Y-%m-%d %H:%M:%S.%f")
+            previous = _parse_timestamp(previous_heartbeat)
             time_since_last = current - previous
             LOGGER.debug(f"Time since last heartbeat: {time_since_last}")
 
@@ -358,39 +391,43 @@ def heartbeat(cached_data: dict, data: Any) -> dict | None:
             if previous.date() < current.date():
                 LOGGER.debug("Sending heartbeat (different UTC day)")
                 if send_heartbeat(cached_data.get("id"), data=data):
-                    cached_data["heartbeat_timestamp"] = str(current)
+                    cached_data["heartbeat_timestamp"] = _format_timestamp(current)
                     return cached_data
                 else:
-                    LOGGER.warning("Heartbeat send failed")
+                    LOGGER.debug("Heartbeat send failed")
                     return None
             else:
                 LOGGER.debug("Heartbeat throttled (same UTC day)")
                 return None
         except ValueError as e:
-            LOGGER.error(f"Invalid heartbeat timestamp format: {e}")
+            LOGGER.debug(f"Invalid heartbeat timestamp format: {e}")
             # Treat as first heartbeat if timestamp is invalid
 
     # First heartbeat or invalid timestamp
     LOGGER.debug("Sending first heartbeat")
     if send_heartbeat(cached_data.get("id"), data=data):
-        cached_data["heartbeat_timestamp"] = str(current)
+        cached_data["heartbeat_timestamp"] = _format_timestamp(current)
         LOGGER.debug("First heartbeat sent successfully")
         return cached_data
     else:
-        LOGGER.warning("First heartbeat send failed")
+        LOGGER.debug("First heartbeat send failed")
         return None
 
 
-def alive(config: dict, data: Any = None) -> bool:
+def alive(config: dict | None, data: Any = None) -> bool:
     """Record liveliness.
 
     Args:
-        config: Configuration dictionary
+        config: Configuration dictionary (or None to skip tracking)
         data: Additional usage data to send with heartbeat
 
     Returns:
-        True if usage tracking was successful, False otherwise
+        True if usage tracking was successful (or skipped), False on failure
     """
+    # Guard: missing config — skip silently
+    if config is None:
+        return True
+
     # Check if usage tracking is disabled
     if not get_usage_tracking_enabled(config):
         LOGGER.debug("Usage tracking is disabled, skipping")
@@ -409,7 +446,7 @@ def alive(config: dict, data: Any = None) -> bool:
             LOGGER.debug("Installation registration completed")
             return result
         else:
-            LOGGER.error("Installation registration failed")
+            LOGGER.debug("Installation registration failed")
             return False
 
     LOGGER.debug("Installation already registered, checking heartbeat")
@@ -420,4 +457,4 @@ def alive(config: dict, data: Any = None) -> bool:
         return result
 
     LOGGER.debug("No heartbeat required or heartbeat failed")
-    return False
+    return True
