@@ -19,7 +19,9 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
-def download_file(item: Any, local_file: str) -> str | None:
+def download_file(
+    item: Any, local_file: str, flatten_packages: bool = False,
+) -> str | None:
     """Download a file from iCloud to local filesystem.
 
     This function handles the actual download of files from iCloud, including
@@ -28,6 +30,12 @@ def download_file(item: Any, local_file: str) -> str | None:
     Args:
         item: iCloud file item to download
         local_file: Local path to save the file
+        flatten_packages: When True, package downloads (``/packageDownload?``
+            URLs) skip the unpack step entirely and stay on disk as a
+            single binary file. Useful for backup-style deployments where
+            bundle-directory semantics aren't needed and single-file
+            storage simplifies dedup / restoration. Opt-in via
+            ``drive.flatten_packages: true`` in config.yaml.
 
     Returns:
         Path to the downloaded/processed file, or None if download failed
@@ -42,13 +50,23 @@ def download_file(item: Any, local_file: str) -> str | None:
                 for chunk in response.iter_content(4 * 1024 * 1024):
                     file_out.write(chunk)
 
-            # Check if this is a package that needs processing
+            # Check if this is a package that needs processing.
+            #
+            # ``process_package`` now returns the local_file path for both
+            # successful unpacks AND unrecognised mime types (the bytes
+            # are still on disk as a flat bundle — see the docstring on
+            # ``process_package`` for the rationale). It only returns
+            # ``None`` on hard processing failure that leaves the file in
+            # an unusable state. So we surface that as a download failure
+            # but no longer treat "couldn't unpack" as failure when the
+            # downloaded bytes are intact.
             if response.url and "/packageDownload?" in response.url:
-                processed_file = process_package(local_file=local_file)
-                if processed_file:
-                    local_file = processed_file
-                else:
+                processed_file = process_package(
+                    local_file=local_file, flatten=flatten_packages,
+                )
+                if processed_file is None:
                     return None
+                local_file = processed_file
 
         # Set the file modification time to match the remote file.
         # iCloudPy produces date_modified via strptime(..., "%Y-%m-%dT%H:%M:%SZ") — always
