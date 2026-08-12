@@ -76,7 +76,7 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
 
       - name: Comment PR with Docker image info
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.issues.createComment({
