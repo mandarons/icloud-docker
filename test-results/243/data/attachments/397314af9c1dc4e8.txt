@@ -1,0 +1,1 @@
+ERROR    root:sync.py:341 Photos mount marker missing: /tmp/tmp6havzki6/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmp6havzki6/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.

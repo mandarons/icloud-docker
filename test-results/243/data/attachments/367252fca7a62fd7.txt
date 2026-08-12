@@ -1,0 +1,1 @@
+[38;5;196m2026-08-12 17:57:24,179 :: ERROR :: root :: sync.py :: 341 :: Drive mount marker missing: /tmp/tmpe3nmt31a/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpe3nmt31a/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m
