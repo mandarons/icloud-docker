@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python 3.10
         uses: actions/setup-python@v7
         with:
@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python 3.10
         uses: actions/setup-python@v7
         with:
@@ -97,7 +97,7 @@ jobs:
   #     pull-requests: write
   #   steps:
   #     - name: Check Out Repo
-  #       uses: actions/checkout@v4
+  #       uses: actions/checkout@v7
 
   #     - name: Prepare PR tag
   #       id: prep
