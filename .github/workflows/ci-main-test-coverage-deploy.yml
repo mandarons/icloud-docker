@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python 3.10
         uses: actions/setup-python@v7
         with:
@@ -43,7 +43,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Python 3.10
         uses: actions/setup-python@v7
         with:
@@ -64,7 +64,7 @@ jobs:
           sudo chown -R $(id -u):$(id -g) /config /icloud &&
           ENV_CONFIG_FILE_PATH=./tests/data/test_config.yaml pytest
       - name: Checkout gh-pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         if: always()
         continue-on-error: true
         with:
@@ -114,7 +114,7 @@ jobs:
       #       - name: Setup tmate session
       #         uses: mxschmitt/action-tmate@v3
       - name: Checkout gh-pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         if: always()
         continue-on-error: true
         with:
@@ -141,7 +141,7 @@ jobs:
           name: coverage-output
           path: coverage
       - name: Checkout gh-pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         if: always()
         continue-on-error: true
         with:
@@ -165,7 +165,7 @@ jobs:
           name: badges-output
           path: badges
       - name: Checkout gh-pages
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         if: always()
         continue-on-error: true
         with:
@@ -184,7 +184,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Cache Docker layers
         uses: actions/cache@v6
         with:
