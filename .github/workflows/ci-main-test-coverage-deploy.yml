@@ -85,20 +85,20 @@ jobs:
         run: |
           python generate_badges.py
       - name: Upload tests artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-output.zip
           path: test-output.zip
           retention-days: 1
       - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-output
           path: htmlcov
           retention-days: 1
           overwrite: true
       - name: Upload badges artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: badges-output
           path: badges
