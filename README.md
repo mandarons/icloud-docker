@@ -795,11 +795,11 @@ As mentioned in [USAGE.md](https://github.com/mandarons/icloud-docker/blob/main/
 
 ## Star History
 
-<a href="https://star-history.com/#mandarons/icloud-docker&Timeline">
+<a href="https://star-history.dera.page/#mandarons/icloud-docker&Timeline">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=mandarons/icloud-docker&type=Timeline&theme=dark" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=mandarons/icloud-docker&type=Timeline" />
-   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=mandarons/icloud-docker&type=Timeline" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=mandarons/icloud-docker&type=Timeline&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=mandarons/icloud-docker&type=Timeline" />
+   <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=mandarons/icloud-docker&type=Timeline" />
  </picture>
 </a>
 
