@@ -1,0 +1,7 @@
+[38;21m2026-08-20 22:39:07,106 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:07,106 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:07,107 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:07,107 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:07,107 :: DEBUG :: root :: usage.py :: 147 :: Failed to save usage cache to /home/runner/work/icloud-docker/icloud-docker/icloud/.data: Permission denied[0m
+[38;21m2026-08-20 22:39:07,108 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:07,108 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

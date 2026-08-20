@@ -1,0 +1,16 @@
+[38;21m2026-08-20 22:39:05,671 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:05,671 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:05,672 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-08-20 22:39:05,672 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:05,672 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:05,672 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:05,672 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:05,672 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-08-20 22:39:05,672 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-08-20 22:39:05,673 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-08-20 22:39:05,673 :: DEBUG :: root :: usage.py :: 203 :: Unexpected error during request: Network error[0m
+[38;21m2026-08-20 22:39:05,673 :: DEBUG :: root :: usage.py :: 243 :: Installation registration failed: no response[0m
+[38;21m2026-08-20 22:39:05,673 :: DEBUG :: root :: usage.py :: 298 :: Installation failed[0m
+[38;21m2026-08-20 22:39:05,673 :: DEBUG :: root :: usage.py :: 449 :: Installation registration failed[0m
+[38;21m2026-08-20 22:39:05,673 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:05,673 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

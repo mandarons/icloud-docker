@@ -1,0 +1,7 @@
+[38;21m2026-08-20 22:39:05,883 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:05,883 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:05,884 :: DEBUG :: root :: usage.py :: 403 :: Invalid heartbeat timestamp format: time data 'invalid-timestamp' does not match format '%Y-%m-%d %H:%M:%S.%f'[0m
+[38;21m2026-08-20 22:39:05,884 :: DEBUG :: root :: usage.py :: 407 :: Sending first heartbeat[0m
+[38;21m2026-08-20 22:39:05,884 :: DEBUG :: root :: usage.py :: 410 :: First heartbeat sent successfully[0m
+[38;21m2026-08-20 22:39:05,884 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:05,885 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

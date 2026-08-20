@@ -1,0 +1,7 @@
+[38;21m2026-08-20 22:39:06,447 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:06,447 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:06,447 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: Invalid[0m
+[38;21m2026-08-20 22:39:06,447 :: DEBUG :: root :: usage.py :: 185 :: Non-retriable error (status 404)[0m
+[38;21m2026-08-20 22:39:06,448 :: DEBUG :: root :: usage.py :: 243 :: Installation registration failed: 404[0m
+[38;21m2026-08-20 22:39:06,448 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:06,448 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

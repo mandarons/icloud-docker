@@ -1,0 +1,20 @@
+[38;21m2026-08-20 22:39:06,746 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:06,746 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-20 22:39:06,747 :: DEBUG :: root :: usage.py :: 194 :: Request failed with status 500, attempt 1/2[0m
+[38;21m2026-08-20 22:39:06,747 :: DEBUG :: root :: usage.py :: 209 :: Waiting 1.0s before retry...[0m
+[38;21m2026-08-20 22:39:06,748 :: DEBUG :: root :: usage.py :: 194 :: Request failed with status 500, attempt 2/2[0m
+[38;21m2026-08-20 22:39:06,748 :: DEBUG :: root :: usage.py :: 215 :: All retry attempts failed: HTTP 500[0m
+[38;21m2026-08-20 22:39:06,748 :: DEBUG :: root :: usage.py :: 194 :: Request failed with status 502, attempt 1/2[0m
+[38;21m2026-08-20 22:39:06,748 :: DEBUG :: root :: usage.py :: 209 :: Waiting 1.0s before retry...[0m
+[38;21m2026-08-20 22:39:06,749 :: DEBUG :: root :: usage.py :: 194 :: Request failed with status 502, attempt 2/2[0m
+[38;21m2026-08-20 22:39:06,749 :: DEBUG :: root :: usage.py :: 215 :: All retry attempts failed: HTTP 502[0m
+[38;21m2026-08-20 22:39:06,749 :: DEBUG :: root :: usage.py :: 194 :: Request failed with status 503, attempt 1/2[0m
+[38;21m2026-08-20 22:39:06,749 :: DEBUG :: root :: usage.py :: 209 :: Waiting 1.0s before retry...[0m
+[38;21m2026-08-20 22:39:06,749 :: DEBUG :: root :: usage.py :: 194 :: Request failed with status 503, attempt 2/2[0m
+[38;21m2026-08-20 22:39:06,750 :: DEBUG :: root :: usage.py :: 215 :: All retry attempts failed: HTTP 503[0m
+[38;21m2026-08-20 22:39:06,750 :: DEBUG :: root :: usage.py :: 194 :: Request failed with status 504, attempt 1/2[0m
+[38;21m2026-08-20 22:39:06,750 :: DEBUG :: root :: usage.py :: 209 :: Waiting 1.0s before retry...[0m
+[38;21m2026-08-20 22:39:06,750 :: DEBUG :: root :: usage.py :: 194 :: Request failed with status 504, attempt 2/2[0m
+[38;21m2026-08-20 22:39:06,750 :: DEBUG :: root :: usage.py :: 215 :: All retry attempts failed: HTTP 504[0m
+[38;21m2026-08-20 22:39:06,750 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-20 22:39:06,751 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
