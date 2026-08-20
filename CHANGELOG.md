@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Expired download URL (HTTP 410) recovery now uses CloudKit `records/lookup` instead
+  of `records/query`. `CPLMaster` is not a query-indexable type, so every refresh
+  attempt failed with `Type is not marked indexable: CPLMaster (BAD_REQUEST)`, which
+  could stop large albums syncing entirely ([#521](https://github.com/mandarons/icloud-docker/issues/521))
+
+### Changed
+
+- Repeated consecutive download URL refresh failures are logged at WARNING rather than
+  only DEBUG, so a systematically broken refresh path is visible by default
+
 ## [1.28.0] - 2026-07-27
 
 ### Added

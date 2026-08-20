@@ -20,6 +20,12 @@ LOGGER = get_logger()
 # Module-level lock to protect thread-safe mutation of photo._versions during retries
 _versions_refresh_lock = threading.Lock()
 
+# Consecutive download-URL refresh failures, and how often to escalate them to WARNING.
+# Downloads run in parallel, so the counter is guarded by its own lock.
+_refresh_failure_lock = threading.Lock()
+_consecutive_refresh_failures = 0
+_REFRESH_FAILURE_WARN_INTERVAL = 3
+
 # CloudKit fields to request when re-fetching a photo record for fresh download URLs.
 # Mirrors the desiredKeys list used by icloudpy's PhotoAlbum._list_query_gen().
 _DESIRED_KEYS = [
@@ -127,6 +133,40 @@ _DESIRED_KEYS = [
 ]
 
 
+def _note_refresh_success() -> None:
+    """Reset the consecutive refresh-failure streak after a successful refresh."""
+    global _consecutive_refresh_failures  # noqa: PLW0603
+    with _refresh_failure_lock:
+        _consecutive_refresh_failures = 0
+
+
+def _note_refresh_failure(record_name: str, reason: str) -> None:
+    """Record a failed URL refresh, escalating to WARNING once failures repeat.
+
+    URL refresh is the last line of defence before a download is abandoned, so a
+    systematically broken refresh path (rather than an occasional miss) should be
+    visible without turning on debug logging.  Individual failures stay at DEBUG;
+    every ``_REFRESH_FAILURE_WARN_INTERVAL`` consecutive failures emits a WARNING.
+
+    Args:
+        record_name: CloudKit recordName of the photo being refreshed
+        reason: Human-readable description of why the refresh failed
+    """
+    global _consecutive_refresh_failures  # noqa: PLW0603
+    with _refresh_failure_lock:
+        _consecutive_refresh_failures += 1
+        failures = _consecutive_refresh_failures
+
+    if failures % _REFRESH_FAILURE_WARN_INTERVAL == 0:
+        LOGGER.warning(
+            f"Download URL refresh has failed {failures} times in a row - expired-URL (HTTP 410) "
+            f"recovery is not working, so affected photos will be reported as failed downloads. "
+            f"Most recent failure: {record_name} - {reason}",
+        )
+    else:
+        LOGGER.debug(f"Failed to refresh download URL for {record_name}: {reason}")
+
+
 def _refresh_photo_download_url(photo) -> bool:
     """Re-fetch the photo's master record from iCloud to obtain fresh download URLs.
 
@@ -134,9 +174,14 @@ def _refresh_photo_download_url(photo) -> bool:
     When a URL expires (HTTP 410 Gone), clearing ``photo._versions`` alone is
     insufficient because icloudpy re-parses the same stale ``_master_record``
     which still contains the expired URL.  This function makes a new
-    ``records/query`` API call to get an updated master record with fresh URLs,
+    ``records/lookup`` API call to get an updated master record with fresh URLs,
     then updates ``photo._master_record`` in place and clears ``_versions`` so
     the next ``download()`` call uses the fresh URL.
+
+    ``records/lookup`` is used rather than ``records/query`` because ``CPLMaster``
+    is not a query-indexable CloudKit type: querying it fails every time with
+    ``Type is not marked indexable: CPLMaster (BAD_REQUEST)``.  Lookup fetches
+    records by name and returns the same ``{"records": [...]}`` shape.
 
     Args:
         photo: PhotoAsset object from icloudpy
@@ -146,14 +191,13 @@ def _refresh_photo_download_url(photo) -> bool:
     """
     try:
         record_name = photo._master_record["recordName"]  # noqa: SLF001
-        record_type = photo._master_record.get("recordType", "CPLMaster")  # noqa: SLF001
     except (AttributeError, KeyError, TypeError):
-        LOGGER.debug("Cannot refresh download URL: photo missing _master_record or recordName")
+        _note_refresh_failure("<unknown>", "photo missing _master_record or recordName")
         return False
 
     service = getattr(photo, "_service", None)
     if service is None:
-        LOGGER.debug("Cannot refresh download URL: photo missing _service")
+        _note_refresh_failure(record_name, "photo missing _service")
         return False
 
     endpoint = getattr(service, "_service_endpoint", None)
@@ -162,26 +206,13 @@ def _refresh_photo_download_url(photo) -> bool:
     zone_id = getattr(service, "zone_id", None)
 
     if not all([endpoint, session, params, zone_id]):
-        LOGGER.debug("Cannot refresh download URL: photo._service missing required attributes")
+        _note_refresh_failure(record_name, "photo._service missing required attributes")
         return False
 
     try:
-        url = f"{endpoint}/records/query?{urlencode(params)}"
+        url = f"{endpoint}/records/lookup?{urlencode(params)}"
         query = {
-            "query": {
-                "recordType": record_type,
-                "filterBy": [
-                    {
-                        "fieldName": "recordName",
-                        "comparator": "IN",
-                        "fieldValue": {
-                            "type": "STRING_LIST",
-                            "value": [record_name],
-                        },
-                    },
-                ],
-            },
-            "resultsLimit": 1,
+            "records": [{"recordName": record_name}],
             "desiredKeys": _DESIRED_KEYS,
             "zoneID": zone_id,
         }
@@ -199,13 +230,14 @@ def _refresh_photo_download_url(photo) -> bool:
                 with _versions_refresh_lock:
                     photo._versions = None  # noqa: SLF001
                 LOGGER.debug(f"Refreshed download URL for {record_name}")
+                _note_refresh_success()
                 return True
 
-        LOGGER.debug(f"Record {record_name} not found in iCloud response during URL refresh")
+        _note_refresh_failure(record_name, "record not found in iCloud response")
         return False
 
     except Exception as e:  # noqa: BLE001
-        LOGGER.debug(f"Failed to refresh download URL for {record_name}: {e!s}")
+        _note_refresh_failure(record_name, str(e))
         return False
 
 

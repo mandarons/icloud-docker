@@ -2203,6 +2203,94 @@ class TestSyncPhotos(unittest.TestCase):
         result = _refresh_photo_download_url(mock_photo)
         self.assertFalse(result)
 
+    def test_refresh_photo_download_url_uses_records_lookup(self):
+        """Test _refresh_photo_download_url calls records/lookup, not records/query.
+
+        CPLMaster is not a query-indexable CloudKit type, so records/query fails
+        every time with "Type is not marked indexable: CPLMaster (BAD_REQUEST)".
+        """
+        import json
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock()
+        mock_photo._master_record = {"recordName": "test-123", "recordType": "CPLMaster"}  # noqa: SLF001
+
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"records": [{"recordName": "test-123"}]}
+        mock_service.session.post.return_value = mock_response
+
+        self.assertTrue(_refresh_photo_download_url(mock_photo))
+
+        called_url = mock_service.session.post.call_args[0][0]
+        self.assertIn("/records/lookup?", called_url)
+        self.assertNotIn("/records/query", called_url)
+
+        body = json.loads(mock_service.session.post.call_args[1]["data"])
+        self.assertEqual(body["records"], [{"recordName": "test-123"}])
+        self.assertNotIn("query", body)
+        self.assertEqual(body["zoneID"], {"zoneName": "PrimarySync"})
+
+    def test_refresh_failure_streak_escalates_to_warning(self):
+        """Test repeated refresh failures escalate from DEBUG to WARNING."""
+        from unittest.mock import Mock, patch
+
+        from src import photo_file_utils
+
+        mock_photo = Mock(spec=["_service"])
+
+        with (
+            patch.object(photo_file_utils, "_consecutive_refresh_failures", 0),
+            patch.object(photo_file_utils.LOGGER, "warning") as mock_warning,
+        ):
+            for _ in range(photo_file_utils._REFRESH_FAILURE_WARN_INTERVAL - 1):  # noqa: SLF001
+                self.assertFalse(photo_file_utils._refresh_photo_download_url(mock_photo))  # noqa: SLF001
+            mock_warning.assert_not_called()
+
+            # The Nth consecutive failure escalates
+            self.assertFalse(photo_file_utils._refresh_photo_download_url(mock_photo))  # noqa: SLF001
+            mock_warning.assert_called_once()
+            self.assertIn("failed", mock_warning.call_args[0][0])
+
+    def test_refresh_success_resets_failure_streak(self):
+        """Test a successful refresh clears the consecutive-failure counter."""
+        from unittest.mock import MagicMock, Mock, patch
+
+        from src import photo_file_utils
+
+        failing_photo = Mock(spec=["_service"])
+
+        mock_photo = Mock()
+        mock_photo._master_record = {"recordName": "test-123"}  # noqa: SLF001
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"records": [{"recordName": "test-123"}]}
+        mock_service.session.post.return_value = mock_response
+
+        with (
+            patch.object(photo_file_utils, "_consecutive_refresh_failures", 0),
+            patch.object(photo_file_utils.LOGGER, "warning") as mock_warning,
+        ):
+            for _ in range(photo_file_utils._REFRESH_FAILURE_WARN_INTERVAL - 1):  # noqa: SLF001
+                photo_file_utils._refresh_photo_download_url(failing_photo)  # noqa: SLF001
+
+            self.assertTrue(photo_file_utils._refresh_photo_download_url(mock_photo))  # noqa: SLF001
+
+            # Streak reset, so the next failure must not trip the warning
+            self.assertFalse(photo_file_utils._refresh_photo_download_url(failing_photo))  # noqa: SLF001
+            mock_warning.assert_not_called()
+
     @patch("src.photo_file_utils._refresh_photo_download_url")
     def test_download_photo_from_server_410_calls_refresh(self, mock_refresh):
         """Test that download_photo_from_server calls _refresh_photo_download_url on 410."""

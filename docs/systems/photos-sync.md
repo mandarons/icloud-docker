@@ -57,6 +57,11 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 - `folder_format` uses strftime patterns (e.g., `"%Y/%m"`)
 - `enumeration_chunk_size` bounds peak memory (default 1000 photos/chunk)
 - HTTP 410 Gone triggers download URL refresh via `_refresh_photo_download_url()`
+- URL refresh MUST use CloudKit `records/lookup`, not `records/query` — `CPLMaster`
+  is not a query-indexable type and querying it always fails with
+  `Type is not marked indexable: CPLMaster (BAD_REQUEST)`
+- Repeated consecutive refresh failures escalate from DEBUG to WARNING, so a
+  systematically broken refresh path is visible without debug logging
 
 ## Dependencies
 
