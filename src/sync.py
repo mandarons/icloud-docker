@@ -5,6 +5,7 @@ import datetime
 import os
 from time import sleep
 
+import requests
 from icloudpy import ICloudPyService, exceptions, utils
 
 from src import (
@@ -59,6 +60,10 @@ def _read_trust_cookie_expiry(api) -> datetime.datetime | None:
 # ``_resolve_dashboard_url``) so the advice appears once per process,
 # not once per sync-loop iteration.
 _WEB_UI_PUBLIC_URL_WARNED = False
+
+# Minimum wait after a failed sign-in. Apple answers a throttled account
+# with 409 on /signin/init; retrying sooner just extends the lockout.
+_AUTH_BACKOFF_FLOOR_SEC = 1800
 
 
 def _resolve_dashboard_url(config) -> str | None:
@@ -797,6 +802,27 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
     return True
 
 
+def _handle_auth_transport_error(config, username: str, sync_state: SyncState, error):
+    """Back off after a sign-in failure Apple did not express as a 2FA prompt.
+
+    Uses at least ``_AUTH_BACKOFF_FLOOR_SEC`` regardless of the configured
+    retry interval: the errors that land here (notably Apple's 409 on
+    ``/signin/init``) mean "you are trying too often", so honouring a short
+    interval would make it worse.
+
+    Returns True to keep looping, False to exit.
+    """
+    LOGGER.error(f"Sign-in failed and will be retried: {error!s}")
+    sleep_for = config_parser.get_retry_login_interval(config=config)
+    if sleep_for < 0:
+        LOGGER.info("retry_login_interval is < 0, exiting ...")
+        return False
+    sleep_for = max(sleep_for, _AUTH_BACKOFF_FLOOR_SEC)
+    _log_retry_time(sleep_for)
+    sleep(sleep_for)
+    return True
+
+
 def _handle_password_error(config, username: str, sync_state: SyncState):
     """
     Handle password not available error.
@@ -1123,6 +1149,20 @@ def sync(dry_run: bool = False, check_files: int | None = None):
 
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
                 if not _handle_password_error(config, username, sync_state):
+                    break
+                continue
+            except (
+                exceptions.ICloudPyAPIResponseException,
+                requests.exceptions.RequestException,
+            ) as e:
+                # Apple refuses sign-in for reasons other than "2FA needed":
+                # 409 when it is throttling the account, 5xx when it is
+                # having a bad day, plus ordinary network faults. None of
+                # these are fatal, but letting them escape kills the process
+                # -- and with `restart: unless-stopped` that becomes a crash
+                # loop that re-authenticates every few seconds, which is the
+                # fastest possible way to deepen a throttle.
+                if not _handle_auth_transport_error(config, username, sync_state, e):
                     break
                 continue
 
