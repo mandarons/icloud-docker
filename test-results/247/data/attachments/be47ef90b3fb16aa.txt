@@ -1,0 +1,14 @@
+[38;21m2026-08-21 17:58:48,481 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-21 17:58:48,482 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-21 17:58:48,482 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-21 17:58:48,482 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-21 17:58:48,483 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-21 17:58:48,483 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-21 17:58:48,483 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-08-21 17:58:48,483 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-08-21 17:58:48,483 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: dec49511-d381-421a-97e9-ee910cba3bfc[0m
+[38;21m2026-08-21 17:58:48,483 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: dec49511-d381-421a-97e9-ee910cba3bfc[0m
+[38;21m2026-08-21 17:58:48,483 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: None[0m
+[38;21m2026-08-21 17:58:48,484 :: DEBUG :: root :: usage.py :: 317 :: Heartbeat sent successfully[0m
+[38;21m2026-08-21 17:58:48,484 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-21 17:58:48,484 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

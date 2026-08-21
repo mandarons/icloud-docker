@@ -1,0 +1,11 @@
+[38;5;196m2026-08-21 17:58:50,299 :: ERROR :: root :: web.py :: 551 :: Web UI auth failed during ICloudPyService instantiation[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 545, in auth_password
+    api = icloudpy.ICloudPyService(
+  File "/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/unittest/mock.py", line 1114, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/unittest/mock.py", line 1118, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/unittest/mock.py", line 1173, in _execute_mock_call
+    raise effect
+RuntimeError: Apple said no

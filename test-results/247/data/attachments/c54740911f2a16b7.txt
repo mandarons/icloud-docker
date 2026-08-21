@@ -1,0 +1,8 @@
+[38;21m2026-08-21 17:58:39,359 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-08-21 17:58:39,359 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-08-21 17:58:39,360 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-08-21 17:58:39,368 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;5;39m2026-08-21 17:58:39,369 :: INFO :: root :: drive_file_download.py :: 38 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band ...[0m
+[38;5;39m2026-08-21 17:58:39,370 :: INFO :: root :: drive_package_processing.py :: 73 :: Unpacking /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band.zip to /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive[0m
+[38;5;39m2026-08-21 17:58:39,374 :: INFO :: root :: drive_package_processing.py :: 83 :: Successfully unpacked the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band.zip.[0m
+[38;21m2026-08-21 10:58:39,374 :: DEBUG :: root :: drive_file_existence.py :: 84 :: No changes detected. Skipping the package /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/Project.band ...[0m

@@ -1,0 +1,20 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+INFO     root:config_logging.py:35 Syncing drive every -1 seconds.
+INFO     root:config_logging.py:35 Syncing photos every -1 seconds.
+DEBUG    root:usage.py:436 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data
+DEBUG    root:usage.py:114 Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data
+DEBUG    root:usage.py:442 New installation detected, registering...
+DEBUG    root:usage.py:289 Installing new instance
+DEBUG    root:usage.py:233 Posting new installation to: None
+DEBUG    root:usage.py:239 Successfully registered new installation: 97f8d388-c9a4-4f97-95ea-ab6dee35fba5
+DEBUG    root:usage.py:295 Installation completed with ID: 97f8d388-c9a4-4f97-95ea-ab6dee35fba5
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data
+DEBUG    root:usage.py:446 Installation registration completed
+INFO     root:sync.py:912 Resyncing at Fri Aug 21 17:58:36 2026 ...
+INFO     root:sync.py:1133 All configured sync intervals are negative, exiting oneshot mode...

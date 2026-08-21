@@ -1,0 +1,11 @@
+[38;5;196m2026-08-21 17:58:51,297 :: ERROR :: root :: web.py :: 772 :: Web UI refresh-trust: ICloudPyService raised[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 766, in auth_refresh_trust
+    api = icloudpy.ICloudPyService(
+  File "/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/unittest/mock.py", line 1114, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/unittest/mock.py", line 1118, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.21/x64/lib/python3.10/unittest/mock.py", line 1173, in _execute_mock_call
+    raise effect
+RuntimeError: ctor boom

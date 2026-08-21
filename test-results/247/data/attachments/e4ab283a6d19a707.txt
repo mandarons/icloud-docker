@@ -1,0 +1,1 @@
+[38;5;226m2026-08-21 17:58:47,649 :: WARNING :: root :: sync.py :: 86 :: app.web_ui.public_url not set -- notification URLs will use http://127.0.0.1:9090/, which won't work from outside the container. Set app.web_ui.public_url to your reverse-proxy URL.[0m

@@ -1,0 +1,9 @@
+[38;21m2026-08-21 17:58:48,085 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-21 17:58:48,086 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-21 17:58:48,086 :: DEBUG :: root :: usage.py :: 407 :: Sending first heartbeat[0m
+[38;21m2026-08-21 17:58:48,087 :: DEBUG :: root :: usage.py :: 413 :: First heartbeat send failed[0m
+[38;21m2026-08-21 17:58:48,087 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 1 day, 1:00:00.000022[0m
+[38;21m2026-08-21 17:58:48,087 :: DEBUG :: root :: usage.py :: 392 :: Sending heartbeat (different UTC day)[0m
+[38;21m2026-08-21 17:58:48,087 :: DEBUG :: root :: usage.py :: 397 :: Heartbeat send failed[0m
+[38;21m2026-08-21 17:58:48,087 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-21 17:58:48,087 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

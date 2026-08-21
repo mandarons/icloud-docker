@@ -1,0 +1,46 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:436 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:114 Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:442 New installation detected, registering...
+DEBUG    root:usage.py:289 Installing new instance
+DEBUG    root:usage.py:233 Posting new installation to: None
+DEBUG    root:usage.py:239 Successfully registered new installation: 7794ceb4-0c64-4fdf-925c-695c997ccdc7
+DEBUG    root:usage.py:295 Installation completed with ID: 7794ceb4-0c64-4fdf-925c-695c997ccdc7
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:446 Installation registration completed
+DEBUG    root:usage.py:436 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:105 Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:452 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:407 Sending first heartbeat
+DEBUG    root:usage.py:313 Posting heartbeat to: None
+DEBUG    root:usage.py:317 Heartbeat sent successfully
+DEBUG    root:usage.py:410 First heartbeat sent successfully
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:456 Heartbeat completed successfully
+DEBUG    root:usage.py:436 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:105 Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:452 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:388 Time since last heartbeat: 0:00:00.002102
+DEBUG    root:usage.py:400 Heartbeat throttled (same UTC day)
+DEBUG    root:usage.py:459 No heartbeat required or heartbeat failed
+DEBUG    root:usage.py:436 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:105 Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:452 Installation already registered, checking heartbeat
+DEBUG    root:usage.py:388 Time since last heartbeat: 1 day, 0:00:00.002497
+DEBUG    root:usage.py:392 Sending heartbeat (different UTC day)
+DEBUG    root:usage.py:313 Posting heartbeat to: None
+DEBUG    root:usage.py:317 Heartbeat sent successfully
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:456 Heartbeat completed successfully
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data

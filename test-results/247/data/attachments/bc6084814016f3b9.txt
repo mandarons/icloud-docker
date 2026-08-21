@@ -1,0 +1,1 @@
+ERROR    root:sync.py:341 Drive mount marker missing: /tmp/tmpmpi8g28t/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpmpi8g28t/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.
