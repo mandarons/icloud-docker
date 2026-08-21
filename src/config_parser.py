@@ -394,6 +394,29 @@ def get_trust_expiry_warn_days(config: dict) -> int:
     )
 
 
+def get_trust_refresh_days(config: dict) -> int:
+    """Proactively re-trust when the cookie has this many days left.
+
+    Default 14. Apple's trust window is finite, but ``trust_session``
+    mints a fresh token whenever it is called on a live session, so
+    re-trusting on a schedule keeps the *persisted* token young. That is
+    what lets a container restart resume without a second factor -- the
+    common failure mode otherwise is a long-running process holding a
+    valid in-memory session while the token on disk quietly expires,
+    stranding the next cold start on a 2FA prompt.
+
+    Must exceed ``trust_expiry_warn_days`` for the refresh to get a
+    chance before the warning fires. Set to 0 to disable.
+    """
+    return int(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "trust_refresh_days"],
+            default=14,
+        ),
+    )
+
+
 def get_app_max_threads(config: dict) -> int:
     """Return app-level max threads from config with support for 'auto' value.
 
