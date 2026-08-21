@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Drive packages (`.key`, `.pxm`, `.band`, `.framework`, `.app`, …) are no longer
+  re-downloaded on every sync. `package_exists()` compared the summed size of the
+  *unpacked* directory against `item.size`, which is the size of the remote *zip* —
+  never equal, so the up-to-date branch was unreachable
+  ([#525](https://github.com/mandarons/icloud-docker/issues/525))
+- Package extraction is gated on `zipfile.is_zipfile()` rather than the libmagic MIME
+  string, which reports `application/octet-stream` for many of Apple's packageDownload
+  zips. Previously those packages were never unpacked and the raw zip was left on disk
+  under the package's own name ([#525](https://github.com/mandarons/icloud-docker/issues/525))
+
 - Expired download URL (HTTP 410) recovery now uses CloudKit `records/lookup` instead
   of `records/query`. `CPLMaster` is not a query-indexable type, so every refresh
   attempt failed with `Type is not marked indexable: CPLMaster (BAD_REQUEST)`, which

@@ -8,7 +8,6 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 from datetime import timezone
-from pathlib import Path
 from shutil import rmtree
 from typing import Any
 
@@ -75,17 +74,20 @@ def package_exists(item: Any, local_package_path: str) -> bool:
     # iCloudPy produces date_modified via strptime(..., "%Y-%m-%dT%H:%M:%SZ") — always
     # naive UTC with no tzinfo. replace(tzinfo=UTC) is the correct conversion.
     remote_package_modified_time = int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
-    local_package_size = sum(f.stat().st_size for f in Path(local_package_path).glob("**/*") if f.is_file())
-    remote_package_size = item.size
 
-    if local_package_modified_time == remote_package_modified_time and local_package_size == remote_package_size:
+    # Only date_modified is comparable here. A package is stored remotely as a zip and
+    # unpacked locally, so item.size (the zip) and the summed size of the unpacked
+    # directory are never equal — e.g. one .pxm is 7,821,180 bytes zipped and
+    # 11,716,516 unpacked. Requiring size equality made this branch unreachable, so
+    # every package was rmtree'd and re-downloaded on every single sync.
+    if local_package_modified_time == remote_package_modified_time:
         LOGGER.debug(f"No changes detected. Skipping the package {local_package_path} ...")
         return True
 
     LOGGER.info(
         f"Changes detected: local_modified_time is {local_package_modified_time}, "
-        + f"remote_modified_time is {remote_package_modified_time}, "
-        + f"local_package_size is {local_package_size} and remote_package_size is {remote_package_size}.",
+        + f"remote_modified_time is {remote_package_modified_time} "
+        + f"for package {local_package_path}.",
     )
     rmtree(local_package_path)
     return False

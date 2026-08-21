@@ -44,7 +44,13 @@ Drive sync is purely a download system — it does NOT upload files to iCloud. I
 
 - All file paths MUST be NFC-normalized with `unicodedata.normalize("NFC", path)`
 - Files are downloaded to temp paths, then moved atomically to final location
-- ZIP packages are auto-extracted when detected via `python-magic`
+- ZIP packages are auto-extracted when `zipfile.is_zipfile()` accepts them; `python-magic`
+  is consulted only for the gzip branch. Do not gate ZIP handling on the libmagic MIME
+  string — it reports `application/octet-stream` for many of Apple's packageDownload
+  zips, and a failed unpack leaves the raw archive on disk under the package's name
+- Package freshness is decided by `date_modified` **only**. `item.size` is the size of
+  the remote zip while the local package is an unpacked directory, so the two are never
+  comparable
 - Thread count is capped at `min(CPU_COUNT, 8)`, max 16
 - `files_lock` protects shared `files` set in parallel workers
 
