@@ -1219,3 +1219,118 @@ class TestInterruptibleSleep(unittest.TestCase):
         # Exited after the second chunk -> 2 sleeps + 2 polls.
         self.assertEqual(mock_sleep.call_count, 2)
         self.assertEqual(mock_pending.call_count, 2)
+
+
+class TestSigninTransportFailures(unittest.TestCase):
+    """A sign-in failure Apple does not express as a 2FA prompt must not
+    end the process.
+
+    Only the missing-password exception was caught, so a bare requests
+    HTTPError from ICloudPyService construction escaped, exited, and -- with
+    the container's restart policy -- became a loop that re-authenticated
+    every few seconds. Apple answers a rate-limited account with 409 on
+    /signin/init, so the loop was hammering the very condition it was
+    reacting to."""
+
+    def test_backoff_floor_beats_a_short_retry_interval(self):
+        from unittest.mock import MagicMock, patch
+
+        from src import sync
+
+        config = {"app": {"credentials": {"retry_login_interval": 60}}}
+        with patch.object(sync, "sleep") as slept:
+            keep_going = sync._handle_auth_transport_error(  # noqa: SLF001
+                config,
+                "a@icloud.com",
+                MagicMock(),
+                RuntimeError("409"),
+            )
+        self.assertTrue(keep_going)
+        self.assertGreaterEqual(
+            slept.call_args.args[0],
+            sync._AUTH_BACKOFF_FLOOR_SEC,  # noqa: SLF001
+        )
+
+    def test_negative_interval_exits(self):
+        from unittest.mock import MagicMock
+
+        from src import sync
+
+        config = {"app": {"credentials": {"retry_login_interval": -1}}}
+        self.assertFalse(
+            sync._handle_auth_transport_error(  # noqa: SLF001
+                config,
+                "a@icloud.com",
+                MagicMock(),
+                RuntimeError("409"),
+            ),
+        )
+
+    def test_loop_retries_after_a_recoverable_failure(self):
+        """The continue path: the handler says keep going, the loop loops."""
+        from unittest.mock import patch
+
+        import requests
+
+        from src import sync
+
+        config = {
+            "app": {"credentials": {"username": "a@icloud.com"}},
+            "drive": {"destination": "drive"},
+        }
+        with (
+            patch.object(sync, "_load_configuration", return_value=config),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(
+                sync,
+                "_authenticate_and_get_api",
+                side_effect=requests.exceptions.HTTPError("409 Client Error"),
+            ),
+            patch.object(
+                sync,
+                "_handle_auth_transport_error",
+                side_effect=[True, False],
+            ) as handler,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            sync.sync()
+        self.assertEqual(handler.call_count, 2)
+
+    def test_http_error_is_a_request_exception(self):
+        """Guard the except clause: the crash was an HTTPError, so the
+        handler only helps if that type is actually caught."""
+        import requests
+
+        self.assertTrue(
+            issubclass(
+                requests.exceptions.HTTPError,
+                requests.exceptions.RequestException,
+            ),
+        )
+
+    def test_loop_absorbs_an_http_error_instead_of_dying(self):
+        from unittest.mock import patch
+
+        import requests
+
+        from src import sync
+
+        config = {
+            "app": {
+                "credentials": {"username": "a@icloud.com", "retry_login_interval": -1},
+            },
+            "drive": {"destination": "drive"},
+        }
+        with (
+            patch.object(sync, "_load_configuration", return_value=config),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(
+                sync,
+                "_authenticate_and_get_api",
+                side_effect=requests.exceptions.HTTPError("409 Client Error"),
+            ),
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            sync.sync()  # must return, not raise
