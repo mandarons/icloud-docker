@@ -1380,3 +1380,56 @@ class TestPendingAuthTtl(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAuthStateReflectsSyncLoop(unittest.TestCase):
+    """``_detect_auth_state`` must not report health the sync loop is
+    contradicting: a green dashboard over a sync that stopped weeks ago is
+    worse than no dashboard."""
+
+    def test_reauth_needed_when_the_loop_reports_blocked(self):
+        with (
+            patch("icloudpy.utils.password_exists_in_keyring", return_value=True),
+            patch("src.web_signals.get_auth_blocked", return_value={"blocked": True}),
+        ):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "reauth_needed",
+            )
+
+    def test_ready_when_the_loop_reports_healthy(self):
+        with (
+            patch("icloudpy.utils.password_exists_in_keyring", return_value=True),
+            patch("src.web_signals.get_auth_blocked", return_value={"blocked": False}),
+        ):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "ready",
+            )
+
+    def test_setup_needed_still_wins_without_a_keyring_entry(self):
+        with patch("icloudpy.utils.password_exists_in_keyring", return_value=False):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "setup_needed",
+            )
+
+
+class TestSyncPublishesAuthState(unittest.TestCase):
+    """``sync._publish_auth_blocked`` is advisory and must never raise."""
+
+    def test_publishes_blocked(self):
+        from src import sync
+
+        with patch("src.web_signals.record_auth_blocked") as recorder:
+            sync._publish_auth_blocked(True, reason="2fa_required")  # noqa: SLF001
+        recorder.assert_called_once_with(blocked=True, reason="2fa_required")
+
+    def test_swallows_failure(self):
+        from src import sync
+
+        with patch(
+            "src.web_signals.record_auth_blocked",
+            side_effect=OSError("read-only"),
+        ):
+            sync._publish_auth_blocked(False)  # noqa: SLF001

@@ -113,7 +113,10 @@
       .container { padding: 20px 16px 32px; }
       .header-inner { padding: 0 16px; gap: 12px; }
       .page-title { font-size: 26px; }
-      .page-sub { word-break: break-all; }
+      /* Break only words that genuinely cannot fit (long Apple IDs,
+         config paths, URLs). ``break-all`` split ordinary prose
+         mid-word on phones. */
+      .page-sub { overflow-wrap: anywhere; }
       .status-row { padding: 14px 16px; gap: 10px; }
       .status-text { flex-basis: 100%; }
       .status-actions { margin-left: 0; width: 100%; }
