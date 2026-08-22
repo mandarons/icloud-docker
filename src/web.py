@@ -368,6 +368,9 @@ def _detect_auth_state(username: str | None) -> str:
       - ``not_configured`` — no ``app.credentials.username`` in config.
       - ``setup_needed`` — username set, but the keyring has no password
         cached. The container's first 2FA flow hasn't been completed.
+      - ``reauth_needed`` — the sync loop reported that it cannot
+        authenticate. Every on-disk signal below looks fine in this state,
+        which is why it has to be asked for explicitly.
       - ``ready`` — username set + keyring entry present. Sync loop can
         resume the session on the next retry.
 
@@ -381,6 +384,12 @@ def _detect_auth_state(username: str | None) -> str:
         from icloudpy import utils as icloudpy_utils
 
         if icloudpy_utils.password_exists_in_keyring(username):
+            # Ask the sync loop before claiming health: a configured
+            # username and a cached password look identical whether or not
+            # Apple is demanding a second factor, so on-disk signals alone
+            # render a green dashboard over a sync that has not run.
+            if web_signals.get_auth_blocked().get("blocked"):
+                return "reauth_needed"
             return "ready"
     except Exception as e:
         LOGGER.debug(f"Web UI auth-state check raised: {e!s}")

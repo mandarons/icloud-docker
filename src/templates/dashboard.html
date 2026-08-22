@@ -28,6 +28,14 @@
     <a class="status-cta" href="/auth">Re-authenticate</a>
   </div>
 </div>
+{% elif auth == 'reauth_needed' %}
+<div class="status-row">
+  <div class="status-dot err"></div>
+  <div class="status-text"><strong>{{ status.username }}</strong> — sync is stopped: Apple is asking for a second factor</div>
+  <div class="status-actions">
+    <a class="status-cta" href="/auth">Re-authenticate →</a>
+  </div>
+</div>
 {% elif auth == 'setup_needed' %}
 <div class="status-row">
   <div class="status-dot warn"></div>
@@ -36,7 +44,7 @@
     <a class="status-cta" href="/auth">Authenticate now →</a>
   </div>
 </div>
-{% else %}
+{% elif auth == 'not_configured' %}
 <div class="status-row">
   <div class="status-dot warn"></div>
   <div class="status-text">No <strong>app.credentials.username</strong> in config.yaml</div>
