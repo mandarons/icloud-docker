@@ -455,6 +455,19 @@ def sync_photos(config, photos):
                     )
                     continue
                 lib_dest = _library_destination(destination_path, library, library_destinations)
+                if lib_dest == destination_path:
+                    # An unmapped library falls through to the shared root,
+                    # which holds every other library's tree -- and anything
+                    # else the user keeps there. Cleaning it on behalf of one
+                    # library would delete all of them. Apple invents
+                    # libraries (backend migration zones), so this is reached
+                    # by doing nothing wrong.
+                    LOGGER.warning(
+                        f"Skipping obsolete-file cleanup for {library}: it has no "
+                        f"library_destinations entry, so its destination is the "
+                        f"shared root and cleaning it would affect other libraries.",
+                    )
+                    continue
                 remove_obsolete_files(lib_dest, files, exclude_filenames=exclude)
         elif failed_libraries:
             # One shared destination: ``files`` cannot say which library a
@@ -483,7 +496,7 @@ def _library_destination(base_destination: str, library: str, library_destinatio
     1. **Exact match.** ``library_destinations[library]`` if present.
     2. **Role alias for `SharedLibrary`.** Apple's modern iCloud Shared
        Photo Library is exposed by icloudpy under a GUID-based zone name
-       like ``SharedSync-3C977B4A-C15A-46E4-9854-585B9342C409``. A config
+       like ``SharedSync-<guid>``. A config
        key of ``SharedLibrary`` matches any zone whose name starts with
        ``SharedSync-`` so users don't need to discover and hardcode the
        per-account GUID. (Configs that already use the literal current

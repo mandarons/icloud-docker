@@ -2714,3 +2714,33 @@ class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
             )
         self.assertEqual((ok, bad), (0, 0))
         self.assertEqual(failed, {"PrimarySync"})
+
+    def test_an_unmapped_library_never_cleans_the_shared_root(self):
+        """A library with no library_destinations entry falls through to the
+        photos root, which holds every other library's tree. Cleaning it on
+        that library's behalf would delete all of them -- including trees
+        this container does not own."""
+        from unittest.mock import patch
+
+        from src import sync_photos
+
+        cleaned = []
+        tmp = tempfile.mkdtemp()
+        cfg = {
+            "app": {"root": "/icloud"},
+            "photos": {
+                "destination": "photos",
+                "remove_obsolete": True,
+                # NewZone deliberately absent from the mapping.
+                "library_destinations": {"PrimarySync": "Personal"},
+            },
+        }
+        with (
+            patch.object(sync_photos, "_sync_albums_by_configuration", return_value=(1, 0)),
+            patch.object(sync_photos, "remove_obsolete_files", side_effect=lambda d, f, **k: cleaned.append(d)),
+            patch.object(sync_photos.config_parser, "prepare_photos_destination", return_value=tmp),
+        ):
+            sync_photos.sync_photos(config=cfg, photos=self._photos(["PrimarySync", "NewZone"]))
+
+        self.assertTrue(any("Personal" in c for c in cleaned), "mapped library still cleaned")
+        self.assertNotIn(tmp, cleaned, "the shared root must never be cleaned per-library")
