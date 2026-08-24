@@ -8,6 +8,9 @@ ___author___ = "Mandar Patil <mandarons@pm.me>"
 
 import os
 
+import requests
+from icloudpy import exceptions
+
 from src import config_parser, configure_icloudpy_logging, get_logger
 from src.album_sync_orchestrator import sync_album_photos
 from src.hardlink_registry import create_hardlink_registry
@@ -397,6 +400,11 @@ def sync_photos(config, photos):
     hardlink_registry = create_hardlink_registry(use_hardlinks)
 
     total_successful, total_failed = 0, 0
+    # Libraries we could not read. They must be barred from the cleanup
+    # below: a library that failed contributes nothing to ``files``, so
+    # cleaning its destination would read as "the server has none of these"
+    # and delete every local copy.
+    failed_libraries: set = set()
 
     # Special handling for "All Photos" when hardlinks are enabled
     if use_hardlinks and download_all:
@@ -410,6 +418,7 @@ def sync_photos(config, photos):
             hardlink_registry,
             config,
             library_destinations=library_destinations,
+            failed_libraries=failed_libraries,
         )
         total_successful += sub_successful
         total_failed += sub_failed
@@ -426,6 +435,7 @@ def sync_photos(config, photos):
         hardlink_registry,
         config,
         library_destinations=library_destinations,
+        failed_libraries=failed_libraries,
     )
     total_successful += sub_successful
     total_failed += sub_failed
@@ -438,8 +448,22 @@ def sync_photos(config, photos):
         exclude = {marker_filename}
         if library_destinations:
             for library in libraries:
+                if library in failed_libraries:
+                    LOGGER.warning(
+                        f"Skipping obsolete-file cleanup for {library}: it could not "
+                        f"be read this run, so its local files cannot be verified.",
+                    )
+                    continue
                 lib_dest = _library_destination(destination_path, library, library_destinations)
                 remove_obsolete_files(lib_dest, files, exclude_filenames=exclude)
+        elif failed_libraries:
+            # One shared destination: ``files`` cannot say which library a
+            # path came from, so a single failure makes the whole set
+            # untrustworthy for deletion.
+            LOGGER.warning(
+                "Skipping obsolete-file cleanup: "
+                f"{len(failed_libraries)} library(ies) could not be read this run.",
+            )
         else:
             remove_obsolete_files(destination_path, files, exclude_filenames=exclude)
 
@@ -483,6 +507,25 @@ def _library_destination(base_destination: str, library: str, library_destinatio
     return dest
 
 
+# An account can be shown libraries it never created -- zones left behind
+# by Apple's own backend migrations -- and some of them answer every query
+# with ZONE_NOT_FOUND or BAD_REQUEST. One of those must not be able to
+# abort the sync for the libraries that work.
+_LIBRARY_FAULTS = (exceptions.ICloudPyAPIResponseException, requests.exceptions.RequestException)
+
+
+def _note_library_failure(library, error, failed_libraries) -> None:
+    """Record a library we could not read, and say so in the log.
+
+    Never silent: the count is reported as failures by the caller, and the
+    library is barred from obsolete-file cleanup so an unreadable library
+    can never be mistaken for an empty one.
+    """
+    LOGGER.error(f"Library {library} could not be synced, skipping it: {error!s}")
+    if failed_libraries is not None:
+        failed_libraries.add(library)
+
+
 def _sync_all_photos_first_for_hardlinks(
     photos,
     libraries,
@@ -493,6 +536,7 @@ def _sync_all_photos_first_for_hardlinks(
     hardlink_registry,
     config,
     library_destinations: dict | None = None,
+    failed_libraries: set | None = None,
 ) -> tuple[int, int]:
     """Sync 'All Photos' album first to populate hardlink registry.
 
@@ -510,27 +554,30 @@ def _sync_all_photos_first_for_hardlinks(
         Tuple of (total_successful, total_failed) download counts
     """
     for library in libraries:
-        if library == "PrimarySync" and "All Photos" in photos.libraries[library].albums:
-            LOGGER.info("Syncing 'All Photos' album first for hard link reference...")
-            lib_dest = _library_destination(destination_path, library, library_destinations or {})
-            result = sync_album_photos(
-                album=photos.libraries[library].albums["All Photos"],
-                destination_path=os.path.join(lib_dest, "All Photos"),
-                file_sizes=filters["file_sizes"],
-                extensions=filters["extensions"],
-                files=files,
-                folder_format=folder_format,
-                hardlink_registry=hardlink_registry,
-                config=config,
-            )
-            if hardlink_registry:
-                LOGGER.info(
-                    f"'All Photos' sync complete. Hard link registry populated with "
-                    f"{hardlink_registry.get_registry_size()} reference files.",
+        try:
+            if library == "PrimarySync" and "All Photos" in photos.libraries[library].albums:
+                LOGGER.info("Syncing 'All Photos' album first for hard link reference...")
+                lib_dest = _library_destination(destination_path, library, library_destinations or {})
+                result = sync_album_photos(
+                    album=photos.libraries[library].albums["All Photos"],
+                    destination_path=os.path.join(lib_dest, "All Photos"),
+                    file_sizes=filters["file_sizes"],
+                    extensions=filters["extensions"],
+                    files=files,
+                    folder_format=folder_format,
+                    hardlink_registry=hardlink_registry,
+                    config=config,
                 )
-            if result is not None:
-                return result
-            break
+                if hardlink_registry:
+                    LOGGER.info(
+                        f"'All Photos' sync complete. Hard link registry populated with "
+                        f"{hardlink_registry.get_registry_size()} reference files.",
+                    )
+                if result is not None:
+                    return result
+                break
+        except _LIBRARY_FAULTS as e:
+            _note_library_failure(library, e, failed_libraries)
     return 0, 0
 
 
@@ -545,6 +592,7 @@ def _sync_albums_by_configuration(
     hardlink_registry,
     config,
     library_destinations: dict | None = None,
+    failed_libraries: set | None = None,
 ) -> tuple[int, int]:
     """Sync albums based on configuration settings.
 
@@ -564,53 +612,58 @@ def _sync_albums_by_configuration(
     """
     total_successful, total_failed = 0, 0
     for library in libraries:
-        lib_dest = _library_destination(destination_path, library, library_destinations or {})
-        if download_all and library == "PrimarySync":
-            sub_successful, sub_failed = _sync_all_albums_except_filtered(
-                photos,
-                library,
-                filters,
-                lib_dest,
-                files,
-                folder_format,
-                hardlink_registry,
-                config,
-            )
-        elif filters["albums"] and library == "PrimarySync":
-            sub_successful, sub_failed = _sync_filtered_albums(
-                photos,
-                library,
-                filters,
-                lib_dest,
-                files,
-                folder_format,
-                hardlink_registry,
-                config,
-            )
-        elif filters["albums"]:
-            sub_successful, sub_failed = _sync_filtered_albums_in_library(
-                photos,
-                library,
-                filters,
-                lib_dest,
-                files,
-                folder_format,
-                hardlink_registry,
-                config,
-            )
-        else:
-            sub_successful, sub_failed = _sync_all_photos_in_library(
-                photos,
-                library,
-                lib_dest,
-                filters,
-                files,
-                folder_format,
-                hardlink_registry,
-                config,
-            )
-        total_successful += sub_successful
-        total_failed += sub_failed
+        try:
+            lib_dest = _library_destination(destination_path, library, library_destinations or {})
+            if download_all and library == "PrimarySync":
+                sub_successful, sub_failed = _sync_all_albums_except_filtered(
+                    photos,
+                    library,
+                    filters,
+                    lib_dest,
+                    files,
+                    folder_format,
+                    hardlink_registry,
+                    config,
+                )
+            elif filters["albums"] and library == "PrimarySync":
+                sub_successful, sub_failed = _sync_filtered_albums(
+                    photos,
+                    library,
+                    filters,
+                    lib_dest,
+                    files,
+                    folder_format,
+                    hardlink_registry,
+                    config,
+                )
+            elif filters["albums"]:
+                sub_successful, sub_failed = _sync_filtered_albums_in_library(
+                    photos,
+                    library,
+                    filters,
+                    lib_dest,
+                    files,
+                    folder_format,
+                    hardlink_registry,
+                    config,
+                )
+            else:
+                sub_successful, sub_failed = _sync_all_photos_in_library(
+                    photos,
+                    library,
+                    lib_dest,
+                    filters,
+                    files,
+                    folder_format,
+                    hardlink_registry,
+                    config,
+                )
+            total_successful += sub_successful
+            total_failed += sub_failed
+        # Per-iteration by design: isolating one library from the next is
+        # the whole point, so the handler cannot be hoisted out of the loop.
+        except _LIBRARY_FAULTS as e:  # noqa: PERF203
+            _note_library_failure(library, e, failed_libraries)
     return total_successful, total_failed
 
 
