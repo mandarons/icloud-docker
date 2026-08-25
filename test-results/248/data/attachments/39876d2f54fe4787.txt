@@ -1,0 +1,5 @@
+[38;21m2026-08-25 17:25:26,221 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-25 17:25:26,221 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-08-25 17:25:26,222 :: DEBUG :: root :: usage.py :: 185 :: Non-retriable error (status 400)[0m
+[38;21m2026-08-25 17:25:26,222 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-08-25 17:25:26,222 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
