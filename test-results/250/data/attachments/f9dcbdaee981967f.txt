@@ -1,0 +1,6 @@
+[38;21m2026-09-06 03:53:22,645 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-06 03:53:22,645 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-06 03:53:22,646 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: http://test.com[0m
+[38;21m2026-09-06 03:53:22,647 :: DEBUG :: root :: usage.py :: 245 :: Failed to post new installation: JSON decode error[0m
+[38;21m2026-09-06 03:53:22,647 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-06 03:53:22,647 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
