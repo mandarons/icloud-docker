@@ -834,3 +834,23 @@ class TestConfigParser(unittest.TestCase):
         config = {"app": {"usage_tracking": {"enabled": None}}}
         result = config_parser.get_usage_tracking_enabled(config)
         self.assertTrue(result)
+
+
+class TestObsoleteDeleteLimitConfig(unittest.TestCase):
+    """Cleanup is the only destructive step in a sync; the limit is what
+    stops a tracking bug from being acted on at full speed."""
+
+    def test_default_when_unset(self):
+        from src import DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT
+
+        self.assertEqual(
+            config_parser.get_photos_obsolete_delete_limit_percent(config={}),
+            DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT,
+        )
+
+    def test_configured_value_is_used(self):
+        cfg = {"photos": {"obsolete_delete_limit_percent": 60}}
+        self.assertEqual(
+            config_parser.get_photos_obsolete_delete_limit_percent(config=cfg),
+            60,
+        )

@@ -436,12 +436,13 @@ def sync_photos(config, photos):
     if config_parser.get_photos_remove_obsolete(config=config):
         marker_filename = config_parser.get_mount_marker_filename(config=config)
         exclude = {marker_filename}
+        limit = config_parser.get_photos_obsolete_delete_limit_percent(config=config)
         if library_destinations:
             for library in libraries:
                 lib_dest = _library_destination(destination_path, library, library_destinations)
-                remove_obsolete_files(lib_dest, files, exclude_filenames=exclude)
+                remove_obsolete_files(lib_dest, files, exclude_filenames=exclude, limit_percent=limit)
         else:
-            remove_obsolete_files(destination_path, files, exclude_filenames=exclude)
+            remove_obsolete_files(destination_path, files, exclude_filenames=exclude, limit_percent=limit)
 
     return total_successful, total_failed
 

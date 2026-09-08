@@ -15,6 +15,7 @@ from icloudpy.services.photos import PhotoAsset
 from src import (
     DEFAULT_DRIVE_DESTINATION,
     DEFAULT_ENUMERATION_CHUNK_SIZE,
+    DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT,
     DEFAULT_PHOTOS_DESTINATION,
     DEFAULT_REQUEST_TIMEOUT_SEC,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
@@ -772,6 +773,22 @@ def get_photos_folder_format(config: dict) -> str | None:
         log_config_found_info(f"Using format {fmt}.")
 
     return fmt
+
+
+def get_photos_obsolete_delete_limit_percent(config: dict) -> int:
+    """Share of a destination obsolete-cleanup may delete in one run.
+
+    Cleanup is the only destructive step in a sync and it infers deletions
+    from the absence of a path in the run's tracked-file set, so any bug that
+    leaves paths untracked is acted on at full speed. Above this share the
+    run reports instead of deleting. 0 disables the limit.
+    """
+    config_path = ["photos", "obsolete_delete_limit_percent"]
+
+    if not traverse_config_path(config=config, config_path=config_path):
+        return DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT
+
+    return get_config_value(config=config, config_path=config_path)
 
 
 # =============================================================================

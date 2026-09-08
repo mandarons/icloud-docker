@@ -5,6 +5,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import glob
 import os
 import shutil
+import tempfile
 import unittest
 from datetime import timezone
 from io import StringIO
@@ -2570,3 +2571,59 @@ class TestSyncPhotos(unittest.TestCase):
             )
         # Should return (0, 0) when sync_album_photos returns None
         self.assertEqual(result, (0, 0))
+
+
+class TestObsoleteDeleteLimit(unittest.TestCase):
+    """Cleanup is the only destructive step in a sync, and it infers
+    deletions from the absence of a path in the tracked-file set -- so any
+    bug that leaves paths untracked reads as "the server dropped these" and
+    is acted on at full speed. A real incident removed 185,207 files in one
+    pass this way."""
+
+    def _tree(self, base, n):
+        for i in range(n):
+            Path(base, f"f{i}.jpg").write_text("x")
+        return {str(Path(base, f"f{i}.jpg").absolute()) for i in range(n)}
+
+    def test_a_mass_deletion_is_refused_and_nothing_is_removed(self):
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            all_files = self._tree(base, 100)
+            tracked = set(list(all_files)[:50])  # 50% would be deleted
+            removed = remove_obsolete_files(base, tracked, limit_percent=25)
+            self.assertEqual(removed, set())
+            self.assertEqual(len(list(Path(base).glob("*.jpg"))), 100)
+
+    def test_an_ordinary_deletion_still_happens(self):
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            all_files = self._tree(base, 100)
+            tracked = set(list(all_files)[:95])  # 5% obsolete
+            removed = remove_obsolete_files(base, tracked, limit_percent=25)
+            self.assertEqual(len(removed), 5)
+            self.assertEqual(len(list(Path(base).glob("*.jpg"))), 95)
+
+    def test_the_limit_can_be_disabled(self):
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            self._tree(base, 20)
+            removed = remove_obsolete_files(base, set(), limit_percent=0)
+            self.assertEqual(len(removed), 20)
+
+    def test_excluded_names_do_not_count_toward_the_limit(self):
+        """The mount marker is never deletable, so it must not tip the
+        balance into a refusal either."""
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            all_files = self._tree(base, 100)
+            Path(base, ".mounted").write_text("")
+            tracked = set(list(all_files)[:95])
+            removed = remove_obsolete_files(
+                base, tracked, exclude_filenames={".mounted"}, limit_percent=25,
+            )
+            self.assertEqual(len(removed), 5)
+            self.assertTrue(Path(base, ".mounted").is_file())
