@@ -576,6 +576,43 @@ def get_drive_remove_obsolete(config: dict) -> bool:
     return drive_remove_obsolete
 
 
+def get_drive_flatten_packages(config: dict | None) -> bool:
+    """Return whether iCloud Drive package downloads should be kept on
+    disk as single binary files (zip / gzip bytes) instead of being
+    unpacked into bundle directories.
+
+    Default ``False`` — preserves the historical mandarons behaviour
+    of unpacking ``.band``-style bundles so the local representation
+    mirrors macOS's directory-bundle semantics.
+
+    Setting this to ``True`` is appropriate for backup-style deployments
+    (NAS, cold storage) where the operator prefers:
+
+    - **Single-file storage** — one mtime / size per package for
+      simpler dedup, restoration, and round-trip back to iCloud.
+    - **No internal name collisions** — two iWork files in the same
+      folder normally share bare-pathed internal entries like
+      ``Data/Document.iwa``; unpacking both into the same parent dir
+      raises ``FileExistsError``. Skipping unpack avoids this entirely.
+    - **Lower inode footprint** — large bundles often expand to
+      hundreds of small files on disk.
+
+    Args:
+        config: Configuration dictionary (None ok).
+
+    Returns:
+        bool — True if packages should be kept as single files.
+    """
+    if not config:
+        return False
+    config_path = ["drive", "flatten_packages"]
+    return bool(
+        get_config_value_or_default(
+            config=config, config_path=config_path, default=False,
+        ),
+    )
+
+
 def get_drive_require_mount_marker(config: dict) -> bool:
     """Return whether Drive sync requires the mount-failsafe marker file.
 
