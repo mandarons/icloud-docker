@@ -5,6 +5,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import glob
 import os
 import shutil
+import tempfile
 import unittest
 from datetime import timezone
 from io import StringIO
@@ -453,7 +454,7 @@ class TestSyncPhotos(unittest.TestCase):
         """Test if download_photo has file size as None."""
 
         class MockPhoto:
-            def download(self, quality):
+            def download(self, quality, **kwargs):
                 raise icloudpy.exceptions.ICloudPyAPIResponseException
 
         self.assertFalse(sync_photos.download_photo(MockPhoto(), None, self.destination_path))
@@ -462,7 +463,7 @@ class TestSyncPhotos(unittest.TestCase):
         """Test if download_photo has destination path as None."""
 
         class MockPhoto:
-            def download(self, quality):
+            def download(self, quality, **kwargs):
                 raise icloudpy.exceptions.ICloudPyAPIResponseException
 
         self.assertFalse(sync_photos.download_photo(MockPhoto(), ["original"], None))
@@ -471,7 +472,7 @@ class TestSyncPhotos(unittest.TestCase):
         """Test if exception is thrown in dowonload_photo."""
 
         class MockPhoto:
-            def download(self, quality):
+            def download(self, quality, **kwargs):
                 raise icloudpy.exceptions.ICloudPyAPIResponseException
 
         self.assertFalse(sync_photos.download_photo(MockPhoto(), ["original"], self.destination_path))
@@ -788,7 +789,7 @@ class TestSyncPhotos(unittest.TestCase):
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 
-            def download(self, file_size):
+            def download(self, file_size, **kwargs):
                 # Return a mock response with raw attribute
                 class MockResponse:
                     def __init__(self):
@@ -1454,7 +1455,7 @@ class TestSyncPhotos(unittest.TestCase):
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 
-            def download(self, file_size):
+            def download(self, file_size, **kwargs):
                 # Return a mock response with raw attribute
                 class MockResponse:
                     def __init__(self):
@@ -2570,3 +2571,38 @@ class TestSyncPhotos(unittest.TestCase):
             )
         # Should return (0, 0) when sync_album_photos returns None
         self.assertEqual(result, (0, 0))
+
+
+class TestPhotoDownloadTimeout(unittest.TestCase):
+    """A download with no timeout blocks its worker thread forever."""
+
+    def test_the_timeout_reaches_the_download_call(self):
+        from unittest.mock import MagicMock, patch
+
+        from src.photo_file_utils import download_photo_from_server
+
+        photo = MagicMock()
+        photo.download.return_value.raw = StringIO("")
+        with tempfile.TemporaryDirectory() as d:
+            with patch("shutil.copyfileobj"):
+                download_photo_from_server(
+                    photo, "original", os.path.join(d, "x.jpg"), timeout=77,
+                )
+        self.assertEqual(photo.download.call_args.kwargs["timeout"], 77)
+
+    def test_the_configured_timeout_reaches_every_task(self):
+        from src import photo_download_manager as m
+
+        tasks = [
+            m.DownloadTaskInfo(photo=object(), file_size="original", photo_path="/a"),
+            m.DownloadTaskInfo(photo=object(), file_size="original", photo_path="/b"),
+        ]
+        cfg = {"photos": {"request_timeout": 45}, "app": {}}
+        from unittest.mock import patch
+
+        with patch.object(m, "ThreadPoolExecutor", side_effect=RuntimeError("stop")):
+            try:
+                m.execute_parallel_downloads(tasks, cfg)
+            except RuntimeError:
+                pass
+        self.assertEqual([t.timeout for t in tasks], [45, 45])

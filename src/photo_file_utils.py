@@ -13,7 +13,7 @@ import threading
 from datetime import timezone
 from urllib.parse import urlencode
 
-from src import get_logger
+from src import DEFAULT_REQUEST_TIMEOUT_SEC, get_logger
 
 LOGGER = get_logger()
 
@@ -288,7 +288,13 @@ def create_hardlink(source_path: str, destination_path: str) -> bool:
         return False
 
 
-def download_photo_from_server(photo, file_size: str, destination_path: str, max_retries: int = 1) -> bool:
+def download_photo_from_server(
+    photo,
+    file_size: str,
+    destination_path: str,
+    max_retries: int = 1,
+    timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC,
+) -> bool:
     """Download photo from iCloud server to local path.
 
     This function implements automatic retry logic for HTTP 410 (Gone) errors,
@@ -301,6 +307,8 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
         file_size: File size variant (original, medium, thumb, etc.)
         destination_path: Local path where photo should be saved
         max_retries: Maximum number of retries on 410 errors (default: 1)
+        timeout: HTTP read timeout in seconds. Without one a stalled CDN
+            connection blocks the worker thread forever.
 
     Returns:
         True if download was successful, False otherwise
@@ -316,7 +324,7 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
 
     while attempt < max_attempts:  # noqa: PERF203
         try:
-            download = photo.download(file_size)
+            download = photo.download(file_size, timeout=timeout)
             with open(destination_path, "wb") as file_out:
                 shutil.copyfileobj(download.raw, file_out)
 

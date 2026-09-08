@@ -48,7 +48,10 @@ def read_config(config_path=DEFAULT_CONFIG_FILE_PATH):
 def get_logger_config(config):
     """Get logger config."""
     logger_config = {}
-    if "logger" not in config["app"]:
+    # ``read_config`` returns None when config.yaml is missing, and a partial
+    # file may have no ``app`` section. Both reached ``config["app"]`` and
+    # raised -- from module scope, so the container could not start at all.
+    if not config or "logger" not in (config.get("app") or {}):
         return None
     config_app_logger = config["app"]["logger"]
     logger_config["level"] = (
@@ -126,7 +129,15 @@ def configure_icloudpy_logging():
 def get_logger():
     """Return logger."""
     logger = logging.getLogger()
-    logger_config = get_logger_config(config=read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH)))
+    # This runs at import time, so anything raised here stops the container
+    # before it can report why -- and `restart: unless-stopped` turns that
+    # into a restart loop. A config too broken to parse is the sync loop's
+    # problem to report; here it just means default logging.
+    try:
+        config = read_config(config_path=os.environ.get(ENV_CONFIG_FILE_PATH_KEY, DEFAULT_CONFIG_FILE_PATH))
+    except Exception:  # noqa: BLE001 -- import-time: never crash on a bad config
+        config = None
+    logger_config = get_logger_config(config=config)
     if logger_config:
         level_name = logging.getLevelName(level=logger_config["level"].upper())
         logger.setLevel(level=level_name)

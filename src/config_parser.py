@@ -774,6 +774,25 @@ def get_photos_folder_format(config: dict) -> str | None:
     return fmt
 
 
+def get_photos_request_timeout(config: dict) -> int:
+    """Return the HTTP read timeout for photo downloads, in seconds.
+
+    Drive downloads have had ``drive.request_timeout`` for a while; photo
+    downloads had no timeout at all, so a stalled connection to Apple's CDN
+    blocked its worker thread forever. The process stays alive and the
+    container stays "healthy" while the sync never finishes.
+
+    This is a between-bytes timeout, not a total-transfer budget, so large
+    videos are unaffected -- it only fires when the connection goes quiet.
+    """
+    config_path = ["photos", "request_timeout"]
+
+    if not traverse_config_path(config=config, config_path=config_path):
+        return DEFAULT_REQUEST_TIMEOUT_SEC
+
+    return get_config_value(config=config, config_path=config_path)
+
+
 # =============================================================================
 # Photos Filter Configuration Functions
 # =============================================================================

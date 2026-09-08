@@ -116,7 +116,11 @@ def process_file(
         timeout = config_parser.get_drive_request_timeout(config)
         item_is_package = is_package(item=item, timeout=timeout)
 
-    local_file = download_file(item=item, local_file=local_file)
+    local_file = download_file(
+        item=item,
+        local_file=local_file,
+        timeout=config_parser.get_drive_request_timeout(config),
+    )
     if local_file and item_is_package:
         for f in Path(local_file).glob("**/*"):
             f = str(f)

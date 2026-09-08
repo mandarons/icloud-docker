@@ -834,3 +834,21 @@ class TestConfigParser(unittest.TestCase):
         config = {"app": {"usage_tracking": {"enabled": None}}}
         result = config_parser.get_usage_tracking_enabled(config)
         self.assertTrue(result)
+
+
+class TestPhotosRequestTimeout(unittest.TestCase):
+    """Photo downloads had no timeout at all, so a stalled connection to
+    Apple's CDN blocked its worker thread for the life of the process. The
+    container stays alive and 'healthy' while the sync never finishes."""
+
+    def test_default_matches_the_drive_option(self):
+        from src import DEFAULT_REQUEST_TIMEOUT_SEC
+
+        self.assertEqual(
+            config_parser.get_photos_request_timeout(config={}),
+            DEFAULT_REQUEST_TIMEOUT_SEC,
+        )
+
+    def test_configured_value_is_used(self):
+        cfg = {"photos": {"request_timeout": 120}}
+        self.assertEqual(config_parser.get_photos_request_timeout(config=cfg), 120)
