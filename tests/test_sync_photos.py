@@ -5,6 +5,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import glob
 import os
 import shutil
+import tempfile
 import unittest
 from datetime import timezone
 from io import StringIO
@@ -2570,3 +2571,242 @@ class TestSyncPhotos(unittest.TestCase):
             )
         # Should return (0, 0) when sync_album_photos returns None
         self.assertEqual(result, (0, 0))
+
+
+class TestCollisionDoesNotOrphanTheFileItPreserves(unittest.TestCase):
+    """The collision branch exists to "preserve both photos". Obsolete-file
+    cleanup deletes anything absent from the tracked-file set, so unless the
+    collided-with file is tracked, the same run writes the suffix copy and
+    then deletes the file it just refused to overwrite.
+
+    On a library with many repeated filenames this is not an edge case: it
+    removed 185,207 files in a single pass on a real 400k-file library, and
+    the next pass re-downloaded them, because freeing the plain path flips
+    the collision outcome back."""
+
+    def _photo(self, name="IMG_0001.HEIC", size=100):
+        from unittest.mock import MagicMock
+
+        photo = MagicMock()
+        photo.filename = name
+        photo.id = "ABC123"
+        photo.versions = {"original": {"size": size}}
+        return photo
+
+    def test_the_collided_with_file_stays_tracked(self):
+        from unittest.mock import patch
+
+        from src import photo_download_manager as m
+
+        with tempfile.TemporaryDirectory() as base:
+            plain = os.path.join(base, "IMG_0001.HEIC")
+            Path(plain).write_text("someone else's photo")
+            files = set()
+            with (
+                patch.object(m, "generate_photo_path", return_value=plain),
+                patch.object(m, "get_default_filename_format", return_value="simple"),
+                patch.object(m, "get_file_format", return_value=None),
+                patch.object(m, "create_folder_path_if_needed", return_value=base),
+                patch.object(m, "generate_photo_filename_with_metadata", return_value="IMG_0001__original__X.HEIC"),
+                patch("src.photo_file_utils.check_photo_exists", return_value=False),
+            ):
+                m.collect_download_task(
+                    self._photo(), "original", base, files, None, None,
+                )
+            self.assertIn(plain, files, "the preserved file must not be left untracked")
+            self.assertIn(os.path.join(base, "IMG_0001__original__X.HEIC"), files)
+
+    def test_an_in_flight_collision_does_not_re_add_the_path(self):
+        """This run already claimed the plain path, so it is already tracked;
+        nothing on disk is being stepped around."""
+        from unittest.mock import patch
+
+        from src import photo_download_manager as m
+
+        with tempfile.TemporaryDirectory() as base:
+            plain = os.path.join(base, "IMG_0001.HEIC")  # deliberately absent
+            files = {plain}
+            with (
+                patch.object(m, "generate_photo_path", return_value=plain),
+                patch.object(m, "get_default_filename_format", return_value="simple"),
+                patch.object(m, "get_file_format", return_value=None),
+                patch.object(m, "create_folder_path_if_needed", return_value=base),
+                patch.object(m, "generate_photo_filename_with_metadata", return_value="IMG_0001__original__X.HEIC"),
+                patch("src.photo_file_utils.check_photo_exists", return_value=False),
+            ):
+                m.collect_download_task(
+                    self._photo(), "original", base, files, None, None,
+                )
+            self.assertEqual(len(files), 2)
+
+
+class TestWrongContentAtThePlainPathDoesNotChurn(unittest.TestCase):
+    """The real-world shape of the incident: a file sits at the expected path
+    whose bytes belong to a different variant (a HEIC still saved under a
+    .MOV name by an older release). Its size never matches, so the collision
+    fires on every single pass, forever -- no number of syncs repairs a wrong
+    extension. Before the fix that meant: exile the photo to a suffix, leave
+    the plain path untracked, let cleanup delete it, re-download it next pass,
+    repeat. 185,207 files in one pass on a real library."""
+
+    def test_the_mismatched_file_survives_repeated_passes(self):
+        from unittest.mock import MagicMock, patch
+
+        from src import photo_download_manager as m
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            plain = os.path.join(base, "IMG_5921.MOV")
+            Path(plain).write_text("HEIC bytes under a .MOV name")
+            suffix = os.path.join(base, "IMG_5921__live_video_original__X.MOV")
+
+            photo = MagicMock()
+            photo.filename = "IMG_5921.MOV"
+            photo.id = "ID1"
+            photo.versions = {"live_video_original": {"size": 3954138}}
+
+            for _pass in range(3):
+                files: set[str] = set()
+                with (
+                    patch.object(m, "generate_photo_path", return_value=plain),
+                    patch.object(m, "get_default_filename_format", return_value="simple"),
+                    patch.object(m, "get_file_format", return_value=None),
+                    patch.object(m, "create_folder_path_if_needed", return_value=base),
+                    patch.object(
+                        m, "generate_photo_filename_with_metadata",
+                        return_value=os.path.basename(suffix),
+                    ),
+                    patch("src.photo_file_utils.check_photo_exists", return_value=False),
+                ):
+                    m.collect_download_task(
+                        photo, "live_video_original", base, files, None, None,
+                    )
+                Path(suffix).write_text("the real video")
+                removed = remove_obsolete_files(base, files)
+                self.assertEqual(
+                    removed, set(), f"pass {_pass}: cleanup deleted a preserved file",
+                )
+                self.assertTrue(Path(plain).is_file(), f"pass {_pass}: plain path lost")
+
+
+class TestSelfHealMustNotEatTheStill(unittest.TestCase):
+    """The Live Photo self-heal builds its candidate from the still's own
+    extension. Under a naming scheme that keeps the photo's filename, that
+    candidate IS the still's correct path -- so the "repair" renames the
+    still onto the video's path, and os.rename replaces its target, so the
+    real video is destroyed too. No deletion is logged, the still is gone,
+    and the .MOV now holds image bytes."""
+
+    def _photo(self):
+        from unittest.mock import MagicMock
+
+        photo = MagicMock()
+        photo.filename = "IMG_5878.HEIC"
+        photo.id = "ATgry"
+        photo.versions = {
+            "original": {"size": 111, "type": "public.heic"},
+            "live_video_original": {"size": 222, "type": "com.apple.quicktime-movie"},
+        }
+        photo.added_date = None
+        return photo
+
+    def test_simple_naming_leaves_both_files_intact(self):
+        from unittest.mock import patch
+
+        from src import photo_download_manager as m
+        from src.photo_path_utils import set_default_filename_format
+
+        with tempfile.TemporaryDirectory() as base:
+            # folder_format puts files in a date subdirectory, so the library
+            # base and the photo's folder are different -- as in any real
+            # configuration.
+            folder = os.path.join(base, "2026", "08")
+            os.makedirs(folder)
+            still = Path(folder, "IMG_5878.HEIC")
+            video = Path(folder, "IMG_5878.MOV")
+            still.write_text("the still")
+            video.write_text("the video")
+
+            set_default_filename_format("simple")
+            try:
+                with patch.object(m, "create_folder_path_if_needed", return_value=folder):
+                    m.generate_photo_path(self._photo(), "live_video_original", base, "%Y/%m")
+            finally:
+                set_default_filename_format("metadata")
+
+            self.assertTrue(still.is_file(), "the still was renamed away")
+            self.assertEqual(still.read_text(), "the still")
+            self.assertEqual(video.read_text(), "the video", "the video was overwritten")
+
+    def test_a_genuinely_mislabeled_video_is_still_healed(self):
+        """Under metadata naming the two paths cannot coincide, so the repair
+        this exists for must keep working."""
+        from unittest.mock import patch
+
+        from src import photo_download_manager as m
+        from src.photo_path_utils import generate_photo_filename_with_metadata
+
+        with tempfile.TemporaryDirectory() as base:
+            folder = os.path.join(base, "2026", "08")
+            os.makedirs(folder)
+            photo = self._photo()
+            correct = generate_photo_filename_with_metadata(photo, "live_video_original")
+            mislabeled = Path(folder, os.path.splitext(correct)[0] + ".HEIC")
+            # Must be the length CloudKit reports, or the heal correctly
+            # refuses to touch it.
+            mislabeled.write_bytes(b"v" * photo.versions["live_video_original"]["size"])
+
+            with patch.object(m, "create_folder_path_if_needed", return_value=folder):
+                out = m.generate_photo_path(photo, "live_video_original", base, "%Y/%m")
+
+            self.assertFalse(mislabeled.is_file(), "mislabeled file was not healed")
+            self.assertTrue(Path(out).is_file())
+            self.assertEqual(len(Path(out).read_bytes()), 222)
+
+    def test_a_wrong_length_file_is_never_renamed(self):
+        """os.rename replaces its target, so an unverified rename destroys two
+        files at once. CloudKit reports the video's length; a file of some
+        other length is not the video, whatever it is named."""
+        from unittest.mock import patch
+
+        from src import photo_download_manager as m
+        from src.photo_path_utils import generate_photo_filename_with_metadata
+
+        with tempfile.TemporaryDirectory() as base:
+            folder = os.path.join(base, "2026", "08")
+            os.makedirs(folder)
+            photo = self._photo()
+            correct = generate_photo_filename_with_metadata(photo, "live_video_original")
+            impostor = Path(folder, os.path.splitext(correct)[0] + ".HEIC")
+            impostor.write_bytes(b"x" * 999)  # not the video's 222 bytes
+
+            with patch.object(m, "create_folder_path_if_needed", return_value=folder):
+                out = m.generate_photo_path(photo, "live_video_original", base, "%Y/%m")
+
+            self.assertTrue(impostor.is_file(), "a wrong-length file was renamed")
+            self.assertFalse(Path(out).exists())
+
+    def test_a_flat_layout_without_folder_format_also_survives(self):
+        """With no folder_format the destination and the photo's folder are
+        the same directory, so the "legacy" flat paths are identical to the
+        still's current one -- the earlier renames hit it too."""
+        from unittest.mock import patch
+
+        from src import photo_download_manager as m
+        from src.photo_path_utils import set_default_filename_format
+
+        with tempfile.TemporaryDirectory() as base:
+            still = Path(base, "IMG_5878.HEIC")
+            video = Path(base, "IMG_5878.MOV")
+            still.write_text("the still")
+            video.write_text("the video")
+
+            set_default_filename_format("simple")
+            try:
+                with patch.object(m, "create_folder_path_if_needed", return_value=base):
+                    m.generate_photo_path(self._photo(), "live_video_original", base, None)
+            finally:
+                set_default_filename_format("metadata")
+
+            self.assertTrue(still.is_file(), "the still was renamed away")
+            self.assertEqual(video.read_text(), "the video", "the video was overwritten")
