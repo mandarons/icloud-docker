@@ -439,3 +439,121 @@ class TestWebSignalsTrustState(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestGetTrustRefreshDays(unittest.TestCase):
+    """``app.trust_refresh_days`` reader."""
+
+    def test_default_is_fourteen(self):
+        from src import config_parser
+
+        self.assertEqual(config_parser.get_trust_refresh_days(config={}), 14)
+
+    def test_override(self):
+        from src import config_parser
+
+        cfg = {"app": {"trust_refresh_days": 3}}
+        self.assertEqual(config_parser.get_trust_refresh_days(config=cfg), 3)
+
+
+class TestMaybeRefreshTrust(unittest.TestCase):
+    """``sync._maybe_refresh_trust`` rolls the trust window forward while
+    the session is still healthy.
+
+    This is what makes a container restart survivable: icloudpy persists
+    the token ``trust_session`` mints, so refreshing on a schedule keeps
+    the copy on disk young. Without it a long-lived process can hold a
+    valid in-memory session for months while the persisted token quietly
+    expires, stranding the next cold start on a second factor.
+    """
+
+    def _expiry(self, days: int):
+        return datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(
+            days=days,
+        )
+
+    def test_disabled_when_threshold_is_zero(self):
+        from src import sync
+
+        api = MagicMock()
+        cfg = {"app": {"trust_refresh_days": 0}}
+        with patch.object(sync, "_read_trust_cookie_expiry") as reader:
+            sync._maybe_refresh_trust(cfg, api)  # noqa: SLF001
+        reader.assert_not_called()
+        api.trust_session.assert_not_called()
+
+    def test_noop_when_no_trust_cookie(self):
+        """Never authenticated with 2FA, or the cookie was cleared."""
+        from src import sync
+
+        api = MagicMock()
+        with patch.object(sync, "_read_trust_cookie_expiry", return_value=None):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        api.trust_session.assert_not_called()
+
+    def test_noop_when_plenty_of_time_left(self):
+        from src import sync
+
+        api = MagicMock()
+        with patch.object(
+            sync,
+            "_read_trust_cookie_expiry",
+            return_value=self._expiry(25),
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        api.trust_session.assert_not_called()
+
+    def test_refreshes_when_inside_threshold(self):
+        from src import sync
+
+        api = MagicMock()
+        api.trust_session.return_value = True
+        with patch.object(
+            sync,
+            "_read_trust_cookie_expiry",
+            side_effect=[self._expiry(3), self._expiry(30)],
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        api.trust_session.assert_called_once()
+
+    def test_refresh_logs_when_apple_declines(self):
+        """A declined refresh is not fatal — it just means the next cold
+        start will need a second factor."""
+        from src import sync
+
+        api = MagicMock()
+        api.trust_session.return_value = False
+        with patch.object(
+            sync,
+            "_read_trust_cookie_expiry",
+            return_value=self._expiry(2),
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        api.trust_session.assert_called_once()
+
+    def test_refresh_handles_unknown_new_expiry(self):
+        """``trust_session`` succeeded but the cookie is unreadable after —
+        log 'unknown' rather than raising."""
+        from src import sync
+
+        api = MagicMock()
+        api.trust_session.return_value = True
+        with patch.object(
+            sync,
+            "_read_trust_cookie_expiry",
+            side_effect=[self._expiry(1), None],
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        api.trust_session.assert_called_once()
+
+    def test_never_raises_into_the_sync_loop(self):
+        from src import sync
+
+        api = MagicMock()
+        api.trust_session.side_effect = RuntimeError("apple down")
+        with patch.object(
+            sync,
+            "_read_trust_cookie_expiry",
+            return_value=self._expiry(1),
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
