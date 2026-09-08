@@ -94,6 +94,23 @@ def _resolve_dashboard_url(config) -> str | None:
     return f"http://{host}:{port}"
 
 
+def _publish_auth_blocked(blocked: bool, reason: str | None = None) -> None:
+    """Tell the web UI whether the loop can authenticate.
+
+    Only this loop knows: every on-disk signal the dashboard can check by
+    itself (username configured, password in the keyring) still looks
+    healthy while an account sits stuck on a second factor.
+
+    Best-effort -- signalling must never break syncing.
+    """
+    try:
+        from src import web_signals
+
+        web_signals.record_auth_blocked(blocked=blocked, reason=reason)
+    except Exception as e:  # pragma: no cover - signalling is advisory
+        LOGGER.warning(f"Could not publish auth state: {e!s}")
+
+
 def _maybe_warn_trust_expiring(config, api, username: str) -> None:
     """Fire the trust-expiring notification once when crossing threshold.
 
@@ -778,6 +795,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         bool: True if should continue (retry), False if should exit
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
+    _publish_auth_blocked(True, reason="2fa_required")
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -1019,6 +1037,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         _perform_dry_run(config, api, check_files=check_files)
                     return
 
+                _publish_auth_blocked(False)
                 if not api.requires_2sa:
                     # Trust-window check: record current cookie expiry and
                     # fire a pre-emptive warning once if it's about to lapse.

@@ -256,3 +256,40 @@ class TestFormatRelativeTime(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAuthBlockedState(unittest.TestCase):
+    """``record_auth_blocked`` / ``get_auth_blocked``.
+
+    The dashboard cannot infer this: a username in the config and a
+    password in the keyring both look correct while an account is stuck on
+    a second factor, so only the sync loop can report it."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self._patcher = patch.object(web_signals, "_config_dir", return_value=self.tmp)
+        self._patcher.start()
+        self.addCleanup(self._patcher.stop)
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_unrecorded_is_empty(self):
+        self.assertEqual(web_signals.get_auth_blocked(), {})
+
+    def test_records_blocked_with_reason(self):
+        web_signals.record_auth_blocked(blocked=True, reason="2fa_required")
+        entry = web_signals.get_auth_blocked()
+        self.assertTrue(entry["blocked"])
+        self.assertEqual(entry["reason"], "2fa_required")
+
+    def test_clearing_unblocks(self):
+        web_signals.record_auth_blocked(blocked=True, reason="2fa_required")
+        web_signals.record_auth_blocked(blocked=False)
+        self.assertFalse(web_signals.get_auth_blocked()["blocked"])
+
+    def test_malformed_entry_is_empty(self):
+        web_signals._save_state({web_signals._AUTH_BLOCKED_STATE_KEY: "oops"})  # noqa: SLF001
+        self.assertEqual(web_signals.get_auth_blocked(), {})
