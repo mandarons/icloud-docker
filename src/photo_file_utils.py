@@ -225,13 +225,35 @@ def _refresh_photo_download_url(photo) -> bool:
         records = response.get("records", [])
 
         for rec in records:
-            if rec.get("recordName") == record_name:
-                photo._master_record = rec  # noqa: SLF001
-                with _versions_refresh_lock:
-                    photo._versions = None  # noqa: SLF001
-                LOGGER.debug(f"Refreshed download URL for {record_name}")
-                _note_refresh_success()
-                return True
+            if rec.get("recordName") != record_name:
+                continue
+            # A failed lookup is not an HTTP error: CloudKit returns it as a
+            # record inside ``records`` carrying the requested recordName and a
+            # ``serverErrorCode``/``reason`` in place of ``fields``. Matching on
+            # the name alone therefore accepts an error payload as a fresh
+            # master record -- the refresh reports success, and the retrying
+            # download raises KeyError('fields') deep inside icloudpy, which
+            # surfaces as an unexplained "Failed to download <path>: 'fields'"
+            # and is charged to the download rather than to the refresh.
+            #
+            # An empty ``fields`` is no better than a missing one: icloudpy
+            # builds ``versions`` by testing ``f"{prefix}Res" in fields``, so
+            # an empty dict yields no versions at all, ``download()`` returns
+            # None, and the caller dereferences ``.raw`` on it. Accepting
+            # either shape also discards the still-valid master record we
+            # already hold, poisoning the asset for the rest of the sync.
+            if rec.get("serverErrorCode") or not rec.get("fields"):
+                _note_refresh_failure(
+                    record_name,
+                    rec.get("serverErrorCode") or rec.get("reason") or "record has no usable fields",
+                )
+                return False
+            photo._master_record = rec  # noqa: SLF001
+            with _versions_refresh_lock:
+                photo._versions = None  # noqa: SLF001
+            LOGGER.debug(f"Refreshed download URL for {record_name}")
+            _note_refresh_success()
+            return True
 
         _note_refresh_failure(record_name, "record not found in iCloud response")
         return False
