@@ -6,6 +6,7 @@ import logging
 import os
 import sys
 import warnings
+from logging.handlers import RotatingFileHandler
 
 from ruamel.yaml import YAML
 
@@ -21,6 +22,12 @@ ENV_ICLOUD_PASSWORD_KEY = "ENV_ICLOUD_PASSWORD"
 ENV_CONFIG_FILE_PATH_KEY = "ENV_CONFIG_FILE_PATH"
 DEFAULT_LOGGER_LEVEL = "info"
 DEFAULT_LOG_FILE_NAME = "icloud.log"
+# Rotation bounds for the file handler. A busy library logs one line per
+# file *considered* each cycle, so an unbounded handler grows without
+# limit -- multi-GB logs on large accounts. 50 MB x 3 backups keeps a
+# useful window at a bounded 200 MB worst case.
+DEFAULT_LOG_MAX_BYTES = 50 * 1024 * 1024
+DEFAULT_LOG_BACKUP_COUNT = 3
 DEFAULT_CONFIG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), DEFAULT_CONFIG_FILE_NAME)
 # Operator-overridable via ICLOUD_DOCKER_CONFIG_DIR. Default ``/config`` is the
 # in-container mount point users bind their config volume to. The override
@@ -57,6 +64,8 @@ def get_logger_config(config):
     logger_config["filename"] = (
         config_app_logger["filename"].strip().lower() if "filename" in config_app_logger else DEFAULT_LOG_FILE_NAME
     )
+    logger_config["max_bytes"] = int(config_app_logger.get("max_bytes", DEFAULT_LOG_MAX_BYTES))
+    logger_config["backup_count"] = int(config_app_logger.get("backup_count", DEFAULT_LOG_BACKUP_COUNT))
     return logger_config
 
 
@@ -140,7 +149,14 @@ def get_logger():
             handler_type=logging.FileHandler,
             filename=logger_config["filename"],
         ):
-            file_handler = logging.FileHandler(logger_config["filename"])
+            # Rotating rather than plain FileHandler: see
+            # DEFAULT_LOG_MAX_BYTES. max_bytes=0 disables rotation for
+            # operators who hand the file to an external logrotate.
+            file_handler = RotatingFileHandler(
+                logger_config["filename"],
+                maxBytes=logger_config["max_bytes"],
+                backupCount=logger_config["backup_count"],
+            )
             file_handler.setFormatter(
                 logging.Formatter(
                     "%(asctime)s :: %(levelname)s :: %(name)s :: %(filename)s :: %(lineno)d :: %(message)s",

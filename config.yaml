@@ -4,6 +4,12 @@ app:
     level: "info"
     # log filename icloud.log
     filename: "/config/icloud.log"
+    # Rotate the log file rather than letting it grow without bound. One
+    # line is written per file considered each cycle, so a large library
+    # can reach several GB. Defaults: 50 MB per file, 3 backups. Set
+    # max_bytes to 0 if an external logrotate manages the file instead.
+    # max_bytes: 52428800
+    # backup_count: 3
   credentials:
     # iCloud drive username
     username: "please@replace.me"
