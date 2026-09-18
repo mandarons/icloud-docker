@@ -1,0 +1,16 @@
+[38;21m2026-09-18 04:06:24,071 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-18 04:06:24,071 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-18 04:06:24,071 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-18 04:06:24,072 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-18 04:06:24,072 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-18 04:06:24,072 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-18 04:06:24,072 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-09-18 04:06:24,072 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-09-18 04:06:24,072 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: ad466d4d-df6d-47cb-8a59-40c92daf4735[0m
+[38;21m2026-09-18 04:06:24,073 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: ad466d4d-df6d-47cb-8a59-40c92daf4735[0m
+[38;21m2026-09-18 04:06:24,073 :: DEBUG :: root :: usage.py :: 287 :: Upgrading existing installation: ad466d4d-df6d-47cb-8a59-40c92daf4735[0m
+[38;21m2026-09-18 04:06:24,073 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-09-18 04:06:24,073 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: 5c755a11-aa64-4392-9213-421ea1e63ba4[0m
+[38;21m2026-09-18 04:06:24,073 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: 5c755a11-aa64-4392-9213-421ea1e63ba4[0m
+[38;21m2026-09-18 04:06:24,073 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-18 04:06:24,073 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
