@@ -2203,6 +2203,136 @@ class TestSyncPhotos(unittest.TestCase):
         result = _refresh_photo_download_url(mock_photo)
         self.assertFalse(result)
 
+    def test_refresh_photo_download_url_error_record_is_not_accepted(self):
+        """CloudKit reports a failed lookup as a record in the ``records``
+        array carrying the requested recordName and a ``serverErrorCode``
+        instead of ``fields``. Matching on recordName alone therefore accepts
+        an error payload as a fresh master record: the refresh reports
+        success, and the retrying download then raises KeyError('fields')
+        deep inside icloudpy, which surfaces as an unexplained
+        "Failed to download <path>: 'fields'"."""
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        original_record = {
+            "recordName": "test-123",
+            "recordType": "CPLMaster",
+            "fields": {"resOriginalRes": {"value": {"size": 1}}},
+        }
+        mock_photo = Mock()
+        mock_photo._master_record = original_record  # noqa: SLF001
+        mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "records": [
+                {
+                    "recordName": "test-123",
+                    "reason": "Record not found",
+                    "serverErrorCode": "NOT_FOUND",
+                },
+            ],
+        }
+        mock_service.session.post.return_value = mock_response
+
+        result = _refresh_photo_download_url(mock_photo)
+
+        self.assertFalse(result)
+        # The usable record must survive a failed refresh -- overwriting it
+        # with the error payload is what turns a clean "could not refresh"
+        # into a KeyError on the next download attempt.
+        self.assertEqual(mock_photo._master_record, original_record)  # noqa: SLF001
+
+    def test_refresh_photo_download_url_record_without_fields_is_not_accepted(self):
+        """Same guard, minimal shape: any record lacking ``fields`` is unusable
+        as a master record regardless of why it came back that way."""
+        from unittest.mock import MagicMock, Mock
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        mock_photo = Mock()
+        mock_photo._master_record = {"recordName": "test-123", "fields": {}}  # noqa: SLF001
+
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "records": [{"recordName": "test-123", "recordType": "CPLMaster"}],
+        }
+        mock_service.session.post.return_value = mock_response
+
+        self.assertFalse(_refresh_photo_download_url(mock_photo))
+
+    def _refresh_photo_with_response(self, response_records, original_record):
+        """Build a photo whose lookup returns ``response_records``."""
+        from unittest.mock import MagicMock, Mock
+
+        mock_photo = Mock()
+        mock_photo._master_record = original_record  # noqa: SLF001
+        mock_photo._versions = {"original": {"url": "http://expired.url"}}  # noqa: SLF001
+        mock_service = Mock()
+        mock_service._service_endpoint = "https://cv.icloud.com"  # noqa: SLF001
+        mock_service.zone_id = {"zoneName": "PrimarySync"}  # noqa: SLF001
+        mock_service.params = {"auth": "token"}  # noqa: SLF001
+        mock_photo._service = mock_service  # noqa: SLF001
+        mock_response = MagicMock()
+        mock_response.json.return_value = {"records": response_records}
+        mock_service.session.post.return_value = mock_response
+        return mock_photo
+
+    def test_refresh_photo_download_url_empty_fields_is_not_accepted(self):
+        """An empty ``fields`` is as unusable as a missing one: icloudpy builds
+        versions by testing ``f"{prefix}Res" in fields``, so an empty dict
+        yields no versions, ``download()`` returns None and the caller
+        dereferences ``.raw`` on it. Accepting it would also discard the
+        still-valid master record, poisoning the asset for the rest of the
+        sync."""
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        original = {
+            "recordName": "test-123",
+            "fields": {"resOriginalRes": {"value": {"size": 1}}},
+        }
+        photo = self._refresh_photo_with_response(
+            [{"recordName": "test-123", "fields": {}}], original,
+        )
+
+        self.assertFalse(_refresh_photo_download_url(photo))
+        self.assertEqual(photo._master_record, original)  # noqa: SLF001
+        self.assertEqual(photo._versions, {"original": {"url": "http://expired.url"}})  # noqa: SLF001
+
+    def test_refresh_photo_download_url_server_error_code_wins_over_fields(self):
+        """``serverErrorCode`` is what actually marks the payload as an error,
+        so a record carrying one is rejected even if fields came back too."""
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        original = {
+            "recordName": "test-123",
+            "fields": {"resOriginalRes": {"value": {"size": 1}}},
+        }
+        photo = self._refresh_photo_with_response(
+            [{
+                "recordName": "test-123",
+                "serverErrorCode": "NOT_FOUND",
+                "fields": {"resOriginalRes": {"value": {"size": 2}}},
+            }],
+            original,
+        )
+
+        self.assertFalse(_refresh_photo_download_url(photo))
+        self.assertEqual(photo._master_record, original)  # noqa: SLF001
+
     def test_refresh_photo_download_url_uses_records_lookup(self):
         """Test _refresh_photo_download_url calls records/lookup, not records/query.
 
@@ -2224,7 +2354,11 @@ class TestSyncPhotos(unittest.TestCase):
         mock_photo._service = mock_service  # noqa: SLF001
 
         mock_response = MagicMock()
-        mock_response.json.return_value = {"records": [{"recordName": "test-123"}]}
+        mock_response.json.return_value = {
+            "records": [
+                {"recordName": "test-123", "fields": {"resOriginalRes": {"value": {"size": 1}}}},
+            ],
+        }
         mock_service.session.post.return_value = mock_response
 
         self.assertTrue(_refresh_photo_download_url(mock_photo))
@@ -2275,7 +2409,11 @@ class TestSyncPhotos(unittest.TestCase):
         mock_service.params = {"auth": "token"}  # noqa: SLF001
         mock_photo._service = mock_service  # noqa: SLF001
         mock_response = MagicMock()
-        mock_response.json.return_value = {"records": [{"recordName": "test-123"}]}
+        mock_response.json.return_value = {
+            "records": [
+                {"recordName": "test-123", "fields": {"resOriginalRes": {"value": {"size": 1}}}},
+            ],
+        }
         mock_service.session.post.return_value = mock_response
 
         with (
