@@ -356,6 +356,7 @@ class TestAuthForm(unittest.TestCase):
         body = client.get("/auth").data.decode("utf-8")
         self.assertIn('name="password"', body)
         self.assertIn('action="/auth/password"', body)
+        self.assertIn('name="csrf_token" value="', body)
 
     def test_auth_renders_code_field_when_pending(self):
         with web._AUTH_LOCK:  # noqa: SLF001
