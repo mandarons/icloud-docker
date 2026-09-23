@@ -1,6 +1,0 @@
-[38;21m2026-09-23 23:10:20,306 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
-[38;21m2026-09-23 23:10:20,306 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
-[38;21m2026-09-23 23:10:20,307 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: http://test.com[0m
-[38;21m2026-09-23 23:10:20,307 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: ddf535a9-f9ec-44a3-b8ba-9a173fd32df5[0m
-[38;21m2026-09-23 23:10:20,307 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
-[38;21m2026-09-23 23:10:20,308 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

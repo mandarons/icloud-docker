@@ -1,0 +1,9 @@
+[38;5;226m2026-09-23 23:12:49,920 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;196m2026-09-23 23:12:49,921 :: ERROR :: root :: sync.py :: 831 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-09-23 23:12:49,921 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-23 23:12:49,921 :: INFO :: root :: sync.py :: 896 :: Retrying login at Wed Sep 23 23:22:49 2026 ...[0m
+[38;5;226m2026-09-23 23:12:49,922 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-09-23 23:12:49,923 :: ERROR :: root :: sync.py :: 831 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-09-23 23:12:49,923 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-23 23:12:49,923 :: INFO :: root :: sync.py :: 896 :: Retrying login at Wed Sep 23 23:22:49 2026 ...[0m
+[38;5;226m2026-09-23 23:12:49,923 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
