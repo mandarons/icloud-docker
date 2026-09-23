@@ -293,3 +293,37 @@ class TestAuthBlockedState(unittest.TestCase):
     def test_malformed_entry_is_empty(self):
         web_signals._save_state({web_signals._AUTH_BLOCKED_STATE_KEY: "oops"})  # noqa: SLF001
         self.assertEqual(web_signals.get_auth_blocked(), {})
+
+class TestTheReauthSentinelRoundTrips(unittest.TestCase):
+    def test_round_trip_and_single_consume(self):
+        import tempfile
+        from unittest.mock import patch
+
+        from src import web_signals
+
+        with tempfile.TemporaryDirectory() as d:
+            with patch.object(web_signals, "_config_dir", return_value=d):
+                self.assertFalse(web_signals.consume_reauth_completed())
+                self.assertTrue(web_signals.record_reauth_completed())
+                self.assertTrue(web_signals.consume_reauth_completed())
+                self.assertFalse(web_signals.consume_reauth_completed())
+
+    def test_an_unwritable_dir_is_reported_not_raised(self):
+        from unittest.mock import patch
+
+        from src import web_signals
+
+        with patch.object(web_signals, "_config_dir", return_value="/proc/x/y"):
+            self.assertFalse(web_signals.record_reauth_completed())
+
+    def test_an_unlink_error_other_than_missing_is_swallowed(self):
+        import tempfile
+        from unittest.mock import patch
+
+        from src import web_signals
+
+        with tempfile.TemporaryDirectory() as d:
+            with patch.object(web_signals, "_config_dir", return_value=d):
+                web_signals.record_reauth_completed()
+                with patch("os.unlink", side_effect=PermissionError("nope")):
+                    self.assertFalse(web_signals.consume_reauth_completed())

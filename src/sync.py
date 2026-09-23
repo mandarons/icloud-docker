@@ -782,6 +782,40 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
     alive(config=config, data=usage_data)
 
 
+def _auth_retry_sleep(total_seconds: int) -> None:
+    """Wait between sign-in attempts, ending early on a completed re-auth.
+
+    The loop backs off for ``retry_login_interval`` between attempts and
+    cannot otherwise see that the session was fixed underneath it, so
+    someone who signs in through the web UI watches the dashboard keep
+    saying the sync is stopped until an interval that began *before* the
+    problem was solved finally runs out.
+
+    Polls only the re-auth signal, not the force-sync sentinel behind
+    "Sync now": that button means "sync everything now", and a re-auth
+    should end a wait without also queueing a full re-enumeration.
+    """
+    _CHUNK = 2
+    try:
+        from src import web_signals as _ws
+    except ImportError:  # pragma: no cover - module is optional
+        sleep(total_seconds)
+        return
+
+    if total_seconds <= _CHUNK:
+        sleep(total_seconds)
+        return
+
+    remaining = total_seconds
+    while remaining > 0:
+        chunk = min(_CHUNK, remaining)
+        sleep(chunk)
+        remaining -= chunk
+        if _ws.consume_reauth_completed():
+            LOGGER.info("Re-auth completed -- ending the retry wait early.")
+            return
+
+
 def _handle_2fa_required(config, username: str, sync_state: SyncState):
     """
     Handle 2FA authentication requirement.
@@ -811,7 +845,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
     )
-    sleep(sleep_for)
+    _auth_retry_sleep(sleep_for)
     return True
 
 
@@ -845,7 +879,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
     )
-    sleep(sleep_for)
+    _auth_retry_sleep(sleep_for)
     return True
 
 
