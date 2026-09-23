@@ -781,7 +781,15 @@ def get_photos_obsolete_delete_limit_percent(config: dict) -> int:
     Cleanup is the only destructive step in a sync and it infers deletions
     from the absence of a path in the run's tracked-file set, so any bug that
     leaves paths untracked is acted on at full speed. Above this share the
-    run reports instead of deleting. 0 disables the limit.
+    run reports instead of deleting.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Percentage of a destination a single cleanup run may delete.
+        ``DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT`` when unset; 0 disables
+        the limit entirely.
     """
     config_path = ["photos", "obsolete_delete_limit_percent"]
 

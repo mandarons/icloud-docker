@@ -2580,6 +2580,53 @@ class TestObsoleteDeleteLimit(unittest.TestCase):
     is acted on at full speed. A real incident removed 185,207 files in one
     pass this way."""
 
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_a_mass_deletion_is_refused_through_sync_photos(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
+    ):
+        """End to end rather than against remove_obsolete_files directly.
+
+        The unit tests prove the limit arithmetic; this proves the limit is
+        actually reached from a real sync -- that the config value is read,
+        threaded to cleanup, and applied to the destination the run wrote to.
+        A limit that works in isolation but is never passed through would pass
+        every other test in this class.
+        """
+        service = data.ICloudPyServiceMock(
+            data.AUTHENTICATED_USER, data.VALID_PASSWORD,
+        )
+        config = read_config(config_path=tests.CONFIG_PATH)
+        destination = tests.PHOTOS_DIR
+        config["photos"]["destination"] = destination
+        config["photos"]["filters"]["libraries"] = ["PrimarySync"]
+        config["photos"]["remove_obsolete"] = True
+        config["photos"]["obsolete_delete_limit_percent"] = 25
+        mock_read_config.return_value = config
+
+        # Populate the destination, then sync: none of these are on the
+        # server, so every one is obsolete -- far past any sane limit.
+        os.makedirs(destination, exist_ok=True)
+        strays = [Path(destination, f"stray{i}.jpg") for i in range(40)]
+        for stray in strays:
+            stray.write_text("x")
+
+        with self.assertLogs(level="ERROR") as captured:
+            sync_photos.sync_photos(config=config, photos=service.photos)
+
+        self.assertTrue(
+            any("Refusing to remove" in line for line in captured.output),
+            "cleanup should have refused rather than deleted",
+        )
+        for stray in strays:
+            self.assertTrue(stray.is_file(), f"{stray} was deleted despite the limit")
+
+    def tearDown(self) -> None:
+        if os.path.exists(tests.PHOTOS_DIR):
+            shutil.rmtree(tests.PHOTOS_DIR)
+
     def _tree(self, base, n):
         for i in range(n):
             Path(base, f"f{i}.jpg").write_text("x")

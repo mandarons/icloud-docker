@@ -100,6 +100,12 @@ photos:
   destination: "photos"
   # Remove local photos that are not present on server (i.e. photos delete on server)
   remove_obsolete: false
+  # Optional, default 25. Ceiling on how much of a destination one cleanup run
+  # may delete, as a percentage of the files found there. Cleanup infers
+  # deletions from absence in the run's tracked-file set, so a bug that leaves
+  # paths untracked reads as "the server dropped these" and is acted on at full
+  # speed. Above this share the run reports and deletes nothing. 0 disables it.
+  # obsolete_delete_limit_percent: 25
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.
