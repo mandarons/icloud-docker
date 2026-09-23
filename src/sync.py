@@ -31,6 +31,41 @@ LOGGER = get_logger()
 _TRUST_COOKIE_NAME = "X-APPLE-WEBAUTH-HSA-TRUST"
 
 
+def _log_trust_revocation_hint(api) -> None:
+    """Say so when Apple rejected a trust token that has not expired.
+
+    Expiry and revocation are indistinguishable from the logs -- both
+    surface as 421 and both end with a 2FA prompt -- but they mean
+    opposite things for what to do next. A refresh schedule prevents the
+    first and can do nothing about the second: Apple drops trust on
+    security events, typically a new trusted device, a password change,
+    or a change to security keys.
+
+    Without this, the obvious reading of "valid trust token, 2FA demanded
+    anyway" is that the refresh logic is broken, and the time goes into
+    auditing code that behaved correctly.
+
+    Best-effort: never raises into the retry path.
+    """
+    try:
+        expires_at = _read_trust_cookie_expiry(api)
+        if expires_at is None:
+            return
+        remaining = (
+            expires_at - datetime.datetime.now(tz=datetime.timezone.utc)
+        ).days
+        if remaining <= 0:
+            return
+        LOGGER.error(
+            f"The trust token had not expired -- it is valid for {remaining} "
+            f"more days (until {expires_at.date()}). Apple revoked it "
+            f"server-side, which typically follows a new trusted device, a "
+            f"password change, or a change to security keys.",
+        )
+    except Exception as e:  # noqa: BLE001 - diagnostics never break the retry
+        LOGGER.debug(f"trust revocation hint failed: {e!s}")
+
+
 def _read_trust_cookie_expiry(api) -> datetime.datetime | None:
     """Return the expiry datetime of Apple's HSA trust cookie, or None.
 
@@ -1163,6 +1198,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                             "Nothing to sync. Please add drive: and/or photos: section in config.yaml file.",
                         )
                 else:
+                    _log_trust_revocation_hint(api)
                     if not _handle_2fa_required(config, username, sync_state):
                         break
                     continue
