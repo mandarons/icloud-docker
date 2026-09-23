@@ -61,6 +61,42 @@ def _state_path() -> str:
     return os.path.join(_config_dir(), ".last-sync-state.json")
 
 
+def _reauth_sentinel_path() -> str:
+    return os.path.join(_config_dir(), ".reauth-completed")
+
+
+def record_reauth_completed() -> bool:
+    """Signal that a re-auth just succeeded in the web UI.
+
+    Deliberately not the force-sync sentinel. That one is a button meaning
+    "sync everything now"; borrowing it would queue a full photo
+    re-enumeration -- hours on a large library -- that nobody asked for.
+    This one means only "the wait you are serving is over".
+    """
+    path = _reauth_sentinel_path()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(str(time.time()))
+        return True
+    except OSError as e:
+        LOGGER.warning(f"web_signals: failed to write {path}: {e!s}")
+        return False
+
+
+def consume_reauth_completed() -> bool:
+    """Atomically check + clear the re-auth signal."""
+    path = _reauth_sentinel_path()
+    try:
+        os.unlink(path)
+        return True
+    except FileNotFoundError:
+        return False
+    except OSError as e:
+        LOGGER.warning(f"web_signals: failed to clear {path}: {e!s}")
+        return False
+
+
 def request_force_sync(service: str) -> bool:
     """Touch the sentinel for ``service``.
 

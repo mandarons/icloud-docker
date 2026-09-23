@@ -55,6 +55,22 @@ _AUTH_LOCK = threading.Lock()
 _PENDING_AUTH_TTL_SECONDS = 600
 
 
+def _wake_sync_loop() -> None:
+    """Cut short the auth-retry wait after a re-auth succeeds.
+
+    Without this the loop serves out the rest of an interval that began
+    before the problem was solved -- the user completes the sign-in and
+    the dashboard keeps reporting the sync as stopped for up to
+    ``retry_login_interval``.
+
+    Best-effort: a missed nudge costs a delay, never correctness.
+    """
+    try:
+        web_signals.record_reauth_completed()
+    except Exception as e:  # noqa: BLE001 - never fail a successful sign-in
+        LOGGER.debug(f"could not signal the completed re-auth: {e!s}")
+
+
 def _pending_auth_is_stale() -> bool:
     """True when the in-memory password is older than the TTL.
 
@@ -594,6 +610,7 @@ def create_app(testing: bool = False) -> Flask:
             )
         except Exception as e:
             LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
+        _wake_sync_loop()
         return redirect(url_for("dashboard"))
 
     @app.route("/auth/code", methods=["POST"])
@@ -682,6 +699,7 @@ def create_app(testing: bool = False) -> Flask:
             except Exception as e:
                 LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
 
+            _wake_sync_loop()
             return redirect(url_for("dashboard"))
         finally:
             with _AUTH_LOCK:
@@ -794,6 +812,7 @@ def create_app(testing: bool = False) -> Flask:
             # Trust window was still alive — nothing to do, sync loop is
             # already authenticated. Bounce back to the dashboard with
             # the success state.
+            _wake_sync_loop()
             return redirect(url_for("dashboard"))
 
         try:
