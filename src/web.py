@@ -55,6 +55,22 @@ _AUTH_LOCK = threading.Lock()
 _PENDING_AUTH_TTL_SECONDS = 600
 
 
+def _wake_sync_loop() -> None:
+    """Cut short the auth-retry wait after a re-auth succeeds.
+
+    Without this the loop serves out the rest of an interval that began
+    before the problem was solved -- the user completes the sign-in and
+    the dashboard keeps reporting the sync as stopped for up to
+    ``retry_login_interval``.
+
+    Best-effort: a missed nudge costs a delay, never correctness.
+    """
+    try:
+        web_signals.record_reauth_completed()
+    except Exception as e:  # noqa: BLE001 - never fail a successful sign-in
+        LOGGER.debug(f"could not signal the completed re-auth: {e!s}")
+
+
 def _pending_auth_is_stale() -> bool:
     """True when the in-memory password is older than the TTL.
 
@@ -368,6 +384,9 @@ def _detect_auth_state(username: str | None) -> str:
       - ``not_configured`` — no ``app.credentials.username`` in config.
       - ``setup_needed`` — username set, but the keyring has no password
         cached. The container's first 2FA flow hasn't been completed.
+      - ``reauth_needed`` — the sync loop reported that it cannot
+        authenticate. Every on-disk signal below looks fine in this state,
+        which is why it has to be asked for explicitly.
       - ``ready`` — username set + keyring entry present. Sync loop can
         resume the session on the next retry.
 
@@ -381,6 +400,12 @@ def _detect_auth_state(username: str | None) -> str:
         from icloudpy import utils as icloudpy_utils
 
         if icloudpy_utils.password_exists_in_keyring(username):
+            # Ask the sync loop before claiming health: a configured
+            # username and a cached password look identical whether or not
+            # Apple is demanding a second factor, so on-disk signals alone
+            # render a green dashboard over a sync that has not run.
+            if web_signals.get_auth_blocked().get("blocked"):
+                return "reauth_needed"
             return "ready"
     except Exception as e:
         LOGGER.debug(f"Web UI auth-state check raised: {e!s}")
@@ -585,6 +610,7 @@ def create_app(testing: bool = False) -> Flask:
             )
         except Exception as e:
             LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
+        _wake_sync_loop()
         return redirect(url_for("dashboard"))
 
     @app.route("/auth/code", methods=["POST"])
@@ -673,6 +699,7 @@ def create_app(testing: bool = False) -> Flask:
             except Exception as e:
                 LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
 
+            _wake_sync_loop()
             return redirect(url_for("dashboard"))
         finally:
             with _AUTH_LOCK:
@@ -785,6 +812,7 @@ def create_app(testing: bool = False) -> Flask:
             # Trust window was still alive — nothing to do, sync loop is
             # already authenticated. Bounce back to the dashboard with
             # the success state.
+            _wake_sync_loop()
             return redirect(url_for("dashboard"))
 
         try:
