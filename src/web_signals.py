@@ -61,6 +61,42 @@ def _state_path() -> str:
     return os.path.join(_config_dir(), ".last-sync-state.json")
 
 
+def _reauth_sentinel_path() -> str:
+    return os.path.join(_config_dir(), ".reauth-completed")
+
+
+def record_reauth_completed() -> bool:
+    """Signal that a re-auth just succeeded in the web UI.
+
+    Deliberately not the force-sync sentinel. That one is a button meaning
+    "sync everything now"; borrowing it would queue a full photo
+    re-enumeration -- hours on a large library -- that nobody asked for.
+    This one means only "the wait you are serving is over".
+    """
+    path = _reauth_sentinel_path()
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(str(time.time()))
+        return True
+    except OSError as e:
+        LOGGER.warning(f"web_signals: failed to write {path}: {e!s}")
+        return False
+
+
+def consume_reauth_completed() -> bool:
+    """Atomically check + clear the re-auth signal."""
+    path = _reauth_sentinel_path()
+    try:
+        os.unlink(path)
+        return True
+    except FileNotFoundError:
+        return False
+    except OSError as e:
+        LOGGER.warning(f"web_signals: failed to clear {path}: {e!s}")
+        return False
+
+
 def request_force_sync(service: str) -> bool:
     """Touch the sentinel for ``service``.
 
@@ -187,6 +223,7 @@ def _save_state(state: dict[str, dict[str, Any]]) -> None:
 
 
 _TRUST_STATE_KEY = "_trust"
+_AUTH_BLOCKED_STATE_KEY = "_auth_blocked"
 
 
 def record_trust_state(
@@ -216,6 +253,30 @@ def record_trust_state(
 def get_trust_state() -> dict[str, Any]:
     """Return persisted trust state. Empty dict if never recorded."""
     return _load_state().get(_TRUST_STATE_KEY, {})
+
+
+def record_auth_blocked(*, blocked: bool, reason: str | None = None) -> None:
+    """Record whether the sync loop is currently unable to authenticate.
+
+    ``_detect_auth_state`` can only see on-disk signals -- a username in
+    the config and a password in the keyring -- so it reports "ready" for
+    an account that is in fact stuck on a second factor. Only the sync
+    loop knows it is failing, so it publishes that here and the dashboard
+    stops claiming everything is healthy while nothing is syncing.
+    """
+    state = _load_state()
+    state[_AUTH_BLOCKED_STATE_KEY] = {
+        "blocked": bool(blocked),
+        "reason": reason,
+        "last_updated": time.time(),
+    }
+    _save_state(state)
+
+
+def get_auth_blocked() -> dict[str, Any]:
+    """Return the recorded auth-blocked state. Empty dict if never recorded."""
+    entry = _load_state().get(_AUTH_BLOCKED_STATE_KEY)
+    return entry if isinstance(entry, dict) else {}
 
 
 def format_relative_time(epoch_seconds: float, *, now: float | None = None) -> str:
