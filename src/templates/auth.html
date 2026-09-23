@@ -74,6 +74,7 @@
     </form>
   {% else %}
     <form method="post" action="/auth/password">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       {% if status.username %}
       <div style="margin-bottom: 16px;">
         <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">Apple ID</label>

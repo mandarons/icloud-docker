@@ -1222,6 +1222,160 @@ class TestInterruptibleSleep(unittest.TestCase):
 
 
 
+class TestACompletedReauthEndsTheRetryWait(unittest.TestCase):
+    """The loop backs off for retry_login_interval between sign-in attempts
+    and cannot otherwise see that the session was fixed underneath it, so
+    someone who signs in through the web UI watches the dashboard keep
+    reporting the sync as stopped until an interval that began before the
+    problem was solved finally runs out."""
+
+    def test_a_completed_reauth_ends_the_wait(self):
+        from unittest.mock import patch
+
+        from src import sync
+
+        with patch.object(sync, "sleep") as slept:
+            with patch("src.web_signals.consume_reauth_completed", return_value=True):
+                sync._auth_retry_sleep(600)  # noqa: SLF001
+        self.assertLess(sum(c.args[0] for c in slept.call_args_list), 600)
+
+    def test_without_a_reauth_the_whole_interval_is_served(self):
+        from unittest.mock import patch
+
+        from src import sync
+
+        with patch.object(sync, "sleep") as slept:
+            with patch("src.web_signals.consume_reauth_completed", return_value=False):
+                sync._auth_retry_sleep(10)  # noqa: SLF001
+        self.assertEqual(sum(c.args[0] for c in slept.call_args_list), 10)
+
+    def test_a_force_sync_request_does_not_end_an_auth_wait(self):
+        """"Sync now" means sync everything now, not "stop waiting to sign
+        in" -- borrowing it would queue a full re-enumeration nobody asked
+        for, and on a rate-limited account it would drive sign-in attempts."""
+        from unittest.mock import patch
+
+        from src import sync
+
+        with patch.object(sync, "sleep") as slept:
+            with patch("src.web_signals.pending_force_syncs", return_value=["drive"]):
+                with patch(
+                    "src.web_signals.consume_reauth_completed", return_value=False,
+                ):
+                    sync._auth_retry_sleep(10)  # noqa: SLF001
+        self.assertEqual(sum(c.args[0] for c in slept.call_args_list), 10)
+
+    def test_a_short_wait_is_a_single_sleep(self):
+        from unittest.mock import patch
+
+        from src import sync
+
+        with patch.object(sync, "sleep") as slept:
+            sync._auth_retry_sleep(1)  # noqa: SLF001
+        slept.assert_called_once_with(1)
+
+    def test_a_successful_reauth_signals_the_loop(self):
+        from unittest.mock import patch
+
+        from src import web
+
+        with patch("src.web.web_signals.record_reauth_completed") as rec:
+            with patch("src.web.web_signals.request_force_sync") as force:
+                web._wake_sync_loop()  # noqa: SLF001
+        rec.assert_called_once_with()
+        force.assert_not_called()
+
+    def test_a_failed_signal_never_fails_the_sign_in(self):
+        from unittest.mock import patch
+
+        from src import web
+
+        with patch(
+            "src.web.web_signals.record_reauth_completed",
+            side_effect=OSError("read-only"),
+        ):
+            web._wake_sync_loop()  # noqa: SLF001
+
+
+    def test_the_2fa_handler_reports_keep_going(self):
+        """Returning True is what sends the loop round again rather than
+        ending it -- the retry path must not look like a fatal error."""
+        from unittest.mock import patch
+
+        from src import sync
+
+        config = {"app": {"credentials": {"retry_login_interval": 600}}}
+        with patch.object(sync, "_auth_retry_sleep"):
+            with patch.object(sync, "notify"):
+                self.assertTrue(
+                    sync._handle_2fa_required(  # noqa: SLF001
+                        config, "a@icloud.com", sync.SyncState(),
+                    ),
+                )
+
+    def test_the_password_handler_reports_keep_going(self):
+        from unittest.mock import patch
+
+        from src import sync
+
+        config = {"app": {"credentials": {"retry_login_interval": 600}}}
+        with patch.object(sync, "_auth_retry_sleep"):
+            with patch.object(sync, "notify"):
+                self.assertTrue(
+                    sync._handle_password_error(  # noqa: SLF001
+                        config, "a@icloud.com", sync.SyncState(),
+                    ),
+                )
+
+    def _loop_once_then_exit(self, **auth_kwargs):
+        """Drive sync() so a handler runs, the loop continues, and the second
+        retry wait ends the test -- proving the loop retried rather than
+        exiting."""
+        from unittest.mock import patch
+
+        from src import sync
+
+        config = {
+            "app": {
+                "credentials": {
+                    "username": "a@icloud.com",
+                    "retry_login_interval": 600,
+                },
+            },
+            "drive": {"destination": "drive"},
+        }
+        with (
+            patch.object(sync, "_load_configuration", return_value=config),
+            patch.object(sync, "alive"),
+            patch.object(sync, "notify"),
+            patch.object(sync, "_authenticate_and_get_api", **auth_kwargs),
+            patch.object(
+                sync, "_auth_retry_sleep", side_effect=[None, SystemExit],
+            ) as slept,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            with self.assertRaises(SystemExit):
+                sync.sync()
+        return slept
+
+    def test_a_pending_second_factor_sends_the_loop_round_again(self):
+        from unittest.mock import MagicMock
+
+        api = MagicMock()
+        api.requires_2sa = True
+        slept = self._loop_once_then_exit(return_value=api)
+        self.assertEqual(slept.call_count, 2)
+
+    def test_a_missing_keyring_password_sends_the_loop_round_again(self):
+        from icloudpy import exceptions
+
+        slept = self._loop_once_then_exit(
+            side_effect=exceptions.ICloudPyNoStoredPasswordAvailableException(),
+        )
+        self.assertEqual(slept.call_count, 2)
+
+
+
 class TestRevocationIsNamedSeparatelyFromExpiry(unittest.TestCase):
     """Expiry and revocation both surface as 421 and both end in a 2FA
     prompt, but a refresh schedule prevents one and can do nothing about the

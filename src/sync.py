@@ -129,6 +129,23 @@ def _resolve_dashboard_url(config) -> str | None:
     return f"http://{host}:{port}"
 
 
+def _publish_auth_blocked(blocked: bool, reason: str | None = None) -> None:
+    """Tell the web UI whether the loop can authenticate.
+
+    Only this loop knows: every on-disk signal the dashboard can check by
+    itself (username configured, password in the keyring) still looks
+    healthy while an account sits stuck on a second factor.
+
+    Best-effort -- signalling must never break syncing.
+    """
+    try:
+        from src import web_signals
+
+        web_signals.record_auth_blocked(blocked=blocked, reason=reason)
+    except Exception as e:  # pragma: no cover - signalling is advisory
+        LOGGER.warning(f"Could not publish auth state: {e!s}")
+
+
 def _maybe_refresh_trust(config, api) -> None:
     """Re-trust the session before its token ages out.
 
@@ -845,6 +862,40 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
     alive(config=config, data=usage_data)
 
 
+def _auth_retry_sleep(total_seconds: int) -> None:
+    """Wait between sign-in attempts, ending early on a completed re-auth.
+
+    The loop backs off for ``retry_login_interval`` between attempts and
+    cannot otherwise see that the session was fixed underneath it, so
+    someone who signs in through the web UI watches the dashboard keep
+    saying the sync is stopped until an interval that began *before* the
+    problem was solved finally runs out.
+
+    Polls only the re-auth signal, not the force-sync sentinel behind
+    "Sync now": that button means "sync everything now", and a re-auth
+    should end a wait without also queueing a full re-enumeration.
+    """
+    _CHUNK = 2
+    try:
+        from src import web_signals as _ws
+    except ImportError:  # pragma: no cover - module is optional
+        sleep(total_seconds)
+        return
+
+    if total_seconds <= _CHUNK:
+        sleep(total_seconds)
+        return
+
+    remaining = total_seconds
+    while remaining > 0:
+        chunk = min(_CHUNK, remaining)
+        sleep(chunk)
+        remaining -= chunk
+        if _ws.consume_reauth_completed():
+            LOGGER.info("Re-auth completed -- ending the retry wait early.")
+            return
+
+
 def _handle_2fa_required(config, username: str, sync_state: SyncState):
     """
     Handle 2FA authentication requirement.
@@ -858,6 +909,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         bool: True if should continue (retry), False if should exit
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
+    _publish_auth_blocked(True, reason="2fa_required")
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -873,7 +925,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
     )
-    sleep(sleep_for)
+    _auth_retry_sleep(sleep_for)
     return True
 
 
@@ -907,7 +959,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
     )
-    sleep(sleep_for)
+    _auth_retry_sleep(sleep_for)
     return True
 
 
@@ -1099,6 +1151,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         _perform_dry_run(config, api, check_files=check_files)
                     return
 
+                _publish_auth_blocked(False)
                 if not api.requires_2sa:
                     # Trust-window check: record current cookie expiry and
                     # fire a pre-emptive warning once if it's about to lapse.
