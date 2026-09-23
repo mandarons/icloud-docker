@@ -1,0 +1,9 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:407 Sending first heartbeat
+DEBUG    root:usage.py:413 First heartbeat send failed
+DEBUG    root:usage.py:388 Time since last heartbeat: 1 day, 1:00:00.000014
+DEBUG    root:usage.py:392 Sending heartbeat (different UTC day)
+DEBUG    root:usage.py:397 Heartbeat send failed
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
