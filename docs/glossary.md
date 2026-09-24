@@ -29,4 +29,5 @@ Domain terminology, acronyms, and project-specific vocabulary.
 | **enumeration_chunk_size** | Photos buffered per streaming chunk. Bounds peak memory on large libraries. |
 | **all_albums** | Config flag to preserve album structure. When true, photos organized by album. |
 | **remove_obsolete** | Config flag to delete local files not present on server. |
+| **obsolete_delete_limit_percent** | Ceiling on how much of a destination one cleanup run may delete (default 25, 0 disables). Above it the run reports instead of deleting. |
 | **adaptive scheduling** | Algorithm that alternates Drive/Photos sync based on countdown timers. |

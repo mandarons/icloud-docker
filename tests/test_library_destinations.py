@@ -85,12 +85,12 @@ class TestLibraryDestinationHelper(unittest.TestCase):
 
     def test_shared_library_alias_matches_guid_named_zone(self):
         """`SharedLibrary` in the config matches Apple's GUID-named shared zones
-        (e.g. ``SharedSync-3C977B4A-...``) — users don't have to discover and
+        (e.g. ``SharedSync-<guid>``) — users don't have to discover and
         hardcode their per-account GUID."""
         with tempfile.TemporaryDirectory() as base:
-            mapping = {"PrimarySync": "Eric", "SharedLibrary": "Shared"}
+            mapping = {"PrimarySync": "Personal", "SharedLibrary": "Shared"}
             result = _library_destination(
-                base, "SharedSync-3C977B4A-C15A-46E4-9854-585B9342C409", mapping,
+                base, "SharedSync-00000000-0000-4000-8000-000000000000", mapping,
             )
             assert result == os.path.join(base, "Shared")
             assert os.path.isdir(result)
@@ -100,7 +100,7 @@ class TestLibraryDestinationHelper(unittest.TestCase):
         a non-SharedSync library that isn't explicitly mapped still falls
         through to base."""
         with tempfile.TemporaryDirectory() as base:
-            mapping = {"PrimarySync": "Eric", "SharedLibrary": "Shared"}
+            mapping = {"PrimarySync": "Personal", "SharedLibrary": "Shared"}
             result = _library_destination(base, "OtherLibrary", mapping)
             assert result == base
 
