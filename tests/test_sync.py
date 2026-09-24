@@ -1373,3 +1373,69 @@ class TestACompletedReauthEndsTheRetryWait(unittest.TestCase):
             side_effect=exceptions.ICloudPyNoStoredPasswordAvailableException(),
         )
         self.assertEqual(slept.call_count, 2)
+
+
+
+class TestRevocationIsNamedSeparatelyFromExpiry(unittest.TestCase):
+    """Expiry and revocation both surface as 421 and both end in a 2FA
+    prompt, but a refresh schedule prevents one and can do nothing about the
+    other. Without saying which happened, the obvious reading of "valid trust
+    token, 2FA demanded anyway" is that the refresh logic is broken."""
+
+    def test_a_still_valid_token_is_reported_as_revoked(self):
+        import datetime
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _log_trust_revocation_hint
+
+        future = datetime.datetime.now(
+            tz=datetime.timezone.utc,
+        ) + datetime.timedelta(days=58)
+        with patch("src.sync._read_trust_cookie_expiry", return_value=future):
+            with self.assertLogs(level="ERROR") as captured:
+                _log_trust_revocation_hint(MagicMock())
+        joined = "\n".join(captured.output)
+        self.assertIn("had not expired", joined)
+        self.assertIn("revoked it", joined)
+        # A day count, not a specific one: timedelta.days truncates, so
+        # "+58 days from now" reads back as 57 and pinning the number makes
+        # the test fail on arithmetic rather than on behaviour.
+        self.assertRegex(joined, r"valid for \d+ more days")
+
+    def test_an_actually_expired_token_says_nothing(self):
+        """Ordinary expiry is not news -- the 2FA prompt already says it."""
+        import datetime
+        import logging
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _log_trust_revocation_hint
+
+        past = datetime.datetime.now(
+            tz=datetime.timezone.utc,
+        ) - datetime.timedelta(days=1)
+        with patch("src.sync._read_trust_cookie_expiry", return_value=past):
+            with patch.object(logging.getLogger(), "error") as err:
+                _log_trust_revocation_hint(MagicMock())
+        err.assert_not_called()
+
+    def test_no_trust_cookie_says_nothing(self):
+        import logging
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _log_trust_revocation_hint
+
+        with patch("src.sync._read_trust_cookie_expiry", return_value=None):
+            with patch.object(logging.getLogger(), "error") as err:
+                _log_trust_revocation_hint(MagicMock())
+        err.assert_not_called()
+
+    def test_a_raising_reader_never_breaks_the_retry(self):
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _log_trust_revocation_hint
+
+        with patch(
+            "src.sync._read_trust_cookie_expiry",
+            side_effect=RuntimeError("cookie jar gone"),
+        ):
+            _log_trust_revocation_hint(MagicMock())  # must not raise

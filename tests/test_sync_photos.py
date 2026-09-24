@@ -2674,3 +2674,196 @@ class TestObsoleteDeleteLimit(unittest.TestCase):
             )
             self.assertEqual(len(removed), 5)
             self.assertTrue(Path(base, ".mounted").is_file())
+class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
+    """An account can be shown libraries it never created -- zones left
+    behind by Apple's own backend migrations -- and some answer every query
+    with ZONE_NOT_FOUND or BAD_REQUEST. One of those used to abort the whole
+    photos pass, so libraries later in the list never synced at all."""
+
+    def _photos(self, names):
+        from unittest.mock import MagicMock
+
+        photos = MagicMock()
+        photos.libraries = {n: MagicMock() for n in names}
+        return photos
+
+    def test_zone_faults_are_inside_the_isolated_exception_set(self):
+        """Pins the dependency the handler relies on, instead of trusting that
+        the mock-driven test above happens to raise the right type.
+
+        Apple reports an unreadable zone as ICloudPyServiceNotActivatedException.
+        _LIBRARY_FAULTS names its base, ICloudPyAPIResponseException, so the
+        subclass is caught in production. If a future icloudpy re-parents it,
+        this fails here rather than a real library silently aborting a sync.
+        """
+        from icloudpy import exceptions
+
+        from src.sync_photos import _LIBRARY_FAULTS
+
+        zone_fault = exceptions.ICloudPyServiceNotActivatedException("ZONE_NOT_FOUND", "x")
+        self.assertIsInstance(zone_fault, _LIBRARY_FAULTS)
+        self.assertTrue(
+            issubclass(
+                exceptions.ICloudPyServiceNotActivatedException,
+                exceptions.ICloudPyAPIResponseException,
+            ),
+        )
+
+    def test_a_failing_library_does_not_prevent_the_next_one(self):
+        from unittest.mock import patch
+
+        from icloudpy import exceptions
+
+        from src import sync_photos
+
+        seen = []
+
+        def fake(photos, library, *a, **k):
+            seen.append(library)
+            if library.startswith("BrokenZone"):
+                msg = "ZONE_NOT_FOUND"
+                raise exceptions.ICloudPyServiceNotActivatedException(msg)
+            return (5, 0)
+
+        failed = set()
+        with patch.object(sync_photos, "_sync_all_photos_in_library", side_effect=fake):
+            ok, bad = sync_photos._sync_albums_by_configuration(  # noqa: SLF001
+                self._photos(["SharedSync-A", "BrokenZone-1", "PrimarySync"]),
+                ["SharedSync-A", "BrokenZone-1", "PrimarySync"],
+                False,
+                "/dest",
+                {"albums": None, "file_sizes": ["original"], "extensions": None},
+                set(),
+                "%Y/%m",
+                None,
+                {},
+                failed_libraries=failed,
+            )
+        # PrimarySync is last; before the fix it was never reached.
+        self.assertEqual(seen, ["SharedSync-A", "BrokenZone-1", "PrimarySync"])
+        self.assertEqual(ok, 10)
+        self.assertEqual(failed, {"BrokenZone-1"})
+
+    def test_a_failed_library_is_never_cleaned_up(self):
+        """The data-loss guard: a library that could not be read contributes
+        nothing to ``files``, so cleaning it would delete every local copy."""
+        from unittest.mock import patch
+
+        from src import sync_photos
+
+        cleaned = []
+        tmp = tempfile.mkdtemp()
+        cfg = {
+            "app": {"root": "/icloud"},
+            "photos": {
+                "destination": "photos",
+                "remove_obsolete": True,
+                "library_destinations": {"PrimarySync": "Personal", "Broken": "Shared"},
+            },
+        }
+
+        def fake_albums(*a, **k):
+            k["failed_libraries"].add("Broken")
+            return (1, 0)
+
+        with (
+            patch.object(sync_photos, "_sync_albums_by_configuration", side_effect=fake_albums),
+            patch.object(sync_photos, "remove_obsolete_files", side_effect=lambda d, f, **k: cleaned.append(d)),
+            patch.object(sync_photos.config_parser, "prepare_photos_destination", return_value=tmp),
+        ):
+            sync_photos.sync_photos(config=cfg, photos=self._photos(["PrimarySync", "Broken"]))
+
+        self.assertTrue(any("Personal" in c for c in cleaned), "healthy library should still be cleaned")
+        self.assertFalse(any("Shared" in c for c in cleaned), "failed library must never be cleaned")
+
+    def test_shared_destination_skips_cleanup_entirely_on_any_failure(self):
+        """Without per-library destinations, ``files`` cannot attribute a path
+        to a library, so one failure makes the whole set unusable."""
+        from unittest.mock import patch
+
+        from src import sync_photos
+
+        cleaned = []
+        tmp = tempfile.mkdtemp()
+        cfg = {
+            "app": {"root": "/icloud"},
+            "photos": {"destination": "photos", "remove_obsolete": True},
+        }
+
+        def fake_albums(*a, **k):
+            k["failed_libraries"].add("Broken")
+            return (1, 0)
+
+        with (
+            patch.object(sync_photos, "_sync_albums_by_configuration", side_effect=fake_albums),
+            patch.object(sync_photos, "remove_obsolete_files", side_effect=lambda d, f, **k: cleaned.append(d)),
+            patch.object(sync_photos.config_parser, "prepare_photos_destination", return_value=tmp),
+        ):
+            sync_photos.sync_photos(config=cfg, photos=self._photos(["PrimarySync", "Broken"]))
+
+        self.assertEqual(cleaned, [], "a failure must disable cleanup for the shared destination")
+
+    def test_hardlink_pass_survives_a_broken_library(self):
+        """The 'All Photos' pre-pass walks libraries too, so it needs the
+        same isolation -- otherwise a library that faults mid-album kills the
+        run before the main album sync ever starts."""
+        from unittest.mock import MagicMock, patch
+
+        from icloudpy import exceptions
+
+        from src import sync_photos
+
+        photos = MagicMock()
+        lib = MagicMock()
+        lib.albums = {"All Photos": MagicMock()}
+        photos.libraries = {"PrimarySync": lib}
+
+        error = exceptions.ICloudPyAPIResponseException("Index has invalid data")
+        failed = set()
+        with (
+            patch.object(sync_photos, "sync_album_photos", side_effect=error),
+            patch.object(sync_photos, "_library_destination", return_value="/dest"),
+        ):
+            ok, bad = sync_photos._sync_all_photos_first_for_hardlinks(  # noqa: SLF001
+                photos,
+                ["PrimarySync"],
+                "/dest",
+                {"file_sizes": ["original"], "extensions": None},
+                set(),
+                "%Y/%m",
+                None,
+                {},
+                failed_libraries=failed,
+            )
+        self.assertEqual((ok, bad), (0, 0))
+        self.assertEqual(failed, {"PrimarySync"})
+
+    def test_an_unmapped_library_never_cleans_the_shared_root(self):
+        """A library with no library_destinations entry falls through to the
+        photos root, which holds every other library's tree. Cleaning it on
+        that library's behalf would delete all of them -- including trees
+        this container does not own."""
+        from unittest.mock import patch
+
+        from src import sync_photos
+
+        cleaned = []
+        tmp = tempfile.mkdtemp()
+        cfg = {
+            "app": {"root": "/icloud"},
+            "photos": {
+                "destination": "photos",
+                "remove_obsolete": True,
+                # NewZone deliberately absent from the mapping.
+                "library_destinations": {"PrimarySync": "Personal"},
+            },
+        }
+        with (
+            patch.object(sync_photos, "_sync_albums_by_configuration", return_value=(1, 0)),
+            patch.object(sync_photos, "remove_obsolete_files", side_effect=lambda d, f, **k: cleaned.append(d)),
+            patch.object(sync_photos.config_parser, "prepare_photos_destination", return_value=tmp),
+        ):
+            sync_photos.sync_photos(config=cfg, photos=self._photos(["PrimarySync", "NewZone"]))
+
+        self.assertTrue(any("Personal" in c for c in cleaned), "mapped library still cleaned")
+        self.assertNotIn(tmp, cleaned, "the shared root must never be cleaned per-library")
