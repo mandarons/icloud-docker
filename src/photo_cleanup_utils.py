@@ -58,11 +58,11 @@ def remove_obsolete_files(
         return removed_paths
 
     if limit_percent > 0 and present:
-        share = 100 * len(candidates) / present
-        if share > limit_percent:
+        delete_percent = 100 * len(candidates) / present
+        if delete_percent > limit_percent:
             LOGGER.error(
                 f"Refusing to remove {len(candidates)} of {present} files "
-                f"({share:.0f}%) under {destination_path} — over the "
+                f"({delete_percent:.0f}%) under {destination_path} — over the "
                 f"{limit_percent}% obsolete-delete limit. A sync does not "
                 f"normally make this share of a library obsolete, so this is "
                 f"treated as a fault rather than acted on. Check the library "

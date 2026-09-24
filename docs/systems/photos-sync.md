@@ -36,6 +36,7 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 | `sync_photos(config, photos)` | Main entry — enumerate libraries, delegate to album sync |
 | `sync_album_photos(...)` | Sync a single album's photos |
 | `create_hardlink_registry(...)` | Create registry for cross-album dedup |
+| `remove_obsolete_files(destination, tracked, ...)` | Delete local files absent from the run's tracked set; refuses above `obsolete_delete_limit_percent` |
 
 ## File Size Variants
 
