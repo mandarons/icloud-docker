@@ -2313,6 +2313,34 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertEqual(photo._master_record, original)  # noqa: SLF001
         self.assertEqual(photo._versions, {"original": {"url": "http://expired.url"}})  # noqa: SLF001
 
+    def test_refresh_failure_reasons_distinguish_error_from_empty(self):
+        """An error payload and a structurally empty record are different
+        faults; the recorded reason must say which one happened."""
+        from unittest.mock import patch
+
+        from src.photo_file_utils import _refresh_photo_download_url
+
+        original = {"recordName": "test-123", "fields": {"resOriginalRes": {"value": {"size": 1}}}}
+        cases = [
+            (
+                [{"recordName": "test-123", "serverErrorCode": "NOT_FOUND", "reason": "gone"}],
+                "CloudKit error NOT_FOUND: gone",
+            ),
+            (
+                [{"recordName": "test-123", "serverErrorCode": "ACCESS_DENIED"}],
+                "CloudKit error ACCESS_DENIED: no reason given",
+            ),
+            (
+                [{"recordName": "test-123", "fields": {}}],
+                "record came back with no usable fields",
+            ),
+        ]
+        for records, reason in cases:
+            photo = self._refresh_photo_with_response(records, dict(original))
+            with patch("src.photo_file_utils._note_refresh_failure") as noted:
+                self.assertFalse(_refresh_photo_download_url(photo))
+            noted.assert_called_once_with("test-123", reason)
+
     def test_refresh_photo_download_url_server_error_code_wins_over_fields(self):
         """``serverErrorCode`` is what actually marks the payload as an error,
         so a record carrying one is rejected even if fields came back too."""

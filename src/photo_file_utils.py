@@ -242,11 +242,16 @@ def _refresh_photo_download_url(photo) -> bool:
             # None, and the caller dereferences ``.raw`` on it. Accepting
             # either shape also discards the still-valid master record we
             # already hold, poisoning the asset for the rest of the sync.
-            if rec.get("serverErrorCode") or not rec.get("fields"):
+            # Two distinct failures, reported separately so a refresh that
+            # keeps failing in the field says which one it is.
+            if rec.get("serverErrorCode"):
                 _note_refresh_failure(
                     record_name,
-                    rec.get("serverErrorCode") or rec.get("reason") or "record has no usable fields",
+                    f"CloudKit error {rec['serverErrorCode']}: {rec.get('reason') or 'no reason given'}",
                 )
+                return False
+            if not rec.get("fields"):
+                _note_refresh_failure(record_name, "record came back with no usable fields")
                 return False
             photo._master_record = rec  # noqa: SLF001
             with _versions_refresh_lock:
