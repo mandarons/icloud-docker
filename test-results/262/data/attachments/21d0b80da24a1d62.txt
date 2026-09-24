@@ -1,0 +1,2 @@
+INFO     root:sync.py:182 Trust token has 1d left (threshold 14d) -- refreshing.
+WARNING  root:sync.py:192 Proactive trust refresh was declined by Apple -- a second factor will be needed at the next cold start.

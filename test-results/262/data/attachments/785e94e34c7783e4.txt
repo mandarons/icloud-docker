@@ -1,0 +1,6 @@
+[38;5;196m2026-09-24 21:49:31,467 :: ERROR :: root :: sync.py :: 948 :: Sign-in failed and will be retried: 409[0m
+[38;5;196m2026-09-24 21:49:31,467 :: ERROR :: root :: sync.py :: 948 :: Sign-in failed and will be retried: 409[0m
+[38;5;39m2026-09-24 21:49:31,468 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every -1 seconds.[0m
+[38;5;39m2026-09-24 21:49:31,468 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every -1 seconds.[0m
+[38;5;39m2026-09-24 21:49:31,468 :: INFO :: root :: sync.py :: 951 :: retry_login_interval is < 0, exiting ...[0m
+[38;5;39m2026-09-24 21:49:31,468 :: INFO :: root :: sync.py :: 951 :: retry_login_interval is < 0, exiting ...[0m

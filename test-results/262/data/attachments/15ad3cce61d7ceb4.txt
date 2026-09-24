@@ -1,0 +1,8 @@
+[38;5;196m2026-09-24 21:49:31,432 :: ERROR :: root :: sync.py :: 917 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-09-24 21:49:31,432 :: ERROR :: root :: sync.py :: 917 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-09-24 21:49:31,433 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-24 21:49:31,433 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-24 21:49:31,433 :: INFO :: root :: sync.py :: 1049 :: Retrying login at Thu Sep 24 21:59:31 2026 ...[0m
+[38;5;39m2026-09-24 21:49:31,433 :: INFO :: root :: sync.py :: 1049 :: Retrying login at Thu Sep 24 21:59:31 2026 ...[0m
+[38;5;226m2026-09-24 21:49:31,433 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-24 21:49:31,433 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m

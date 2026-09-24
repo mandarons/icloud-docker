@@ -1,0 +1,3 @@
+ERROR    root:sync.py:948 Sign-in failed and will be retried: 409
+INFO     root:config_logging.py:35 Retrying login every -1 seconds.
+INFO     root:sync.py:951 retry_login_interval is < 0, exiting ...

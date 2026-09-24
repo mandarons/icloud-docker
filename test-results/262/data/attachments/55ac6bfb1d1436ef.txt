@@ -1,0 +1,3 @@
+ERROR    root:sync.py:990 Sync failed and will be retried: boom
+INFO     root:config_logging.py:35 Retrying login every 600 seconds.
+INFO     root:sync.py:1049 Retrying login at Thu Sep 24 21:59:31 2026 ...

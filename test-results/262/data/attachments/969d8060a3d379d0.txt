@@ -1,0 +1,16 @@
+[38;21m2026-09-24 21:49:29,880 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-09-24 21:49:29,880 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-09-24 21:49:29,880 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;5;39m2026-09-24 21:49:29,880 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-09-24 21:49:29,881 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-24 21:49:29,881 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-24 21:49:29,886 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2026-09-24 21:49:29,886 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2026-09-24 21:49:29,891 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-09-24 21:49:29,891 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-09-24 21:49:29,892 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-24 21:49:29,892 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-09-24 21:49:29,892 :: INFO :: root :: sync.py :: 585 :: Syncing photos...[0m
+[38;5;39m2026-09-24 21:49:29,892 :: INFO :: root :: sync.py :: 585 :: Syncing photos...[0m
+[38;5;39m2026-09-24 21:49:29,892 :: INFO :: root :: sync.py :: 587 :: Photos synced[0m
+[38;5;39m2026-09-24 21:49:29,892 :: INFO :: root :: sync.py :: 587 :: Photos synced[0m
