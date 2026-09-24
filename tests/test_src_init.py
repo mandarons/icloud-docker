@@ -128,3 +128,33 @@ class TestLogRotation(unittest.TestCase):
             },
         }
         self.assertEqual(src.get_logger_config(config=config)["max_bytes"], 0)
+
+
+class TestUnreadableConfigDoesNotBreakImport(unittest.TestCase):
+    """``LOGGER = get_logger()`` runs at module scope, so anything raised
+    while reading config.yaml stops the container before it can report why
+    -- and ``restart: unless-stopped`` turns that into a restart loop."""
+
+    def test_missing_config_falls_back_to_default_logging(self):
+        """``read_config`` returns None when the file is not there."""
+        from src import get_logger_config
+
+        self.assertIsNone(get_logger_config(config=None))
+
+    def test_wrong_shapes_at_any_level_do_not_raise(self):
+        """Parseable-but-wrong YAML must fall back, not TypeError at import."""
+        from src import get_logger_config
+
+        for config in (123, "text", ["a"], {"app": 123}, {"app": {"logger": "info"}}, {"app": None}):
+            with self.subTest(config=config):
+                self.assertIsNone(get_logger_config(config=config))
+
+    def test_partial_config_without_an_app_section(self):
+        from src import get_logger_config
+
+        self.assertIsNone(get_logger_config(config={"drive": {}}))
+
+    @patch("src.read_config", side_effect=ValueError("could not parse yaml"))
+    def test_unparseable_config_does_not_raise(self, _mock_read_config):
+        """A half-written file must not take the process down at import."""
+        self.assertIsNotNone(get_logger())

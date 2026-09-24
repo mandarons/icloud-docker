@@ -13,7 +13,7 @@ import threading
 from datetime import timezone
 from urllib.parse import urlencode
 
-from src import get_logger
+from src import DEFAULT_REQUEST_TIMEOUT_SEC, get_logger
 
 LOGGER = get_logger()
 
@@ -225,13 +225,40 @@ def _refresh_photo_download_url(photo) -> bool:
         records = response.get("records", [])
 
         for rec in records:
-            if rec.get("recordName") == record_name:
-                photo._master_record = rec  # noqa: SLF001
-                with _versions_refresh_lock:
-                    photo._versions = None  # noqa: SLF001
-                LOGGER.debug(f"Refreshed download URL for {record_name}")
-                _note_refresh_success()
-                return True
+            if rec.get("recordName") != record_name:
+                continue
+            # A failed lookup is not an HTTP error: CloudKit returns it as a
+            # record inside ``records`` carrying the requested recordName and a
+            # ``serverErrorCode``/``reason`` in place of ``fields``. Matching on
+            # the name alone therefore accepts an error payload as a fresh
+            # master record -- the refresh reports success, and the retrying
+            # download raises KeyError('fields') deep inside icloudpy, which
+            # surfaces as an unexplained "Failed to download <path>: 'fields'"
+            # and is charged to the download rather than to the refresh.
+            #
+            # An empty ``fields`` is no better than a missing one: icloudpy
+            # builds ``versions`` by testing ``f"{prefix}Res" in fields``, so
+            # an empty dict yields no versions at all, ``download()`` returns
+            # None, and the caller dereferences ``.raw`` on it. Accepting
+            # either shape also discards the still-valid master record we
+            # already hold, poisoning the asset for the rest of the sync.
+            # Two distinct failures, reported separately so a refresh that
+            # keeps failing in the field says which one it is.
+            if rec.get("serverErrorCode"):
+                _note_refresh_failure(
+                    record_name,
+                    f"CloudKit error {rec['serverErrorCode']}: {rec.get('reason') or 'no reason given'}",
+                )
+                return False
+            if not rec.get("fields"):
+                _note_refresh_failure(record_name, "record came back with no usable fields")
+                return False
+            photo._master_record = rec  # noqa: SLF001
+            with _versions_refresh_lock:
+                photo._versions = None  # noqa: SLF001
+            LOGGER.debug(f"Refreshed download URL for {record_name}")
+            _note_refresh_success()
+            return True
 
         _note_refresh_failure(record_name, "record not found in iCloud response")
         return False
@@ -288,7 +315,13 @@ def create_hardlink(source_path: str, destination_path: str) -> bool:
         return False
 
 
-def download_photo_from_server(photo, file_size: str, destination_path: str, max_retries: int = 1) -> bool:
+def download_photo_from_server(
+    photo,
+    file_size: str,
+    destination_path: str,
+    max_retries: int = 1,
+    timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC,
+) -> bool:
     """Download photo from iCloud server to local path.
 
     This function implements automatic retry logic for HTTP 410 (Gone) errors,
@@ -301,6 +334,8 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
         file_size: File size variant (original, medium, thumb, etc.)
         destination_path: Local path where photo should be saved
         max_retries: Maximum number of retries on 410 errors (default: 1)
+        timeout: HTTP read timeout in seconds. Without one a stalled CDN
+            connection blocks the worker thread forever.
 
     Returns:
         True if download was successful, False otherwise
@@ -316,7 +351,7 @@ def download_photo_from_server(photo, file_size: str, destination_path: str, max
 
     while attempt < max_attempts:  # noqa: PERF203
         try:
-            download = photo.download(file_size)
+            download = photo.download(file_size, timeout=timeout)
             with open(destination_path, "wb") as file_out:
                 shutil.copyfileobj(download.raw, file_out)
 
