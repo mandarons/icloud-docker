@@ -94,7 +94,7 @@ def process_package(
     else:
         # NOT an error — many iCloud Drive "package" downloads are flat
         # binary bundles (Apple iWork .key/.pages/.numbers,
-        # third-party .jmb, etc) that report as application/octet-stream
+        # JMG's third-party .jmb, etc) that report as application/octet-stream
         # but don't need to be unpacked to be usable by their target
         # application. The bytes are already on disk at ``local_file``;
         # treat that as the canonical local representation.
@@ -182,6 +182,10 @@ def _safe_extractall(
             of the bundle; for bare-rooted bundles this equals
             ``extract_dir``.
     """
+    # realpath canonicalises a path that does not exist yet (the bare-rooted
+    # case creates the bundle subdir just before this, but nothing here
+    # relies on that) -- POSIX realpath resolves what exists and appends
+    # the rest literally, which is what the containment check needs.
     boundary_abs = os.path.realpath(safety_boundary)
     safe_members = []
     for member in zf.infolist():
@@ -250,7 +254,10 @@ def _process_zip_package(local_file: str, archive_file: str) -> str:
     # Handle Unicode normalization for cross-platform compatibility
     normalized_path = unicodedata.normalize("NFD", local_file)
     if normalized_path != local_file and os.path.exists(local_file):
-        os.rename(local_file, normalized_path)
+        # os.replace, not os.rename: same on POSIX, but rename refuses to
+        # overwrite an existing target on Windows, and the NFD name can
+        # already exist there.
+        os.replace(local_file, normalized_path)
         local_file = normalized_path
 
     os.remove(archive_file)
