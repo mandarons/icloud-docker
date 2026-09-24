@@ -21,6 +21,7 @@ The config system is a pure data layer — it does NOT perform sync operations, 
 | `get_username(config)` | Validate and return iCloud username |
 | `get_drive_sync_interval(config)` | Return drive interval in seconds |
 | `get_photos_sync_interval(config)` | Return photos interval in seconds |
+| `get_drive_request_timeout(config)` / `get_photos_request_timeout(config)` | HTTP read timeout for downloads (default 30s) |
 | `get_app_max_threads(config)` | Return thread count (auto or 1-16) |
 | `prepare_drive_destination(config)` | Create and return drive dest path |
 | `prepare_photos_destination(config)` | Create and return photos dest path |

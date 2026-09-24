@@ -141,6 +141,14 @@ class TestUnreadableConfigDoesNotBreakImport(unittest.TestCase):
 
         self.assertIsNone(get_logger_config(config=None))
 
+    def test_wrong_shapes_at_any_level_do_not_raise(self):
+        """Parseable-but-wrong YAML must fall back, not TypeError at import."""
+        from src import get_logger_config
+
+        for config in (123, "text", ["a"], {"app": 123}, {"app": {"logger": "info"}}, {"app": None}):
+            with self.subTest(config=config):
+                self.assertIsNone(get_logger_config(config=config))
+
     def test_partial_config_without_an_app_section(self):
         from src import get_logger_config
 

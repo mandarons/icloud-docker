@@ -952,7 +952,21 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
         return False
     sleep_for = max(sleep_for, _AUTH_BACKOFF_FLOOR_SEC)
     _log_retry_time(sleep_for)
-    sleep(sleep_for)
+    if isinstance(error, exceptions.ICloudPyFailedLoginException):
+        # icloudpy raises this for a rejected password as well as for a
+        # throttle or a 5xx, and a wrong password never heals by retrying --
+        # so say so. notify.send is throttled, so this is not a message per
+        # retry.
+        sync_state.last_send = notify.send(
+            config=config,
+            username=username,
+            last_send=sync_state.last_send,
+            region=config_parser.get_region(config=config),
+            dashboard_url=_resolve_dashboard_url(config),
+        )
+    # Ends early on a completed web-UI re-auth, but not on "Sync now":
+    # nothing a button does may shorten a throttle backoff.
+    _auth_retry_sleep(sleep_for)
     return True
 
 
@@ -982,7 +996,9 @@ def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval)
     if configured:
         sleep_for = max(sleep_for, min(configured))
     _log_retry_time(sleep_for)
-    sleep(sleep_for)
+    # This can be a whole sync interval; the "Sync now" button must still
+    # cut it short, as it does on the normal scheduling path.
+    _interruptible_sleep(sleep_for)
     return True
 
 
@@ -1333,6 +1349,15 @@ def sync(dry_run: bool = False, check_files: int | None = None):
 
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
                 if not _handle_password_error(config, username, sync_state):
+                    break
+                continue
+            except exceptions.ICloudPyFailedLoginException as e:
+                # icloudpy catches most sign-in errors -- a 409 or 401 with a
+                # reason, any 5xx -- and re-raises them as this, which
+                # subclasses ICloudPyException directly and so is not caught by
+                # the API-response clause below. It only arises while signing
+                # in, so it always takes the auth backoff.
+                if not _handle_auth_transport_error(config, username, sync_state, e):
                     break
                 continue
             except exceptions.ICloudPyServiceNotActivatedException as e:

@@ -1458,7 +1458,7 @@ class TestSigninTransportFailures(unittest.TestCase):
         from src import sync
 
         config = {"app": {"credentials": {"retry_login_interval": 60}}}
-        with patch.object(sync, "sleep") as slept:
+        with patch.object(sync, "_auth_retry_sleep") as slept:
             keep_going = sync._handle_auth_transport_error(  # noqa: SLF001
                 config,
                 "a@icloud.com",
@@ -1616,7 +1616,7 @@ class TestServiceUnavailableIsNotASigninFailure(unittest.TestCase):
             patch.object(sync, "alive"),
             patch.object(sync, "_log_sync_intervals_at_startup"),
             patch.object(sync, "_authenticate_and_get_api", side_effect=error),
-            patch.object(sync, "sleep", side_effect=[None, SystemExit]) as slept,
+            patch.object(sync, "_interruptible_sleep", side_effect=[None, SystemExit]) as slept,
             patch("src.config_parser.get_username", return_value="a@icloud.com"),
         ):
             with self.assertRaises(SystemExit):
@@ -1689,7 +1689,7 @@ class TestPostAuthFailuresAreNotSigninFailures(unittest.TestCase):
 
         from src import sync
 
-        with patch.object(sync, "sleep") as slept:
+        with patch.object(sync, "_interruptible_sleep") as slept:
             kept_looping = sync._handle_sync_error(  # noqa: SLF001
                 self._config(retry=600, drive_interval=43200),
                 Exception("boom"),
@@ -1704,7 +1704,7 @@ class TestPostAuthFailuresAreNotSigninFailures(unittest.TestCase):
 
         from src import sync
 
-        with patch.object(sync, "sleep") as slept:
+        with patch.object(sync, "_interruptible_sleep") as slept:
             sync._handle_sync_error(  # noqa: SLF001
                 self._config(retry=600), Exception("boom"), -1, -1,
             )
@@ -1800,3 +1800,104 @@ class TestUnreadableConfigDoesNotKillTheDaemon(unittest.TestCase):
         ):
             sync.sync(dry_run=True)
         slept.assert_not_called()
+
+
+
+class TestSigninFailuresThroughTheRealIcloudpyPath(unittest.TestCase):
+    """icloudpy wraps most sign-in errors in ICloudPyFailedLoginException,
+    which subclasses ICloudPyException directly -- not the API-response or
+    requests classes the loop caught. Earlier tests raised those classes
+    straight from a patched _authenticate_and_get_api, skipping the wrap, so
+    a 409-with-reason, a 5xx or a rejected password still exited the process
+    and, under restart: unless-stopped, became a sign-in crash loop.
+
+    These drive the real ICloudPyService against a faked HTTP layer, so the
+    exception the loop sees is the one icloudpy actually raises."""
+
+    def _apple_says(self, status, body):
+        import json
+
+        import requests
+
+        def fake(_session, method, url, **_kw):
+            response = requests.Response()
+            response.status_code = status
+            response.url = url
+            response.reason = "error"
+            response._content = json.dumps(body).encode()  # noqa: SLF001
+            response.headers["Content-Type"] = "application/json"
+            return response
+
+        return fake
+
+    def _run_loop(self, status, body):
+        from unittest.mock import patch
+
+        from src import sync
+
+        config = {
+            "app": {"credentials": {"username": "a@icloud.com", "retry_login_interval": 600}},
+            "drive": {"destination": "drive"},
+        }
+        with (
+            patch.object(sync, "_load_configuration", return_value=config),
+            patch.object(sync, "alive"),
+            patch.object(sync, "notify") as notify,
+            patch.object(sync, "_retrieve_password", return_value="pw"),
+            patch("requests.Session.request", self._apple_says(status, body)),
+            patch.object(sync, "_auth_retry_sleep", side_effect=[None, SystemExit]) as slept,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            with self.assertRaises(SystemExit):
+                sync.sync()
+        return slept, notify
+
+    def test_every_sign_in_error_shape_is_retried_not_fatal(self):
+        cases = [
+            (409, {"reason": "Too many attempts"}),
+            (500, {}),
+            (503, {"errorMessage": "Service Unavailable"}),
+            (401, {"errorMessage": "Invalid credentials"}),
+            (409, {"serviceErrors": [{"code": "-20209"}]}),
+        ]
+        from src import sync
+
+        for status, body in cases:
+            with self.subTest(status=status, body=body):
+                slept, _ = self._run_loop(status, body)
+                # Reached the second wait: the loop retried instead of exiting.
+                self.assertEqual(slept.call_count, 2)
+                # And waited at least the throttle floor, never the short interval.
+                self.assertGreaterEqual(
+                    slept.call_args_list[0].args[0],
+                    sync._AUTH_BACKOFF_FLOOR_SEC,  # noqa: SLF001
+                )
+
+    def test_a_negative_retry_interval_still_exits_cleanly(self):
+        """retry_login_interval < 0 is the documented way to ask for an exit
+        instead of a retry; that must keep working for this error too."""
+        from unittest.mock import patch
+
+        from src import sync
+
+        config = {
+            "app": {"credentials": {"username": "a@icloud.com", "retry_login_interval": -1}},
+            "drive": {"destination": "drive"},
+        }
+        with (
+            patch.object(sync, "_load_configuration", return_value=config),
+            patch.object(sync, "alive"),
+            patch.object(sync, "notify"),
+            patch.object(sync, "_retrieve_password", return_value="pw"),
+            patch("requests.Session.request", self._apple_says(500, {})),
+            patch.object(sync, "_auth_retry_sleep") as slept,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            sync.sync()  # returns rather than raising or looping
+        slept.assert_not_called()
+
+    def test_a_rejected_sign_in_tells_the_user(self):
+        """A wrong password raises the same exception and never heals by
+        retrying, so the user has to be told -- notify.send is throttled."""
+        _, notify = self._run_loop(401, {"errorMessage": "Invalid credentials"})
+        notify.send.assert_called()

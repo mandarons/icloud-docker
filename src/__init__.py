@@ -63,9 +63,13 @@ def get_logger_config(config):
     # ``read_config`` returns None when config.yaml is missing, and a partial
     # file may have no ``app`` section. Both reached ``config["app"]`` and
     # raised -- from module scope, so the container could not start at all.
-    if not config or "logger" not in (config.get("app") or {}):
+    # Shape-check every level, not just presence: a parseable but wrong YAML
+    # (``app: 123``, ``logger: info``) otherwise raises TypeError here at
+    # import time -- the same restart loop this guard exists to prevent.
+    app = config.get("app") if isinstance(config, dict) else None
+    config_app_logger = app.get("logger") if isinstance(app, dict) else None
+    if not isinstance(config_app_logger, dict):
         return None
-    config_app_logger = config["app"]["logger"]
     logger_config["level"] = (
         config_app_logger["level"].strip().lower() if "level" in config_app_logger else DEFAULT_LOGGER_LEVEL
     )
