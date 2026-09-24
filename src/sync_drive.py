@@ -122,7 +122,13 @@ def process_file(
         timeout = config_parser.get_drive_request_timeout(config)
         item_is_package = is_package(item=item, timeout=timeout)
 
-    local_file = download_file(item=item, local_file=local_file)
+    # The parallel path honours drive.flatten_packages; without passing it
+    # here too, the knob was silently ignored whenever this legacy path ran.
+    local_file = download_file(
+        item=item,
+        local_file=local_file,
+        flatten_packages=config_parser.get_drive_flatten_packages(config),
+    )
     if local_file and item_is_package:
         for f in Path(local_file).glob("**/*"):
             f = str(f)

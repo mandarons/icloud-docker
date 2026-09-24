@@ -196,12 +196,11 @@ class TestZipEntriesSelfPrefixedEdgeCases(unittest.TestCase):
             with zipfile.ZipFile(zip_path, "w") as zf:
                 zf.writestr(bundle + "/", "")
             with zipfile.ZipFile(zip_path) as zf:
-                assert (
+                self.assertIsNone(
                     drive_package_processing._zip_entries_self_prefixed(  # noqa: SLF001
                         zf,
                         bundle,
-                    )
-                    is None
+                    ),
                 )
 
     def test_returns_self_for_self_prefixed(self):
@@ -213,12 +212,12 @@ class TestZipEntriesSelfPrefixedEdgeCases(unittest.TestCase):
                 zf.writestr(f"{bundle}/projectData", b"x")
                 zf.writestr(f"{bundle}/Resources/Info.plist", b"<plist/>")
             with zipfile.ZipFile(zip_path) as zf:
-                assert (
+                self.assertEqual(
                     drive_package_processing._zip_entries_self_prefixed(  # noqa: SLF001
                         zf,
                         bundle,
-                    )
-                    == "self"
+                    ),
+                    "self",
                 )
 
     def test_returns_traversal_for_dotdot_prefixed(self):
@@ -233,12 +232,12 @@ class TestZipEntriesSelfPrefixedEdgeCases(unittest.TestCase):
                 zf.writestr(f"../{bundle}/projectData", b"x")
                 zf.writestr(f"../{bundle}/Resources/Info.plist", b"<plist/>")
             with zipfile.ZipFile(zip_path) as zf:
-                assert (
+                self.assertEqual(
                     drive_package_processing._zip_entries_self_prefixed(  # noqa: SLF001
                         zf,
                         bundle,
-                    )
-                    == "traversal"
+                    ),
+                    "traversal",
                 )
 
 
@@ -264,9 +263,6 @@ class TestFlattenPackagesConfigGetter(unittest.TestCase):
     def test_none_config_is_safe(self):
         self.assertFalse(config_parser.get_drive_flatten_packages(None))
 
-
-if __name__ == "__main__":
-    unittest.main()
 
 
 class TestZipSlipDefence(unittest.TestCase):
@@ -461,3 +457,35 @@ class TestProcessPackageNeverTouchesRegularUserZips(unittest.TestCase):
             "via data_token URLs without that segment) are never passed "
             "to the unpacker.",
         )
+
+
+class TestLegacyPathHonoursFlatten(unittest.TestCase):
+    """Review finding: the parallel path passed drive.flatten_packages to
+    download_file, the legacy process_file path did not -- so the knob was
+    silently ignored whenever that path ran."""
+
+    def _run(self, flatten):
+        from unittest.mock import MagicMock, patch
+
+        from src import sync_drive
+
+        item = MagicMock()
+        item.name = "Deck.key"
+        config = {"drive": {"flatten_packages": flatten}}
+        with tempfile.TemporaryDirectory() as tmp, patch.object(
+            sync_drive, "file_exists", return_value=False,
+        ), patch.object(sync_drive, "package_exists", return_value=False), patch.object(
+            sync_drive, "is_package", return_value=True,
+        ), patch.object(sync_drive, "download_file", return_value=None) as dl:
+            sync_drive.process_file(item, tmp, [], [], set(), config=config)
+        return dl.call_args.kwargs["flatten_packages"]
+
+    def test_flatten_true_reaches_download_file(self):
+        self.assertTrue(self._run(True))
+
+    def test_flatten_false_reaches_download_file(self):
+        self.assertFalse(self._run(False))
+
+
+if __name__ == "__main__":
+    unittest.main()
