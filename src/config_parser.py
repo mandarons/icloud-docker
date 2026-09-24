@@ -15,6 +15,7 @@ from icloudpy.services.photos import PhotoAsset
 from src import (
     DEFAULT_DRIVE_DESTINATION,
     DEFAULT_ENUMERATION_CHUNK_SIZE,
+    DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT,
     DEFAULT_PHOTOS_DESTINATION,
     DEFAULT_REQUEST_TIMEOUT_SEC,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
@@ -392,6 +393,54 @@ def get_trust_expiry_warn_days(config: dict) -> int:
             default=7,
         ),
     )
+
+
+def get_trust_refresh_days(config: dict) -> int:
+    """Proactively re-trust when the cookie has this many days left.
+
+    Default 14. Apple's trust window is finite, but ``trust_session``
+    mints a fresh token whenever it is called on a live session, so
+    re-trusting on a schedule keeps the *persisted* token young. That is
+    what lets a container restart resume without a second factor -- the
+    common failure mode otherwise is a long-running process holding a
+    valid in-memory session while the token on disk quietly expires,
+    stranding the next cold start on a 2FA prompt.
+
+    Must exceed ``trust_expiry_warn_days`` for the refresh to get a
+    chance before the warning fires. Set to 0 to disable.
+    """
+    refresh_days = int(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "trust_refresh_days"],
+            default=14,
+        ),
+    )
+    _warn_if_refresh_cannot_precede_warning(config, refresh_days)
+    return refresh_days
+
+
+def _warn_if_refresh_cannot_precede_warning(config: dict, refresh_days: int) -> None:
+    """Say so once when the refresh threshold is at or below the warn threshold.
+
+    The refresh exists so the expiry warning never has to fire. With
+    ``trust_refresh_days <= trust_expiry_warn_days`` the warning always fires
+    first, and the user is told to re-authenticate a session the container
+    was about to renew on its own. Not an error -- both still work -- so it
+    is a one-time warning rather than a rejected config.
+    """
+    if refresh_days <= 0:
+        return
+    warn_days = get_trust_expiry_warn_days(config=config)
+    key = "app > trust_refresh_days <= trust_expiry_warn_days"
+    if refresh_days <= warn_days and key not in _config_warning_cache:
+        _config_warning_cache.add(key)
+        LOGGER.warning(
+            f"app.trust_refresh_days ({refresh_days}) is not above "
+            f"app.trust_expiry_warn_days ({warn_days}), so the expiry warning "
+            f"will fire before the proactive refresh gets a chance. Raise "
+            f"trust_refresh_days, or lower trust_expiry_warn_days.",
+        )
 
 
 def get_app_max_threads(config: dict) -> int:
@@ -809,6 +858,30 @@ def get_photos_folder_format(config: dict) -> str | None:
         log_config_found_info(f"Using format {fmt}.")
 
     return fmt
+
+
+def get_photos_obsolete_delete_limit_percent(config: dict) -> int:
+    """Share of a destination obsolete-cleanup may delete in one run.
+
+    Cleanup is the only destructive step in a sync and it infers deletions
+    from the absence of a path in the run's tracked-file set, so any bug that
+    leaves paths untracked is acted on at full speed. Above this share the
+    run reports instead of deleting.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Percentage of a destination a single cleanup run may delete.
+        ``DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT`` when unset; 0 disables
+        the limit entirely.
+    """
+    config_path = ["photos", "obsolete_delete_limit_percent"]
+
+    if not traverse_config_path(config=config, config_path=config_path):
+        return DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT
+
+    return get_config_value(config=config, config_path=config_path)
 
 
 # =============================================================================

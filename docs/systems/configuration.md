@@ -24,6 +24,7 @@ The config system is a pure data layer — it does NOT perform sync operations, 
 | `get_app_max_threads(config)` | Return thread count (auto or 1-16) |
 | `prepare_drive_destination(config)` | Create and return drive dest path |
 | `prepare_photos_destination(config)` | Create and return photos dest path |
+| `get_photos_obsolete_delete_limit_percent(config)` | Max share of a destination one cleanup may delete |
 | `get_web_ui_enabled(config)` | Check if web UI is enabled |
 
 ## Config Access Pattern
