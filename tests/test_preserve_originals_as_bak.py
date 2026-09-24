@@ -183,6 +183,10 @@ class TestSyncGateRequiresOriginalAlt(unittest.TestCase):
         ), patch.object(
             sync_photos, "remove_obsolete_files",
         ), patch(
+            # Patched at its source module on purpose: sync_photos imports it
+            # inside the function body, so there is no sync_photos attribute
+            # to patch. If that import ever moves to module level, patch
+            # "src.sync_photos.set_preserve_originals_as_bak" instead.
             "src.photo_path_utils.set_preserve_originals_as_bak",
         ) as fake_set:
             sync_photos.sync_photos(config=config, photos=api_photos)
@@ -195,9 +199,9 @@ class TestSyncGateRequiresOriginalAlt(unittest.TestCase):
         the photo has no visible representation on disk."""
         fake_set = self._run_with_config(self._config(["original"]))
         # set_preserve_originals_as_bak called with False (or never called).
-        if fake_set.call_args_list:
-            last_arg = fake_set.call_args_list[-1].args[0]
-            assert last_arg is False, f"expected False, got {last_arg!r}"
+        # The setter runs unconditionally, so it must have been called --
+        # guarding on call_args_list let this pass without asserting anything.
+        fake_set.assert_called_once_with(False)
 
     def test_gate_TRUE_when_original_alt_IS_in_file_sizes(self):
         """preserve_originals_as_bak=true AND original_alt requested
@@ -215,6 +219,65 @@ class TestSyncGateRequiresOriginalAlt(unittest.TestCase):
         cfg = self._config(["original", "original_alt"])
         cfg["photos"]["preserve_originals_as_bak"] = False
         fake_set = self._run_with_config(cfg)
-        if fake_set.call_args_list:
-            last_arg = fake_set.call_args_list[-1].args[0]
-            assert last_arg is False, f"expected False, got {last_arg!r}"
+        # The setter runs unconditionally, so it must have been called --
+        # guarding on call_args_list let this pass without asserting anything.
+        fake_set.assert_called_once_with(False)
+
+
+class TestCleanupCascadesToTheSidecar(unittest.TestCase):
+    """sync_photos promises that the .bak sidecar never outlives its photo:
+    both paths are tracked while the photo exists, and both drop out of the
+    tracked set -- and so get cleaned -- once it is deleted from iCloud."""
+
+    def _paths(self, base):
+        from unittest.mock import MagicMock
+
+        from src import photo_path_utils
+
+        photo = MagicMock()
+        photo.filename = "IMG_1234.HEIC"
+        photo.id = "abc"
+        photo.versions = {"original": {}, "original_alt": {"type": "public.jpeg"}}
+        photo_path_utils.set_preserve_originals_as_bak(True)
+        try:
+            hidden = photo_path_utils.generate_photo_filename_with_metadata(photo, "original")
+            visible = photo_path_utils.generate_photo_filename_with_metadata(photo, "original_alt")
+        finally:
+            photo_path_utils.set_preserve_originals_as_bak(False)
+        from pathlib import Path
+
+        paths = [Path(base, hidden), Path(base, visible)]
+        for path in paths:
+            path.write_text("x")
+        return paths
+
+    def test_both_survive_while_the_photo_exists(self):
+        import tempfile
+
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            hidden, visible = self._paths(base)
+            assert hidden.name.endswith(".original.bak")
+            tracked = {str(hidden.absolute()), str(visible.absolute())}
+            removed = remove_obsolete_files(base, tracked)
+            assert removed == set()
+            assert hidden.is_file() and visible.is_file()
+
+    def test_both_go_when_the_photo_is_deleted_from_icloud(self):
+        import tempfile
+        from pathlib import Path
+
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            hidden, visible = self._paths(base)
+            # Unrelated tracked photos alongside, so removing this pair is a
+            # small share of the destination -- as it would be in a real
+            # library, and below any mass-delete safety limit.
+            others = [Path(base, f"other{i}.jpg") for i in range(20)]
+            for other in others:
+                other.write_text("x")
+            removed = remove_obsolete_files(base, {str(o.absolute()) for o in others})
+            assert removed == {str(hidden.absolute()), str(visible.absolute())}
+            assert not hidden.exists() and not visible.exists()
