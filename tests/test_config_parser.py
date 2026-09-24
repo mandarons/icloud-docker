@@ -854,3 +854,21 @@ class TestObsoleteDeleteLimitConfig(unittest.TestCase):
             config_parser.get_photos_obsolete_delete_limit_percent(config=cfg),
             60,
         )
+
+
+class TestPhotosRequestTimeout(unittest.TestCase):
+    """Photo downloads had no timeout at all, so a stalled connection to
+    Apple's CDN blocked its worker thread for the life of the process. The
+    container stays alive and 'healthy' while the sync never finishes."""
+
+    def test_default_matches_the_drive_option(self):
+        from src import DEFAULT_REQUEST_TIMEOUT_SEC
+
+        self.assertEqual(
+            config_parser.get_photos_request_timeout(config={}),
+            DEFAULT_REQUEST_TIMEOUT_SEC,
+        )
+
+    def test_configured_value_is_used(self):
+        cfg = {"photos": {"request_timeout": 120}}
+        self.assertEqual(config_parser.get_photos_request_timeout(config=cfg), 120)
