@@ -446,6 +446,7 @@ def sync_photos(config, photos):
     if config_parser.get_photos_remove_obsolete(config=config):
         marker_filename = config_parser.get_mount_marker_filename(config=config)
         exclude = {marker_filename}
+        limit = config_parser.get_photos_obsolete_delete_limit_percent(config=config)
         if library_destinations:
             for library in libraries:
                 if library in failed_libraries:
@@ -468,7 +469,7 @@ def sync_photos(config, photos):
                         f"shared root and cleaning it would affect other libraries.",
                     )
                     continue
-                remove_obsolete_files(lib_dest, files, exclude_filenames=exclude)
+                remove_obsolete_files(lib_dest, files, exclude_filenames=exclude, limit_percent=limit)
         elif failed_libraries:
             # One shared destination: ``files`` cannot say which library a
             # path came from, so a single failure makes the whole set
@@ -478,7 +479,7 @@ def sync_photos(config, photos):
                 f"{len(failed_libraries)} library(ies) could not be read this run.",
             )
         else:
-            remove_obsolete_files(destination_path, files, exclude_filenames=exclude)
+            remove_obsolete_files(destination_path, files, exclude_filenames=exclude, limit_percent=limit)
 
     return total_successful, total_failed
 

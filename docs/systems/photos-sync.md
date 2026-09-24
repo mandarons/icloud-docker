@@ -36,6 +36,7 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 | `sync_photos(config, photos)` | Main entry — enumerate libraries, delegate to album sync |
 | `sync_album_photos(...)` | Sync a single album's photos |
 | `create_hardlink_registry(...)` | Create registry for cross-album dedup |
+| `remove_obsolete_files(destination, tracked, ...)` | Delete local files absent from the run's tracked set; refuses above `obsolete_delete_limit_percent` |
 
 ## File Size Variants
 
@@ -62,6 +63,11 @@ Photos sync is purely a download system. It writes to the local filesystem at th
   `Type is not marked indexable: CPLMaster (BAD_REQUEST)`
 - Repeated consecutive refresh failures escalate from DEBUG to WARNING, so a
   systematically broken refresh path is visible without debug logging
+- Obsolete-file cleanup refuses to delete more than
+  `obsolete_delete_limit_percent` of a destination in one run (default 25,
+  0 disables). Cleanup infers deletions from absence in the run's
+  tracked-file set, so a bug that leaves paths untracked reads as "the
+  server dropped these"; above the limit the run reports and deletes nothing
 
 ## Dependencies
 

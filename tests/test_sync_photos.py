@@ -2573,6 +2573,107 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertEqual(result, (0, 0))
 
 
+class TestObsoleteDeleteLimit(unittest.TestCase):
+    """Cleanup is the only destructive step in a sync, and it infers
+    deletions from the absence of a path in the tracked-file set -- so any
+    bug that leaves paths untracked reads as "the server dropped these" and
+    is acted on at full speed. A real incident removed 185,207 files in one
+    pass this way."""
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_a_mass_deletion_is_refused_through_sync_photos(
+        self, mock_read_config, mock_service, mock_get_username, mock_get_password,
+    ):
+        """End to end rather than against remove_obsolete_files directly.
+
+        The unit tests prove the limit arithmetic; this proves the limit is
+        actually reached from a real sync -- that the config value is read,
+        threaded to cleanup, and applied to the destination the run wrote to.
+        A limit that works in isolation but is never passed through would pass
+        every other test in this class.
+        """
+        service = data.ICloudPyServiceMock(
+            data.AUTHENTICATED_USER, data.VALID_PASSWORD,
+        )
+        config = read_config(config_path=tests.CONFIG_PATH)
+        destination = tests.PHOTOS_DIR
+        config["photos"]["destination"] = destination
+        config["photos"]["filters"]["libraries"] = ["PrimarySync"]
+        config["photos"]["remove_obsolete"] = True
+        config["photos"]["obsolete_delete_limit_percent"] = 25
+        mock_read_config.return_value = config
+
+        # Populate the destination, then sync: none of these are on the
+        # server, so every one is obsolete -- far past any sane limit.
+        os.makedirs(destination, exist_ok=True)
+        strays = [Path(destination, f"stray{i}.jpg") for i in range(40)]
+        for stray in strays:
+            stray.write_text("x")
+
+        with self.assertLogs(level="ERROR") as captured:
+            sync_photos.sync_photos(config=config, photos=service.photos)
+
+        self.assertTrue(
+            any("Refusing to remove" in line for line in captured.output),
+            "cleanup should have refused rather than deleted",
+        )
+        for stray in strays:
+            self.assertTrue(stray.is_file(), f"{stray} was deleted despite the limit")
+
+    def tearDown(self) -> None:
+        if os.path.exists(tests.PHOTOS_DIR):
+            shutil.rmtree(tests.PHOTOS_DIR)
+
+    def _tree(self, base, n):
+        for i in range(n):
+            Path(base, f"f{i}.jpg").write_text("x")
+        return {str(Path(base, f"f{i}.jpg").absolute()) for i in range(n)}
+
+    def test_a_mass_deletion_is_refused_and_nothing_is_removed(self):
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            all_files = self._tree(base, 100)
+            tracked = set(list(all_files)[:50])  # 50% would be deleted
+            removed = remove_obsolete_files(base, tracked, limit_percent=25)
+            self.assertEqual(removed, set())
+            self.assertEqual(len(list(Path(base).glob("*.jpg"))), 100)
+
+    def test_an_ordinary_deletion_still_happens(self):
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            all_files = self._tree(base, 100)
+            tracked = set(list(all_files)[:95])  # 5% obsolete
+            removed = remove_obsolete_files(base, tracked, limit_percent=25)
+            self.assertEqual(len(removed), 5)
+            self.assertEqual(len(list(Path(base).glob("*.jpg"))), 95)
+
+    def test_the_limit_can_be_disabled(self):
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            self._tree(base, 20)
+            removed = remove_obsolete_files(base, set(), limit_percent=0)
+            self.assertEqual(len(removed), 20)
+
+    def test_excluded_names_do_not_count_toward_the_limit(self):
+        """The mount marker is never deletable, so it must not tip the
+        balance into a refusal either."""
+        from src.photo_cleanup_utils import remove_obsolete_files
+
+        with tempfile.TemporaryDirectory() as base:
+            all_files = self._tree(base, 100)
+            Path(base, ".mounted").write_text("")
+            tracked = set(list(all_files)[:95])
+            removed = remove_obsolete_files(
+                base, tracked, exclude_filenames={".mounted"}, limit_percent=25,
+            )
+            self.assertEqual(len(removed), 5)
+            self.assertTrue(Path(base, ".mounted").is_file())
 class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
     """An account can be shown libraries it never created -- zones left
     behind by Apple's own backend migrations -- and some answer every query
