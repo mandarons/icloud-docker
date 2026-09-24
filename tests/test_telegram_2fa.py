@@ -272,7 +272,7 @@ class TestHandle2faRequiredTelegramBranch(unittest.TestCase):
         mock_send.assert_called_once()
         mock_wait.assert_called_once()
 
-    @patch("src.sync.sleep")
+    @patch("src.sync._auth_retry_sleep")
     @patch("src.sync.notify.send", return_value=None)
     @patch("src.config_parser.get_retry_login_interval", return_value=60)
     def test_without_api_falls_back_to_sleep(self, _interval, mock_send, mock_sleep):
