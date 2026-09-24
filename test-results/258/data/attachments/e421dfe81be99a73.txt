@@ -1,0 +1,1 @@
+WARNING  root:config_parser.py:437 app.trust_refresh_days (3) is not above app.trust_expiry_warn_days (7), so the expiry warning will fire before the proactive refresh gets a chance. Raise trust_refresh_days, or lower trust_expiry_warn_days.
