@@ -17,7 +17,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout PR source code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: refs/pull/${{ github.event.inputs.pr_number }}/head
 
@@ -38,25 +38,25 @@ jobs:
           echo "pr_sha=${PR_SHA}" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Docker QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
         id: buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
         with:
           version: latest
           driver-opts: network=host
 
       - name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: ./
           file: ./Dockerfile
@@ -76,7 +76,7 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
 
       - name: Comment PR with Docker image info
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             github.rest.issues.createComment({

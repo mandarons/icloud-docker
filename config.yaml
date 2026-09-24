@@ -4,6 +4,12 @@ app:
     level: "info"
     # log filename icloud.log
     filename: "/config/icloud.log"
+    # Rotate the log file rather than letting it grow without bound. One
+    # line is written per file considered each cycle, so a large library
+    # can reach several GB. Defaults: 50 MB per file, 3 backups. Set
+    # max_bytes to 0 if an external logrotate manages the file instead.
+    # max_bytes: 52428800
+    # backup_count: 3
   credentials:
     # iCloud drive username
     username: "please@replace.me"
@@ -11,6 +17,23 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "/icloud"
+  # Optional embedded web UI — dashboard + on-device 2FA re-auth flow.
+  # Disabled by default. SECURITY: the UI has no login of its own; it
+  # accepts your Apple ID password on POST /auth/password. The default
+  # host (127.0.0.1) keeps it reachable only from inside the container /
+  # via `docker exec`. Setting host: "0.0.0.0" publishes a
+  # credential-accepting form to every interface in plaintext HTTP —
+  # only do that behind a trusted reverse proxy (Cloudflare Access,
+  # Tailscale, Authelia) that supplies authentication and TLS.
+  # web_ui:
+  #   enabled: false            # default false
+  #   host: "127.0.0.1"         # default 127.0.0.1 (loopback only). "0.0.0.0" = all interfaces — proxy required
+  #   port: 8080                # default 8080
+  #   public_url: ""            # default unset. Your externally reachable URL (e.g. https://icloud.example.com)
+                                # — embedded in notifications so the re-auth link works from your phone
+  # Warn this many days before Apple's ~90-day trust cookie expires, so a
+  # re-auth can be scheduled instead of discovered mid-sync. Default 7.
+  # trust_expiry_warn_days: 7
   # Maximum number of parallel download threads for both drive and photos
   # auto: automatically set based on CPU cores (default, max 8)
   # integer: specific number of threads (max 16)
@@ -56,6 +79,12 @@ app:
   # no_tls: true
   # valid values are - global (default - uses .com) or china (uses .com.cn)
   region: global
+  # Re-trust the session when the trust token has this many days left.
+  # trust_session mints a fresh token whenever it is called on a live
+  # session, so refreshing on a schedule keeps the token on disk young and
+  # lets a container restart resume without a second factor. Must exceed
+  # trust_expiry_warn_days. Set to 0 to disable. Default 14.
+  # trust_refresh_days: 14
 drive:
   destination: "drive"
   # Remove local files that are not present on server (i.e. files delete on server)
@@ -83,6 +112,12 @@ photos:
   destination: "photos"
   # Remove local photos that are not present on server (i.e. photos delete on server)
   remove_obsolete: false
+  # Optional, default 25. Ceiling on how much of a destination one cleanup run
+  # may delete, as a percentage of the files found there. Cleanup infers
+  # deletions from absence in the run's tracked-file set, so a bug that leaves
+  # paths untracked reads as "the server dropped these" and is acted on at full
+  # speed. Above this share the run reports and deletes nothing. 0 disables it.
+  # obsolete_delete_limit_percent: 25
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.
@@ -101,6 +136,14 @@ photos:
     # from the listed libraries are downloaded.
     # libraries:
     #   - PrimarySync # Name of the own library
+
+    # Per-library destination subdirectories (optional).
+    # When set, photos from each library are written to
+    #   <photos.destination>/<subdirectory>/…  instead of sharing one tree.
+    # When unset (default), all libraries share the single destination path.
+    # library_destinations:
+    #   PrimarySync: personal
+    #   SharedLibrary: shared
 
     # if all_albums is false - albums list is used as filter-in, if all_albums is true - albums list is used as filter-out
     # if albums list is empty and all_albums is false download all photos to "all" folder. if empty and all_albums is true download all folders

@@ -15,6 +15,7 @@ from icloudpy.services.photos import PhotoAsset
 from src import (
     DEFAULT_DRIVE_DESTINATION,
     DEFAULT_ENUMERATION_CHUNK_SIZE,
+    DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT,
     DEFAULT_PHOTOS_DESTINATION,
     DEFAULT_REQUEST_TIMEOUT_SEC,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
@@ -309,6 +310,137 @@ def parse_max_threads_value(max_threads_config: Any, default_max_threads: int) -
         max_threads = default_max_threads
 
     return max_threads
+
+
+def get_web_ui_enabled(config: dict) -> bool:
+    """Return whether the embedded web UI should start on container boot.
+
+    Default: **False** — opt-in. Existing mandarons installs see no
+    behaviour change; only users who explicitly set
+    ``app.web_ui.enabled: true`` open the port.
+    """
+    return bool(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "enabled"],
+            default=False,
+        ),
+    )
+
+
+def get_web_ui_host(config: dict) -> str:
+    """Web UI bind address.
+
+    Default ``127.0.0.1`` — the web UI accepts the user's Apple ID
+    password on POST /auth/password with no built-in authentication and
+    no CSRF token (the feature assumes a reverse-proxy trust boundary
+    in front of it). Defaulting to loopback means the credential-
+    accepting form is never exposed to LAN/public on a vanilla install.
+    Users who run behind a reverse proxy or want explicit LAN exposure
+    set ``app.web_ui.host: 0.0.0.0`` consciously.
+    """
+    return str(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "host"],
+            default="127.0.0.1",
+        ),
+    )
+
+
+def get_web_ui_port(config: dict) -> int:
+    """Web UI TCP port. Default ``8080``. Coexists with mandarons' legacy
+    ``EXPOSE 80`` (unused) — no port collision."""
+    return int(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "web_ui", "port"],
+            default=8080,
+        ),
+    )
+
+
+def get_web_ui_public_url(config: dict) -> str | None:
+    """Public-facing URL for the web UI, used in notifications.
+
+    The daemon only knows its local bind host:port; the user-facing URL
+    (e.g. ``https://icloud.zosia.io`` behind a reverse proxy) must be
+    declared explicitly. When unset, notifications fall back to
+    ``http://{host}:{port}`` and log a one-shot warning at startup.
+    """
+    value = get_config_value_or_default(
+        config=config,
+        config_path=["app", "web_ui", "public_url"],
+        default=None,
+    )
+    if value is None:
+        return None
+    return str(value).rstrip("/")
+
+
+def get_trust_expiry_warn_days(config: dict) -> int:
+    """Warn this many days before Apple's trust cookie expires.
+
+    Default 7. The check + notification fires once per cookie-lifetime
+    when ``trust_days_remaining`` first drops below this threshold so
+    the user can tap refresh-trust *before* the sync loop hits a
+    failed-auth state.
+    """
+    return int(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "trust_expiry_warn_days"],
+            default=7,
+        ),
+    )
+
+
+def get_trust_refresh_days(config: dict) -> int:
+    """Proactively re-trust when the cookie has this many days left.
+
+    Default 14. Apple's trust window is finite, but ``trust_session``
+    mints a fresh token whenever it is called on a live session, so
+    re-trusting on a schedule keeps the *persisted* token young. That is
+    what lets a container restart resume without a second factor -- the
+    common failure mode otherwise is a long-running process holding a
+    valid in-memory session while the token on disk quietly expires,
+    stranding the next cold start on a 2FA prompt.
+
+    Must exceed ``trust_expiry_warn_days`` for the refresh to get a
+    chance before the warning fires. Set to 0 to disable.
+    """
+    refresh_days = int(
+        get_config_value_or_default(
+            config=config,
+            config_path=["app", "trust_refresh_days"],
+            default=14,
+        ),
+    )
+    _warn_if_refresh_cannot_precede_warning(config, refresh_days)
+    return refresh_days
+
+
+def _warn_if_refresh_cannot_precede_warning(config: dict, refresh_days: int) -> None:
+    """Say so once when the refresh threshold is at or below the warn threshold.
+
+    The refresh exists so the expiry warning never has to fire. With
+    ``trust_refresh_days <= trust_expiry_warn_days`` the warning always fires
+    first, and the user is told to re-authenticate a session the container
+    was about to renew on its own. Not an error -- both still work -- so it
+    is a one-time warning rather than a rejected config.
+    """
+    if refresh_days <= 0:
+        return
+    warn_days = get_trust_expiry_warn_days(config=config)
+    key = "app > trust_refresh_days <= trust_expiry_warn_days"
+    if refresh_days <= warn_days and key not in _config_warning_cache:
+        _config_warning_cache.add(key)
+        LOGGER.warning(
+            f"app.trust_refresh_days ({refresh_days}) is not above "
+            f"app.trust_expiry_warn_days ({warn_days}), so the expiry warning "
+            f"will fire before the proactive refresh gets a chance. Raise "
+            f"trust_refresh_days, or lower trust_expiry_warn_days.",
+        )
 
 
 def get_app_max_threads(config: dict) -> int:
@@ -689,6 +821,30 @@ def get_photos_folder_format(config: dict) -> str | None:
         log_config_found_info(f"Using format {fmt}.")
 
     return fmt
+
+
+def get_photos_obsolete_delete_limit_percent(config: dict) -> int:
+    """Share of a destination obsolete-cleanup may delete in one run.
+
+    Cleanup is the only destructive step in a sync and it infers deletions
+    from the absence of a path in the run's tracked-file set, so any bug that
+    leaves paths untracked is acted on at full speed. Above this share the
+    run reports instead of deleting.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        Percentage of a destination a single cleanup run may delete.
+        ``DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT`` when unset; 0 disables
+        the limit entirely.
+    """
+    config_path = ["photos", "obsolete_delete_limit_percent"]
+
+    if not traverse_config_path(config=config, config_path=config_path):
+        return DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT
+
+    return get_config_value(config=config, config_path=config_path)
 
 
 # =============================================================================

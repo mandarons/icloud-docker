@@ -128,7 +128,7 @@ class TestNotify(unittest.TestCase):
 
             # verify that the message was passed to sendmail()
             self.assertIn(
-                "Subject: icloud-docker: Two step authentication is required",
+                "Subject: icloud-docker: iCloud login required for",
                 instance.sendmail.mock_calls[0][2]["msg"],
             )
 
@@ -215,7 +215,7 @@ class TestNotify(unittest.TestCase):
 
             # verify that the message was passed to sendmail()
             self.assertIn(
-                "Subject: icloud-docker: Two step authentication is required",
+                "Subject: icloud-docker: iCloud login required for",
                 instance.sendmail.mock_calls[0][2]["msg"],
             )
             self.assertNotIn("--region=", instance.sendmail.mock_calls[0][2]["msg"])

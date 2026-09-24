@@ -34,8 +34,8 @@ def mocked_usage_post(*args, **kwargs):
         def json(self):
             return self.json_data
 
-    if args[0] is usage.NEW_INSTALLATION_ENDPOINT:
+    if args[0] == usage.NEW_INSTALLATION_ENDPOINT:
         return MockResponse({"id": str(uuid.uuid4())}, 201)
-    elif args[0] is usage.NEW_HEARTBEAT_ENDPOINT:
+    elif args[0] == usage.NEW_HEARTBEAT_ENDPOINT:
         return MockResponse({"message": "All good."}, 201)
     return MockResponse(None, 404)

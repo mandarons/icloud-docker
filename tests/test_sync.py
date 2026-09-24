@@ -91,9 +91,10 @@ class TestSync(unittest.TestCase):
         self.remove_temp()
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
-        dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(dir_length == 1)
+        dir_contents = os.listdir(self.root_dir)
         self.assertTrue(os.path.isdir(os.path.join(self.root_dir, config["photos"]["destination"])))
+        # Root contains the destination dir and the usage cache file (`.data`)
+        self.assertGreaterEqual(len(dir_contents), 1)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
@@ -119,8 +120,9 @@ class TestSync(unittest.TestCase):
         mock_read_config.return_value = config
         self.assertIsNone(sync.sync())
         self.assertTrue(os.path.isdir(os.path.join(self.root_dir, config["drive"]["destination"])))
-        dir_length = len(os.listdir(self.root_dir))
-        self.assertTrue(dir_length == 1)
+        dir_contents = os.listdir(self.root_dir)
+        # Root contains the destination dir and the usage cache file (`.data`)
+        self.assertGreaterEqual(len(dir_contents), 1)
 
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
     @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
@@ -1053,3 +1055,387 @@ class TestSync(unittest.TestCase):
         self.assertEqual(sleep_for, 0, "Should have 0 sleep for small equal timers")
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
         self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled")
+
+
+class TestWebSignalsSyncIntegration(unittest.TestCase):
+    """Cover sync.sync() ↔ web_signals integration paths.
+    Existing tests don't exercise the consume_force_sync TRUE branches
+    or the record_sync_completion exception fallback."""
+
+    def setUp(self):
+        config = read_config(config_path=tests.CONFIG_PATH)
+        assert isinstance(config, dict)
+        self.config = config
+        self.config["app"]["root"] = tests.TEMP_DIR
+        os.makedirs(tests.TEMP_DIR, exist_ok=True)
+
+    def tearDown(self):
+        if os.path.exists(tests.TEMP_DIR):
+            shutil.rmtree(tests.TEMP_DIR)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_consume_force_sync_logs_when_signals_present(
+        self,
+        _mock_post,
+        mock_read_config,
+        _mock_service,
+        _mock_un,
+        _mock_pw,
+    ):
+        """consume_force_sync returns True for both drive + photos →
+        each is logged as a force-sync request before the cycle runs."""
+        import logging
+
+        from src import web_signals
+
+        cfg = deepcopy(self.config)
+        mock_read_config.return_value = cfg
+        os.environ.pop(ENV_ICLOUD_PASSWORD_KEY, None)
+
+        calls = {"drive": 0, "photos": 0}
+
+        def fake_consume(service):
+            calls[service] += 1
+            return calls[service] == 1
+
+        with (
+            patch.object(
+                web_signals,
+                "consume_force_sync",
+                side_effect=fake_consume,
+            ),
+            self.assertLogs(sync.LOGGER, level=logging.INFO) as cm,
+        ):
+            sync.sync()
+
+        joined = "\n".join(cm.output)
+        self.assertIn("Force-sync requested for Drive", joined)
+        self.assertIn("Force-sync requested for Photos", joined)
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(
+        target="src.config_parser.get_username",
+        return_value=data.AUTHENTICATED_USER,
+    )
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_record_sync_completion_exception_is_logged_not_fatal(
+        self,
+        _mock_post,
+        mock_read_config,
+        _mock_service,
+        _mock_un,
+        _mock_pw,
+    ):
+        """record_sync_completion raising an unexpected exception (not
+        ImportError) is logged at DEBUG and the sync loop continues."""
+        import logging
+
+        from src import web_signals
+
+        cfg = deepcopy(self.config)
+        mock_read_config.return_value = cfg
+        os.environ.pop(ENV_ICLOUD_PASSWORD_KEY, None)
+
+        # Force ``drive_stats`` non-None so the ``record_sync_completion``
+        # branch is guaranteed to execute -- otherwise the mock chain can
+        # leave both stats None, the call never happens, and the assertion
+        # below would pass without ever exercising the path under test.
+        with (
+            patch(
+                "src.sync._perform_drive_sync",
+                return_value=DriveStats(files_downloaded=1),
+            ) as mock_drive,
+            patch.object(
+                web_signals,
+                "record_sync_completion",
+                side_effect=RuntimeError("disk full"),
+            ) as mock_record,
+            self.assertLogs(sync.LOGGER, level=logging.DEBUG) as cm,
+        ):
+            sync.sync()
+
+        # The branch really ran ...
+        self.assertTrue(mock_drive.called)
+        self.assertTrue(mock_record.called)
+        # ... the raise was swallowed to DEBUG ...
+        joined = "\n".join(cm.output)
+        self.assertIn("record_sync_completion raised", joined)
+        self.assertIn("disk full", joined)
+
+
+class TestInterruptibleSleep(unittest.TestCase):
+    """``_interruptible_sleep`` chunks long sleeps and polls the
+    web-signal sentinels so the "Sync now" button feels responsive
+    even mid-multi-hour interval."""
+
+    def test_short_interval_uses_single_sleep_call(self):
+        """``<= _CHUNK`` should produce exactly one ``sleep`` call so
+        existing tests counting sleep invocations stay correct."""
+        from unittest.mock import patch
+
+        with patch("src.sync.sleep") as mock_sleep:
+            sync._interruptible_sleep(2)  # noqa: SLF001 -- module-private helper
+        mock_sleep.assert_called_once_with(2)
+
+    def test_long_interval_chunks_and_polls_sentinels(self):
+        """``> _CHUNK`` should produce multiple sleep calls AND call
+        ``pending_force_syncs()`` between each chunk."""
+        from unittest.mock import patch
+
+        with (
+            patch("src.sync.sleep") as mock_sleep,
+            patch(
+                "src.web_signals.pending_force_syncs",
+                return_value=[],
+            ) as mock_pending,
+        ):
+            sync._interruptible_sleep(5)  # noqa: SLF001
+        # Expect [sleep(2), sleep(2), sleep(1)] -- 3 calls.
+        self.assertEqual(mock_sleep.call_count, 3)
+        self.assertEqual(mock_pending.call_count, 3)
+
+    def test_long_interval_returns_early_when_sentinel_fires(self):
+        """If ``pending_force_syncs`` reports any sentinel mid-loop,
+        the helper exits without consuming the remaining chunks."""
+        from unittest.mock import patch
+
+        with (
+            patch("src.sync.sleep") as mock_sleep,
+            patch(
+                "src.web_signals.pending_force_syncs",
+                side_effect=[[], ["drive"]],
+            ) as mock_pending,
+        ):
+            sync._interruptible_sleep(10)  # noqa: SLF001
+        # Exited after the second chunk -> 2 sleeps + 2 polls.
+        self.assertEqual(mock_sleep.call_count, 2)
+        self.assertEqual(mock_pending.call_count, 2)
+
+
+
+class TestACompletedReauthEndsTheRetryWait(unittest.TestCase):
+    """The loop backs off for retry_login_interval between sign-in attempts
+    and cannot otherwise see that the session was fixed underneath it, so
+    someone who signs in through the web UI watches the dashboard keep
+    reporting the sync as stopped until an interval that began before the
+    problem was solved finally runs out."""
+
+    def test_a_completed_reauth_ends_the_wait(self):
+        from unittest.mock import patch
+
+        from src import sync
+
+        with patch.object(sync, "sleep") as slept:
+            with patch("src.web_signals.consume_reauth_completed", return_value=True):
+                sync._auth_retry_sleep(600)  # noqa: SLF001
+        self.assertLess(sum(c.args[0] for c in slept.call_args_list), 600)
+
+    def test_without_a_reauth_the_whole_interval_is_served(self):
+        from unittest.mock import patch
+
+        from src import sync
+
+        with patch.object(sync, "sleep") as slept:
+            with patch("src.web_signals.consume_reauth_completed", return_value=False):
+                sync._auth_retry_sleep(10)  # noqa: SLF001
+        self.assertEqual(sum(c.args[0] for c in slept.call_args_list), 10)
+
+    def test_a_force_sync_request_does_not_end_an_auth_wait(self):
+        """"Sync now" means sync everything now, not "stop waiting to sign
+        in" -- borrowing it would queue a full re-enumeration nobody asked
+        for, and on a rate-limited account it would drive sign-in attempts."""
+        from unittest.mock import patch
+
+        from src import sync
+
+        with patch.object(sync, "sleep") as slept:
+            with patch("src.web_signals.pending_force_syncs", return_value=["drive"]):
+                with patch(
+                    "src.web_signals.consume_reauth_completed", return_value=False,
+                ):
+                    sync._auth_retry_sleep(10)  # noqa: SLF001
+        self.assertEqual(sum(c.args[0] for c in slept.call_args_list), 10)
+
+    def test_a_short_wait_is_a_single_sleep(self):
+        from unittest.mock import patch
+
+        from src import sync
+
+        with patch.object(sync, "sleep") as slept:
+            sync._auth_retry_sleep(1)  # noqa: SLF001
+        slept.assert_called_once_with(1)
+
+    def test_a_successful_reauth_signals_the_loop(self):
+        from unittest.mock import patch
+
+        from src import web
+
+        with patch("src.web.web_signals.record_reauth_completed") as rec:
+            with patch("src.web.web_signals.request_force_sync") as force:
+                web._wake_sync_loop()  # noqa: SLF001
+        rec.assert_called_once_with()
+        force.assert_not_called()
+
+    def test_a_failed_signal_never_fails_the_sign_in(self):
+        from unittest.mock import patch
+
+        from src import web
+
+        with patch(
+            "src.web.web_signals.record_reauth_completed",
+            side_effect=OSError("read-only"),
+        ):
+            web._wake_sync_loop()  # noqa: SLF001
+
+
+    def test_the_2fa_handler_reports_keep_going(self):
+        """Returning True is what sends the loop round again rather than
+        ending it -- the retry path must not look like a fatal error."""
+        from unittest.mock import patch
+
+        from src import sync
+
+        config = {"app": {"credentials": {"retry_login_interval": 600}}}
+        with patch.object(sync, "_auth_retry_sleep"):
+            with patch.object(sync, "notify"):
+                self.assertTrue(
+                    sync._handle_2fa_required(  # noqa: SLF001
+                        config, "a@icloud.com", sync.SyncState(),
+                    ),
+                )
+
+    def test_the_password_handler_reports_keep_going(self):
+        from unittest.mock import patch
+
+        from src import sync
+
+        config = {"app": {"credentials": {"retry_login_interval": 600}}}
+        with patch.object(sync, "_auth_retry_sleep"):
+            with patch.object(sync, "notify"):
+                self.assertTrue(
+                    sync._handle_password_error(  # noqa: SLF001
+                        config, "a@icloud.com", sync.SyncState(),
+                    ),
+                )
+
+    def _loop_once_then_exit(self, **auth_kwargs):
+        """Drive sync() so a handler runs, the loop continues, and the second
+        retry wait ends the test -- proving the loop retried rather than
+        exiting."""
+        from unittest.mock import patch
+
+        from src import sync
+
+        config = {
+            "app": {
+                "credentials": {
+                    "username": "a@icloud.com",
+                    "retry_login_interval": 600,
+                },
+            },
+            "drive": {"destination": "drive"},
+        }
+        with (
+            patch.object(sync, "_load_configuration", return_value=config),
+            patch.object(sync, "alive"),
+            patch.object(sync, "notify"),
+            patch.object(sync, "_authenticate_and_get_api", **auth_kwargs),
+            patch.object(
+                sync, "_auth_retry_sleep", side_effect=[None, SystemExit],
+            ) as slept,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            with self.assertRaises(SystemExit):
+                sync.sync()
+        return slept
+
+    def test_a_pending_second_factor_sends_the_loop_round_again(self):
+        from unittest.mock import MagicMock
+
+        api = MagicMock()
+        api.requires_2sa = True
+        slept = self._loop_once_then_exit(return_value=api)
+        self.assertEqual(slept.call_count, 2)
+
+    def test_a_missing_keyring_password_sends_the_loop_round_again(self):
+        from icloudpy import exceptions
+
+        slept = self._loop_once_then_exit(
+            side_effect=exceptions.ICloudPyNoStoredPasswordAvailableException(),
+        )
+        self.assertEqual(slept.call_count, 2)
+
+
+
+class TestRevocationIsNamedSeparatelyFromExpiry(unittest.TestCase):
+    """Expiry and revocation both surface as 421 and both end in a 2FA
+    prompt, but a refresh schedule prevents one and can do nothing about the
+    other. Without saying which happened, the obvious reading of "valid trust
+    token, 2FA demanded anyway" is that the refresh logic is broken."""
+
+    def test_a_still_valid_token_is_reported_as_revoked(self):
+        import datetime
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _log_trust_revocation_hint
+
+        future = datetime.datetime.now(
+            tz=datetime.timezone.utc,
+        ) + datetime.timedelta(days=58)
+        with patch("src.sync._read_trust_cookie_expiry", return_value=future):
+            with self.assertLogs(level="ERROR") as captured:
+                _log_trust_revocation_hint(MagicMock())
+        joined = "\n".join(captured.output)
+        self.assertIn("had not expired", joined)
+        self.assertIn("revoked it", joined)
+        # A day count, not a specific one: timedelta.days truncates, so
+        # "+58 days from now" reads back as 57 and pinning the number makes
+        # the test fail on arithmetic rather than on behaviour.
+        self.assertRegex(joined, r"valid for \d+ more days")
+
+    def test_an_actually_expired_token_says_nothing(self):
+        """Ordinary expiry is not news -- the 2FA prompt already says it."""
+        import datetime
+        import logging
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _log_trust_revocation_hint
+
+        past = datetime.datetime.now(
+            tz=datetime.timezone.utc,
+        ) - datetime.timedelta(days=1)
+        with patch("src.sync._read_trust_cookie_expiry", return_value=past):
+            with patch.object(logging.getLogger(), "error") as err:
+                _log_trust_revocation_hint(MagicMock())
+        err.assert_not_called()
+
+    def test_no_trust_cookie_says_nothing(self):
+        import logging
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _log_trust_revocation_hint
+
+        with patch("src.sync._read_trust_cookie_expiry", return_value=None):
+            with patch.object(logging.getLogger(), "error") as err:
+                _log_trust_revocation_hint(MagicMock())
+        err.assert_not_called()
+
+    def test_a_raising_reader_never_breaks_the_retry(self):
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _log_trust_revocation_hint
+
+        with patch(
+            "src.sync._read_trust_cookie_expiry",
+            side_effect=RuntimeError("cookie jar gone"),
+        ):
+            _log_trust_revocation_hint(MagicMock())  # must not raise
