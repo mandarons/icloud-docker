@@ -2586,6 +2586,28 @@ class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
         photos.libraries = {n: MagicMock() for n in names}
         return photos
 
+    def test_zone_faults_are_inside_the_isolated_exception_set(self):
+        """Pins the dependency the handler relies on, instead of trusting that
+        the mock-driven test above happens to raise the right type.
+
+        Apple reports an unreadable zone as ICloudPyServiceNotActivatedException.
+        _LIBRARY_FAULTS names its base, ICloudPyAPIResponseException, so the
+        subclass is caught in production. If a future icloudpy re-parents it,
+        this fails here rather than a real library silently aborting a sync.
+        """
+        from icloudpy import exceptions
+
+        from src.sync_photos import _LIBRARY_FAULTS
+
+        zone_fault = exceptions.ICloudPyServiceNotActivatedException("ZONE_NOT_FOUND", "x")
+        self.assertIsInstance(zone_fault, _LIBRARY_FAULTS)
+        self.assertTrue(
+            issubclass(
+                exceptions.ICloudPyServiceNotActivatedException,
+                exceptions.ICloudPyAPIResponseException,
+            ),
+        )
+
     def test_a_failing_library_does_not_prevent_the_next_one(self):
         from unittest.mock import patch
 
