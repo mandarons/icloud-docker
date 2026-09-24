@@ -36,16 +36,24 @@ def process_package(local_file: str) -> str | None:
         Path to the processed file/directory, or False if processing failed
     """
     archive_file = local_file
+
+    # zipfile.is_zipfile() rather than libmagic's MIME string: libmagic reports
+    # "application/octet-stream" for many of Apple's packageDownload zips even though
+    # they begin with PK\x03\x04 and open fine with zipfile. is_zipfile() reads the End
+    # of Central Directory record and is the authority on whether ZipFile() will
+    # succeed, which is all _process_zip_package() needs to know.
+    if zipfile.is_zipfile(local_file):
+        return _process_zip_package(local_file, archive_file)
+
     magic_object = magic.Magic(mime=True)
     file_mime_type = magic_object.from_file(filename=local_file)
 
-    if file_mime_type == "application/zip":
-        return _process_zip_package(local_file, archive_file)
-    elif file_mime_type == "application/gzip":
+    if file_mime_type == "application/gzip":
         return _process_gzip_package(local_file, archive_file)
     else:
         LOGGER.error(
-            f"Unhandled file type - cannot unpack the package {file_mime_type}.",
+            f"Unhandled file type - cannot unpack the package {local_file} ({file_mime_type}). "
+            "The downloaded archive is left in place under the package's name.",
         )
         return None
 

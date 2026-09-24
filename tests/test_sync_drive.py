@@ -1258,6 +1258,51 @@ class TestSyncDrive(unittest.TestCase):
         """Test for invalid package type."""
         self.assertFalse(sync_drive.process_package(local_file=os.path.join(DATA_DIR, "medium.jpeg")))
 
+    def test_package_exists_ignores_zip_versus_unpacked_size_mismatch(self):
+        """Package size is not comparable: item.size is the zip, local is the unpacked tree.
+
+        Requiring equality made the up-to-date branch unreachable for every real
+        package, so each one was rmtree'd and re-downloaded on every sync.
+        """
+        sync_drive.download_file(item=self.package_item, local_file=self.local_package_path)
+        self.assertTrue(os.path.isdir(self.local_package_path))
+
+        unpacked_size = sum(
+            f.stat().st_size for f in Path(self.local_package_path).glob("**/*") if f.is_file()
+        )
+        # Stand in for the remote zip's size, which is always smaller than the
+        # unpacked tree (Project.band.zip: 199,960 zipped -> 588,272 unpacked).
+        item = MagicMock()
+        item.date_modified = self.package_item.date_modified
+        item.size = unpacked_size // 2
+        self.assertNotEqual(item.size, unpacked_size)
+
+        self.assertTrue(
+            sync_drive.package_exists(item=item, local_package_path=self.local_package_path),
+        )
+        # And it must not have been deleted on the way to that answer
+        self.assertTrue(os.path.isdir(self.local_package_path))
+
+    def test_process_package_unpacks_zip_when_libmagic_reports_octet_stream(self):
+        """libmagic misidentifies many of Apple's packageDownload zips.
+
+        It returns application/octet-stream for files that begin with PK\\x03\\x04 and
+        open fine with zipfile. Gating on the MIME string meant process_package()
+        returned None and download_file() left the raw zip on disk under the
+        package's own name, so the package was never correctly mirrored.
+        """
+        local_file = os.path.join(self.destination_path, "Project.band")
+        shutil.copyfile(os.path.join(DATA_DIR, "Project.band.zip"), local_file)
+        self.assertTrue(os.path.isfile(local_file))
+
+        with patch("src.drive_package_processing.magic.Magic") as mock_magic:
+            mock_magic.return_value.from_file.return_value = "application/octet-stream"
+            result = sync_drive.process_package(local_file=local_file)
+
+        self.assertTrue(result)
+        self.assertTrue(os.path.isdir(local_file))
+        self.assertFalse(os.path.exists(local_file + ".zip"))
+
     def test_execution_continuation_on_icloudpy_exception(self):
         """Test for icloudpy exception."""
         with (

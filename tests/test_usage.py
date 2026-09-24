@@ -156,12 +156,13 @@ class TestUsage(unittest.TestCase):
         # Test second run - no install but heartbeat
         actual = usage.alive(config=self.config)
         self.assertTrue(actual)
-        # Test third run - no install, no heartbeat (same day)
+        # Test third run - no install, no heartbeat (same day) — returns True
+        # because throttled is not a failure
         actual = usage.alive(config=self.config)
-        self.assertFalse(actual)
+        self.assertTrue(actual)
 
         # Test heartbeat on next UTC day (even if less than 24 hours)
-        mock_now = datetime.datetime.utcnow() + datetime.timedelta(days=1)
+        mock_now = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
         with patch("src.usage.current_time") as mock_datetime_now:
             mock_datetime_now.return_value = mock_now
             actual = usage.alive(config=self.config)
@@ -352,7 +353,7 @@ class TestUsage(unittest.TestCase):
         mock_send.return_value = True
 
         # Create a timestamp for earlier today
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         earlier_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         cached_data = {
@@ -375,7 +376,7 @@ class TestUsage(unittest.TestCase):
         mock_send.return_value = True
 
         # Create a timestamp for yesterday
-        today = datetime.datetime.utcnow()
+        today = datetime.datetime.now(datetime.timezone.utc)
         yesterday = today - datetime.timedelta(days=1)
 
         cached_data = {
@@ -389,7 +390,7 @@ class TestUsage(unittest.TestCase):
             result = usage.heartbeat(cached_data, None)
             # Should send heartbeat
             self.assertIsNotNone(result)
-            self.assertEqual(result["heartbeat_timestamp"], str(today))
+            self.assertEqual(result["heartbeat_timestamp"], today.strftime("%Y-%m-%d %H:%M:%S.%f"))
             mock_send.assert_called_once()
 
     @patch("src.usage.send_heartbeat")
@@ -398,7 +399,7 @@ class TestUsage(unittest.TestCase):
         mock_send.return_value = True
 
         # Create timestamp at 23:59:59 yesterday
-        today = datetime.datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        today = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         yesterday_night = today - datetime.timedelta(seconds=1)
 
         cached_data = {
@@ -421,7 +422,7 @@ class TestUsage(unittest.TestCase):
         mock_send.return_value = True
 
         # Create a timestamp using UTC
-        utc_yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=1)
+        utc_yesterday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
 
         cached_data = {
             "id": str(uuid.uuid4()),
@@ -439,7 +440,7 @@ class TestUsage(unittest.TestCase):
         parsed = datetime.datetime.strptime(new_timestamp, "%Y-%m-%d %H:%M:%S.%f")
 
         # The date should be today in UTC, not local
-        utc_today = datetime.datetime.utcnow().date()
+        utc_today = datetime.datetime.now(datetime.timezone.utc).date()
         self.assertEqual(parsed.date(), utc_today)
 
     def test_current_time_returns_utc(self):
@@ -447,7 +448,7 @@ class TestUsage(unittest.TestCase):
         result = usage.current_time()
 
         # Should be close to utcnow, not now
-        utc_now = datetime.datetime.utcnow()
+        utc_now = datetime.datetime.now(datetime.timezone.utc)
 
         # Result should be within 1 second of UTC now
         self.assertLess(abs((result - utc_now).total_seconds()), 1)
@@ -594,7 +595,7 @@ class TestUsage(unittest.TestCase):
     @patch("time.sleep")
     @patch("requests.post")
     def test_post_with_retry_server_errors_5xx(self, mock_post, mock_sleep):
-        """Test server errors (5xx) are retried."""
+        """Test server errors (5xx) are retried and last response returned."""
         for status_code in [500, 502, 503, 504]:
             mock_post.reset_mock()
             mock_sleep.reset_mock()
@@ -605,7 +606,8 @@ class TestUsage(unittest.TestCase):
             mock_post.return_value = mock_response
 
             result = usage.post_with_retry("http://test.com", {"data": "test"}, max_retries=2)
-            self.assertIsNone(result)
+            self.assertIsNotNone(result)
+            self.assertEqual(result.status_code, status_code)
             self.assertEqual(mock_post.call_count, 2)
             self.assertEqual(mock_sleep.call_count, 1)
 
@@ -683,3 +685,42 @@ class TestUsage(unittest.TestCase):
 
         result = usage.post_new_heartbeat({"test": "data"}, "http://test.com")
         self.assertFalse(result)
+
+    def test_zero_microsecond_timestamp_survives_cache_round_trip(self):
+        """Test that timestamps with zero microseconds don't destroy cache (F3)."""
+        file_path = usage.init_cache(config=self.config)
+        # Install first
+        cached_data = usage.load_cache(file_path=file_path)
+        with patch("src.usage.send_heartbeat", return_value=True):
+            fresh = usage.heartbeat(cached_data, None)
+        self.assertIsNotNone(fresh)
+        # Simulate a zero-microsecond timestamp being written to cache
+        fresh["heartbeat_timestamp"] = "2026-08-07 12:34:56.000000"
+        usage.save_cache(file_path=file_path, data=fresh)
+        # Load back — should validate and survive
+        loaded = usage.load_cache(file_path=file_path)
+        self.assertEqual(loaded["heartbeat_timestamp"], "2026-08-07 12:34:56.000000")
+        # Clean up
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+
+    def test_validate_cache_data_legacy_timestamp_format(self):
+        """Test validate_cache_data accepts legacy format without microseconds."""
+        # Legacy format: "2026-08-07 12:34:56" (no .%f) — can appear in
+        # old caches written by str(datetime) when microseconds were zero.
+        legacy_data = {
+            "id": str(uuid.uuid4()),
+            "app_version": "1.0.0",
+            "heartbeat_timestamp": "2026-08-07 12:34:56",
+        }
+        self.assertTrue(usage.validate_cache_data(legacy_data))
+
+    def test_alive_none_config(self):
+        """Test alive() returns True immediately when config is None (F4)."""
+        result = usage.alive(config=None)
+        self.assertTrue(result)
+
+    def test_alive_none_config_with_data(self):
+        """Test alive(None, data=...) also returns True."""
+        result = usage.alive(config=None, data={"some": "data"})
+        self.assertTrue(result)
