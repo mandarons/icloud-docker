@@ -455,6 +455,38 @@ class TestGetTrustRefreshDays(unittest.TestCase):
         cfg = {"app": {"trust_refresh_days": 3}}
         self.assertEqual(config_parser.get_trust_refresh_days(config=cfg), 3)
 
+    def test_a_refresh_that_cannot_precede_the_warning_is_flagged_once(self):
+        """With refresh <= warn, the user is told to re-authenticate a
+        session the container was about to renew by itself."""
+        from src import config_parser
+
+        config_parser.clear_config_warning_cache()
+        cfg = {"app": {"trust_refresh_days": 7, "trust_expiry_warn_days": 7}}
+        with patch.object(config_parser.LOGGER, "warning") as warned:
+            self.assertEqual(config_parser.get_trust_refresh_days(config=cfg), 7)
+            config_parser.get_trust_refresh_days(config=cfg)
+        warned.assert_called_once()
+        self.assertIn("before the proactive refresh", warned.call_args.args[0])
+
+    def test_a_sane_ordering_says_nothing(self):
+        from src import config_parser
+
+        config_parser.clear_config_warning_cache()
+        cfg = {"app": {"trust_refresh_days": 14, "trust_expiry_warn_days": 7}}
+        with patch.object(config_parser.LOGGER, "warning") as warned:
+            config_parser.get_trust_refresh_days(config=cfg)
+        warned.assert_not_called()
+
+    def test_disabled_refresh_says_nothing(self):
+        """0 means the user turned refresh off; there is no ordering to get wrong."""
+        from src import config_parser
+
+        config_parser.clear_config_warning_cache()
+        cfg = {"app": {"trust_refresh_days": 0, "trust_expiry_warn_days": 7}}
+        with patch.object(config_parser.LOGGER, "warning") as warned:
+            self.assertEqual(config_parser.get_trust_refresh_days(config=cfg), 0)
+        warned.assert_not_called()
+
 
 class TestMaybeRefreshTrust(unittest.TestCase):
     """``sync._maybe_refresh_trust`` rolls the trust window forward while

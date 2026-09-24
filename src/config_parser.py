@@ -408,13 +408,38 @@ def get_trust_refresh_days(config: dict) -> int:
     Must exceed ``trust_expiry_warn_days`` for the refresh to get a
     chance before the warning fires. Set to 0 to disable.
     """
-    return int(
+    refresh_days = int(
         get_config_value_or_default(
             config=config,
             config_path=["app", "trust_refresh_days"],
             default=14,
         ),
     )
+    _warn_if_refresh_cannot_precede_warning(config, refresh_days)
+    return refresh_days
+
+
+def _warn_if_refresh_cannot_precede_warning(config: dict, refresh_days: int) -> None:
+    """Say so once when the refresh threshold is at or below the warn threshold.
+
+    The refresh exists so the expiry warning never has to fire. With
+    ``trust_refresh_days <= trust_expiry_warn_days`` the warning always fires
+    first, and the user is told to re-authenticate a session the container
+    was about to renew on its own. Not an error -- both still work -- so it
+    is a one-time warning rather than a rejected config.
+    """
+    if refresh_days <= 0:
+        return
+    warn_days = get_trust_expiry_warn_days(config=config)
+    key = "app > trust_refresh_days <= trust_expiry_warn_days"
+    if refresh_days <= warn_days and key not in _config_warning_cache:
+        _config_warning_cache.add(key)
+        LOGGER.warning(
+            f"app.trust_refresh_days ({refresh_days}) is not above "
+            f"app.trust_expiry_warn_days ({warn_days}), so the expiry warning "
+            f"will fire before the proactive refresh gets a chance. Raise "
+            f"trust_refresh_days, or lower trust_expiry_warn_days.",
+        )
 
 
 def get_app_max_threads(config: dict) -> int:
