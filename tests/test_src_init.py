@@ -63,6 +63,29 @@ class TestLogRotation(unittest.TestCase):
         self.assertEqual(logger_config["max_bytes"], src.DEFAULT_LOG_MAX_BYTES)
         self.assertEqual(logger_config["backup_count"], src.DEFAULT_LOG_BACKUP_COUNT)
 
+    def test_a_malformed_bound_falls_back_instead_of_crashing_import(self):
+        """This runs at import while logging is being set up, so a typo used
+        to raise out of module import and loop the container on restart."""
+        from unittest.mock import patch
+
+        config = {
+            "app": {
+                "logger": {
+                    "level": "info",
+                    "filename": "icloud.log",
+                    "max_bytes": "50MB",
+                    "backup_count": None,
+                },
+            },
+        }
+        with patch("builtins.print") as said:
+            logger_config = src.get_logger_config(config=config)
+        self.assertEqual(logger_config["max_bytes"], src.DEFAULT_LOG_MAX_BYTES)
+        self.assertEqual(logger_config["backup_count"], src.DEFAULT_LOG_BACKUP_COUNT)
+        printed = " ".join(str(c.args[0]) for c in said.call_args_list)
+        self.assertIn("app.logger.max_bytes", printed)
+        self.assertIn("app.logger.backup_count", printed)
+
     def test_bounds_are_configurable(self):
         config = {
             "app": {

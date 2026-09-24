@@ -64,9 +64,26 @@ def get_logger_config(config):
     logger_config["filename"] = (
         config_app_logger["filename"].strip().lower() if "filename" in config_app_logger else DEFAULT_LOG_FILE_NAME
     )
-    logger_config["max_bytes"] = int(config_app_logger.get("max_bytes", DEFAULT_LOG_MAX_BYTES))
-    logger_config["backup_count"] = int(config_app_logger.get("backup_count", DEFAULT_LOG_BACKUP_COUNT))
+    logger_config["max_bytes"] = _int_setting(config_app_logger, "max_bytes", DEFAULT_LOG_MAX_BYTES)
+    logger_config["backup_count"] = _int_setting(config_app_logger, "backup_count", DEFAULT_LOG_BACKUP_COUNT)
     return logger_config
+
+
+def _int_setting(section, key, default):
+    """Read an integer logger setting, falling back to ``default`` on junk.
+
+    This runs while logging is being configured -- at import, before any
+    handler exists -- so a bare ``int()`` on a typo like ``max_bytes: 50MB``
+    raised out of module import and, under ``restart: unless-stopped``,
+    became a restart loop that never said which key was wrong. Say so on
+    stdout (no logger yet) and carry on with the default.
+    """
+    value = section.get(key, default)
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        print(f"app.logger.{key} must be a whole number, got {value!r}; using {default}.")
+        return default
 
 
 def log_handler_exists(logger, handler_type, **kwargs):
