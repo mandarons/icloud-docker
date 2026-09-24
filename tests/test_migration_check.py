@@ -55,6 +55,9 @@ class TestCheckLibrary(unittest.TestCase):
         if _SIMPLE_FORMAT_AVAILABLE:
             # PR 5 merged: use the real simple-format toggle.
             migration_check.set_default_filename_format("simple")
+            # The format is module-level state; without restoring it every
+            # later test in the run inherits "simple" naming.
+            self.addCleanup(migration_check.set_default_filename_format, "metadata")
             self._addCleanup_no_patch = True
         else:
             # PR 5 NOT merged: monkey-patch the filename generator at the
@@ -343,9 +346,14 @@ class TestCheckOnePhotoEdges(unittest.TestCase):
     """Branches of ``_check_one_photo`` not covered by happy-path tests."""
 
     def setUp(self):
-        # Same monkey-patch as TestCheckLibrary so the metadata-format
-        # generator returns the photo's bare filename.
-        if not _SIMPLE_FORMAT_AVAILABLE:
+        # Same setup as TestCheckLibrary so the generator returns the photo's
+        # bare filename. With the real toggle available this has to be set
+        # here: the class previously relied on an earlier class leaving the
+        # module-level format switched to "simple".
+        if _SIMPLE_FORMAT_AVAILABLE:
+            migration_check.set_default_filename_format("simple")
+            self.addCleanup(migration_check.set_default_filename_format, "metadata")
+        else:
             from unittest.mock import patch
 
             self._patcher = patch.object(
