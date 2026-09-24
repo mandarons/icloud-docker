@@ -33,6 +33,41 @@ LOGGER = get_logger()
 _TRUST_COOKIE_NAME = "X-APPLE-WEBAUTH-HSA-TRUST"
 
 
+def _log_trust_revocation_hint(api) -> None:
+    """Say so when Apple rejected a trust token that has not expired.
+
+    Expiry and revocation are indistinguishable from the logs -- both
+    surface as 421 and both end with a 2FA prompt -- but they mean
+    opposite things for what to do next. A refresh schedule prevents the
+    first and can do nothing about the second: Apple drops trust on
+    security events, typically a new trusted device, a password change,
+    or a change to security keys.
+
+    Without this, the obvious reading of "valid trust token, 2FA demanded
+    anyway" is that the refresh logic is broken, and the time goes into
+    auditing code that behaved correctly.
+
+    Best-effort: never raises into the retry path.
+    """
+    try:
+        expires_at = _read_trust_cookie_expiry(api)
+        if expires_at is None:
+            return
+        remaining = (
+            expires_at - datetime.datetime.now(tz=datetime.timezone.utc)
+        ).days
+        if remaining <= 0:
+            return
+        LOGGER.error(
+            f"The trust token had not expired -- it is valid for {remaining} "
+            f"more days (until {expires_at.date()}). Apple revoked it "
+            f"server-side, which typically follows a new trusted device, a "
+            f"password change, or a change to security keys.",
+        )
+    except Exception as e:  # noqa: BLE001 - diagnostics never break the retry
+        LOGGER.debug(f"trust revocation hint failed: {e!s}")
+
+
 def _read_trust_cookie_expiry(api) -> datetime.datetime | None:
     """Return the expiry datetime of Apple's HSA trust cookie, or None.
 
@@ -98,6 +133,68 @@ def _resolve_dashboard_url(config) -> str | None:
         )
         _WEB_UI_PUBLIC_URL_WARNED = True
     return f"http://{host}:{port}"
+
+
+def _publish_auth_blocked(blocked: bool, reason: str | None = None) -> None:
+    """Tell the web UI whether the loop can authenticate.
+
+    Only this loop knows: every on-disk signal the dashboard can check by
+    itself (username configured, password in the keyring) still looks
+    healthy while an account sits stuck on a second factor.
+
+    Best-effort -- signalling must never break syncing.
+    """
+    try:
+        from src import web_signals
+
+        web_signals.record_auth_blocked(blocked=blocked, reason=reason)
+    except Exception as e:  # pragma: no cover - signalling is advisory
+        LOGGER.warning(f"Could not publish auth state: {e!s}")
+
+
+def _maybe_refresh_trust(config, api) -> None:
+    """Re-trust the session before its token ages out.
+
+    ``trust_session`` asks Apple for a new ``X-Apple-TwoSV-Trust-Token``
+    and icloudpy persists it to ``session_data``. Calling it while the
+    session is still healthy therefore rolls the window forward, so a
+    restart at any later point finds a young token and resumes without
+    prompting for a second factor.
+
+    This matters most for accounts where the second factor is expensive
+    or impossible to satisfy headlessly (hardware security keys, where
+    Apple refuses to send a 6-digit code at all).
+
+    Best-effort: never raises into the sync loop.
+    """
+    try:
+        threshold = config_parser.get_trust_refresh_days(config=config)
+        if threshold <= 0:
+            return
+        expires_at = _read_trust_cookie_expiry(api)
+        if expires_at is None:
+            return
+        days_remaining = (
+            expires_at - datetime.datetime.now(tz=datetime.timezone.utc)
+        ).days
+        if days_remaining > threshold:
+            return
+        LOGGER.info(
+            f"Trust token has {days_remaining}d left (threshold {threshold}d) -- refreshing.",
+        )
+        if api.trust_session():
+            refreshed = _read_trust_cookie_expiry(api)
+            LOGGER.info(
+                "Trust refreshed; now expires "
+                f"{refreshed.isoformat() if refreshed else 'unknown'}.",
+            )
+        else:
+            LOGGER.warning(
+                "Proactive trust refresh was declined by Apple -- a second "
+                "factor will be needed at the next cold start.",
+            )
+    except Exception as e:  # pragma: no cover - never break sync over a refresh
+        LOGGER.warning(f"trust refresh failed: {e!s}")
 
 
 def _maybe_warn_trust_expiring(config, api, username: str) -> None:
@@ -771,6 +868,40 @@ def _send_usage_statistics(config, summary: SyncSummary) -> None:
     alive(config=config, data=usage_data)
 
 
+def _auth_retry_sleep(total_seconds: int) -> None:
+    """Wait between sign-in attempts, ending early on a completed re-auth.
+
+    The loop backs off for ``retry_login_interval`` between attempts and
+    cannot otherwise see that the session was fixed underneath it, so
+    someone who signs in through the web UI watches the dashboard keep
+    saying the sync is stopped until an interval that began *before* the
+    problem was solved finally runs out.
+
+    Polls only the re-auth signal, not the force-sync sentinel behind
+    "Sync now": that button means "sync everything now", and a re-auth
+    should end a wait without also queueing a full re-enumeration.
+    """
+    _CHUNK = 2
+    try:
+        from src import web_signals as _ws
+    except ImportError:  # pragma: no cover - module is optional
+        sleep(total_seconds)
+        return
+
+    if total_seconds <= _CHUNK:
+        sleep(total_seconds)
+        return
+
+    remaining = total_seconds
+    while remaining > 0:
+        chunk = min(_CHUNK, remaining)
+        sleep(chunk)
+        remaining -= chunk
+        if _ws.consume_reauth_completed():
+            LOGGER.info("Re-auth completed -- ending the retry wait early.")
+            return
+
+
 def _handle_2fa_required(config, username: str, sync_state: SyncState):
     """
     Handle 2FA authentication requirement.
@@ -784,6 +915,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         bool: True if should continue (retry), False if should exit
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
+    _publish_auth_blocked(True, reason="2fa_required")
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -799,7 +931,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
     )
-    sleep(sleep_for)
+    _auth_retry_sleep(sleep_for)
     return True
 
 
@@ -884,7 +1016,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
     )
-    sleep(sleep_for)
+    _auth_retry_sleep(sleep_for)
     return True
 
 
@@ -1094,10 +1226,12 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         _perform_dry_run(config, api, check_files=check_files)
                     return
 
+                _publish_auth_blocked(False)
                 if not api.requires_2sa:
                     # Trust-window check: record current cookie expiry and
                     # fire a pre-emptive warning once if it's about to lapse.
                     # Best-effort: any failure is logged + swallowed inside.
+                    _maybe_refresh_trust(config, api)
                     _maybe_warn_trust_expiring(config, api, username)
 
                     # Create summary for this sync cycle
@@ -1192,6 +1326,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                             "Nothing to sync. Please add drive: and/or photos: section in config.yaml file.",
                         )
                 else:
+                    _log_trust_revocation_hint(api)
                     if not _handle_2fa_required(config, username, sync_state):
                         break
                     continue
