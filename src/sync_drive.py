@@ -127,6 +127,7 @@ def process_file(
     local_file = download_file(
         item=item,
         local_file=local_file,
+        timeout=config_parser.get_drive_request_timeout(config),
         flatten_packages=config_parser.get_drive_flatten_packages(config),
     )
     if local_file and item_is_package:
