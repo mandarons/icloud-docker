@@ -21,7 +21,7 @@ from src import (
     get_logger,
 )
 from src.drive_file_download import download_file
-from src.drive_file_existence import file_exists, is_package, package_exists
+from src.drive_file_existence import file_exists, is_package, package_bundle_unchanged, package_exists
 from src.drive_filtering import wanted_file
 
 # Configure icloudpy logging immediately after import
@@ -70,6 +70,12 @@ def collect_file_for_download(
     with files_lock:
         files.add(local_file)
 
+    flatten_packages = (
+        bool(config_parser.get_drive_flatten_packages(config))
+        if config
+        else False
+    )
+
     # Check local existence FIRST to avoid unnecessary network requests.
     # is_package() makes an HTTP call for every file, which is very slow
     # when syncing thousands of already-up-to-date files.
@@ -95,12 +101,23 @@ def collect_file_for_download(
             "is_package": True,
             "files": files,
             "timeout": config_parser.get_drive_request_timeout(config),
+            "flatten_packages": flatten_packages,
         }
 
     # File/directory doesn't exist locally (or was an outdated regular file that needs
     # re-download) — make the network call to determine the item type
     timeout = config_parser.get_drive_request_timeout(config)
     item_is_package = is_package(item=item, timeout=timeout)
+
+    # A package stored as a flat single-file bundle (unrecognised-mime package,
+    # or flatten_packages=true) reports item.size as the package's *logical*
+    # size, which never equals the on-disk bundle's byte count -- so file_exists()
+    # above sees a spurious size mismatch and we'd re-download the bundle on every
+    # sync. When it IS a package and the on-disk bundle's mtime already matches the
+    # remote, the bytes are unchanged; skip the wasteful re-download. is_package()
+    # was just called above, so this adds no extra network round-trip.
+    if item_is_package and package_bundle_unchanged(item=item, local_file=local_file):
+        return None
 
     # Return download task info
     return {
@@ -109,6 +126,7 @@ def collect_file_for_download(
         "is_package": item_is_package,
         "files": files,
         "timeout": timeout,
+        "flatten_packages": flatten_packages,
     }
 
 
@@ -133,6 +151,7 @@ def download_file_task(download_info: dict[str, Any]) -> bool:
             item=item,
             local_file=local_file,
             timeout=download_info.get("timeout", DEFAULT_REQUEST_TIMEOUT_SEC),
+            flatten_packages=download_info.get("flatten_packages", False),
         )
         if not downloaded_file:
             return False
@@ -153,7 +172,9 @@ def download_file_task(download_info: dict[str, Any]) -> bool:
         return False
 
 
-def execute_parallel_downloads(download_tasks: list[dict[str, Any]], max_threads: int) -> tuple[int, int]:
+def execute_parallel_downloads(
+    download_tasks: list[dict[str, Any]], max_threads: int,
+) -> tuple[int, int]:
     """Execute multiple file downloads in parallel.
 
     Args:
@@ -166,14 +187,18 @@ def execute_parallel_downloads(download_tasks: list[dict[str, Any]], max_threads
     if not download_tasks:
         return 0, 0
 
-    LOGGER.info(f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...")
+    LOGGER.info(
+        f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...",
+    )
 
     successful_downloads = 0
     failed_downloads = 0
 
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         # Submit all download tasks
-        future_to_task = {executor.submit(download_file_task, task): task for task in download_tasks}
+        future_to_task = {
+            executor.submit(download_file_task, task): task for task in download_tasks
+        }
 
         # Process completed downloads
         for future in as_completed(future_to_task):
@@ -187,5 +212,7 @@ def execute_parallel_downloads(download_tasks: list[dict[str, Any]], max_threads
                 LOGGER.error(f"Download task failed with exception: {e!s}")
                 failed_downloads += 1
 
-    LOGGER.info(f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed")
+    LOGGER.info(
+        f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed",
+    )
     return successful_downloads, failed_downloads
