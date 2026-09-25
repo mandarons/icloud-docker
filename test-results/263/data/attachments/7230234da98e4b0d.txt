@@ -1,0 +1,3 @@
+ERROR    root:sync.py:989 Sign-in failed and will be retried: 409
+INFO     root:config_logging.py:35 Retrying login every 60 seconds.
+INFO     root:sync.py:1090 Retrying login at Fri Sep 25 18:40:57 2026 ...

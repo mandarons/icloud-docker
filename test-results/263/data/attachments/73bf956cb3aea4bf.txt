@@ -1,0 +1,3 @@
+ERROR    root:sync.py:1031 Sync failed and will be retried: 500 Server Error
+INFO     root:config_logging.py:35 Retrying login every -1 seconds.
+INFO     root:sync.py:1034 retry_login_interval is < 0, exiting ...

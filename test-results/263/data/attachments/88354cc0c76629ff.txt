@@ -1,0 +1,6 @@
+[38;5;196m2026-09-25 18:10:57,811 :: ERROR :: root :: sync.py :: 1031 :: Sync failed and will be retried: boom[0m
+[38;5;196m2026-09-25 18:10:57,811 :: ERROR :: root :: sync.py :: 1031 :: Sync failed and will be retried: boom[0m
+[38;5;39m2026-09-25 18:10:57,812 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every -1 seconds.[0m
+[38;5;39m2026-09-25 18:10:57,812 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every -1 seconds.[0m
+[38;5;39m2026-09-25 18:10:57,812 :: INFO :: root :: sync.py :: 1034 :: retry_login_interval is < 0, exiting ...[0m
+[38;5;39m2026-09-25 18:10:57,812 :: INFO :: root :: sync.py :: 1034 :: retry_login_interval is < 0, exiting ...[0m
