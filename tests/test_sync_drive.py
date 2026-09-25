@@ -4,6 +4,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
 import shutil
+import tempfile
 import time
 import unittest
 from datetime import timezone
@@ -2209,3 +2210,31 @@ class TestSyncDrive(unittest.TestCase):
         self.assertNotIn("%CC%88", download_info["local_file"])
         self.assertNotIn("%2C", download_info["local_file"])
         self.assertNotIn("%25", download_info["local_file"])
+
+
+class TestDriveDownloadHasATimeout(unittest.TestCase):
+    """A drive download with no timeout blocks its worker thread for the life
+    of the process. Nothing raises, so nothing retries and nothing restarts --
+    the sync simply stops, while the container still looks healthy. Observed
+    live: a stalled drive download froze a sync for nearly three days."""
+
+    def test_the_timeout_reaches_the_stream_open(self):
+        from unittest.mock import MagicMock, patch
+
+        from src.drive_file_download import download_file
+
+        item = MagicMock()
+        item.open.return_value.__enter__.return_value.iter_content.return_value = []
+        with tempfile.TemporaryDirectory() as d, patch("src.drive_file_download.process_package"):
+            download_file(item=item, local_file=os.path.join(d, "f.bin"), timeout=61)
+        self.assertEqual(item.open.call_args.kwargs.get("timeout"), 61)
+
+    def test_the_worker_applies_the_task_timeout(self):
+        from unittest.mock import patch
+
+        from src import drive_parallel_download as m
+
+        with patch.object(m, "download_file", return_value=None) as dl:
+            m.download_file_task({"item": object(), "local_file": "/x",
+                                  "is_package": False, "files": set(), "timeout": 47})
+        self.assertEqual(dl.call_args.kwargs.get("timeout"), 47)

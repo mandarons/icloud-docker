@@ -10,7 +10,7 @@ import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
-from src import config_parser, get_logger
+from src import DEFAULT_REQUEST_TIMEOUT_SEC, config_parser, get_logger
 from src.hardlink_registry import HardlinkRegistry
 from src.photo_file_utils import create_hardlink, download_photo_from_server
 from src.photo_path_utils import (
@@ -37,6 +37,7 @@ class DownloadTaskInfo:
         photo_path: str,
         hardlink_source: str | None = None,
         hardlink_registry: HardlinkRegistry | None = None,
+        timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC,
     ):
         """Initialize download task info.
 
@@ -46,12 +47,14 @@ class DownloadTaskInfo:
             photo_path: Target path for photo download
             hardlink_source: Path to existing file for hardlink creation
             hardlink_registry: Registry for tracking downloaded files
+            timeout: HTTP read timeout for the download, in seconds
         """
         self.photo = photo
         self.file_size = file_size
         self.photo_path = photo_path
         self.hardlink_source = hardlink_source
         self.hardlink_registry = hardlink_registry
+        self.timeout = timeout
 
 
 def get_max_threads_for_download(config) -> int:
@@ -209,7 +212,12 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
                 LOGGER.warning(f"Hard link creation failed, downloading {task_info.photo_path} instead")
 
         # Download the photo
-        result = download_photo_from_server(task_info.photo, task_info.file_size, task_info.photo_path)
+        result = download_photo_from_server(
+            task_info.photo,
+            task_info.file_size,
+            task_info.photo_path,
+            timeout=task_info.timeout,
+        )
         if result and task_info.hardlink_registry is not None:
             # Register for future hard links if enabled
             task_info.hardlink_registry.register_photo_path(
@@ -240,6 +248,12 @@ def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -
         return 0, 0
 
     max_threads = get_max_threads_for_download(config)
+
+    # Resolved once here rather than per task: without it a stalled CDN
+    # connection blocks its worker thread for the life of the process.
+    timeout = config_parser.get_photos_request_timeout(config)
+    for task in download_tasks:
+        task.timeout = timeout
 
     # Count hardlink tasks vs download tasks for logging
     hardlink_tasks = sum(1 for task in download_tasks if task.hardlink_source)
