@@ -906,6 +906,36 @@ def _auth_retry_sleep(total_seconds: int) -> None:
             return
 
 
+def _request_2fa_push_once(api, sync_state: SyncState) -> None:
+    """Ask Apple to push a 2FA code to the trusted devices, once per episode.
+
+    Without this call the loop notified the user that re-auth was needed but
+    never requested a code, so nothing was ever sent.
+
+    The latch is set only when Apple accepts the request.
+    ``trigger_2fa_push_notification`` returns False rather than raising for
+    most failures, and latching regardless meant one transient error
+    forfeited the push for the whole episode -- the user told "2FA is
+    required" while no code ever arrived, which is the bug this exists to
+    fix. Retrying on the next cycle is bounded by ``retry_login_interval``
+    (600s by default), far below anything that trips Apple's limits.
+
+    Best-effort: a failure here never stops the retry loop.
+    """
+    if sync_state.two_fa_triggered:
+        return
+    try:
+        pushed = api.trigger_2fa_push_notification()
+    except Exception as e:  # noqa: BLE001
+        LOGGER.warning(f"Failed to request 2FA push notification; will retry next cycle: {e!s}")
+        return
+    if pushed:
+        LOGGER.info("Requested a 2FA push notification to your trusted devices.")
+        sync_state.two_fa_triggered = True
+    else:
+        LOGGER.warning("Apple did not accept the 2FA push request; will retry next cycle.")
+
+
 def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     Handle 2FA authentication requirement.
@@ -922,25 +952,16 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
     _publish_auth_blocked(True, reason="2fa_required")
+    # Ask Apple to push a code before anything else -- including the exit
+    # below: retry_login_interval < 0 is the mode where an operator is about
+    # to intervene by hand, and a code on their devices is what they need.
+    _request_2fa_push_once(api, sync_state)
+
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
         return False
-
-    # Ask Apple to actually push a 2FA code to the trusted devices. Without this
-    # call the loop notified the user that re-auth was needed but never requested
-    # a code, so nothing was ever sent. Fire once per episode (two_fa_triggered is
-    # reset on successful auth) to avoid re-pushing every retry cycle -- the
-    # default interval is 600s -- and tripping Apple's rate limits. Best-effort:
-    # a failure here must not stop the retry loop.
-    if not sync_state.two_fa_triggered:
-        try:
-            api.trigger_2fa_push_notification()
-            LOGGER.info("Requested a 2FA push notification to your trusted devices.")
-        except Exception as e:  # noqa: BLE001
-            LOGGER.warning(f"Failed to request 2FA push notification: {e!s}")
-        sync_state.two_fa_triggered = True
 
     _log_retry_time(sleep_for)
     server_region = config_parser.get_region(config=config)

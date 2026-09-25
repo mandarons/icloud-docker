@@ -2,6 +2,7 @@
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import copy
 import os
 import shutil
 import unittest
@@ -213,8 +214,42 @@ class TestSync(unittest.TestCase):
 
         with self.assertLogs() as captured:
             self.assertTrue(self._run_2fa_handler(sync_state, api))
-        self.assertTrue(sync_state.two_fa_triggered)
+        # Not latched: one transient failure must not forfeit the push for the
+        # whole re-auth episode -- the next cycle asks again.
+        self.assertFalse(sync_state.two_fa_triggered)
         self.assertTrue(any("Failed to request 2FA push notification" in e for e in captured[1]))
+        api.trigger_2fa_push_notification.side_effect = None
+        api.trigger_2fa_push_notification.return_value = True
+        self.assertTrue(self._run_2fa_handler(sync_state, api))
+        self.assertEqual(api.trigger_2fa_push_notification.call_count, 2)
+        self.assertTrue(sync_state.two_fa_triggered)
+
+    @patch("src.sync._auth_retry_sleep")
+    @patch("src.sync.notify.send", return_value=None)
+    def test_a_rejected_push_request_is_retried_next_cycle(self, _mock_notify, _mock_sleep):
+        """trigger_2fa_push_notification reports most failures by returning
+        False, not by raising -- that must not latch either."""
+        sync_state = sync.SyncState()
+        api = Mock()
+        api.trigger_2fa_push_notification.return_value = False
+        with self.assertLogs() as captured:
+            self.assertTrue(self._run_2fa_handler(sync_state, api))
+        self.assertFalse(sync_state.two_fa_triggered)
+        self.assertTrue(any("did not accept the 2FA push request" in e for e in captured[1]))
+
+    @patch("src.sync.notify.send", return_value=None)
+    def test_exit_mode_still_requests_the_push(self, _mock_notify):
+        """retry_login_interval < 0 means an operator is about to step in by
+        hand -- exactly when a code on their devices is needed."""
+        config = copy.deepcopy(self.config)
+        config["app"]["credentials"]["retry_login_interval"] = -1
+        sync_state = sync.SyncState()
+        api = Mock()
+        api.trigger_2fa_push_notification.return_value = True
+        self.assertFalse(
+            sync._handle_2fa_required(config, data.REQUIRES_2FA_USER, sync_state, api),  # noqa: SLF001
+        )
+        api.trigger_2fa_push_notification.assert_called_once()
 
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
