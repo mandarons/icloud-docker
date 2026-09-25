@@ -1,0 +1,8 @@
+[38;5;196m2026-09-25 18:20:42,429 :: ERROR :: root :: sync.py :: 1058 :: Password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;196m2026-09-25 18:20:42,429 :: ERROR :: root :: sync.py :: 1058 :: Password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;39m2026-09-25 18:20:42,429 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-25 18:20:42,429 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-25 18:20:42,429 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:30:42 2026 ...[0m
+[38;5;39m2026-09-25 18:20:42,429 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:30:42 2026 ...[0m
+[38;5;226m2026-09-25 18:20:42,430 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-25 18:20:42,430 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m

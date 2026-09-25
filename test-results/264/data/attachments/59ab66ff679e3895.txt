@@ -1,0 +1,16 @@
+[38;21m2026-09-25 18:20:47,579 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-09-25 18:20:47,579 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-09-25 18:20:47,579 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;5;39m2026-09-25 18:20:47,579 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-09-25 18:20:47,580 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-25 18:20:47,580 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-25 18:20:47,588 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;21m2026-09-25 18:20:47,588 :: DEBUG :: icloudpy.base :: base.py :: 412 :: Authentication completed successfully[0m
+[38;5;39m2026-09-25 18:20:47,589 :: INFO :: root :: photo_file_utils.py :: 346 :: Downloading /tmp/tmp6i7b4in3/test_photo.jpg ...[0m
+[38;5;39m2026-09-25 18:20:47,589 :: INFO :: root :: photo_file_utils.py :: 346 :: Downloading /tmp/tmp6i7b4in3/test_photo.jpg ...[0m
+[38;5;226m2026-09-25 18:20:47,590 :: WARNING :: root :: photo_file_utils.py :: 378 :: Download URL expired (410) for /tmp/tmp6i7b4in3/test_photo.jpg. Refreshing URL and retrying (attempt 1/2)...[0m
+[38;5;226m2026-09-25 18:20:47,590 :: WARNING :: root :: photo_file_utils.py :: 378 :: Download URL expired (410) for /tmp/tmp6i7b4in3/test_photo.jpg. Refreshing URL and retrying (attempt 1/2)...[0m
+[38;21m2026-09-25 18:20:47,590 :: DEBUG :: root :: photo_file_utils.py :: 167 :: Failed to refresh download URL for <unknown>: photo missing _master_record or recordName[0m
+[38;21m2026-09-25 18:20:47,590 :: DEBUG :: root :: photo_file_utils.py :: 167 :: Failed to refresh download URL for <unknown>: photo missing _master_record or recordName[0m
+[38;5;196m2026-09-25 18:20:47,590 :: ERROR :: root :: photo_file_utils.py :: 388 :: Failed to download /tmp/tmp6i7b4in3/test_photo.jpg after 1 retries: Gone (410)[0m
+[38;5;196m2026-09-25 18:20:47,590 :: ERROR :: root :: photo_file_utils.py :: 388 :: Failed to download /tmp/tmp6i7b4in3/test_photo.jpg after 1 retries: Gone (410)[0m

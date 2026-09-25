@@ -1,0 +1,12 @@
+[38;5;196m2026-09-25 18:20:42,495 :: ERROR :: root :: sync.py :: 1031 :: Sync failed and will be retried: Zone does not exist[0m
+[38;5;196m2026-09-25 18:20:42,495 :: ERROR :: root :: sync.py :: 1031 :: Sync failed and will be retried: Zone does not exist[0m
+[38;5;226m2026-09-25 18:20:42,495 :: WARNING :: root :: config_logging.py :: 26 :: app > credentials > retry_login_interval not found. Using default 600 seconds ...[0m
+[38;5;226m2026-09-25 18:20:42,495 :: WARNING :: root :: config_logging.py :: 26 :: app > credentials > retry_login_interval not found. Using default 600 seconds ...[0m
+[38;5;39m2026-09-25 18:20:42,495 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:50:42 2026 ...[0m
+[38;5;39m2026-09-25 18:20:42,495 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:50:42 2026 ...[0m
+[38;5;196m2026-09-25 18:20:42,496 :: ERROR :: root :: sync.py :: 1031 :: Sync failed and will be retried: Zone does not exist[0m
+[38;5;196m2026-09-25 18:20:42,496 :: ERROR :: root :: sync.py :: 1031 :: Sync failed and will be retried: Zone does not exist[0m
+[38;5;226m2026-09-25 18:20:42,496 :: WARNING :: root :: config_logging.py :: 26 :: app > credentials > retry_login_interval not found. Using default 600 seconds ...[0m
+[38;5;226m2026-09-25 18:20:42,496 :: WARNING :: root :: config_logging.py :: 26 :: app > credentials > retry_login_interval not found. Using default 600 seconds ...[0m
+[38;5;39m2026-09-25 18:20:42,496 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:50:42 2026 ...[0m
+[38;5;39m2026-09-25 18:20:42,496 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:50:42 2026 ...[0m

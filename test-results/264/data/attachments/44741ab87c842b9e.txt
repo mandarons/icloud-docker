@@ -1,0 +1,1 @@
+ERROR    root:sync.py:448 Photos mount marker missing: /tmp/tmpy427j94s/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpy427j94s/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.

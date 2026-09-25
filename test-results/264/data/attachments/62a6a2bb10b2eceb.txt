@@ -1,0 +1,38 @@
+[38;5;226m2026-09-25 18:20:42,569 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;226m2026-09-25 18:20:42,569 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;226m2026-09-25 18:20:42,569 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-25 18:20:42,569 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;21m2026-09-25 18:20:42,569 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloud_test_config_yp5zcc8f/session_data/aicloudcom.session[0m
+[38;21m2026-09-25 18:20:42,569 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloud_test_config_yp5zcc8f/session_data/aicloudcom.session[0m
+[38;5;39m2026-09-25 18:20:42,570 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;5;39m2026-09-25 18:20:42,570 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-09-25 18:20:42,570 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as a@icloud.com[0m
+[38;21m2026-09-25 18:20:42,570 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as a@icloud.com[0m
+[38;5;196m2026-09-25 18:20:42,571 :: ERROR :: icloudpy.base :: base.py :: 176 :: Unknown reason[0m
+[38;5;196m2026-09-25 18:20:42,571 :: ERROR :: icloudpy.base :: base.py :: 176 :: Unknown reason[0m
+[38;5;196m2026-09-25 18:20:42,571 :: ERROR :: root :: sync.py :: 989 :: Sign-in failed and will be retried: ('Failed to initiate srp authentication.', ICloudPyAPIResponseException('Unknown reason'))[0m
+[38;5;196m2026-09-25 18:20:42,571 :: ERROR :: root :: sync.py :: 989 :: Sign-in failed and will be retried: ('Failed to initiate srp authentication.', ICloudPyAPIResponseException('Unknown reason'))[0m
+[38;5;39m2026-09-25 18:20:42,572 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-25 18:20:42,572 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-25 18:20:42,572 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:50:42 2026 ...[0m
+[38;5;39m2026-09-25 18:20:42,572 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:50:42 2026 ...[0m
+[38;5;226m2026-09-25 18:20:42,573 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-25 18:20:42,573 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-25 18:20:42,574 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-25 18:20:42,574 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;21m2026-09-25 18:20:42,574 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloud_test_config_yp5zcc8f/session_data/aicloudcom.session[0m
+[38;21m2026-09-25 18:20:42,574 :: DEBUG :: icloudpy.base :: base.py :: 236 :: Using session file /tmp/icloud_test_config_yp5zcc8f/session_data/aicloudcom.session[0m
+[38;5;39m2026-09-25 18:20:42,575 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;5;39m2026-09-25 18:20:42,575 :: INFO :: icloudpy.base :: base.py :: 243 :: Session file does not exist[0m
+[38;21m2026-09-25 18:20:42,575 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as a@icloud.com[0m
+[38;21m2026-09-25 18:20:42,575 :: DEBUG :: icloudpy.base :: base.py :: 308 :: Authenticating as a@icloud.com[0m
+[38;5;196m2026-09-25 18:20:42,576 :: ERROR :: icloudpy.base :: base.py :: 176 :: Unknown reason[0m
+[38;5;196m2026-09-25 18:20:42,576 :: ERROR :: icloudpy.base :: base.py :: 176 :: Unknown reason[0m
+[38;5;196m2026-09-25 18:20:42,576 :: ERROR :: root :: sync.py :: 989 :: Sign-in failed and will be retried: ('Failed to initiate srp authentication.', ICloudPyAPIResponseException('Unknown reason'))[0m
+[38;5;196m2026-09-25 18:20:42,576 :: ERROR :: root :: sync.py :: 989 :: Sign-in failed and will be retried: ('Failed to initiate srp authentication.', ICloudPyAPIResponseException('Unknown reason'))[0m
+[38;5;39m2026-09-25 18:20:42,577 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-25 18:20:42,577 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-25 18:20:42,577 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:50:42 2026 ...[0m
+[38;5;39m2026-09-25 18:20:42,577 :: INFO :: root :: sync.py :: 1090 :: Retrying login at Fri Sep 25 18:50:42 2026 ...[0m
+[38;5;226m2026-09-25 18:20:42,577 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-25 18:20:42,577 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
