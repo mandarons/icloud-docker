@@ -6,10 +6,12 @@ import os
 import re
 from time import sleep
 
+import requests
 from icloudpy import ICloudPyService, exceptions, utils
 
 from src import (
     DEFAULT_CONFIG_FILE_PATH,
+    DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
     config_parser,
@@ -95,6 +97,10 @@ def _read_trust_cookie_expiry(api) -> datetime.datetime | None:
 # ``_resolve_dashboard_url``) so the advice appears once per process,
 # not once per sync-loop iteration.
 _WEB_UI_PUBLIC_URL_WARNED = False
+
+# Minimum wait after a failed sign-in. Apple answers a throttled account
+# with 409 on /signin/init; retrying sooner just extends the lockout.
+_AUTH_BACKOFF_FLOOR_SEC = 1800
 
 
 def _resolve_dashboard_url(config) -> str | None:
@@ -901,6 +907,36 @@ def _auth_retry_sleep(total_seconds: int) -> None:
             return
 
 
+def _request_2fa_push_once(api, sync_state: SyncState) -> None:
+    """Ask Apple to push a 2FA code to the trusted devices, once per episode.
+
+    Without this call the loop notified the user that re-auth was needed but
+    never requested a code, so nothing was ever sent.
+
+    The latch is set only when Apple accepts the request.
+    ``trigger_2fa_push_notification`` returns False rather than raising for
+    most failures, and latching regardless meant one transient error
+    forfeited the push for the whole episode -- the user told "2FA is
+    required" while no code ever arrived, which is the bug this exists to
+    fix. Retrying on the next cycle is bounded by ``retry_login_interval``
+    (600s by default), far below anything that trips Apple's limits.
+
+    Best-effort: a failure here never stops the retry loop.
+    """
+    if sync_state.two_fa_triggered:
+        return
+    try:
+        pushed = api.trigger_2fa_push_notification()
+    except Exception as e:  # noqa: BLE001
+        LOGGER.warning(f"Failed to request 2FA push notification; will retry next cycle: {e!s}")
+        return
+    if pushed:
+        LOGGER.info("Requested a 2FA push notification to your trusted devices.")
+        sync_state.two_fa_triggered = True
+    else:
+        LOGGER.warning("Apple did not accept the 2FA push request; will retry next cycle.")
+
+
 def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     Handle 2FA authentication requirement.
@@ -921,25 +957,16 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
     _publish_auth_blocked(True, reason="2fa_required")
+    # Ask Apple to push a code before anything else -- including the exit
+    # below: retry_login_interval < 0 is the mode where an operator is about
+    # to intervene by hand, and a code on their devices is what they need.
+    _request_2fa_push_once(api, sync_state)
+
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
         return False
-
-    # Ask Apple to actually push a 2FA code to the trusted devices. Without this
-    # call the loop notified the user that re-auth was needed but never requested
-    # a code, so nothing was ever sent. Fire once per episode (two_fa_triggered is
-    # reset on successful auth) to avoid re-pushing every retry cycle -- the
-    # default interval is 600s -- and tripping Apple's rate limits. Best-effort:
-    # a failure here must not stop the retry loop.
-    if not sync_state.two_fa_triggered:
-        try:
-            api.trigger_2fa_push_notification()
-            LOGGER.info("Requested a 2FA push notification to your trusted devices.")
-        except Exception as e:  # noqa: BLE001
-            LOGGER.warning(f"Failed to request 2FA push notification: {e!s}")
-        sync_state.two_fa_triggered = True
 
     _log_retry_time(sleep_for)
     server_region = config_parser.get_region(config=config)
@@ -1066,6 +1093,73 @@ def _wait_for_telegram_code(config, api, timeout_seconds: int) -> bool:
             return True
     LOGGER.info("Telegram listen timeout reached with no usable code; retrying auth.")
     return False
+
+
+def _handle_auth_transport_error(config, username: str, sync_state: SyncState, error):
+    """Back off after a sign-in failure Apple did not express as a 2FA prompt.
+
+    Uses at least ``_AUTH_BACKOFF_FLOOR_SEC`` regardless of the configured
+    retry interval: the errors that land here (notably Apple's 409 on
+    ``/signin/init``) mean "you are trying too often", so honouring a short
+    interval would make it worse.
+
+    Returns True to keep looping, False to exit.
+    """
+    LOGGER.error(f"Sign-in failed and will be retried: {error!s}")
+    sleep_for = config_parser.get_retry_login_interval(config=config)
+    if sleep_for < 0:
+        LOGGER.info("retry_login_interval is < 0, exiting ...")
+        return False
+    sleep_for = max(sleep_for, _AUTH_BACKOFF_FLOOR_SEC)
+    _log_retry_time(sleep_for)
+    if isinstance(error, exceptions.ICloudPyFailedLoginException):
+        # icloudpy raises this for a rejected password as well as for a
+        # throttle or a 5xx, and a wrong password never heals by retrying --
+        # so say so. notify.send is throttled, so this is not a message per
+        # retry.
+        sync_state.last_send = notify.send(
+            config=config,
+            username=username,
+            last_send=sync_state.last_send,
+            region=config_parser.get_region(config=config),
+            dashboard_url=_resolve_dashboard_url(config),
+        )
+    # Ends early on a completed web-UI re-auth, but not on "Sync now":
+    # nothing a button does may shorten a throttle backoff.
+    _auth_retry_sleep(sleep_for)
+    return True
+
+
+def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval):
+    """Back off after a failure that happened *after* a successful sign-in.
+
+    Anything raised once ``api`` exists is a service problem, not an auth
+    problem: a zone that is unavailable, a 5xx on a download, a connection
+    dropped mid-transfer. Reporting those as sign-in failures sends the user
+    to re-authenticate for no reason.
+
+    The interval matters as much as the wording. Every handler here ends in
+    ``continue``, which skips ``_calculate_next_sync_schedule`` -- so the
+    countdown timers never advance and both services stay enabled. Retrying
+    on the short login interval therefore re-enumerates the whole library
+    every few minutes. Wait at least as long as the shortest configured sync
+    interval instead: never poll a broken service faster than a working one.
+
+    Returns True to keep looping, False to exit.
+    """
+    LOGGER.error(f"Sync failed and will be retried: {error!s}")
+    sleep_for = config_parser.get_retry_login_interval(config=config)
+    if sleep_for < 0:
+        LOGGER.info("retry_login_interval is < 0, exiting ...")
+        return False
+    configured = [i for i in (drive_sync_interval, photos_sync_interval) if i > 0]
+    if configured:
+        sleep_for = max(sleep_for, min(configured))
+    _log_retry_time(sleep_for)
+    # This can be a whole sync interval; the "Sync now" button must still
+    # cut it short, as it does on the normal scheduling path.
+    _interruptible_sleep(sleep_for)
+    return True
 
 
 def _handle_password_error(config, username: str, sync_state: SyncState):
@@ -1242,7 +1336,23 @@ def sync(dry_run: bool = False, check_files: int | None = None):
     startup_logged = False
 
     while True:
-        config = _load_configuration()
+        # A config that cannot be read must not kill the daemon. On a NAS the
+        # volume holding config.yaml can lag behind container start or go away
+        # mid-run, and a half-written file (the user editing it live) raises
+        # out of the YAML parser. Either way the traceback escapes the loop,
+        # and `restart: unless-stopped` turns that into a restart loop.
+        try:
+            config = _load_configuration()
+        except Exception as e:  # noqa: BLE001 -- any parse fault must not be fatal
+            LOGGER.error(f"Config file could not be read, retrying: {e!s}")
+            config = None
+        if config is None:
+            if dry_run:
+                # A dry run is a one-shot check with nothing to wait for.
+                LOGGER.error("DRY RUN: no readable config, nothing to check.")
+                return
+            sleep(DEFAULT_RETRY_LOGIN_INTERVAL_SEC)
+            continue
 
         # Log sync intervals once at startup
         if not startup_logged:
@@ -1275,8 +1385,10 @@ def sync(dry_run: bool = False, check_files: int | None = None):
             pass
 
         if username:
+            authenticated = False
             try:
                 api = _authenticate_and_get_api(config, username)
+                authenticated = True
 
                 # Dry-run path: authenticate, enumerate, log, exit.
                 # Skips the entire sync + notification + retry pipeline.
@@ -1401,6 +1513,54 @@ def sync(dry_run: bool = False, check_files: int | None = None):
 
             except exceptions.ICloudPyNoStoredPasswordAvailableException:
                 if not _handle_password_error(config, username, sync_state):
+                    break
+                continue
+            except exceptions.ICloudPyFailedLoginException as e:
+                # icloudpy catches most sign-in errors -- a 409 or 401 with a
+                # reason, any 5xx -- and re-raises them as this, which
+                # subclasses ICloudPyException directly and so is not caught by
+                # the API-response clause below. It only arises while signing
+                # in, so it always takes the auth backoff.
+                if not _handle_auth_transport_error(config, username, sync_state, e):
+                    break
+                continue
+            except exceptions.ICloudPyServiceNotActivatedException as e:
+                # A zone or service being unavailable says nothing about the
+                # sign-in whenever it surfaces, so it never earns the
+                # rate-limit backoff. Listed ahead of the broader catch
+                # below because it subclasses it.
+                if not _handle_sync_error(
+                    config,
+                    e,
+                    drive_sync_interval,
+                    photos_sync_interval,
+                ):
+                    break
+                continue
+            except (
+                exceptions.ICloudPyAPIResponseException,
+                requests.exceptions.RequestException,
+            ) as e:
+                # Any other failure raised after the sign-in succeeded is a
+                # service problem, not an auth problem -- and must not earn
+                # the backoff meant for "you are trying too often" either.
+                if authenticated:
+                    if not _handle_sync_error(
+                        config,
+                        e,
+                        drive_sync_interval,
+                        photos_sync_interval,
+                    ):
+                        break
+                    continue
+                # Apple refuses sign-in for reasons other than "2FA needed":
+                # 409 when it is throttling the account, 5xx when it is
+                # having a bad day, plus ordinary network faults. None of
+                # these are fatal, but letting them escape kills the process
+                # -- and with `restart: unless-stopped` that becomes a crash
+                # loop that re-authenticates every few seconds, which is the
+                # fastest possible way to deepen a throttle.
+                if not _handle_auth_transport_error(config, username, sync_state, e):
                     break
                 continue
 
