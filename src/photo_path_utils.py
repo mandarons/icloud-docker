@@ -29,9 +29,6 @@ LOGGER = get_logger()
 # not images, even though the parent asset's filename ends in .HEIC/.JPG.
 _LIVE_VIDEO_SIZES = frozenset({"live_video_original", "live_video_medium", "live_video_thumb"})
 
-# ``${photo.*}`` tokens for photos.file_format; unknown tokens are left literal.
-_TEMPLATE_TOKEN_RE = re.compile(r"\$\{([^}]+)\}")
-
 
 def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
     """Extract filename and extension from photo.
@@ -72,10 +69,31 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
     return name, extension
 
 
-# Module-level default filename format. ``sync_photos`` sets this once at
-# the start of a sync run via ``set_default_filename_format`` so the value
-# threads through ``generate_photo_path`` -> ``collect_download_task`` without
-# requiring a config argument on every downstream signature.
+# Module-level toggle for hiding untouched originals of edited photos via
+# the ``.original.bak`` suffix convention. ``sync_photos`` sets this once
+# per sync run from ``photos.preserve_originals_as_bak``.
+_PRESERVE_ORIGINALS_AS_BAK = False
+
+
+def set_preserve_originals_as_bak(value: bool) -> None:
+    """Set the module-level toggle for hiding untouched originals via .original.bak."""
+    global _PRESERVE_ORIGINALS_AS_BAK
+    _PRESERVE_ORIGINALS_AS_BAK = bool(value)
+
+
+def _photo_has_alt_version(photo) -> bool:
+    """Check whether the asset has an edited (``original_alt``) version on iCloud.
+
+    Soft check — exceptions reading ``photo.versions`` are treated as "no alt"
+    so a partial CloudKit record cannot break the filename pipeline.
+    """
+    try:
+        return "original_alt" in photo.versions
+    except Exception:
+        return False
+
+
+_TEMPLATE_TOKEN_RE = re.compile(r"\$\{([^}]+)\}")
 _DEFAULT_FILENAME_FORMAT = "metadata"
 
 
@@ -86,6 +104,9 @@ def set_default_filename_format(filename_format: str) -> None:
         _DEFAULT_FILENAME_FORMAT = filename_format
 
 
+# Module-level toggle for hiding untouched originals of edited photos via
+# the ``.original.bak`` suffix convention. ``sync_photos`` sets this once
+# per sync run from ``photos.preserve_originals_as_bak``.
 def get_default_filename_format() -> str:
     """Read the current module-level default filename format.
 
@@ -160,15 +181,19 @@ def generate_photo_filename_with_metadata(
 ) -> str:
     """Generate filename for a photo asset.
 
-    Two conventions supported (controlled by ``filename_format`` or the
-    module-level default set by ``set_default_filename_format``):
+    Two conventions (controlled by ``filename_format`` or module default):
+    - ``"metadata"`` (default): ``name__filesize__base64id.extension``
+    - ``"simple"``: ``name.extension``
 
-    - ``"metadata"`` (default): ``name__filesize__base64id.extension`` —
-      mandarons' historical format, encodes CloudKit asset id into the filename.
-    - ``"simple"``: ``name.extension`` — boredazfcuk/Apple convention. Lets
-      users migrate from boredazfcuk-format trees without re-downloading.
-      ``collect_download_task`` detects collisions and falls back to the
-      metadata-suffix path for the colliding photo so both files coexist.
+    When ``_PRESERVE_ORIGINALS_AS_BAK`` is on AND this is the ``original``
+    size AND the asset has an ``original_alt`` version on iCloud (edited),
+    the filename ends with ``.original.bak`` so photo browsers skip it but
+    the file remains filesystem-recoverable.
+
+    Works uniformly across both ``filename_format`` modes — the
+    ``.original.bak`` qualifier is appended to whatever the base filename
+    would have been (``name__filesize__base64id.ext`` in metadata mode or
+    ``name.ext`` in simple mode).
 
     Args:
         photo: Photo object from iCloudPy
@@ -177,7 +202,11 @@ def generate_photo_filename_with_metadata(
             use the module-level default.
 
     Returns:
-        Filename string in the chosen format.
+        Filename string in the chosen format, plus ``.original.bak`` suffix
+        when the bak-preservation toggle applies to this file. The bak suffix
+        is appended AFTER the base filename is composed, so it works the same
+        whether the base came from ``simple`` (``IMG_1234.HEIC``) or
+        ``metadata`` (``IMG_1234__original__<id>.HEIC``) mode.
     """
     forced = filename_format  # explicit value; None means a normal (non-fallback) call
     if filename_format is None:
@@ -194,18 +223,25 @@ def generate_photo_filename_with_metadata(
         # ${photo.variant} on an original) would otherwise yield a path pointing
         # at the directory. Fall back to filename_format instead.
         LOGGER.warning(
-            f"photos.file_format rendered an empty name for {file_size}; "
-            f"falling back to {filename_format} naming.",
+            f"photos.file_format rendered an empty name for {file_size}; falling back to {filename_format} naming.",
         )
 
     if filename_format == "simple":
-        return name if extension == "" else f"{name}.{extension}"
-
-    photo_id_encoded = base64.urlsafe_b64encode(photo.id.encode()).decode()
-    if extension == "":
-        return f"{'__'.join([name, file_size, photo_id_encoded])}"
+        result = name if extension == "" else f"{name}.{extension}"
     else:
-        return f"{'__'.join([name, file_size, photo_id_encoded])}.{extension}"
+        photo_id_encoded = base64.urlsafe_b64encode(photo.id.encode()).decode()
+        if extension == "":
+            result = f"{'__'.join([name, file_size, photo_id_encoded])}"
+        else:
+            result = f"{'__'.join([name, file_size, photo_id_encoded])}.{extension}"
+
+    # Apply .original.bak hide-suffix when applicable. Uniformly handled for
+    # both filename_format modes — simple+bak yields IMG_1234.HEIC.original.bak,
+    # metadata+bak yields IMG_1234__original__<id>.HEIC.original.bak.
+    if _PRESERVE_ORIGINALS_AS_BAK and file_size == "original" and _photo_has_alt_version(photo):
+        result = f"{result}.original.bak"
+
+    return result
 
 
 def resolve_folder_path(destination_path: str, folder_format: str | None, photo) -> str:
@@ -262,12 +298,6 @@ def normalize_file_path(file_path: str) -> str:
 
 def rename_legacy_file_if_exists(old_path: str, new_path: str) -> None:
     """Rename legacy file format to new format if it exists.
-
-    Reported because this is destructive and was previously silent: a
-    rename is not a deletion, so nothing in the log accounted for a file
-    that moved, and ``os.rename`` replaces an existing target without a
-    word. A file could leave its path, or be overwritten where it stood,
-    with no record either way.
 
     Args:
         old_path: Path to legacy file format
