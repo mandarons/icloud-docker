@@ -70,6 +70,9 @@ def collect_file_for_download(
     with files_lock:
         files.add(local_file)
 
+    # get_drive_flatten_packages already returns False for a None config.
+    flatten_packages = config_parser.get_drive_flatten_packages(config)
+
     # Check local existence FIRST to avoid unnecessary network requests.
     # is_package() makes an HTTP call for every file, which is very slow
     # when syncing thousands of already-up-to-date files.
@@ -95,6 +98,7 @@ def collect_file_for_download(
             "is_package": True,
             "files": files,
             "timeout": config_parser.get_drive_request_timeout(config),
+            "flatten_packages": flatten_packages,
         }
 
     # File/directory doesn't exist locally (or was an outdated regular file that needs
@@ -109,6 +113,7 @@ def collect_file_for_download(
         "is_package": item_is_package,
         "files": files,
         "timeout": timeout,
+        "flatten_packages": flatten_packages,
     }
 
 
@@ -133,6 +138,7 @@ def download_file_task(download_info: dict[str, Any]) -> bool:
             item=item,
             local_file=local_file,
             timeout=download_info.get("timeout", DEFAULT_REQUEST_TIMEOUT_SEC),
+            flatten_packages=download_info.get("flatten_packages", False),
         )
         if not downloaded_file:
             return False
@@ -153,7 +159,10 @@ def download_file_task(download_info: dict[str, Any]) -> bool:
         return False
 
 
-def execute_parallel_downloads(download_tasks: list[dict[str, Any]], max_threads: int) -> tuple[int, int]:
+def execute_parallel_downloads(
+    download_tasks: list[dict[str, Any]],
+    max_threads: int,
+) -> tuple[int, int]:
     """Execute multiple file downloads in parallel.
 
     Args:
@@ -166,14 +175,18 @@ def execute_parallel_downloads(download_tasks: list[dict[str, Any]], max_threads
     if not download_tasks:
         return 0, 0
 
-    LOGGER.info(f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...")
+    LOGGER.info(
+        f"Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...",
+    )
 
     successful_downloads = 0
     failed_downloads = 0
 
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         # Submit all download tasks
-        future_to_task = {executor.submit(download_file_task, task): task for task in download_tasks}
+        future_to_task = {
+            executor.submit(download_file_task, task): task for task in download_tasks
+        }
 
         # Process completed downloads
         for future in as_completed(future_to_task):
@@ -187,5 +200,7 @@ def execute_parallel_downloads(download_tasks: list[dict[str, Any]], max_threads
                 LOGGER.error(f"Download task failed with exception: {e!s}")
                 failed_downloads += 1
 
-    LOGGER.info(f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed")
+    LOGGER.info(
+        f"Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed",
+    )
     return successful_downloads, failed_downloads
