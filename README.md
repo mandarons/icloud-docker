@@ -174,6 +174,13 @@ photos:
   # enumeration_chunk_size: 1000 # Optional, default 1000. Photos buffered per streaming chunk. Lower = lower peak memory on huge libraries, slightly more per-chunk overhead.
   # Optional: refuse to sync if a marker file is missing in the destination.
   # require_mount_marker: false
+  filename_format: metadata # optional, default "metadata". "metadata" = name__filesize__base64id.ext (legacy). "simple" = plain name.ext (boredazfcuk/Apple-style; lets you migrate without re-downloading)
+  # file_format: optional single template applied to ALL versions (overrides filename_format). Tokens:
+  #   ${photo.filename} ${photo.ext} ${photo.id} ${photo.file_size} ${photo.year} ${photo.month} ${photo.day}
+  #   ${photo.variant} (empty for original/full, else version) and ${photo.variant_suffix} (separator+variant, only when present).
+  #   Example (keeps plain Apple/boredazfcuk names for originals, so existing files are not re-downloaded):
+  #   file_format: "${photo.filename}${photo.variant_suffix}.${photo.ext}"
+  # variant_separator: "_" # separator before the variant in ${photo.variant_suffix} (default "_")
   filters:
     # List of libraries to download. If omitted (default), photos from all libraries (own and shared) are downloaded. If included, photos only
     # from the listed libraries are downloaded.
