@@ -1,0 +1,1 @@
+ERROR    root:sync.py:449 Drive mount marker missing: /tmp/tmpo_p9yzas/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpo_p9yzas/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.

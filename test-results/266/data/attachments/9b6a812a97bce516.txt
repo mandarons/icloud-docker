@@ -1,0 +1,2 @@
+INFO     root:sync.py:1037 Listening on Telegram for 'auth' trigger or 6-digit code (timeout 600s).
+INFO     root:sync.py:1049 Re-auth completed in the web UI -- ending the Telegram wait.
