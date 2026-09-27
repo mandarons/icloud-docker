@@ -128,11 +128,25 @@ class TestNotifySendListenAware(unittest.TestCase):
     def test_listen_on_sends_prompt_to_telegram_standard_to_others(self, tg, discord, _push, _email):
         """Listen on: Telegram gets the reply prompt; other channels get the standard alert."""
         config = {"app": {"telegram": {"listen": True, "auth_keyword": "auth"}}}
-        notify.send(config=config, username="me@x.com")
+        notify.send(config=config, username="me@x.com", reply_prompt=True)
         tg_msg = tg.call_args.kwargs["message"]
         self.assertIn("Reply", tg_msg)
         self.assertNotIn("docker exec", tg_msg)
         self.assertIn("docker exec", discord.call_args.kwargs["message"])
+
+    @patch("src.notify.notify_email", return_value=None)
+    @patch("src.notify.notify_pushover", return_value=None)
+    @patch("src.notify.notify_discord", return_value=None)
+    @patch("src.notify.notify_telegram", return_value=None)
+    def test_listen_on_without_reply_prompt_sends_standard_to_telegram(self, tg, _discord, _push, _email):
+        """Listen on, but not from the 2FA handler (a rejected password, a
+        throttled sign-in): Telegram gets the standard alert, not a reply
+        prompt that cannot work there."""
+        config = {"app": {"telegram": {"listen": True, "auth_keyword": "auth"}}}
+        notify.send(config=config, username="me@x.com")
+        tg_msg = tg.call_args.kwargs["message"]
+        self.assertIn("docker exec", tg_msg)
+        self.assertNotIn("Reply", tg_msg)
 
     @patch("src.notify.notify_email", return_value=None)
     @patch("src.notify.notify_pushover", return_value=None)
@@ -151,6 +165,22 @@ class TestWaitForTelegramCode(unittest.TestCase):
     def setUp(self):
         self.config = {"app": {"telegram": {"bot_token": "t", "chat_id": "c"}}}
         self.api = MagicMock()
+        # Keep a stray re-auth sentinel on disk from ending these waits early.
+        reauth = patch("src.web_signals.consume_reauth_completed", return_value=False)
+        self.consume_reauth = reauth.start()
+        self.addCleanup(reauth.stop)
+
+    @patch("src.notify.poll_telegram_for_text")
+    @patch("src.sync.sleep")
+    def test_web_reauth_ends_the_wait(self, mock_sleep, poll):
+        """A re-auth completed in the web UI ends the wait on the next tick."""
+        self.consume_reauth.return_value = True
+        poll.side_effect = [(None, 0), (None, 0)]  # drain only
+        result = sync._wait_for_telegram_code(config=self.config, api=self.api, timeout_seconds=600)  # noqa: SLF001
+        self.assertTrue(result)
+        mock_sleep.assert_called_once_with(5)
+        self.assertEqual(poll.call_count, 2)
+        self.api.validate_2fa_code.assert_not_called()
 
     @patch("src.sync.sleep")
     def test_missing_credentials_falls_back_to_sleep(self, mock_sleep):
@@ -270,6 +300,7 @@ class TestHandle2faRequiredTelegramBranch(unittest.TestCase):
         result = sync._handle_2fa_required(config, "user", SyncState(), api=MagicMock())  # noqa: SLF001
         self.assertTrue(result)
         mock_send.assert_called_once()
+        self.assertIs(mock_send.call_args.kwargs["reply_prompt"], True)
         mock_wait.assert_called_once()
 
     @patch("src.sync._auth_retry_sleep")
@@ -281,6 +312,31 @@ class TestHandle2faRequiredTelegramBranch(unittest.TestCase):
         self.assertTrue(result)
         mock_sleep.assert_called_once_with(60)
         mock_send.assert_called_once()
+
+
+class TestReplyPromptOnlyFromThe2faHandler(unittest.TestCase):
+    """Only the 2FA handler may ask for the Telegram reply prompt.
+
+    A rejected password or a throttled sign-in never reaches 2FA, so a
+    "reply 'auth'" prompt there cannot work and would hide the real error."""
+
+    config = {"app": {"telegram": {"bot_token": "t", "chat_id": "c", "listen": True}}}
+
+    @patch("src.sync._auth_retry_sleep")
+    @patch("src.sync.notify.send", return_value=None)
+    def test_transport_error_sends_the_standard_alert(self, mock_send, _sleep):
+        sync._handle_auth_transport_error(  # noqa: SLF001
+            self.config, "user", SyncState(), sync.exceptions.ICloudPyFailedLoginException("rejected"),
+        )
+        mock_send.assert_called_once()
+        self.assertFalse(mock_send.call_args.kwargs.get("reply_prompt", False))
+
+    @patch("src.sync._auth_retry_sleep")
+    @patch("src.sync.notify.send", return_value=None)
+    def test_password_error_sends_the_standard_alert(self, mock_send, _sleep):
+        sync._handle_password_error(self.config, "user", SyncState())  # noqa: SLF001
+        mock_send.assert_called_once()
+        self.assertFalse(mock_send.call_args.kwargs.get("reply_prompt", False))
 
 
 if __name__ == "__main__":

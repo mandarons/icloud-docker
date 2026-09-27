@@ -446,6 +446,7 @@ def send(
     dry_run=False,
     region="global",
     dashboard_url=None,
+    reply_prompt=False,
 ):
     """
     Send 2FA notification to all configured notification services.
@@ -460,6 +461,12 @@ def send(
             (web UI ``/auth``) instead of the docker-exec command. Caller
             should resolve from ``app.web_ui.public_url`` (or the
             host:port fallback) when ``app.web_ui.enabled`` is true.
+        reply_prompt: Set only by the 2FA handler. With Telegram listen
+            enabled, Telegram then gets the actionable "reply 'auth'" prompt
+            instead of the standard alert. Other callers (a rejected
+            password, a throttled sign-in) must not set it: sign-in never
+            reaches 2FA there, so the reply flow cannot work and the prompt
+            would hide the real error from Telegram.
 
     Returns:
         Timestamp when notifications were sent, or None if all failed
@@ -474,7 +481,7 @@ def send(
     # Telegram instead of the generic "run docker exec" message; the other
     # channels still get the standard alert.
     telegram_message = message
-    if config_parser.get_telegram_listen_enabled(config=config):
+    if reply_prompt and config_parser.get_telegram_listen_enabled(config=config):
         telegram_message = _create_telegram_reply_prompt(config)
 
     # Send to all notification services

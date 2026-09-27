@@ -979,6 +979,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
         last_send=sync_state.last_send,
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
+        reply_prompt=True,
     )
     if config_parser.get_telegram_listen_enabled(config=config):
         _wait_for_telegram_code(config=config, api=api, timeout_seconds=sleep_for)
@@ -1000,9 +1001,12 @@ def _wait_for_telegram_code(config, api, timeout_seconds: int) -> bool:
          + ``trust_session``.
 
     Returns True once a code validates and trust succeeds within
-    ``timeout_seconds``; False on timeout. Best-effort throughout. The Telegram
+    ``timeout_seconds``, or once the web UI completes the re-auth first;
+    False on timeout. Best-effort throughout. The Telegram
     ``getUpdates`` offset is held in-memory for the duration of this wait.
     """
+    from src import web_signals
+
     poll_interval = 5
     bot_token = config_parser.get_telegram_bot_token(config=config)
     chat_id = config_parser.get_telegram_chat_id(config=config)
@@ -1016,6 +1020,9 @@ def _wait_for_telegram_code(config, api, timeout_seconds: int) -> bool:
 
     # Drain any messages already pending so a stale reply from a previous
     # session does not get acted on; start listening for genuinely new replies.
+    # Deliberate trade-off: a code typed while the loop is between wait
+    # windows is dropped too. Acting on an old code is worse than asking for
+    # a fresh one, and the window is the whole retry interval (600s default).
     _, offset = notify.poll_telegram_for_text(
         bot_token=bot_token, chat_id=chat_id, offset=0,
     )
@@ -1035,6 +1042,12 @@ def _wait_for_telegram_code(config, api, timeout_seconds: int) -> bool:
         chunk = min(poll_interval, timeout_seconds - elapsed)
         sleep(chunk)
         elapsed += chunk
+        # The web UI and Telegram can both complete a re-auth. If the web UI
+        # got there first, stop listening -- otherwise the loop sits out the
+        # rest of the window holding a session that is already fixed.
+        if web_signals.consume_reauth_completed():
+            LOGGER.info("Re-auth completed in the web UI -- ending the Telegram wait.")
+            return True
         text, offset = notify.poll_telegram_for_text(
             bot_token=bot_token,
             chat_id=chat_id,
