@@ -625,6 +625,43 @@ def get_drive_remove_obsolete(config: dict) -> bool:
     return drive_remove_obsolete
 
 
+def get_drive_flatten_packages(config: dict | None) -> bool:
+    """Return whether iCloud Drive package downloads should be kept on
+    disk as single binary files (zip / gzip bytes) instead of being
+    unpacked into bundle directories.
+
+    Default ``False`` — preserves the historical mandarons behaviour
+    of unpacking ``.band``-style bundles so the local representation
+    mirrors macOS's directory-bundle semantics.
+
+    Setting this to ``True`` is appropriate for backup-style deployments
+    (NAS, cold storage) where the operator prefers:
+
+    - **Single-file storage** — one mtime / size per package for
+      simpler dedup, restoration, and round-trip back to iCloud.
+    - **No internal name collisions** — two iWork files in the same
+      folder normally share bare-pathed internal entries like
+      ``Data/Document.iwa``; unpacking both into the same parent dir
+      raises ``FileExistsError``. Skipping unpack avoids this entirely.
+    - **Lower inode footprint** — large bundles often expand to
+      hundreds of small files on disk.
+
+    Args:
+        config: Configuration dictionary (None ok).
+
+    Returns:
+        bool — True if packages should be kept as single files.
+    """
+    if not config:
+        return False
+    config_path = ["drive", "flatten_packages"]
+    return bool(
+        get_config_value_or_default(
+            config=config, config_path=config_path, default=False,
+        ),
+    )
+
+
 def get_drive_require_mount_marker(config: dict) -> bool:
     """Return whether Drive sync requires the mount-failsafe marker file.
 
@@ -1315,6 +1352,42 @@ def get_telegram_chat_id(config: dict) -> str | None:
         Telegram chat ID if configured, None otherwise
     """
     return get_notification_config_value(config, "telegram", "chat_id")
+
+
+def get_telegram_listen_enabled(config: dict) -> bool:
+    """Whether to poll Telegram for inbound replies during a 2FA wait.
+
+    Opt-in (default False). When True, the 2FA wait gap is replaced with a
+    Telegram ``getUpdates`` poll: the user replies the auth keyword to have a
+    code pushed to their Apple devices, then replies the 6-digit code -- so
+    re-authentication can be completed from a phone, headless.
+
+    Reuses ``app.telegram.bot_token`` / ``chat_id`` from the existing outbound
+    config; ``chat_id`` filtering means only messages from the user's own chat
+    are honoured (no separate auth surface).
+    """
+    return bool(
+        get_config_value_or_none(
+            config=config,
+            config_path=["app", "telegram", "listen"],
+        ),
+    )
+
+
+def get_telegram_auth_keyword(config: dict) -> str:
+    """The reply keyword that triggers a 2FA push (default ``auth``).
+
+    Customisable via ``app.telegram.auth_keyword`` so users running multiple
+    containers in one chat can target a specific one (e.g. ``auth-photos``).
+    Matched case-insensitively; returns the lowercased word.
+    """
+    # Optional key with a sane default -- quiet lookup so the absent case does
+    # not log a "not found" warning on every 2FA wait.
+    value = get_config_value_or_none(
+        config=config,
+        config_path=["app", "telegram", "auth_keyword"],
+    )
+    return str(value).strip().lower() if value else "auth"
 
 
 def get_discord_webhook_url(config: dict) -> str | None:

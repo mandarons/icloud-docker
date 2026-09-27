@@ -18,7 +18,7 @@ Notifications are fire-and-forget — failures are logged and swallowed so they 
 
 | Function | Purpose |
 |----------|---------|
-| `send(config, username, last_send, region, dashboard_url)` | Send 2FA alert (rate-limited) |
+| `send(config, username, last_send, region, dashboard_url, reply_prompt)` | Send an auth alert (rate-limited); `reply_prompt=True` (2FA handler only) swaps Telegram's copy for the reply prompt when `app.telegram.listen` is on |
 | `send_sync_summary(config, summary)` | Send sync completion summary |
 | `send_trust_expiring(config, username, days_remaining, dashboard_url)` | Send trust cookie warning |
 
