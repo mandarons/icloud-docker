@@ -1,0 +1,1 @@
+[38;5;196m2026-09-27 21:58:37,442 :: ERROR :: root :: sync.py :: 449 :: Drive mount marker missing: /tmp/tmp_x45s1i0/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmp_x45s1i0/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

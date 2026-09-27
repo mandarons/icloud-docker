@@ -1,0 +1,18 @@
+[38;5;226m2026-09-27 21:58:40,984 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;226m2026-09-27 21:58:40,984 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;196m2026-09-27 21:58:40,984 :: ERROR :: root :: sync.py :: 1190 :: Password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;196m2026-09-27 21:58:40,984 :: ERROR :: root :: sync.py :: 1190 :: Password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;39m2026-09-27 21:58:40,984 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-27 21:58:40,984 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-27 21:58:40,984 :: INFO :: root :: sync.py :: 1222 :: Retrying login at Sun Sep 27 22:08:40 2026 ...[0m
+[38;5;39m2026-09-27 21:58:40,984 :: INFO :: root :: sync.py :: 1222 :: Retrying login at Sun Sep 27 22:08:40 2026 ...[0m
+[38;5;226m2026-09-27 21:58:40,984 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-27 21:58:40,984 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-09-27 21:58:40,985 :: ERROR :: root :: sync.py :: 1190 :: Password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;196m2026-09-27 21:58:40,985 :: ERROR :: root :: sync.py :: 1190 :: Password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;39m2026-09-27 21:58:40,985 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-27 21:58:40,985 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-09-27 21:58:40,985 :: INFO :: root :: sync.py :: 1222 :: Retrying login at Sun Sep 27 22:08:40 2026 ...[0m
+[38;5;39m2026-09-27 21:58:40,985 :: INFO :: root :: sync.py :: 1222 :: Retrying login at Sun Sep 27 22:08:40 2026 ...[0m
+[38;5;226m2026-09-27 21:58:40,986 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-09-27 21:58:40,986 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m

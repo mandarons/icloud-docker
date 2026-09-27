@@ -1,0 +1,5 @@
+DEBUG    icloudpy.base:base.py:236 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:243 Session file does not exist
+DEBUG    icloudpy.base:base.py:308 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:412 Authentication completed successfully
+DEBUG    root:drive_filtering.py:46 Skipping the unwanted file /home/runner/work/icloud-docker/icloud-docker/tests/data/test_config.yaml

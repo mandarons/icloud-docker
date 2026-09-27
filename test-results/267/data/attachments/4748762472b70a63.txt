@@ -1,0 +1,1 @@
+WARNING  root:drive_package_processing.py:201 Zip Slip blocked: refused to extract '/etc/poisoned' -> '/etc/poisoned' (outside safety boundary '/tmp/tmpjjhvvrrw/extract')
