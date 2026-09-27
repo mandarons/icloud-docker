@@ -2,13 +2,14 @@
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import copy
 import os
 import shutil
 import unittest
 from copy import deepcopy
 from io import StringIO
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from icloudpy import exceptions
 
@@ -181,6 +182,74 @@ class TestSync(unittest.TestCase):
                 sync.sync()
         self.assertTrue(len(captured.records) > 1)
         self.assertTrue(len([e for e in captured[1] if "2FA is required" in e]) > 0)
+
+    def _run_2fa_handler(self, sync_state, api):
+        """Invoke the private 2FA handler with this test's config/user."""
+        return sync._handle_2fa_required(self.config, data.REQUIRES_2FA_USER, sync_state, api)  # noqa: SLF001
+
+    @patch("src.sync.sleep")
+    @patch("src.sync.notify.send", return_value=None)
+    def test_handle_2fa_requests_push_once_per_episode(self, _mock_notify, _mock_sleep):
+        """A 2FA push is requested exactly once per re-auth episode."""
+        sync_state = sync.SyncState()
+        api = Mock()
+
+        with self.assertLogs() as captured:
+            self.assertTrue(self._run_2fa_handler(sync_state, api))
+        api.trigger_2fa_push_notification.assert_called_once()
+        self.assertTrue(sync_state.two_fa_triggered)
+        self.assertTrue(any("Requested a 2FA push notification" in e for e in captured[1]))
+
+        # Second retry within the same episode must NOT push again.
+        self.assertTrue(self._run_2fa_handler(sync_state, api))
+        api.trigger_2fa_push_notification.assert_called_once()
+
+    @patch("src.sync.sleep")
+    @patch("src.sync.notify.send", return_value=None)
+    def test_handle_2fa_push_failure_is_non_fatal(self, _mock_notify, _mock_sleep):
+        """A failing trigger is swallowed; the retry loop still continues."""
+        sync_state = sync.SyncState()
+        api = Mock()
+        api.trigger_2fa_push_notification.side_effect = RuntimeError("no trusted device")
+
+        with self.assertLogs() as captured:
+            self.assertTrue(self._run_2fa_handler(sync_state, api))
+        # Not latched: one transient failure must not forfeit the push for the
+        # whole re-auth episode -- the next cycle asks again.
+        self.assertFalse(sync_state.two_fa_triggered)
+        self.assertTrue(any("Failed to request 2FA push notification" in e for e in captured[1]))
+        api.trigger_2fa_push_notification.side_effect = None
+        api.trigger_2fa_push_notification.return_value = True
+        self.assertTrue(self._run_2fa_handler(sync_state, api))
+        self.assertEqual(api.trigger_2fa_push_notification.call_count, 2)
+        self.assertTrue(sync_state.two_fa_triggered)
+
+    @patch("src.sync._auth_retry_sleep")
+    @patch("src.sync.notify.send", return_value=None)
+    def test_a_rejected_push_request_is_retried_next_cycle(self, _mock_notify, _mock_sleep):
+        """trigger_2fa_push_notification reports most failures by returning
+        False, not by raising -- that must not latch either."""
+        sync_state = sync.SyncState()
+        api = Mock()
+        api.trigger_2fa_push_notification.return_value = False
+        with self.assertLogs() as captured:
+            self.assertTrue(self._run_2fa_handler(sync_state, api))
+        self.assertFalse(sync_state.two_fa_triggered)
+        self.assertTrue(any("did not accept the 2FA push request" in e for e in captured[1]))
+
+    @patch("src.sync.notify.send", return_value=None)
+    def test_exit_mode_still_requests_the_push(self, _mock_notify):
+        """retry_login_interval < 0 means an operator is about to step in by
+        hand -- exactly when a code on their devices is needed."""
+        config = copy.deepcopy(self.config)
+        config["app"]["credentials"]["retry_login_interval"] = -1
+        sync_state = sync.SyncState()
+        api = Mock()
+        api.trigger_2fa_push_notification.return_value = True
+        self.assertFalse(
+            sync._handle_2fa_required(config, data.REQUIRES_2FA_USER, sync_state, api),  # noqa: SLF001
+        )
+        api.trigger_2fa_push_notification.assert_called_once()
 
     @patch("src.sync.sleep")
     @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
@@ -607,7 +676,6 @@ class TestSync(unittest.TestCase):
         assert stats is not None
         self.assertFalse(stats.has_errors())
         self.assertEqual(len(stats.errors), 0)
-
 
     @patch("src.sync.notify.send_sync_summary", side_effect=RuntimeError("notify failure"))
     @patch("src.sync._perform_photos_sync")
@@ -1300,7 +1368,7 @@ class TestACompletedReauthEndsTheRetryWait(unittest.TestCase):
     def test_the_2fa_handler_reports_keep_going(self):
         """Returning True is what sends the loop round again rather than
         ending it -- the retry path must not look like a fatal error."""
-        from unittest.mock import patch
+        from unittest.mock import MagicMock, patch
 
         from src import sync
 
@@ -1309,7 +1377,7 @@ class TestACompletedReauthEndsTheRetryWait(unittest.TestCase):
             with patch.object(sync, "notify"):
                 self.assertTrue(
                     sync._handle_2fa_required(  # noqa: SLF001
-                        config, "a@icloud.com", sync.SyncState(),
+                        config, "a@icloud.com", sync.SyncState(), MagicMock(),
                     ),
                 )
 

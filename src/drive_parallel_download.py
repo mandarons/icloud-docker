@@ -173,7 +173,8 @@ def download_file_task(download_info: dict[str, Any]) -> bool:
 
 
 def execute_parallel_downloads(
-    download_tasks: list[dict[str, Any]], max_threads: int,
+    download_tasks: list[dict[str, Any]],
+    max_threads: int,
 ) -> tuple[int, int]:
     """Execute multiple file downloads in parallel.
 

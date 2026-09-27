@@ -3,6 +3,7 @@
 __author__ = "Mandar Patil <mandarons@pm.me>"
 import datetime
 import os
+import re
 from time import sleep
 
 import requests
@@ -311,6 +312,10 @@ class SyncState:
         self.enable_sync_drive = True
         self.enable_sync_photos = True
         self.last_send = None
+        # Whether a 2FA push has already been requested for the current
+        # re-auth episode. Reset to False on each successful authentication so
+        # a fresh episode triggers exactly one push (see _handle_2fa_required).
+        self.two_fa_triggered = False
 
 
 def _load_configuration():
@@ -902,7 +907,37 @@ def _auth_retry_sleep(total_seconds: int) -> None:
             return
 
 
-def _handle_2fa_required(config, username: str, sync_state: SyncState):
+def _request_2fa_push_once(api, sync_state: SyncState) -> None:
+    """Ask Apple to push a 2FA code to the trusted devices, once per episode.
+
+    Without this call the loop notified the user that re-auth was needed but
+    never requested a code, so nothing was ever sent.
+
+    The latch is set only when Apple accepts the request.
+    ``trigger_2fa_push_notification`` returns False rather than raising for
+    most failures, and latching regardless meant one transient error
+    forfeited the push for the whole episode -- the user told "2FA is
+    required" while no code ever arrived, which is the bug this exists to
+    fix. Retrying on the next cycle is bounded by ``retry_login_interval``
+    (600s by default), far below anything that trips Apple's limits.
+
+    Best-effort: a failure here never stops the retry loop.
+    """
+    if sync_state.two_fa_triggered:
+        return
+    try:
+        pushed = api.trigger_2fa_push_notification()
+    except Exception as e:  # noqa: BLE001
+        LOGGER.warning(f"Failed to request 2FA push notification; will retry next cycle: {e!s}")
+        return
+    if pushed:
+        LOGGER.info("Requested a 2FA push notification to your trusted devices.")
+        sync_state.two_fa_triggered = True
+    else:
+        LOGGER.warning("Apple did not accept the 2FA push request; will retry next cycle.")
+
+
+def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     Handle 2FA authentication requirement.
 
@@ -910,12 +945,23 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
         config: Configuration dictionary
         username: iCloud username
         sync_state: Current sync state
+        api: Live ``ICloudPyService`` still in its 2FA-required state. Used to
+            request a push notification to the user's trusted devices. When
+            ``app.telegram.listen`` is true, the retry sleep is replaced with a
+            Telegram poll: the user replies the auth keyword to have Apple push a
+            code, then replies the 6 digits -- completing re-authentication from a
+            phone, headless, with no web UI.
 
     Returns:
         bool: True if should continue (retry), False if should exit
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
     _publish_auth_blocked(True, reason="2fa_required")
+    # Ask Apple to push a code before anything else -- including the exit
+    # below: retry_login_interval < 0 is the mode where an operator is about
+    # to intervene by hand, and a code on their devices is what they need.
+    _request_2fa_push_once(api, sync_state)
+
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -924,15 +970,142 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState):
 
     _log_retry_time(sleep_for)
     server_region = config_parser.get_region(config=config)
+    # notify.send is throttled (once per 24h) and listen-aware: in listen mode the
+    # Telegram channel gets the actionable reply prompt, other channels the standard
+    # alert. Throttling here is what prevents a "reply auth" message every retry cycle.
     sync_state.last_send = notify.send(
         config=config,
         username=username,
         last_send=sync_state.last_send,
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
+        reply_prompt=True,
     )
-    _auth_retry_sleep(sleep_for)
+    if config_parser.get_telegram_listen_enabled(config=config):
+        _wait_for_telegram_code(config=config, api=api, timeout_seconds=sleep_for)
+    else:
+        _auth_retry_sleep(sleep_for)
     return True
+
+
+def _wait_for_telegram_code(config, api, timeout_seconds: int) -> bool:
+    """Drive 2FA over Telegram with a manual, user-initiated trigger.
+
+    The reply prompt itself is sent by ``notify.send`` (throttled); this function
+    drains any stale replies, then polls for the user's actions:
+      1. On the auth keyword -> ``api.trigger_2fa_push_notification()`` so Apple
+         actually pushes a code to the trusted devices. (The headless path
+         previously waited for a code it never requested -- this missing trigger
+         is the core bug this fixes.)
+      2. On a 6-digit reply (spaces/dashes tolerated) -> ``validate_2fa_code``
+         + ``trust_session``.
+
+    Returns True once a code validates and trust succeeds within
+    ``timeout_seconds``, or once the web UI completes the re-auth first;
+    False on timeout. Best-effort throughout. The Telegram
+    ``getUpdates`` offset is held in-memory for the duration of this wait.
+    """
+    from src import web_signals
+
+    poll_interval = 5
+    bot_token = config_parser.get_telegram_bot_token(config=config)
+    chat_id = config_parser.get_telegram_chat_id(config=config)
+    auth_keyword = config_parser.get_telegram_auth_keyword(config=config)
+    if not bot_token or not chat_id:
+        LOGGER.warning(
+            "Telegram listen enabled but bot_token/chat_id not configured; falling back to plain sleep.",
+        )
+        sleep(timeout_seconds)
+        return False
+
+    # Drain any messages already pending so a stale reply from a previous
+    # session does not get acted on; start listening for genuinely new replies.
+    # Deliberate trade-off: a code typed while the loop is between wait
+    # windows is dropped too. Acting on an old code is worse than asking for
+    # a fresh one, and the window is the whole retry interval (600s default).
+    _, offset = notify.poll_telegram_for_text(
+        bot_token=bot_token, chat_id=chat_id, offset=0,
+    )
+    while True:
+        _, drained = notify.poll_telegram_for_text(
+            bot_token=bot_token, chat_id=chat_id, offset=offset,
+        )
+        if drained == offset:
+            break
+        offset = drained
+
+    LOGGER.info(
+        f"Listening on Telegram for '{auth_keyword}' trigger or 6-digit code (timeout {timeout_seconds}s).",
+    )
+    elapsed = 0
+    while elapsed < timeout_seconds:
+        chunk = min(poll_interval, timeout_seconds - elapsed)
+        sleep(chunk)
+        elapsed += chunk
+        # The web UI and Telegram can both complete a re-auth. If the web UI
+        # got there first, stop listening -- otherwise the loop sits out the
+        # rest of the window holding a session that is already fixed.
+        if web_signals.consume_reauth_completed():
+            LOGGER.info("Re-auth completed in the web UI -- ending the Telegram wait.")
+            return True
+        text, offset = notify.poll_telegram_for_text(
+            bot_token=bot_token,
+            chat_id=chat_id,
+            offset=offset,
+        )
+        if not text:
+            continue
+        norm = text.strip().lower()
+        if norm == auth_keyword:
+            LOGGER.info("Telegram auth trigger received -- requesting 2FA push.")
+            try:
+                pushed = api.trigger_2fa_push_notification()
+            except Exception as e:  # noqa: BLE001
+                LOGGER.warning(f"trigger_2fa_push_notification raised: {e!s}")
+                pushed = False
+            notify.post_message_to_telegram(
+                bot_token,
+                chat_id,
+                (
+                    "✅ 2FA code sent to your Apple devices -- reply the 6-digit code here."
+                    if pushed
+                    else "⚠️ Couldn't request a code (no trusted device, or auth state off). Try again shortly."
+                ),
+            )
+            continue
+        code = norm.replace(" ", "").replace("-", "")
+        if re.fullmatch(r"\d{6}", code):
+            LOGGER.info("Received 6-digit code via Telegram -- validating.")
+            try:
+                accepted = api.validate_2fa_code(code)
+            except Exception as e:  # noqa: BLE001
+                LOGGER.warning(
+                    f"validate_2fa_code raised: {e!s} -- waiting for another code.",
+                )
+                continue
+            if not accepted:
+                notify.post_message_to_telegram(
+                    bot_token,
+                    chat_id,
+                    "❌ Apple rejected that code -- reply a fresh one.",
+                )
+                LOGGER.warning(
+                    "Apple rejected the Telegram-supplied code -- waiting for another.",
+                )
+                continue
+            try:
+                api.trust_session()
+            except Exception as e:  # noqa: BLE001
+                LOGGER.warning(f"trust_session raised (non-fatal): {e!s}")
+            notify.post_message_to_telegram(
+                bot_token,
+                chat_id,
+                "✅ Re-authenticated. iCloud sync resumed.",
+            )
+            LOGGER.info("Telegram-driven 2FA succeeded; resuming sync.")
+            return True
+    LOGGER.info("Telegram listen timeout reached with no usable code; retrying auth.")
+    return False
 
 
 def _handle_auth_transport_error(config, username: str, sync_state: SyncState, error):
@@ -1250,6 +1423,10 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     _maybe_refresh_trust(config, api)
                     _maybe_warn_trust_expiring(config, api, username)
 
+                    # Authenticated: clear the 2FA trigger latch so a future
+                    # re-auth episode requests a fresh push exactly once.
+                    sync_state.two_fa_triggered = False
+
                     # Create summary for this sync cycle
                     summary = SyncSummary()
 
@@ -1343,7 +1520,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         )
                 else:
                     _log_trust_revocation_hint(api)
-                    if not _handle_2fa_required(config, username, sync_state):
+                    if not _handle_2fa_required(config, username, sync_state, api):
                         break
                     continue
 
