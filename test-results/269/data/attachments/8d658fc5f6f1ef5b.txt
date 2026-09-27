@@ -1,0 +1,92 @@
+[38;21m2026-09-27 23:05:30,794 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,794 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,794 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,794 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,794 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-09-27 23:05:30,794 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-09-27 23:05:30,795 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: d29f1d43-d5c9-4d09-af9a-9677fb63ff55[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: d29f1d43-d5c9-4d09-af9a-9677fb63ff55[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: d29f1d43-d5c9-4d09-af9a-9677fb63ff55[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: d29f1d43-d5c9-4d09-af9a-9677fb63ff55[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 446 :: Installation registration completed[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 446 :: Installation registration completed[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-09-27 23:05:30,796 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 407 :: Sending first heartbeat[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 407 :: Sending first heartbeat[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: None[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: None[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 317 :: Heartbeat sent successfully[0m
+[38;21m2026-09-27 23:05:30,797 :: DEBUG :: root :: usage.py :: 317 :: Heartbeat sent successfully[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: usage.py :: 410 :: First heartbeat sent successfully[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: usage.py :: 410 :: First heartbeat sent successfully[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: usage.py :: 456 :: Heartbeat completed successfully[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: usage.py :: 456 :: Heartbeat completed successfully[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,798 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.002082[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.002082[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-09-27 23:05:30,799 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-09-27 23:05:30,800 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-09-27 23:05:30,801 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 1 day, 0:00:00.002486[0m
+[38;21m2026-09-27 23:05:30,801 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 1 day, 0:00:00.002486[0m
+[38;21m2026-09-27 23:05:30,801 :: DEBUG :: root :: usage.py :: 392 :: Sending heartbeat (different UTC day)[0m
+[38;21m2026-09-27 23:05:30,801 :: DEBUG :: root :: usage.py :: 392 :: Sending heartbeat (different UTC day)[0m
+[38;21m2026-09-27 23:05:30,801 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: None[0m
+[38;21m2026-09-27 23:05:30,801 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: None[0m
+[38;21m2026-09-27 23:05:30,801 :: DEBUG :: root :: usage.py :: 317 :: Heartbeat sent successfully[0m
+[38;21m2026-09-27 23:05:30,801 :: DEBUG :: root :: usage.py :: 317 :: Heartbeat sent successfully[0m
+[38;21m2026-09-27 23:05:30,802 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,802 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,802 :: DEBUG :: root :: usage.py :: 456 :: Heartbeat completed successfully[0m
+[38;21m2026-09-27 23:05:30,802 :: DEBUG :: root :: usage.py :: 456 :: Heartbeat completed successfully[0m
+[38;21m2026-09-27 23:05:30,802 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,802 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-27 23:05:30,802 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-27 23:05:30,802 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
