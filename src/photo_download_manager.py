@@ -17,6 +17,8 @@ from src.photo_path_utils import (
     _LIVE_VIDEO_SIZES,
     create_folder_path_if_needed,
     generate_photo_filename_with_metadata,
+    get_default_filename_format,
+    get_file_format,
     normalize_file_path,
     rename_legacy_file_if_exists,
 )
@@ -88,7 +90,9 @@ def generate_photo_path(photo, file_size: str, destination_path: str, folder_for
     filename_with_metadata = generate_photo_filename_with_metadata(photo, file_size)
 
     # Create folder path if needed
-    final_destination = create_folder_path_if_needed(destination_path, folder_format, photo)
+    final_destination = create_folder_path_if_needed(
+        destination_path, folder_format, photo,
+    )
 
     # Generate paths for legacy file format handling
     filename = photo.filename
@@ -105,9 +109,26 @@ def generate_photo_path(photo, file_size: str, destination_path: str, folder_for
     final_file_path = os.path.join(final_destination, filename_with_metadata)
     normalized_path = normalize_file_path(final_file_path)
 
+    # The path the still legitimately occupies under the active naming
+    # scheme. Every legacy rename below moves a file onto *this* variant's
+    # path, and os.rename replaces its target -- so a rename starting from
+    # the still destroys the still and whatever stood at the target. Without
+    # folder_format the destination and the photo's folder are the same
+    # directory, which makes the flat "legacy" paths below identical to the
+    # still's current one.
+    still_path = normalize_file_path(
+        os.path.join(
+            final_destination,
+            generate_photo_filename_with_metadata(photo, "original"),
+        ),
+    )
+    _moves_the_still = file_size in _LIVE_VIDEO_SIZES
+
     # Rename legacy files if they exist
-    rename_legacy_file_if_exists(file_path, normalized_path)
-    rename_legacy_file_if_exists(file_size_path, normalized_path)
+    if not (_moves_the_still and file_path == still_path):
+        rename_legacy_file_if_exists(file_path, normalized_path)
+    if not (_moves_the_still and file_size_path == still_path):
+        rename_legacy_file_if_exists(file_size_path, normalized_path)
 
     # Self-heal the earlier .HEIC mislabeling of Live Photo videos: an older
     # version wrote the paired video with the still's extension. Rename that
@@ -118,7 +139,31 @@ def generate_photo_path(photo, file_size: str, destination_path: str, folder_for
         legacy_mislabeled = normalize_file_path(
             os.path.join(final_destination, f"{root}.{extension}"),
         )
-        if legacy_mislabeled != normalized_path:
+        # Under a naming scheme that keeps the photo's own filename, ``root``
+        # is the still's stem, so the candidate above IS the still's correct
+        # path -- renaming it would move the still onto the video's path and,
+        # because os.rename replaces its target, destroy the video too. The
+        # mislabeled file this heals only exists under a scheme that encodes
+        # the variant in the name, where the two paths cannot coincide.
+        # Confirm the candidate really is the paired video before moving it.
+        # os.rename replaces its target, so an unverified rename destroys two
+        # files at once and logs nothing. CloudKit already reports how long
+        # the video should be, so this costs a stat and no extra I/O: a file
+        # of some other length is not the video, whatever it is named.
+        expected_size = (photo.versions.get(file_size) or {}).get("size")
+        try:
+            candidate_size = (
+                os.path.getsize(legacy_mislabeled)
+                if os.path.isfile(legacy_mislabeled)
+                else None
+            )
+        except OSError:  # pragma: no cover - raced away between the two calls
+            candidate_size = None
+        if (
+            legacy_mislabeled not in (normalized_path, still_path)
+            and expected_size is not None
+            and candidate_size == expected_size
+        ):
             rename_legacy_file_if_exists(legacy_mislabeled, normalized_path)
 
     # Handle existing file with different normalization
@@ -165,16 +210,74 @@ def collect_download_task(
     # Generate photo path
     photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)
 
-    # Thread-safe file set update
-    if files is not None:
-        with files_lock:
-            files.add(photo_path)
-
     # Check if photo already exists with correct size
     from src.photo_file_utils import check_photo_exists
 
     if check_photo_exists(photo, file_size, photo_path):
+        if files is not None:
+            with files_lock:
+                files.add(photo_path)
         return None
+
+    # Filename-collision fallback (``simple`` mode only): a plain
+    # ``IMG_1234.HEIC`` path may already be claimed by a DIFFERENT iCloud
+    # photo that happens to share the human filename. Two collision sources:
+    #
+    #   1. On-disk collision: ``check_photo_exists`` returned False but the
+    #      path is occupied -- size mismatch with a photo from a prior sync.
+    #   2. In-flight collision: an earlier call in this same
+    #      ``_collect_album_download_tasks`` pass already claimed this plain
+    #      path. Without this check the later parallel download silently
+    #      overwrites the earlier one and we lose data. ``collect_download_task``
+    #      runs sequentially during collection so a plain ``in files`` membership
+    #      test under ``files_lock`` is sufficient; we hold the lock only long
+    #      enough to read.
+    #
+    # In either case we route this photo to the metadata-suffix filename so
+    # both files coexist and both round-trip stably on future syncs. We use
+    # the ``get_default_filename_format()`` accessor (rather than importing
+    # the module-level constant) so ``set_default_filename_format`` updates
+    # are observed live on every call.
+    # Non-unique naming (simple mode, or a photos.file_format template that may
+    # omit a unique component) can collide; the metadata format cannot.
+    is_non_unique = get_default_filename_format() == "simple" or get_file_format() is not None
+    in_flight_collision = False
+    if is_non_unique and files is not None:
+        with files_lock:
+            in_flight_collision = photo_path in files
+    if is_non_unique and (os.path.isfile(photo_path) or in_flight_collision):
+        # Protect the file we are stepping around. This branch exists to
+        # "preserve both photos", but obsolete-file cleanup deletes anything
+        # absent from ``files`` -- so without this the run writes the suffix
+        # copy and then deletes the very file it just refused to overwrite.
+        # On a library with many repeated filenames that is not a rare edge
+        # case: it deletes a large share of the library every sync, and the
+        # next sync re-downloads it, because freeing the plain path changes
+        # the collision outcome. Only an on-disk collision needs this; an
+        # in-flight one means this run already claimed the path.
+        if files is not None and os.path.isfile(photo_path):
+            with files_lock:
+                files.add(photo_path)
+        suffix_folder = create_folder_path_if_needed(
+            destination_path, folder_format, photo,
+        )
+        suffix_basename = generate_photo_filename_with_metadata(
+            photo, file_size, "metadata",
+        )
+        photo_path = normalize_file_path(os.path.join(suffix_folder, suffix_basename))
+        LOGGER.info(
+            f"Filename collision for {photo.filename} (id={photo.id}); "
+            f"using suffix path {photo_path} to preserve both photos.",
+        )
+        if check_photo_exists(photo, file_size, photo_path):
+            if files is not None:
+                with files_lock:
+                    files.add(photo_path)
+            return None
+
+    if files is not None:
+        with files_lock:
+            files.add(photo_path)
 
     # Check for existing hardlink source
     hardlink_source = None
@@ -209,7 +312,9 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
                 return True
             else:
                 # Fallback to download if hard link creation fails
-                LOGGER.warning(f"Hard link creation failed, downloading {task_info.photo_path} instead")
+                LOGGER.warning(
+                    f"Hard link creation failed, downloading {task_info.photo_path} instead",
+                )
 
         # Download the photo
         result = download_photo_from_server(
@@ -234,7 +339,9 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
         return False
 
 
-def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -> tuple[int, int]:
+def execute_parallel_downloads(
+    download_tasks: list[DownloadTaskInfo], config,
+) -> tuple[int, int]:
     """Execute download tasks in parallel using thread pool.
 
     Args:
@@ -274,7 +381,10 @@ def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -
 
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         # Submit all download tasks
-        future_to_task = {executor.submit(execute_download_task, task): task for task in download_tasks}
+        future_to_task = {
+            executor.submit(execute_download_task, task): task
+            for task in download_tasks
+        }
 
         # Process completed downloads
         for future in as_completed(future_to_task):
@@ -288,5 +398,7 @@ def execute_parallel_downloads(download_tasks: list[DownloadTaskInfo], config) -
                 LOGGER.error(f"Unexpected error during photo download: {e!s}")
                 failed_downloads += 1
 
-    LOGGER.info(f"Photo processing complete: {successful_downloads} successful, {failed_downloads} failed")
+    LOGGER.info(
+        f"Photo processing complete: {successful_downloads} successful, {failed_downloads} failed",
+    )
     return successful_downloads, failed_downloads
