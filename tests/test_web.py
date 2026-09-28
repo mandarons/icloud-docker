@@ -1441,13 +1441,15 @@ class TestPerLibraryDashboardRows(unittest.TestCase):
     the same libraries, which read as unrelated and wrapped badly. One row
     per library, named once."""
 
-    def _rows(self, states, destinations):
+    def _rows(self, states, destinations, configured=None):
         from unittest.mock import patch
 
         from src import web
 
+        if configured is None:
+            configured = list(destinations)
         with patch.object(web.web_signals, "get_library_states", return_value=states):
-            return web._build_libraries(destinations)  # noqa: SLF001
+            return web._build_libraries(configured, destinations)  # noqa: SLF001
 
     def test_a_row_carries_both_destination_and_state(self):
         rows = self._rows(
@@ -1463,12 +1465,57 @@ class TestPerLibraryDashboardRows(unittest.TestCase):
         rows = self._rows({}, {"Zeta": "z", "Alpha": "a"})
         self.assertEqual([r["name"] for r in rows], ["Zeta", "Alpha"])
 
-    def test_an_unmapped_library_is_still_listed(self):
-        """It syncs into the default destination, so it must stay visible."""
-        rows = self._rows({"Surprise": {"state": "failed", "error": "ZONE_NOT_FOUND"}}, {})
-        self.assertEqual(rows[0]["name"], "Surprise")
+    def test_an_unmapped_library_that_syncs_is_listed(self):
+        """It syncs into the default destination, so it must stay visible --
+        including when it starts failing after having worked."""
+        rows = self._rows(
+            {"Family": {"state": "failed", "error": "boom", "completed_at": 1000.0}},
+            {},
+        )
+        self.assertEqual(rows[0]["name"], "Family")
         self.assertIsNone(rows[0]["subdir"])
-        self.assertEqual(rows[0]["error"], "ZONE_NOT_FOUND")
+        self.assertEqual(rows[0]["error"], "boom")
+
+    def test_an_unmapped_library_is_listed_while_it_syncs(self):
+        rows = self._rows({"Family": {"state": "syncing"}}, {})
+        self.assertEqual([r["name"] for r in rows], ["Family"])
+
+    def test_a_library_that_has_never_synced_is_left_out(self):
+        """Some accounts carry libraries that never serve anything. Nothing
+        can be done with them, so they are not shown as a standing failure."""
+        rows = self._rows(
+            {
+                "Family": {"state": "ok", "completed_at": 1000.0},
+                "Other": {"state": "failed", "error": "boom"},
+            },
+            {},
+        )
+        self.assertEqual([r["name"] for r in rows], ["Family"])
+
+    def test_a_configured_library_is_listed_even_if_it_never_synced(self):
+        """Naming a library in config is asking to see it."""
+        rows = self._rows({"Other": {"state": "failed", "error": "boom"}}, {}, configured=["Other"])
+        self.assertEqual(rows[0]["name"], "Other")
+        self.assertEqual(rows[0]["error"], "boom")
+
+    def test_configured_libraries_come_from_the_filter_and_destinations(self):
+        from src import web
+
+        config = {
+            "photos": {
+                "filters": {"libraries": ["Beta", "Alpha"]},
+                "library_destinations": {"Alpha": "a", "Gamma": "g"},
+            },
+        }
+        self.assertEqual(
+            web._get_configured_libraries(config=config),  # noqa: SLF001
+            ["Beta", "Alpha", "Gamma"],
+        )
+
+    def test_no_configured_libraries(self):
+        from src import web
+
+        self.assertEqual(web._get_configured_libraries(config={"photos": {}}), [])  # noqa: SLF001
 
     def test_a_failed_library_still_reports_its_last_success(self):
         rows = self._rows(
