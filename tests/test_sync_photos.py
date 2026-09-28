@@ -3326,7 +3326,9 @@ class TestDownloadIsVerifiedBeforeItCountsAsThePhoto(unittest.TestCase):
             self._fail_after = fail_after
             size = len(body) if declared is None else declared
             self.versions = {"original": {"type": "jpeg", "size": size}}
-            self.added_date = __import__("datetime").datetime(2020, 1, 1, tzinfo=timezone.utc)
+            import datetime
+
+            self.added_date = datetime.datetime(2020, 1, 1, tzinfo=timezone.utc)
 
         def download(self, file_size, **kwargs):
             import io
