@@ -785,7 +785,7 @@ class TestSyncPhotos(unittest.TestCase):
                 import datetime
 
                 self.filename = "test_photo.jpg"
-                self.versions = {"original": {"type": "jpeg", "size": 1000}}  # Add size field
+                self.versions = {"original": {"type": "jpeg", "size": len(b"fake photo data")}}
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 
@@ -1451,7 +1451,7 @@ class TestSyncPhotos(unittest.TestCase):
                 import datetime
 
                 self.filename = "test_photo.jpg"
-                self.versions = {"original": {"type": "jpeg", "size": 1000}}
+                self.versions = {"original": {"type": "jpeg", "size": len(b"fake photo data")}}
                 self.added_date = datetime.datetime(2021, 1, 1, 12, 0, 0)
                 self.id = "test_photo_id"
 
@@ -3307,3 +3307,91 @@ class TestPhotoDownloadTimeout(unittest.TestCase):
             except RuntimeError:
                 pass
         self.assertEqual([t.timeout for t in tasks], [45, 45])
+
+
+class TestDownloadIsVerifiedBeforeItCountsAsThePhoto(unittest.TestCase):
+    """A download used to be written straight to its final path and trusted.
+
+    A transfer that failed partway left its partial file where the photo
+    belongs, and anything reading the library (an Immich external library, a
+    backup) took it for the photo. One that finished with the wrong body was
+    recorded as downloaded. And a failed re-download destroyed the good copy
+    that was there before, because the file was truncated before the new one
+    existed.
+    """
+
+    class _Photo:
+        def __init__(self, body, declared=None, fail_after=None):
+            self._body = body
+            self._fail_after = fail_after
+            size = len(body) if declared is None else declared
+            self.versions = {"original": {"type": "jpeg", "size": size}}
+            self.added_date = __import__("datetime").datetime(2020, 1, 1, tzinfo=timezone.utc)
+
+        def download(self, file_size, **kwargs):
+            import io
+
+            body, fail_after = self._body, self._fail_after
+
+            class _Raw(io.BytesIO):
+                def read(self, n=-1):
+                    if fail_after is None:
+                        return super().read(n)
+                    if self.tell() >= fail_after:
+                        msg = "peer went away mid-transfer"
+                        raise ConnectionResetError(msg)
+                    room = fail_after - self.tell()
+                    return super().read(room if n is None or n < 0 else min(n, room))
+
+            class _Resp:
+                raw = _Raw(body)
+
+            return _Resp()
+
+    def _download(self, photo, dest):
+        from src.photo_file_utils import download_photo_from_server
+
+        return download_photo_from_server(photo, "original", dest)
+
+    def test_a_complete_download_lands_at_the_photos_path(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "IMG_0001.JPG")
+            self.assertTrue(self._download(self._Photo(b"real photo bytes"), dest))
+            self.assertEqual(Path(dest).read_bytes(), b"real photo bytes")
+            self.assertFalse(os.path.exists(dest + ".part"))
+
+    def test_a_short_download_fails_and_leaves_nothing_behind(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "IMG_0002.JPG")
+            self.assertFalse(self._download(self._Photo(b"short", declared=5000), dest))
+            self.assertFalse(os.path.exists(dest), "a short body must not be recorded as the photo")
+            self.assertFalse(os.path.exists(dest + ".part"))
+
+    def test_a_transfer_cut_off_partway_leaves_nothing_at_the_photos_path(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "IMG_0003.MOV")
+            photo = self._Photo(b"x" * 4096, fail_after=1024)
+            self.assertFalse(self._download(photo, dest))
+            self.assertFalse(os.path.exists(dest), "the partial file was left where the photo belongs")
+            self.assertFalse(os.path.exists(dest + ".part"))
+
+    def test_a_failed_redownload_keeps_the_copy_that_was_there(self):
+        with tempfile.TemporaryDirectory() as d:
+            dest = os.path.join(d, "IMG_0004.JPG")
+            Path(dest).write_bytes(b"the good copy from last sync")
+            self.assertFalse(self._download(self._Photo(b"short", declared=5000), dest))
+            self.assertEqual(Path(dest).read_bytes(), b"the good copy from last sync")
+
+    def test_a_version_with_no_declared_size_is_not_second_guessed(self):
+        from src.photo_file_utils import _declared_size
+
+        class NoSize:
+            versions = {"original": {"type": "jpeg"}}
+
+        self.assertIsNone(_declared_size(NoSize(), "original"))
+        self.assertIsNone(_declared_size(object(), "original"))
+
+        class Garbage:
+            versions = {"original": {"size": "not-a-number"}}
+
+        self.assertIsNone(_declared_size(Garbage(), "original"))

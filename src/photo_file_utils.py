@@ -6,6 +6,7 @@ downloading, hardlink creation, and file existence checking.
 
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
+import contextlib
 import json
 import os
 import shutil
@@ -349,11 +350,35 @@ def download_photo_from_server(
     attempt = 0
     max_attempts = max_retries + 1  # Initial attempt + retries
 
+    # Download beside the target and move it into place only once it is
+    # complete. Writing straight to destination_path left a failed transfer's
+    # partial file where the real photo belongs, where anything reading the
+    # library (an Immich external library, a backup) takes it for the photo,
+    # and it also destroyed the previous good copy before the new one existed.
+    # A partial stranded by a killed process is untracked, so obsolete-file
+    # cleanup removes it.
+    partial = f"{destination_path}.part"
+
     while attempt < max_attempts:  # noqa: PERF203
         try:
             download = photo.download(file_size, timeout=timeout)
-            with open(destination_path, "wb") as file_out:
+            with open(partial, "wb") as file_out:
                 shutil.copyfileobj(download.raw, file_out)
+
+            # iCloud declares every version's size, and photo_exists already
+            # treats a mismatch as "not this file". Check it here too, so a
+            # body that is short or is not the photo at all (an error page)
+            # fails now instead of being recorded as downloaded.
+            expected = _declared_size(photo, file_size)
+            written = os.path.getsize(partial)
+            if expected is not None and written != expected:
+                _discard(partial)
+                LOGGER.error(
+                    f"Incomplete download of {destination_path}: got {written} of {expected} bytes. "
+                    "Will retry on the next sync.",
+                )
+                return False
+            os.replace(partial, destination_path)
 
             # Set file modification time to photo's added date.
             # iCloudPy returns added_date as an aware UTC datetime; replace() is a
@@ -365,6 +390,7 @@ def download_photo_from_server(
             return True
 
         except Exception as e:  # noqa: PERF203
+            _discard(partial)
             # Enhanced error logging with file path context
             # This catches all exceptions including iCloudPy errors like ObjectNotFoundException
             error_msg = str(e)
@@ -399,6 +425,20 @@ def download_photo_from_server(
 
     # This line should never be reached due to the logic above, but is kept as defensive programming
     return False  # pragma: no cover
+
+
+def _declared_size(photo, file_size: str) -> int | None:
+    """The size iCloud declares for this version, or None if it does not say."""
+    try:
+        return int(photo.versions[file_size]["size"])
+    except (AttributeError, KeyError, TypeError, ValueError):
+        return None
+
+
+def _discard(path: str) -> None:
+    """Remove a partial download if one was written."""
+    with contextlib.suppress(FileNotFoundError):
+        os.remove(path)
 
 
 def rename_legacy_file_if_exists(old_path: str, new_path: str) -> None:
