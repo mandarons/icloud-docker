@@ -103,8 +103,13 @@
     .btn-primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
     .btn-small { font-size: 13px; padding: 7px 12px; min-height: 32px; }
 
-    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
-    @media (max-width: 720px) { .grid { grid-template-columns: 1fr; } }
+    /* minmax(0, 1fr), not 1fr: a bare 1fr is minmax(auto, 1fr), and that auto
+       floor is the item's min-content width. Library names are
+       white-space: nowrap, so one long name widens the track past the
+       viewport, the page scrolls sideways on a phone, and the ellipsis on
+       .lib-name never fires. A 0 floor lets the ellipsis do its job. */
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-bottom: 28px; }
+    @media (max-width: 720px) { .grid { grid-template-columns: minmax(0, 1fr); } }
 
     /* Mobile breakpoint — narrower than the existing 720px grid trigger
        because the status row + per-card actions need rewrapping before
@@ -182,6 +187,19 @@
     }
     .lib-row { display: flex; align-items: center; gap: 8px; font-size: 13px; padding: 3px 0; }
     .lib-row .arrow { color: var(--text-tertiary); }
+    .lib-entry { padding: 6px 0; }
+    .lib-entry + .lib-entry { border-top: 1px solid var(--divider); }
+    .lib-row .lib-name {
+      min-width: 0; flex: 1;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lib-dest {
+      color: var(--text-tertiary); font-size: 12px; padding-left: 14px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .lib-row .lib-state { color: var(--text-tertiary); white-space: nowrap; margin-left: auto; }
+    .lib-row .lib-state.syncing { color: var(--accent); }
+    .lib-row .lib-state.failed { color: var(--warn, #b25000); }
 
     .logs-card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
     .logs-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }

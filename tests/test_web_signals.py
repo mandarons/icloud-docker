@@ -254,6 +254,69 @@ class TestFormatRelativeTime(unittest.TestCase):
         self.assertIn("min ago", result)
 
 
+class TestPerLibrarySyncState(unittest.TestCase):
+    """A photo library can take an hour, and the per-service record is only
+    written once the whole pass completes -- so one library failing made
+    every other library's progress invisible, and nothing anywhere said
+    which library was running right now."""
+
+    def setUp(self):
+        from src import web_signals
+
+        self.ws = web_signals
+        self.tmp = tempfile.mkdtemp()
+        self._patcher = patch.object(web_signals, "_config_dir", return_value=self.tmp)
+        self._patcher.start()
+        self.addCleanup(self._patcher.stop)
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_started_marks_the_library_syncing(self):
+        self.ws.record_library_started("PrimarySync")
+        state = self.ws.get_library_states()
+        self.assertEqual(state["PrimarySync"]["state"], "syncing")
+        self.assertIn("started_at", state["PrimarySync"])
+
+    def test_success_records_a_completion_time(self):
+        self.ws.record_library_started("PrimarySync")
+        self.ws.record_library_finished("PrimarySync", ok=True, downloaded=5, skipped=2)
+        entry = self.ws.get_library_states()["PrimarySync"]
+        self.assertEqual(entry["state"], "ok")
+        self.assertEqual((entry["downloaded"], entry["skipped"]), (5, 2))
+        self.assertIn("completed_at", entry)
+
+    def test_failure_keeps_the_last_successful_time(self):
+        """So the dashboard can say 'failing now, last worked X ago'."""
+        self.ws.record_library_started("PrimarySync")
+        self.ws.record_library_finished("PrimarySync", ok=True)
+        was = self.ws.get_library_states()["PrimarySync"]["completed_at"]
+
+        self.ws.record_library_started("PrimarySync")
+        self.ws.record_library_finished("PrimarySync", ok=False, error="ZONE_NOT_FOUND")
+        entry = self.ws.get_library_states()["PrimarySync"]
+        self.assertEqual(entry["state"], "failed")
+        self.assertEqual(entry["error"], "ZONE_NOT_FOUND")
+        self.assertEqual(entry["completed_at"], was)
+
+    def test_a_restart_does_not_leave_a_library_syncing_forever(self):
+        """The state file outlives the container."""
+        self.ws.record_library_started("PrimarySync")
+        self.ws.clear_stale_library_states()
+        self.assertEqual(self.ws.get_library_states()["PrimarySync"]["state"], "interrupted")
+
+    def test_clearing_is_a_no_op_when_nothing_is_in_flight(self):
+        self.ws.record_library_started("PrimarySync")
+        self.ws.record_library_finished("PrimarySync", ok=True)
+        self.ws.clear_stale_library_states()
+        self.assertEqual(self.ws.get_library_states()["PrimarySync"]["state"], "ok")
+
+    def test_no_state_recorded_yet(self):
+        self.assertEqual(self.ws.get_library_states(), {})
+
+
 if __name__ == "__main__":
     unittest.main()
 

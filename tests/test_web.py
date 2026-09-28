@@ -1434,3 +1434,61 @@ class TestSyncPublishesAuthState(unittest.TestCase):
             side_effect=OSError("read-only"),
         ):
             sync._publish_auth_blocked(False)  # noqa: SLF001
+
+
+class TestPerLibraryDashboardRows(unittest.TestCase):
+    """Destinations and sync state used to render as two separate lists of
+    the same libraries, which read as unrelated and wrapped badly. One row
+    per library, named once."""
+
+    def _rows(self, states, destinations):
+        from unittest.mock import patch
+
+        from src import web
+
+        with patch.object(web.web_signals, "get_library_states", return_value=states):
+            return web._build_libraries(destinations)  # noqa: SLF001
+
+    def test_a_row_carries_both_destination_and_state(self):
+        rows = self._rows(
+            {"PrimarySync": {"state": "syncing"}},
+            {"PrimarySync": "Personal"},
+        )
+        self.assertEqual(rows[0]["name"], "PrimarySync")
+        self.assertEqual(rows[0]["subdir"], "Personal")
+        self.assertEqual(rows[0]["state"], "syncing")
+
+    def test_configured_order_is_preserved(self):
+        """Config order, not alphabetical -- it is how the user reads it."""
+        rows = self._rows({}, {"Zeta": "z", "Alpha": "a"})
+        self.assertEqual([r["name"] for r in rows], ["Zeta", "Alpha"])
+
+    def test_an_unmapped_library_is_still_listed(self):
+        """It syncs into the default destination, so it must stay visible."""
+        rows = self._rows({"Surprise": {"state": "failed", "error": "ZONE_NOT_FOUND"}}, {})
+        self.assertEqual(rows[0]["name"], "Surprise")
+        self.assertIsNone(rows[0]["subdir"])
+        self.assertEqual(rows[0]["error"], "ZONE_NOT_FOUND")
+
+    def test_a_failed_library_still_reports_its_last_success(self):
+        rows = self._rows(
+            {"PrimarySync": {"state": "failed", "error": "boom", "completed_at": 1000.0}},
+            {"PrimarySync": "Personal"},
+        )
+        self.assertIsNotNone(rows[0]["completed_relative"])
+
+    def test_nothing_configured_and_nothing_recorded(self):
+        self.assertEqual(self._rows({}, {}), [])
+
+    def test_drive_never_gets_library_rows(self):
+        """Drive has no libraries; the section must not appear on its card."""
+        from unittest.mock import patch
+
+        from src import read_config, web
+
+        config = read_config(config_path=tests.CONFIG_PATH)
+        with patch.object(web.web_signals, "get_library_states", return_value={"X": {}}):
+            payload = web._build_status(config=config)  # noqa: SLF001
+        for service in payload["services"]:
+            if service["name"] == "Drive":
+                self.assertEqual(service["libraries"], [])

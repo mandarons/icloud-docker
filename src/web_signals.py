@@ -300,3 +300,83 @@ def format_relative_time(epoch_seconds: float, *, now: float | None = None) -> s
     if delta < 86400:
         return f"{int(delta // 3600)} h ago"
     return f"{int(delta // 86400)} d ago"
+
+
+_LIBRARY_STATE_KEY = "_libraries"
+
+
+def record_library_started(library: str) -> None:
+    """Mark ``library`` as syncing right now.
+
+    A photo library can take an hour, and until it finishes there was
+    nothing anywhere saying which one was being worked on -- the
+    per-service record is only written once the whole pass completes, so
+    a library that never got its turn was indistinguishable from one
+    that had nothing to do.
+    """
+    state = _load_state()
+    libraries = state.get(_LIBRARY_STATE_KEY, {})
+    entry = libraries.get(library, {})
+    entry["state"] = "syncing"
+    entry["started_at"] = time.time()
+    entry.pop("error", None)
+    libraries[library] = entry
+    state[_LIBRARY_STATE_KEY] = libraries
+    _save_state(state)
+
+
+def record_library_finished(
+    library: str,
+    *,
+    ok: bool,
+    error: str | None = None,
+    downloaded: int | None = None,
+    skipped: int | None = None,
+) -> None:
+    """Record how ``library`` ended.
+
+    ``ok=False`` keeps the previous ``completed_at`` untouched, so the
+    dashboard can still show when the library last succeeded alongside
+    the fact that it is failing now.
+    """
+    state = _load_state()
+    libraries = state.get(_LIBRARY_STATE_KEY, {})
+    entry = libraries.get(library, {})
+    entry["state"] = "ok" if ok else "failed"
+    entry["finished_at"] = time.time()
+    if ok:
+        entry["completed_at"] = entry["finished_at"]
+        entry.pop("error", None)
+    else:
+        entry["error"] = error
+    if downloaded is not None:
+        entry["downloaded"] = downloaded
+    if skipped is not None:
+        entry["skipped"] = skipped
+    libraries[library] = entry
+    state[_LIBRARY_STATE_KEY] = libraries
+    _save_state(state)
+
+
+def get_library_states() -> dict[str, Any]:
+    """Return per-library sync state. Empty dict if never recorded."""
+    return _load_state().get(_LIBRARY_STATE_KEY, {})
+
+
+def clear_stale_library_states() -> None:
+    """Demote any library left mid-sync by a previous process.
+
+    The state file outlives the container, so a restart during a library
+    would otherwise leave it reading "syncing" forever. Called once at
+    sync-loop startup, when nothing can legitimately be in flight.
+    """
+    state = _load_state()
+    libraries = state.get(_LIBRARY_STATE_KEY, {})
+    changed = False
+    for entry in libraries.values():
+        if entry.get("state") == "syncing":
+            entry["state"] = "interrupted"
+            changed = True
+    if changed:
+        state[_LIBRARY_STATE_KEY] = libraries
+        _save_state(state)

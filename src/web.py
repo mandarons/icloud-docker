@@ -267,6 +267,7 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
         "marker_present": os.path.isfile(marker_path),
         "marker_path": marker_path,
         "library_destinations": library_destinations,
+        "libraries": _build_libraries(library_destinations) if service == "photos" else [],
         "stats": stats,
         "force_sync_pending": service in web_signals.pending_force_syncs(),
     }
@@ -375,6 +376,39 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         "trust_expires_at": trust_expires_at,
         "trust_days_remaining": trust_days_remaining,
     }
+
+
+def _build_libraries(library_destinations: dict[str, str]) -> list[dict[str, Any]]:
+    """One row per photo library: where it goes and how it last went.
+
+    Destinations and sync state were rendered as two separate lists of the
+    same libraries, which read as unrelated and pushed a long zone name into
+    a two-column row that wrapped badly. Merging them means a library is
+    named once.
+
+    Configured libraries come first and in config order; anything Apple
+    exposes that has no mapping is appended, so a library syncing into the
+    default destination is still visible.
+    """
+    states = web_signals.get_library_states()
+    rows = []
+    for name in list(library_destinations) + [
+        n for n in sorted(states) if n not in library_destinations
+    ]:
+        entry = states.get(name, {})
+        completed_at = entry.get("completed_at")
+        rows.append(
+            {
+                "name": name,
+                "subdir": library_destinations.get(name),
+                "state": entry.get("state"),
+                "error": entry.get("error"),
+                "completed_relative": (
+                    web_signals.format_relative_time(completed_at) if completed_at else None
+                ),
+            },
+        )
+    return rows
 
 
 def _detect_auth_state(username: str | None) -> str:

@@ -3034,6 +3034,53 @@ class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
         self.assertTrue(any("Personal" in c for c in cleaned), "mapped library still cleaned")
         self.assertNotIn(tmp, cleaned, "the shared root must never be cleaned per-library")
 
+    def test_each_library_reports_its_own_start_and_outcome(self):
+        """One pass-wide timestamp cannot express 'this library is fine, that
+        one is failing' -- which is how a broken library stayed invisible."""
+        from unittest.mock import call, patch
+
+        from icloudpy import exceptions
+
+        from src import sync_photos
+
+        def fake(photos, library, *a, **k):
+            if library.startswith("BrokenZone"):
+                msg = "ZONE_NOT_FOUND"
+                raise exceptions.ICloudPyServiceNotActivatedException(msg)
+            return (7, 1)
+
+        libs = ["PrimarySync", "BrokenZone-1"]
+        with (
+            patch.object(sync_photos, "_sync_all_photos_in_library", side_effect=fake),
+            patch.object(sync_photos, "_signal_library") as signal,
+        ):
+            sync_photos._sync_albums_by_configuration(  # noqa: SLF001
+                self._photos(libs), libs, False, "/dest",
+                {"albums": None, "file_sizes": ["original"], "extensions": None},
+                set(), "%Y/%m", None, {}, failed_libraries=set(),
+            )
+
+        signal.assert_has_calls([
+            call("record_library_started", "PrimarySync"),
+            call("record_library_finished", "PrimarySync", ok=True, downloaded=7, skipped=1),
+            call("record_library_started", "BrokenZone-1"),
+        ], any_order=False)
+        failed = [c for c in signal.call_args_list if c.kwargs.get("ok") is False]
+        self.assertEqual(len(failed), 1)
+        self.assertIn("ZONE_NOT_FOUND", failed[0].kwargs["error"])
+
+    def test_a_dashboard_write_failure_never_breaks_the_sync(self):
+        """Reporting progress is never worth failing a sync over."""
+        from unittest.mock import patch
+
+        from src import sync_photos, web_signals
+
+        with patch.object(
+            web_signals, "record_library_started", side_effect=OSError("disk full"),
+        ):
+            # Must not raise.
+            sync_photos._signal_library("record_library_started", "PrimarySync")  # noqa: SLF001
+
 
 class TestCollisionDoesNotOrphanTheFileItPreserves(unittest.TestCase):
     """The collision branch exists to "preserve both photos". Obsolete-file

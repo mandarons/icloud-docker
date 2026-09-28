@@ -553,6 +553,21 @@ def _library_destination(base_destination: str, library: str, library_destinatio
 _LIBRARY_FAULTS = (exceptions.ICloudPyAPIResponseException, requests.exceptions.RequestException)
 
 
+def _signal_library(action: str, library: str, **kwargs) -> None:
+    """Publish per-library progress for the dashboard, best effort.
+
+    A library can take an hour, so "which one is running right now" is
+    only knowable while it runs. Wrapped because the web-signal module is
+    optional and a dashboard write must never affect the sync.
+    """
+    try:
+        from src import web_signals
+
+        getattr(web_signals, action)(library, **kwargs)
+    except Exception as e:  # noqa: BLE001 -- reporting must not break syncing
+        LOGGER.debug(f"web_signals: {action} for {library} raised: {e!s}")
+
+
 def _note_library_failure(library, error, failed_libraries) -> None:
     """Record a library we could not read, and say so in the log.
 
@@ -652,6 +667,7 @@ def _sync_albums_by_configuration(
     total_successful, total_failed = 0, 0
     for library in libraries:
         try:
+            _signal_library("record_library_started", library)
             lib_dest = _library_destination(destination_path, library, library_destinations or {})
             if download_all and library == "PrimarySync":
                 sub_successful, sub_failed = _sync_all_albums_except_filtered(
@@ -699,10 +715,18 @@ def _sync_albums_by_configuration(
                 )
             total_successful += sub_successful
             total_failed += sub_failed
+            _signal_library(
+                "record_library_finished",
+                library,
+                ok=True,
+                downloaded=sub_successful,
+                skipped=sub_failed,
+            )
         # Per-iteration by design: isolating one library from the next is
         # the whole point, so the handler cannot be hoisted out of the loop.
         except _LIBRARY_FAULTS as e:  # noqa: PERF203
             _note_library_failure(library, e, failed_libraries)
+            _signal_library("record_library_finished", library, ok=False, error=str(e))
     return total_successful, total_failed
 
 
