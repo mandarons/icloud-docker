@@ -1370,6 +1370,15 @@ def sync(dry_run: bool = False, check_files: int | None = None):
         # Log sync intervals once at startup
         if not startup_logged:
             _log_sync_intervals_at_startup(config)
+            # The state file outlives the container, so a restart mid-library
+            # would leave the dashboard showing it as still syncing. Nothing
+            # can legitimately be in flight here.
+            try:
+                from src import web_signals as _ws
+
+                _ws.clear_stale_library_states()
+            except Exception as e:  # noqa: BLE001 -- never block startup
+                LOGGER.debug(f"web_signals: clear_stale_library_states raised: {e!s}")
             startup_logged = True
 
         drive_sync_interval, photos_sync_interval = _extract_sync_intervals(

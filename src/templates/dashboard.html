@@ -104,13 +104,26 @@
         <div class="mono" style="color: var(--text-tertiary); margin-top: 4px; font-size: 12px;">{{ service.marker_path }}</div>
       </dd>
     </dl>
-    {% if service.library_destinations %}
-    <div class="section-label">Library destinations</div>
-    {% for lib_name, subdir in service.library_destinations.items() %}
-      <div class="lib-row mono">
-        <span>{{ lib_name }}</span>
-        <span class="arrow">→</span>
-        <span>{{ subdir }}/</span>
+    {% if service.libraries %}
+    <div class="section-label">Libraries</div>
+    {% for lib in service.libraries %}
+      <div class="lib-entry">
+        <div class="lib-row mono">
+          <span class="lib-name" title="{{ lib.name }}">{{ lib.name }}</span>
+          {% if lib.state == 'syncing' %}
+            <span class="lib-state syncing">Syncing now</span>
+          {% elif lib.state == 'failed' %}
+            <span class="lib-state failed" title="{{ lib.error }}">Failed</span>
+          {% elif lib.state == 'interrupted' %}
+            <span class="lib-state">Interrupted</span>
+          {% elif lib.completed_relative %}
+            <span class="lib-state">{{ lib.completed_relative }}</span>
+          {% endif %}
+        </div>
+        {% if lib.subdir %}<div class="lib-dest mono" title="{{ lib.subdir }}/">&rarr; {{ lib.subdir }}/</div>{% endif %}
+        {% if lib.state in ('failed', 'interrupted') and lib.completed_relative %}
+        <div class="lib-dest">last completed {{ lib.completed_relative }}</div>
+        {% endif %}
       </div>
     {% endfor %}
     {% endif %}
