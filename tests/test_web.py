@@ -1512,6 +1512,12 @@ class TestPerLibraryDashboardRows(unittest.TestCase):
             ["Beta", "Alpha", "Gamma"],
         )
 
+    def test_a_single_library_written_as_a_scalar_is_one_library(self):
+        from src import web
+
+        config = {"photos": {"filters": {"libraries": "Beta"}}}
+        self.assertEqual(web._get_configured_libraries(config=config), ["Beta"])  # noqa: SLF001
+
     def test_no_configured_libraries(self):
         from src import web
 

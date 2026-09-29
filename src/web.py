@@ -207,6 +207,10 @@ def _get_configured_libraries(config: dict) -> list[str]:
     dashboard load.
     """
     named = get_config_value_or_none(config=config, config_path=["photos", "filters", "libraries"]) or []
+    if isinstance(named, str):
+        # ``libraries: PrimarySync`` rather than a list -- iterating the
+        # string would list one library per character.
+        named = [named]
     named = [n for n in named if isinstance(n, str)]
     return list(dict.fromkeys(named + list(_get_library_destinations(config=config))))
 
