@@ -104,7 +104,7 @@ runs:
         if [ "${COUNT}" -gt "${KEEP}" ]; then
           echo "Pruning: ${COUNT} dirs > keep ${KEEP}"
           cd "${ALLURE_HISTORY}"
-          rm -f index.html last-history
+          rm -rf index.html last-history
           ls | sort -n | grep -v CNAME | head -n -"${KEEP}" | xargs rm -rf
           cd "${GITHUB_WORKSPACE}"
         fi
