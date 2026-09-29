@@ -1,11 +1,5 @@
-# Security-key (FIDO2/WebAuthn) sign-in needs icloudpy 0.10.0 (#174). The
-# container never talks to a key itself -- it relays the challenge to the
-# signer on the machine holding the key -- so the ``security-key`` extra
-# (fido2) is not installed here.
 icloudpy==0.10.0
 ruamel.yaml==0.19.1
 python-magic==0.4.27
-# icloudpy 0.10.0 pins requests==2.34.2 exactly; ~=2.32.3 (<2.33) cannot
-# resolve against it.
-requests==2.34.2
+requests~=2.34.2
 flask==3.1.3
