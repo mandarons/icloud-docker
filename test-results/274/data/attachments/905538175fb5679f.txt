@@ -1,0 +1,12 @@
+[38;21m2026-09-29 14:44:13,503 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-09-29 14:44:13,503 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-09-29 14:44:13,504 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;5;39m2026-09-29 14:44:13,504 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;21m2026-09-29 14:44:13,504 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-29 14:44:13,504 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-29 14:44:13,513 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;21m2026-09-29 14:44:13,513 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;5;39m2026-09-29 14:44:13,516 :: INFO :: root :: photo_file_utils.py :: 347 :: Downloading /tmp/tmpwj2oxj4w/test_photo.jpg ...[0m
+[38;5;39m2026-09-29 14:44:13,516 :: INFO :: root :: photo_file_utils.py :: 347 :: Downloading /tmp/tmpwj2oxj4w/test_photo.jpg ...[0m
+[38;5;226m2026-09-29 14:44:13,516 :: WARNING :: root :: photo_file_utils.py :: 404 :: Download URL expired (410) for /tmp/tmpwj2oxj4w/test_photo.jpg. Refreshing URL and retrying (attempt 1/2)...[0m
+[38;5;226m2026-09-29 14:44:13,516 :: WARNING :: root :: photo_file_utils.py :: 404 :: Download URL expired (410) for /tmp/tmpwj2oxj4w/test_photo.jpg. Refreshing URL and retrying (attempt 1/2)...[0m
