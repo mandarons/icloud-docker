@@ -439,6 +439,18 @@ class TestSecurityKeyPost(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"does not look like signer output", response.data)
 
+    def test_400_on_json_that_is_not_signer_output(self):
+        """Valid base64 of valid JSON can still be the wrong thing -- an
+        empty list, or a list of strings. It gets the same answer as
+        garbage, not a 500."""
+        self._stash(_api())
+        for payload in ([], ["x"]):
+            with self.subTest(payload=payload):
+                blob = base64.b64encode(json.dumps(payload).encode()).decode()
+                response = _csrf_post(self._client(), "/auth/security-key", {"assertion": blob})
+                self.assertEqual(response.status_code, 400)
+                self.assertIn(b"does not look like signer output", response.data)
+
     def test_400_when_challenge_expired(self):
         """The stashed Apple session is gone — a stale signature cannot be
         submitted against a session that no longer exists."""
@@ -864,3 +876,58 @@ class TestSessionVerification(unittest.TestCase):
             svc.call_args.kwargs["cookie_directory"],
             web.DEFAULT_COOKIE_DIRECTORY,
         )
+
+
+class TestAbandonedCeremonyLeavesNoCookies(unittest.TestCase):
+    """A ceremony's private cookie jar holds its Apple session cookies. It
+    was removed only on a submit, so a ceremony that expired, was reset, or
+    was answered with a stale signature left them in the temp dir."""
+
+    def setUp(self):
+        _reset_pending_auth()
+        self.jar = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.jar, True)
+
+    def tearDown(self):
+        _reset_pending_auth()
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def _stash(self, stashed_at=None):
+        import time
+
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.update(  # noqa: SLF001
+                {
+                    "api": _api(),
+                    "username": "a@icloud.com",
+                    "password": "pw",
+                    "stashed_at": time.monotonic() if stashed_at is None else stashed_at,
+                    "fsa_challenge": _FSA,
+                    "cookie_dir": self.jar,
+                },
+            )
+
+    def test_reset_removes_the_jar(self):
+        self._stash()
+        _csrf_post(self._client(), "/auth/reset")
+        self.assertFalse(os.path.exists(self.jar))
+
+    def test_expiry_removes_the_jar(self):
+        import time
+
+        self._stash(stashed_at=time.monotonic() - web._PENDING_AUTH_TTL_SECONDS - 1)  # noqa: SLF001
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._expire_stale_pending_auth_unlocked()  # noqa: SLF001
+        self.assertFalse(os.path.exists(self.jar))
+        self.assertEqual(web._PENDING_AUTH, {})  # noqa: SLF001
+
+    def test_a_stale_signature_removes_the_jar(self):
+        self._stash()
+        stale = base64.b64encode(
+            json.dumps({"challenge": base64.b64encode(b"z" * 32).decode()}).encode(),
+        ).decode()
+        response = _csrf_post(self._client(), "/auth/security-key", {"assertion": stale})
+        self.assertIn(b"older challenge", response.data)
+        self.assertFalse(os.path.exists(self.jar))

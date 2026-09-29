@@ -93,11 +93,20 @@ def _pending_auth_is_stale() -> bool:
     return (time.monotonic() - stashed_at) > _PENDING_AUTH_TTL_SECONDS
 
 
+def _clear_pending_auth_unlocked() -> None:
+    """Forget the pending auth, and a security-key ceremony's private cookie
+    jar with it -- it holds that ceremony's Apple session cookies, and an
+    abandoned ceremony would otherwise leave them in the temp dir until the
+    container restarts. Caller holds the lock."""
+    _discard_ceremony_dir(_PENDING_AUTH.get("cookie_dir"))
+    _PENDING_AUTH.clear()
+
+
 def _expire_stale_pending_auth_unlocked() -> None:
     """If the pending auth is older than the TTL, wipe it. Caller holds the lock."""
     if _pending_auth_is_stale():
         LOGGER.info("Web UI: expiring stale _PENDING_AUTH past TTL.")
-        _PENDING_AUTH.clear()
+        _clear_pending_auth_unlocked()
 
 
 # CSRF defence. Threat model: even with the default host pinned to
@@ -755,7 +764,7 @@ def create_app(testing: bool = False) -> Flask:
             return redirect(url_for("dashboard"))
         finally:
             with _AUTH_LOCK:
-                _PENDING_AUTH.clear()
+                _clear_pending_auth_unlocked()
 
     @app.route("/auth/security-key", methods=["GET"])
     def auth_security_key():
@@ -949,6 +958,16 @@ def create_app(testing: bool = False) -> Flask:
         # origin is fixed inside clientData at signing time and Apple rejects
         # a wrong one with the same opaque 409 it uses for everything else.
         signatures = decoded if isinstance(decoded, list) else [decoded]
+        # Valid base64 JSON that is not signer output (``[]``, ``["x"]``)
+        # must get the same answer as garbage, not a traceback.
+        if not signatures or not all(isinstance(sig, dict) for sig in signatures):
+            return (
+                _render_auth(
+                    message="That does not look like signer output — copy the whole line.",
+                    message_kind="err",
+                ),
+                400,
+            )
 
         with _AUTH_LOCK:
             _expire_stale_pending_auth_unlocked()
@@ -989,7 +1008,7 @@ def create_app(testing: bool = False) -> Flask:
                     "pending one -- stale page.",
                 )
                 with _AUTH_LOCK:
-                    _PENDING_AUTH.clear()
+                    _clear_pending_auth_unlocked()
                 return (
                     _render_auth(
                         message=(
@@ -1061,7 +1080,7 @@ def create_app(testing: bool = False) -> Flask:
         finally:
             _discard_ceremony_dir(ceremony_dir)
             with _AUTH_LOCK:
-                _PENDING_AUTH.clear()
+                _clear_pending_auth_unlocked()
 
     @app.route("/auth/reset", methods=["POST"])
     def auth_reset():
@@ -1075,7 +1094,7 @@ def create_app(testing: bool = False) -> Flask:
             return rejection
 
         with _AUTH_LOCK:
-            _PENDING_AUTH.clear()
+            _clear_pending_auth_unlocked()
         return redirect(url_for("auth_form"))
 
     @app.route("/auth/refresh-trust", methods=["POST"])
@@ -1330,8 +1349,6 @@ def _build_short_signer_command(blob: str) -> str | None:
     return f"uv run --quiet {_SIGNER_REPO_RAW}/{ref}/src/icloud_sign.py {blob}"
 
 
-
-
 def _session_authenticates(username: str) -> bool:
     """Confirm the sync loop can now sign in.
 
@@ -1384,34 +1401,6 @@ def _is_signin_throttled(error: Exception) -> bool:
     return "signin/init" in text and "409" in text
 
 
-# The closing delimiter must match the opening one by backreference:
-# Apple's cookie values are themselves quoted strings, so a pattern that
-# stops at the first quote of any kind captures an empty value and finds
-# nothing at all.
-# Apple carries "this browser is trusted" in this cookie; without it a
-# session authenticates but still counts as needing a second factor.
-_TRUST_COOKIE_NAME = "X-APPLE-WEBAUTH-HSA-TRUST"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# Apple's setup API rejects requests that do not look like they came from
-# the iCloud web app. icloudpy sets these on every call it makes; omitting
-# them turns a perfectly good session into "not accepted".
-
-
-
-
 def _ceremony_cookie_dir() -> str:
     """A private, empty cookie jar for one security-key ceremony.
 
@@ -1451,10 +1440,6 @@ def _discard_ceremony_dir(cookie_dir: str | None) -> None:
     """Remove a ceremony's private jar. Best-effort."""
     if cookie_dir:
         shutil.rmtree(cookie_dir, ignore_errors=True)
-
-
-
-
 
 
 def _render_auth(
