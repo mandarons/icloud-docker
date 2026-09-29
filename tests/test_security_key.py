@@ -13,9 +13,14 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import base64
 import json
 import os
+import re
+import shutil
 import struct
+import tempfile
 import unittest
 from unittest.mock import MagicMock, patch
+
+import requests
 
 import tests  # noqa: F401  — sets ENV_CONFIG_FILE_PATH via tests/__init__
 from src import web
@@ -377,3 +382,485 @@ class TestChallengeMismatch(unittest.TestCase):
 
     def test_undecodable_challenge_is_a_mismatch(self):
         self.assertFalse(web._same_challenge("!!!not base64", _FSA["challenge"]))  # noqa: SLF001
+
+
+class TestSecurityKeyPost(unittest.TestCase):
+    """``POST /auth/security-key`` — submit the signed assertion.
+
+    The assertion is bound to the ``scnt``/session id of the stashed
+    session, which is why the signer never needs the password and never
+    talks to Apple itself."""
+
+    def setUp(self):
+        _reset_pending_auth()
+
+    def tearDown(self):
+        _reset_pending_auth()
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def _assertion(self, challenge=None):
+        """Signer output. Defaults to the pending challenge, re-encoded with
+        padding the way the signer actually emits it."""
+        payload = {
+            "credentialID": "x",
+            "challenge": challenge or (_FSA["challenge"] + "="),
+        }
+        return base64.b64encode(json.dumps(payload).encode()).decode()
+
+    def _stash(self, api):
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.update(  # noqa: SLF001
+                {
+                    "api": api,
+                    "username": "a@icloud.com",
+                    "password": "pw",
+                    "stashed_at": __import__("time").monotonic(),
+                    "fsa_challenge": _FSA,
+                },
+            )
+
+    def test_requires_csrf(self):
+        response = self._client().post("/auth/security-key", data={"assertion": "x"})
+        self.assertIn(response.status_code, (400, 403))
+
+    def test_400_on_empty_assertion(self):
+        response = _csrf_post(self._client(), "/auth/security-key", {"assertion": " "})
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"Paste the signer output", response.data)
+
+    def test_400_on_unparseable_assertion(self):
+        response = _csrf_post(
+            self._client(),
+            "/auth/security-key",
+            {"assertion": "not-base64!!"},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"does not look like signer output", response.data)
+
+    def test_400_when_challenge_expired(self):
+        """The stashed Apple session is gone — a stale signature cannot be
+        submitted against a session that no longer exists."""
+        response = _csrf_post(
+            self._client(),
+            "/auth/security-key",
+            {"assertion": self._assertion()},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"Challenge expired", response.data)
+
+
+    def test_400_when_apple_rejects_the_assertion(self):
+        api = _api(accepts=False)
+        self._stash(api)
+        response = _csrf_post(
+            self._client(),
+            "/auth/security-key",
+            {"assertion": self._assertion()},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"refused that signature", response.data)
+
+    def test_success_trusts_persists_and_signals_resume(self):
+        api = _api()
+        self._stash(api)
+        with (
+            patch.object(web, "_session_authenticates", return_value=True),
+            patch("icloudpy.utils.store_password_in_keyring") as keyring,
+            patch.object(web, "_wake_sync_loop") as woke,
+        ):
+            response = _csrf_post(
+                self._client(),
+                "/auth/security-key",
+                {"assertion": self._assertion()},
+            )
+        self.assertEqual(response.status_code, 302)
+        # Resuming immediately is the point: the sync loop deliberately
+        # stops retrying on a timer for these accounts.
+        keyring.assert_called_once()
+        api.confirm_security_key.assert_called_once()
+        # Without the wake the loop sleeps out the rest of its retry interval
+        # and the dashboard keeps saying "sync is stopped" after a success.
+        woke.assert_called_once_with()
+
+    def test_success_survives_trust_and_keyring_failures(self):
+        """Apple already accepted the assertion; bookkeeping failures after
+        that must not turn a successful sign-in into an error."""
+        api = _api()
+        self._stash(api)
+        with (
+            patch.object(web, "_session_authenticates", return_value=True),
+            patch(
+                "icloudpy.utils.store_password_in_keyring",
+                side_effect=RuntimeError("keyring boom"),
+            ),
+        ):
+            response = _csrf_post(
+                self._client(),
+                "/auth/security-key",
+                {"assertion": self._assertion()},
+            )
+        self.assertEqual(response.status_code, 302)
+
+
+    def test_400_when_the_submit_raises(self):
+        """A transport fault reaches the operator rather than a traceback."""
+        api = _api()
+        api.confirm_security_key.side_effect = RuntimeError("network")
+        self._stash(api)
+        response = _csrf_post(
+            self._client(),
+            "/auth/security-key",
+            {"assertion": self._assertion()},
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"Assertion submit failed", response.data)
+
+    def test_pending_is_always_cleared(self):
+        """Every exit path clears the stash so a password never lingers in
+        process memory after the ceremony ends."""
+        api = _api()
+        self._stash(api)
+        with (
+            patch("icloudpy.utils.store_password_in_keyring"),
+        ):
+            _csrf_post(
+                self._client(),
+                "/auth/security-key",
+                {"assertion": self._assertion()},
+            )
+        with web._AUTH_LOCK:  # noqa: SLF001
+            self.assertEqual(web._PENDING_AUTH, {})  # noqa: SLF001
+
+
+class TestAuthStateReflectsSyncLoop(unittest.TestCase):
+    """``_detect_auth_state`` must not report health the sync loop is
+    contradicting -- a green dashboard over a sync that stopped weeks ago
+    is worse than no dashboard."""
+
+    def test_reauth_needed_when_loop_reports_blocked(self):
+        with (
+            patch("icloudpy.utils.password_exists_in_keyring", return_value=True),
+            patch("src.web_signals.get_auth_blocked", return_value={"blocked": True}),
+        ):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "reauth_needed",
+            )
+
+    def test_ready_when_loop_reports_healthy(self):
+        with (
+            patch("icloudpy.utils.password_exists_in_keyring", return_value=True),
+            patch("src.web_signals.get_auth_blocked", return_value={"blocked": False}),
+        ):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "ready",
+            )
+
+    def test_setup_needed_still_wins_without_keyring(self):
+        with patch("icloudpy.utils.password_exists_in_keyring", return_value=False):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "setup_needed",
+            )
+
+
+class TestSyncPublishesAuthState(unittest.TestCase):
+    """``sync._publish_auth_blocked`` is advisory and must never raise."""
+
+    def test_publishes_blocked(self):
+        from src import sync
+
+        with patch("src.web_signals.record_auth_blocked") as recorder:
+            sync._publish_auth_blocked(True, reason="2fa_required")  # noqa: SLF001
+        recorder.assert_called_once_with(blocked=True, reason="2fa_required")
+
+    def test_swallows_failure(self):
+        from src import sync
+
+        with patch(
+            "src.web_signals.record_auth_blocked",
+            side_effect=OSError("read-only"),
+        ):
+            sync._publish_auth_blocked(False)  # noqa: SLF001
+
+
+class TestCeremonyCookieIsolation(unittest.TestCase):
+    """The ceremony signs in against its own empty cookie jar.
+
+    icloudpy loads its jar with ignore_expires=True, so a dead session's
+    cookies -- an expired X-APPLE-WEBAUTH-TOKEN among them -- are replayed
+    alongside a fresh SRP handshake. Apple answers that contradiction with
+    409 Conflict, which is what the assertion submit kept receiving."""
+
+    def setUp(self):
+        _reset_pending_auth()
+
+    def tearDown(self):
+        _reset_pending_auth()
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def test_signin_uses_a_private_empty_jar(self):
+        api = _api()
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
+            patch("icloudpy.ICloudPyService", return_value=api) as service,
+            patch.object(web, "_record_auth_method"),
+        ):
+            _csrf_post(self._client(), "/auth/security-key/start")
+        used = service.call_args.kwargs["cookie_directory"]
+        self.assertNotEqual(used, web.DEFAULT_COOKIE_DIRECTORY)
+        self.assertEqual(os.listdir(used), [])
+
+    def test_failed_signin_leaves_no_directory_behind(self):
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
+            patch("icloudpy.ICloudPyService", side_effect=RuntimeError("nope")),
+            patch.object(web, "_ceremony_cookie_dir") as maker,
+        ):
+            maker.return_value = tempfile.mkdtemp()
+            created = maker.return_value
+            _csrf_post(self._client(), "/auth/security-key/start")
+        self.assertFalse(os.path.exists(created))
+
+    def test_success_publishes_the_ceremony_session(self):
+        """The sync loop reads the real directory, so an accepted ceremony
+        has to land there -- and only once Apple has accepted it."""
+        api = _api()
+        ceremony = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, ceremony, True)
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.update(  # noqa: SLF001
+                {
+                    "api": api,
+                    "username": "a@icloud.com",
+                    "password": "pw",
+                    "stashed_at": __import__("time").monotonic(),
+                    "fsa_challenge": _FSA,
+                    "cookie_dir": ceremony,
+                },
+            )
+        assertion = base64.b64encode(
+            json.dumps(
+                {"credentialID": "x", "challenge": _FSA["challenge"] + "="},
+            ).encode(),
+        ).decode()
+        with (
+            patch.object(web, "_session_authenticates", return_value=True),
+            patch("icloudpy.utils.store_password_in_keyring"),
+            patch.object(web, "_publish_ceremony_session") as publish,
+        ):
+            response = _csrf_post(
+                self._client(),
+                "/auth/security-key",
+                {"assertion": assertion},
+            )
+        self.assertEqual(response.status_code, 302)
+        publish.assert_called_once_with(ceremony)
+
+    def test_publish_copies_session_and_backs_up_the_previous(self):
+        source = tempfile.mkdtemp()
+        target = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, source, True)
+        self.addCleanup(shutil.rmtree, target, True)
+        with open(os.path.join(target, "userexamplecom"), "w") as fh:
+            fh.write("old")
+        with open(os.path.join(source, "userexamplecom"), "w") as fh:
+            fh.write("new")
+        with patch.object(web, "DEFAULT_COOKIE_DIRECTORY", target):
+            web._publish_ceremony_session(source)  # noqa: SLF001
+        with open(os.path.join(target, "userexamplecom")) as fh:
+            self.assertEqual(fh.read(), "new")
+        with open(os.path.join(target, "userexamplecom.bak")) as fh:
+            self.assertEqual(fh.read(), "old")
+
+    def test_publish_never_raises(self):
+        with patch("os.listdir", side_effect=OSError("gone")):
+            web._publish_ceremony_session("/nonexistent")  # noqa: SLF001
+
+    def test_discard_tolerates_none_and_missing(self):
+        web._discard_ceremony_dir(None)  # noqa: SLF001
+        web._discard_ceremony_dir("/definitely/not/here")  # noqa: SLF001
+
+    def test_cookie_dir_is_fresh_each_time(self):
+        first = web._ceremony_cookie_dir()  # noqa: SLF001
+        second = web._ceremony_cookie_dir()  # noqa: SLF001
+        self.addCleanup(shutil.rmtree, first, True)
+        self.addCleanup(shutil.rmtree, second, True)
+        self.assertNotEqual(first, second)
+        self.assertEqual(os.listdir(first), [])
+
+
+class TestSigninThrottleHandling(unittest.TestCase):
+    """Apple answers a rate-limited account with 409 on /signin/init, before
+    any challenge exists. That is not a bad password, a bad key or a bad
+    assertion, and retrying is what prolongs it -- so it gets its own
+    message and its own status."""
+
+    def setUp(self):
+        _reset_pending_auth()
+
+    def tearDown(self):
+        _reset_pending_auth()
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def test_recognises_the_signin_rate_limit(self):
+        error = Exception(
+            "409 Client Error:  for url: "
+            "https://idmsa.apple.com/appleauth/auth/signin/init",
+        )
+        self.assertTrue(web._is_signin_throttled(error))  # noqa: SLF001
+
+    def test_does_not_mistake_other_failures_for_throttling(self):
+        throttled = web._is_signin_throttled  # noqa: SLF001
+        self.assertFalse(throttled(Exception("boom")))
+        self.assertFalse(throttled(Exception("409 on /verify/security/key")))
+        self.assertFalse(throttled(Exception("500 signin/init")))
+
+    def test_start_reports_429_and_offers_a_retry(self):
+        error = requests.exceptions.HTTPError(
+            "409 Client Error:  for url: "
+            "https://idmsa.apple.com/appleauth/auth/signin/init",
+        )
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
+            patch("icloudpy.ICloudPyService", side_effect=error),
+        ):
+            response = _csrf_post(self._client(), "/auth/security-key/start")
+        self.assertEqual(response.status_code, 429)
+        self.assertIn(b"rate-limiting", response.data)
+
+    def test_start_requires_csrf(self):
+        """The only path that spends a sign-in must not be triggerable by a
+        cross-site form post."""
+        response = self._client().post("/auth/security-key/start")
+        self.assertIn(response.status_code, (400, 403))
+
+
+
+
+class TestNoDeadInternalLinks(unittest.TestCase):
+    """Every internal link a template offers must resolve.
+
+    A renamed route left the dashboard pointing at a page that no longer
+    existed, so the one action offered when sync is stopped led to a 404 --
+    exactly when the operator is least able to guess the real URL."""
+
+    def test_every_templated_link_has_a_route(self):
+        import glob
+        import os as _os
+
+        app = web.create_app(testing=True)
+        known = set()
+        for rule in app.url_map.iter_rules():
+            known.add(str(rule.rule))
+
+        template_dir = _os.path.join(
+            _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))),
+            "src",
+            "templates",
+        )
+        offending = []
+        for path in glob.glob(_os.path.join(template_dir, "*.html")):
+            body = open(path, encoding="utf-8").read()
+            offending.extend(
+                f"{_os.path.basename(path)} -> {target}"
+                for target in re.findall(r'(?:href|action)="(/[^"{]*)"', body)
+                if target.rstrip("/") and target not in known
+            )
+        self.assertEqual(offending, [])
+
+
+class TestCeremonyIsVerifiedNotAssumed(unittest.TestCase):
+    """Apple accepting the assertion is not proof the sync loop can sign in.
+
+    Reporting success on the submit alone is how a session that still
+    wanted a second factor was announced as working."""
+
+    def setUp(self):
+        _reset_pending_auth()
+
+    def tearDown(self):
+        _reset_pending_auth()
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+
+    def test_accepted_but_unusable_is_reported_as_failure(self):
+        api = _api()
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.update(  # noqa: SLF001
+                {
+                    "api": api,
+                    "username": "a@icloud.com",
+                    "password": "pw",
+                    "stashed_at": __import__("time").monotonic(),
+                    "fsa_challenge": _FSA,
+                },
+            )
+        assertion = base64.b64encode(
+            json.dumps(
+                {"credentialID": "x", "challenge": _FSA["challenge"] + "="},
+            ).encode(),
+        ).decode()
+        with (
+            patch.object(web, "_session_authenticates", return_value=False),
+            patch("icloudpy.utils.store_password_in_keyring"),
+        ):
+            response = _csrf_post(
+                self._client(),
+                "/auth/security-key",
+                {"assertion": assertion},
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"still asks for", response.data)
+
+
+class TestSessionVerification(unittest.TestCase):
+    """``_session_authenticates`` signs in the way the sync loop will.
+
+    Apple accepting the assertion is not the same as the loop being able
+    to authenticate, and reporting success on the submit alone once
+    announced a session that still wanted a second factor."""
+
+    def test_true_when_no_factor_is_wanted(self):
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
+            patch("icloudpy.ICloudPyService", return_value=_api(requires_2fa=False)),
+        ):
+            self.assertTrue(web._session_authenticates("a@icloud.com"))  # noqa: SLF001
+
+    def test_false_when_apple_still_wants_a_factor(self):
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
+            patch("icloudpy.ICloudPyService", return_value=_api(requires_2fa=True)),
+        ):
+            self.assertFalse(web._session_authenticates("a@icloud.com"))  # noqa: SLF001
+
+    def test_false_when_sign_in_raises(self):
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
+            patch("icloudpy.ICloudPyService", side_effect=RuntimeError("nope")),
+        ):
+            self.assertFalse(web._session_authenticates("a@icloud.com"))  # noqa: SLF001
+
+    def test_checks_the_directory_the_loop_reads(self):
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
+            patch(
+                "icloudpy.ICloudPyService",
+                return_value=_api(requires_2fa=False),
+            ) as svc,
+        ):
+            web._session_authenticates("a@icloud.com")  # noqa: SLF001
+        self.assertEqual(
+            svc.call_args.kwargs["cookie_directory"],
+            web.DEFAULT_COOKIE_DIRECTORY,
+        )
