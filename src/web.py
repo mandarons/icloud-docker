@@ -17,9 +17,15 @@ when exposing publicly. Opt-out via ``app.web_ui.enabled: false`` in
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import base64
 import hmac
+import json
 import os
+import re
 import secrets
+import shutil
+import struct
+import tempfile
 import threading
 import time
 from typing import Any
@@ -252,9 +258,7 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
     if state:
         completed_at = state.get("completed_at")
         stats = {
-            "last_sync_relative": (
-                web_signals.format_relative_time(completed_at) if completed_at else None
-            ),
+            "last_sync_relative": (web_signals.format_relative_time(completed_at) if completed_at else None),
             "files_downloaded": state.get("files_downloaded"),
             "files_skipped": state.get("files_skipped"),
             "files_removed": state.get("files_removed"),
@@ -264,10 +268,7 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
             # count of files on disk.
             "last_cycle_total": (
                 (state.get("files_downloaded") or 0) + (state.get("files_skipped") or 0)
-                if (
-                    state.get("files_downloaded") is not None
-                    or state.get("files_skipped") is not None
-                )
+                if (state.get("files_downloaded") is not None or state.get("files_skipped") is not None)
                 else None
             ),
             "errors": state.get("errors", 0),
@@ -375,11 +376,7 @@ def _build_status(config: dict | None) -> dict[str, Any]:
             import datetime
 
             exp = datetime.datetime.fromisoformat(trust_expires_at)
-            now = (
-                datetime.datetime.now(tz=exp.tzinfo)
-                if exp.tzinfo
-                else datetime.datetime.now()
-            )
+            now = datetime.datetime.now(tz=exp.tzinfo) if exp.tzinfo else datetime.datetime.now()
             trust_days_remaining = (exp - now).days
         except (
             ValueError,
@@ -394,6 +391,7 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         "marker_filename": marker_filename,
         "services": services,
         "auth_state": _detect_auth_state(username=username),
+        "auth_method": web_signals.get_auth_method(username) if username else None,
         "force_sync_pending": web_signals.pending_force_syncs(),
         "trust_expires_at": trust_expires_at,
         "trust_days_remaining": trust_days_remaining,
@@ -443,9 +441,6 @@ def _detect_auth_state(username: str | None) -> str:
       - ``not_configured`` — no ``app.credentials.username`` in config.
       - ``setup_needed`` — username set, but the keyring has no password
         cached. The container's first 2FA flow hasn't been completed.
-      - ``reauth_needed`` — the sync loop reported that it cannot
-        authenticate. Every on-disk signal below looks fine in this state,
-        which is why it has to be asked for explicitly.
       - ``ready`` — username set + keyring entry present. Sync loop can
         resume the session on the next retry.
 
@@ -459,10 +454,10 @@ def _detect_auth_state(username: str | None) -> str:
         from icloudpy import utils as icloudpy_utils
 
         if icloudpy_utils.password_exists_in_keyring(username):
-            # Ask the sync loop before claiming health: a configured
-            # username and a cached password look identical whether or not
-            # Apple is demanding a second factor, so on-disk signals alone
-            # render a green dashboard over a sync that has not run.
+            # Ask the sync loop before claiming health: every on-disk
+            # signal still looks correct while an account is stuck on a
+            # second factor, so "keyring populated" alone would render a
+            # green dashboard over a sync that has not run for weeks.
             if web_signals.get_auth_blocked().get("blocked"):
                 return "reauth_needed"
             return "ready"
@@ -499,9 +494,7 @@ def create_app(testing: bool = False) -> Flask:
         dashboard or auth payloads. The dashboard is always live data —
         a cached snapshot would hide a missing mount marker or an
         expired session."""
-        response.headers["Cache-Control"] = (
-            "private, no-store, no-cache, must-revalidate, max-age=0"
-        )
+        response.headers["Cache-Control"] = "private, no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
         # CSRF defence: set the SameSite=Strict token cookie on every
@@ -764,6 +757,312 @@ def create_app(testing: bool = False) -> Flask:
             with _AUTH_LOCK:
                 _PENDING_AUTH.clear()
 
+    @app.route("/auth/security-key", methods=["GET"])
+    def auth_security_key():
+        """Start a security-key (FIDO2/WebAuthn) re-auth ceremony.
+
+        Apple disables every other second factor once security keys are
+        enrolled, so the 6-digit paths (``/auth/code``, the Telegram
+        listener) can never complete for such an account -- Apple answers
+        every factor endpoint with an ``fsaChallenge`` instead of pushing
+        a code.
+
+        The assertion cannot be produced by this page: WebAuthn requires
+        ``rpId`` to be a registrable suffix of the page origin, and
+        Apple's ``rpId`` is ``apple.com``. Browsers additionally blocklist
+        FIDO devices from WebHID/WebUSB precisely to stop a page doing raw
+        CTAP against another origin. So the signing step runs natively on
+        whatever machine holds the key, and only the signed assertion
+        comes back here.
+
+        This handler authenticates with the keyring password, reads
+        Apple's challenge, stashes the live session under ``_PENDING_AUTH``
+        (same slot ``/auth/code`` uses) and renders the blob the operator
+        feeds to the signer.
+        """
+        # A plain page load must never contact Apple. Each sign-in attempt
+        # counts against a rate limit that answers 409 on /signin/init once
+        # tripped, and a reload -- or a browser prefetch -- would otherwise
+        # spend one. The challenge is only fetched when the operator asks
+        # for it, and a pending one is re-rendered rather than replaced so
+        # a command already copied stays valid.
+        with _AUTH_LOCK:
+            _expire_stale_pending_auth_unlocked()
+            pending_challenge = _PENDING_AUTH.get("fsa_challenge")
+        if pending_challenge:
+            LOGGER.info("Web UI security-key: re-rendering the pending challenge.")
+            return _render_auth(security_key_blob=_pack_challenge(pending_challenge))
+        return redirect(url_for("auth_form"))
+
+    @app.route("/auth/security-key/start", methods=["POST"])
+    def auth_security_key_start():
+        """Ask Apple for a challenge. This is the only path that signs in."""
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+
+        # Pressing the button twice must not spend a second sign-in.
+        with _AUTH_LOCK:
+            _expire_stale_pending_auth_unlocked()
+            pending_challenge = _PENDING_AUTH.get("fsa_challenge")
+        if pending_challenge:
+            LOGGER.info("Web UI security-key: reusing the pending challenge.")
+            return _render_auth(security_key_blob=_pack_challenge(pending_challenge))
+
+
+        config = _load_current_config()
+        username = None
+        if config:
+            try:
+                username = config_parser.get_username(config=config)
+            except (KeyError, AttributeError, TypeError):
+                username = None
+        if not username:
+            return (
+                _render_auth(
+                    message="No app.credentials.username in config.yaml — set it first.",
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        try:
+            from icloudpy import utils as icloudpy_utils
+
+            password = icloudpy_utils.get_password_from_keyring(username)
+        except Exception as e:
+            LOGGER.exception("Web UI security-key: keyring lookup raised")
+            return (
+                _render_auth(message=f"Keyring lookup failed: {e!s}", message_kind="err"),
+                500,
+            )
+        if not password:
+            return (
+                _render_auth(
+                    message="No password in keyring — submit one below first.",
+                    message_kind="warn",
+                ),
+                400,
+            )
+
+        try:
+            import icloudpy
+
+            ceremony_dir = _ceremony_cookie_dir()
+            api = icloudpy.ICloudPyService(
+                apple_id=username,
+                password=password,
+                cookie_directory=ceremony_dir,
+            )
+        except Exception as e:
+            _discard_ceremony_dir(locals().get("ceremony_dir"))
+            LOGGER.exception("Web UI security-key: ICloudPyService raised")
+            if _is_signin_throttled(e):
+                return (
+                    _render_auth(
+                        message=(
+                            "Apple is rate-limiting sign-ins for this account "
+                            "and will not issue a challenge yet. Nothing is "
+                            "wrong with your key — wait a while before trying "
+                            "again, as each attempt extends the limit."
+                        ),
+                        message_kind="warn",
+                    ),
+                    429,
+                )
+            return (
+                _render_auth(
+                    message=f"Sign-in failed: {e!s}",
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        if not api.requires_2fa:
+            _wake_sync_loop()
+            return redirect(url_for("dashboard"))
+
+        fsa = api.security_key_challenge
+        if not fsa:
+            return (
+                _render_auth(
+                    message=(
+                        "Apple did not offer a security-key challenge. This "
+                        "account may still use 6-digit codes — use the form below."
+                    ),
+                    message_kind="warn",
+                ),
+                400,
+            )
+
+        with _AUTH_LOCK:
+            _expire_stale_pending_auth_unlocked()
+            _PENDING_AUTH["api"] = api
+            _PENDING_AUTH["username"] = username
+            _PENDING_AUTH["password"] = password
+            _PENDING_AUTH["stashed_at"] = time.monotonic()
+            # Keep Apple's challenge string verbatim. It is echoed back in
+            # the assertion and Apple compares it byte-for-byte, so a
+            # re-encode differing only in base64 padding is rejected with a
+            # 409 -- the signer's encoding must never be trusted here.
+            stashed = dict(fsa)
+            _PENDING_AUTH["fsa_challenge"] = stashed
+            _PENDING_AUTH["cookie_dir"] = ceremony_dir
+
+        _record_auth_method(username, "security_key")
+        # Render exactly what was stashed. Handing over a different
+        # challenge than the one being waited on costs a physical touch to
+        # discover, so the two are deliberately the same object.
+        return _render_auth(security_key_blob=_pack_challenge(stashed))
+
+    @app.route("/auth/security-key", methods=["POST"])
+    def auth_security_key_submit():
+        """Finish the ceremony: submit the signed assertion to Apple.
+
+        The assertion is bound to the ``scnt``/``X-Apple-ID-Session-Id``
+        of the session stashed by the GET handler, so it must be
+        submitted with that same session -- which is why the signer
+        never needs the password and never talks to Apple itself.
+        """
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+
+        raw = request.form.get("assertion", "").strip()
+        if not raw:
+            return (
+                _render_auth(message="Paste the signer output.", message_kind="err"),
+                400,
+            )
+        try:
+            decoded = json.loads(base64.b64decode(raw))
+        except Exception:
+            return (
+                _render_auth(
+                    message="That does not look like signer output — copy the whole line.",
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        # The signer emits one assertion per candidate origin, because the
+        # origin is fixed inside clientData at signing time and Apple rejects
+        # a wrong one with the same opaque 409 it uses for everything else.
+        signatures = decoded if isinstance(decoded, list) else [decoded]
+
+        with _AUTH_LOCK:
+            _expire_stale_pending_auth_unlocked()
+            api = _PENDING_AUTH.get("api")
+            username = _PENDING_AUTH.get("username")
+            password = _PENDING_AUTH.get("password")
+            pending_fsa = _PENDING_AUTH.get("fsa_challenge") or {}
+            ceremony_dir = _PENDING_AUTH.get("cookie_dir")
+            issued_challenge = pending_fsa.get("challenge")
+        if api is None:
+            return (
+                _render_auth(
+                    message=("Challenge expired — start a new security-key re-auth and sign the fresh challenge."),
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        # Apple compares the echoed challenge byte-for-byte, and the signer
+        # round-trips it through raw bytes, so it can come back re-encoded
+        # (base64 padding Apple did not send). Compare on the decoded value
+        # and submit the stashed original.
+        #
+        # A genuine mismatch means the signed challenge is not the one this
+        # session is waiting on -- almost always a stale page, since every
+        # page load starts a fresh Apple session with a fresh challenge.
+        # Overwriting it here would hide that and produce an assertion whose
+        # clientData disagrees with its challenge field, which Apple rejects
+        # with an opaque 409. Say so instead.
+        if issued_challenge:
+            signed = str(signatures[0].get("challenge") or "")
+            if _same_challenge(signed, issued_challenge):
+                for signature in signatures:
+                    signature["challenge"] = issued_challenge
+            else:
+                LOGGER.warning(
+                    "Web UI security-key: signed challenge does not match the "
+                    "pending one -- stale page.",
+                )
+                with _AUTH_LOCK:
+                    _PENDING_AUTH.clear()
+                return (
+                    _render_auth(
+                        message=(
+                            "That signature is for an older challenge. Each time "
+                            "this page loads it starts a new one — reload, copy "
+                            "the command again, and re-sign."
+                        ),
+                        message_kind="err",
+                    ),
+                    400,
+                )
+
+        try:
+            if not api.confirm_security_key(assertion=signatures[0]):
+                LOGGER.warning("Web UI security-key: Apple refused the assertion.")
+                return (
+                    _render_auth(
+                        message=(
+                            "Apple refused that signature. Reload to start a "
+                            "fresh challenge and sign again."
+                        ),
+                        message_kind="err",
+                    ),
+                    400,
+                )
+
+            try:
+                from icloudpy import utils as icloudpy_utils
+
+                icloudpy_utils.store_password_in_keyring(
+                    username=username,
+                    password=password,
+                )
+            except Exception as e:
+                LOGGER.warning(f"Web UI security-key keyring persist failed: {e!s}")
+
+            if ceremony_dir:
+                _publish_ceremony_session(ceremony_dir)
+            # Apple accepting the assertion is not proof the sync loop can
+            # sign in, and claiming success without checking is how a broken
+            # session got reported as working before.
+            if not _session_authenticates(username):
+                LOGGER.warning(
+                    "Web UI security-key: assertion accepted but sign-in still "
+                    "wants a factor.",
+                )
+                return (
+                    _render_auth(
+                        message=(
+                            "Apple accepted your key, but sign-in still asks for "
+                            "a second factor. Start over and sign a fresh "
+                            "challenge."
+                        ),
+                        message_kind="err",
+                    ),
+                    400,
+                )
+            LOGGER.info("Web UI: security-key re-auth succeeded; session trusted.")
+            _wake_sync_loop()
+            # The signer clears the clipboard itself once the signature is
+            # read, so there is nothing left for the dashboard to do here.
+            return redirect(url_for("dashboard"))
+        except Exception as e:
+            LOGGER.exception("Web UI security-key: assertion submit raised")
+            return (
+                _render_auth(message=f"Assertion submit failed: {e!s}", message_kind="err"),
+                400,
+            )
+        finally:
+            _discard_ceremony_dir(ceremony_dir)
+            with _AUTH_LOCK:
+                _PENDING_AUTH.clear()
+
     @app.route("/auth/reset", methods=["POST"])
     def auth_reset():
         """Escape hatch — clear any in-flight pending-auth state.
@@ -837,10 +1136,7 @@ def create_app(testing: bool = False) -> Flask:
         if not password:
             return (
                 _render_auth(
-                    message=(
-                        "No password in keyring — submit one below to "
-                        "complete the first-time auth."
-                    ),
+                    message=("No password in keyring — submit one below to complete the first-time auth."),
                     message_kind="warn",
                 ),
                 400,
@@ -859,8 +1155,7 @@ def create_app(testing: bool = False) -> Flask:
             return (
                 _render_auth(
                     message=(
-                        f"Refresh trust failed: {e!s}. Your stored "
-                        "password may be stale — submit a new one below."
+                        f"Refresh trust failed: {e!s}. Your stored password may be stale — submit a new one below."
                     ),
                     message_kind="err",
                 ),
@@ -906,11 +1201,7 @@ def create_app(testing: bool = False) -> Flask:
         if rejection is not None:
             return rejection
 
-        service = (
-            (request.form.get("service") or request.args.get("service") or "")
-            .strip()
-            .lower()
-        )
+        service = (request.form.get("service") or request.args.get("service") or "").strip().lower()
         if service == "all":
             wanted = ("drive", "photos")
         elif service in ("drive", "photos"):
@@ -929,11 +1220,7 @@ def create_app(testing: bool = False) -> Flask:
         if not configured:
             return jsonify({"error": "no services configured"}), 400
 
-        queued = [
-            svc
-            for svc in wanted
-            if svc in configured and web_signals.request_force_sync(svc)
-        ]
+        queued = [svc for svc in wanted if svc in configured and web_signals.request_force_sync(svc)]
 
         # Browser form submit gets a redirect; API consumers (curl,
         # monitors) get JSON. Distinguished by Accept header.
@@ -944,9 +1231,243 @@ def create_app(testing: bool = False) -> Flask:
     return app
 
 
-def _render_auth(message: str | None, message_kind: str | None):
+_SIGNER_PATH = os.path.join(os.path.dirname(__file__), "icloud_sign.py")
+
+
+def _lookup_auth_method(status_payload: dict[str, Any]) -> str | None:
+    """Recorded second factor for the configured account, if we've seen one.
+
+    Drives which route the auth page leads with: an account Apple has
+    answered with an ``fsaChallenge`` can never complete the 6-digit
+    form, so offering it first just wastes the operator's time.
+    """
+    username = status_payload.get("username") if status_payload else None
+    if not username:
+        return None
+    try:
+        from src import web_signals
+
+        return web_signals.get_auth_method(username)
+    except Exception:  # pragma: no cover - never break rendering over state
+        return None
+
+
+def _record_auth_method(username: str, method: str) -> None:
+    """Persist the account's second factor; never fatal to the auth flow."""
+    try:
+        from src import web_signals
+
+        web_signals.record_auth_method(username=username, method=method)
+    except Exception as e:  # pragma: no cover - bookkeeping must not break auth
+        LOGGER.warning(f"Web UI: recording auth method failed: {e!s}")
+
+
+def _pack_challenge(fsa: dict[str, Any]) -> str:
+    """Pack the challenge + credential handles into one short token.
+
+    Length matters: the operator copies this inside a single shell
+    command. Packing raw bytes (2-byte length prefix each) rather than
+    base64-of-JSON roughly halves it, and ``rpId`` is dropped entirely
+    because Apple's is always ``apple.com``.
+    """
+
+    def decode(value: str) -> bytes:
+        return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+
+    parts = [decode(fsa["challenge"])]
+    parts.extend(decode(handle) for handle in fsa["keyHandles"])
+    packed = b"".join(struct.pack("!H", len(part)) + part for part in parts)
+    return base64.urlsafe_b64encode(packed).decode("ascii").rstrip("=")
+
+
+def _build_signer_command(blob: str) -> str:
+    """The self-contained form: the signer source travels inside the command.
+
+    Piped to ``uv run`` on stdin, so nothing is left on the operator's disk
+    and the machine holding the key needs no network route back to this
+    container. Always offered, because the short form below cannot reach a
+    dashboard that sits behind proxy authentication.
+    """
+    try:
+        with open(_SIGNER_PATH, encoding="utf-8") as handle:
+            source = handle.read()
+    except OSError:
+        return "src/icloud_sign.py is missing from this image."
+    return f"uv run --quiet - {blob} <<'ICLOUDSIGN'\n{source}ICLOUDSIGN"
+
+
+_SIGNER_REPO_RAW = "https://raw.githubusercontent.com/mandarons/icloud-docker"
+
+
+def _signer_source_ref() -> str | None:
+    """The release tag this image was built from, e.g. ``v1.29.0``.
+
+    Release images are built from ``v*`` tags and carry the version in
+    ``APP_VERSION``. Development and PR builds (``dev``, ``pr-123``) have no
+    tag to point at, so they get None.
+    """
+    version = os.environ.get("APP_VERSION", "").strip()
+    if not re.fullmatch(r"\d+\.\d+\.\d+", version):
+        return None
+    return f"v{version}"
+
+
+def _build_short_signer_command(blob: str) -> str | None:
+    """``uv run <signer at this release's tag> <blob>`` -- one line.
+
+    Fetched from the public repo at the tag this image was built from:
+    reachable from any machine (a dashboard behind an auth proxy, as one
+    accepting an Apple ID password should be, cannot be fetched by uv), and
+    readable before running. The signer declares its fido2 dependency inline
+    (PEP 723), so no ``--with`` is needed.
+
+    None for a build that is not a release; the self-contained form is then
+    the only one offered.
+    """
+    ref = _signer_source_ref()
+    if ref is None:
+        return None
+    return f"uv run --quiet {_SIGNER_REPO_RAW}/{ref}/src/icloud_sign.py {blob}"
+
+
+
+
+def _session_authenticates(username: str) -> bool:
+    """Confirm the sync loop can now sign in.
+
+    Apple accepting the assertion is not the same as the loop being able
+    to authenticate, and reporting success on the submit alone once
+    announced a session that still wanted a second factor.
+    """
+    try:
+        import icloudpy
+        from icloudpy import utils as icloudpy_utils
+
+        api = icloudpy.ICloudPyService(
+            apple_id=username,
+            password=icloudpy_utils.get_password_from_keyring(username),
+            cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+        )
+    except Exception as e:
+        LOGGER.warning(f"Web UI: session failed to authenticate: {e!s}")
+        return False
+    LOGGER.info(f"Web UI: session check -> requires_2fa={api.requires_2fa}")
+    return not api.requires_2fa
+
+
+def _same_challenge(left: str, right: str) -> bool:
+    """Compare two base64 challenge strings by value, not spelling.
+
+    Apple emits the standard alphabet unpadded; a round-trip through raw
+    bytes can come back padded, or urlsafe. Those are the same challenge.
+    """
+
+    def decode(value: str) -> bytes | None:
+        try:
+            return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+        except (ValueError, TypeError):
+            return None
+
+    decoded = decode(left)
+    return decoded is not None and decoded == decode(right)
+
+
+def _is_signin_throttled(error: Exception) -> bool:
+    """True when Apple refused to start a sign-in rather than to finish one.
+
+    Apple answers a rate-limited account with 409 on ``/signin/init``, the
+    very first SRP call, so no challenge can be issued at all. Worth
+    distinguishing: it is not a bad password, a bad key, or a bad
+    assertion, and retrying is what prolongs it.
+    """
+    text = str(error)
+    return "signin/init" in text and "409" in text
+
+
+# The closing delimiter must match the opening one by backreference:
+# Apple's cookie values are themselves quoted strings, so a pattern that
+# stops at the first quote of any kind captures an empty value and finds
+# nothing at all.
+# Apple carries "this browser is trusted" in this cookie; without it a
+# session authenticates but still counts as needing a second factor.
+_TRUST_COOKIE_NAME = "X-APPLE-WEBAUTH-HSA-TRUST"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# Apple's setup API rejects requests that do not look like they came from
+# the iCloud web app. icloudpy sets these on every call it makes; omitting
+# them turns a perfectly good session into "not accepted".
+
+
+
+
+def _ceremony_cookie_dir() -> str:
+    """A private, empty cookie jar for one security-key ceremony.
+
+    icloudpy loads its jar with ``ignore_expires=True``, so cookies from a
+    dead session are replayed on every new sign-in -- an expired
+    ``X-APPLE-WEBAUTH-TOKEN`` and friends arriving alongside a fresh SRP
+    handshake. Apple's reply to that contradiction is 409 Conflict, which
+    is exactly what the assertion submit kept receiving.
+
+    The ceremony therefore runs against its own jar and publishes the
+    result only once Apple has accepted it.
+    """
+    return tempfile.mkdtemp(prefix="icloud-securitykey-")
+
+
+def _publish_ceremony_session(cookie_dir: str) -> None:
+    """Move a ceremony's session files into the directory sync reads.
+
+    Called only after Apple accepts the assertion and the session is
+    trusted, so a failed attempt can never damage a working session. The
+    previous files are kept alongside with a ``.bak`` suffix.
+    """
+    try:
+        os.makedirs(DEFAULT_COOKIE_DIRECTORY, exist_ok=True)
+        for name in os.listdir(cookie_dir):
+            source = os.path.join(cookie_dir, name)
+            target = os.path.join(DEFAULT_COOKIE_DIRECTORY, name)
+            if os.path.exists(target):
+                shutil.copy2(target, f"{target}.bak")
+            shutil.copy2(source, target)
+        LOGGER.info(f"Web UI: published ceremony session to {DEFAULT_COOKIE_DIRECTORY}.")
+    except OSError:
+        LOGGER.exception("Web UI: could not publish ceremony session")
+
+
+def _discard_ceremony_dir(cookie_dir: str | None) -> None:
+    """Remove a ceremony's private jar. Best-effort."""
+    if cookie_dir:
+        shutil.rmtree(cookie_dir, ignore_errors=True)
+
+
+
+
+
+
+def _render_auth(
+    message: str | None = None,
+    message_kind: str | None = None,
+    security_key_blob: str | None = None,
+):
     """Render auth.html with the current pending state and an optional
-    error/info pill. Factored out so the POST endpoints can reuse it."""
+    error/info pill. Factored out so the POST endpoints can reuse it.
+
+    ``security_key_blob`` carries the base64 challenge bundle for the
+    FIDO2 ceremony; when set the template shows the signer instructions
+    instead of the 6-digit code form."""
     from flask import render_template as _render
 
     config = _load_current_config()
@@ -962,6 +1483,15 @@ def _render_auth(message: str | None, message_kind: str | None):
         active_nav="auth",
         version=os.environ.get("APP_VERSION", ""),
         csrf_token=_get_csrf_token(),
+        security_key_blob=security_key_blob,
+        signer_command=_build_signer_command(security_key_blob) if security_key_blob else None,
+        signer_source_ref=_signer_source_ref(),
+        signer_command_short=(
+            _build_short_signer_command(security_key_blob)
+            if security_key_blob
+            else None
+        ),
+        auth_method=_lookup_auth_method(status_payload),
     )
 
 

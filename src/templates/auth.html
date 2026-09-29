@@ -5,10 +5,14 @@
 {% set auth = status.auth_state | default('not_configured') %}
 <h1 class="page-title">Authenticate</h1>
 <p class="page-sub">
-  {% if pending %}
+  {% if security_key_blob %}
+    Step 2 of 2 — sign Apple's challenge with your security key.
+  {% elif auth_method == 'security_key' %}
+    This Apple ID signs in with a <strong>security key</strong>. Apple will not send a 6-digit code.
+  {% elif pending %}
     Step 2 of 2 — enter the 6-digit code Apple just sent to your trusted device.
   {% elif auth == 'ready' %}
-    <strong>{{ status.username }}</strong> is already signed in. The sync loop will pick up the trusted session on its next interval. Hit "Re-authenticate" below to start a fresh flow (clears the keyring and prompts Apple for a new 2FA push).
+    <strong>{{ status.username }}</strong> is signed in and the sync loop has not reported an authentication problem. Re-authenticate below only if you want to start a fresh flow.
   {% else %}
     Step 1 of 2 — your Apple ID password. We never log or persist it.
     A 6-digit code will then arrive on your trusted iPhone/iPad/Mac.
@@ -22,8 +26,66 @@
 </div>
 {% endif %}
 
-<div class="card" style="max-width: 480px;">
-  {% if not pending and auth == 'ready' %}
+<div class="card" style="max-width: 640px;">
+  {% if security_key_blob %}
+    <p style="margin: 0 0 14px; font-size: 14px; color: var(--text-secondary);">
+      Apple is asking for your <strong>security key</strong>, not a 6-digit code. Your browser cannot sign this (WebAuthn ties the challenge to <span class="mono">apple.com</span>), so run the signer on the machine holding your key. It's the same relay Windows Remote Desktop and Citrix use for security keys: the key stays with you, and only the signature travels back.
+    </p>
+    <p style="margin: 0 0 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500;">1 — copy, then paste into a terminal on that machine</p>
+    <textarea id="signer-cmd" readonly style="position: absolute; left: -9999px; top: -9999px;">{{ signer_command_short or signer_command }}</textarea>
+    {% if signer_command_short %}
+    <code class="mono" style="display: block; font-size: 12px; padding: 8px 10px; margin-bottom: 6px; background: #fafafa; border: 1px solid var(--divider); border-radius: 6px; overflow-wrap: anywhere;">uv run …/icloud-docker/{{ signer_source_ref }}/src/icloud_sign.py &lt;challenge&gt;</code>
+    <p style="margin: 0 0 8px; font-size: 12px; color: var(--text-tertiary);">
+      Runs the signer from this release on GitHub —
+      <a href="https://github.com/mandarons/icloud-docker/blob/{{ signer_source_ref }}/src/icloud_sign.py" target="_blank" rel="noopener">read it first</a>.
+    </p>
+    {% endif %}
+    <button type="button" id="copy-cmd" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+      Copy command
+    </button>
+    {% if signer_command_short %}
+    <textarea id="signer-cmd-offline" readonly style="position: absolute; left: -9999px; top: -9999px;">{{ signer_command }}</textarea>
+    <p style="margin: 6px 0 0; font-size: 12px; color: var(--text-tertiary);">
+      No internet on that machine?
+      <a href="#" id="copy-cmd-offline">Copy the self-contained version</a> — it carries the signer inline.
+    </p>
+    {% endif %}
+    <p style="margin: 8px 0 0; font-size: 12px; color: var(--text-tertiary);">
+      Nothing is saved to disk · signature never shown · clipboard cleared after use
+    </p>
+
+    <p style="margin: 18px 0 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500;">2 — touch your key once, then paste here (⌘V)</p>
+    <p style="margin: 0 0 8px; font-size: 12px; color: var(--text-tertiary);">
+      One touch, no PIN. The signature proves only that you were present; it carries no password.
+    </p>
+    <form method="post" action="/auth/security-key">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="password" name="assertion" required autofocus
+        autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
+        placeholder="Paste the signature"
+        style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
+               font-size: 15px; letter-spacing: 0.12em; background: #fafafa;">
+      <button type="submit" class="status-cta" style="display: block; width: 100%; margin-top: 12px; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+        Complete sign-in
+      </button>
+    </form>
+    <form method="post" action="/auth/reset" style="margin-top: 10px;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" style="width: 100%; padding: 9px 14px; font-size: 13px; background: transparent; border: 1px solid var(--divider); border-radius: 999px; color: var(--text-secondary); cursor: pointer;">
+        Start over
+      </button>
+    </form>
+  {% elif auth_method == 'security_key' %}
+    <p style="margin: 0 0 16px; font-size: 14px; color: var(--text-secondary);">
+      Apple answers every code request for this account with a security-key challenge, so there is no code to enter and no password to retype.
+    </p>
+    <form method="post" action="/auth/security-key/start">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+        Sign in with your security key
+      </button>
+    </form>
+  {% elif not pending and auth == 'ready' %}
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
       <div class="status-dot"></div>
       <div class="status-text"><strong>{{ status.username }}</strong> — keyring populated</div>
@@ -103,10 +165,53 @@
   {% endif %}
 </div>
 
-<p style="color: var(--text-tertiary); font-size: 12px; margin-top: 24px;">
-  This form posts your password to the container over your network — keep it
-  bound to loopback or behind a trusted proxy. The 2FA code is delivered by
-  Apple to your trusted devices.
+{% if status.username and not security_key_blob and auth_method != 'security_key' %}
+<p style="margin-top: 16px; font-size: 13px; color: var(--text-secondary);">
+  Using a hardware security key or passkey on your Apple ID? Apple will not send a 6-digit code —
+  use the security key button above instead.
 </p>
+{% endif %}
+
+
+
+<p style="color: var(--text-tertiary); font-size: 12px; margin-top: 24px;">
+  {% if security_key_blob %}
+    The signature only proves you touched your key; it carries no password and is useless once Apple has consumed it.
+  {% elif auth_method == 'security_key' %}
+    Signing uses the password already cached in the container's keyring — nothing is typed here.
+  {% else %}
+    This form posts your password to the container over your network — keep it
+    bound to loopback or behind a trusted proxy. The 2FA code is delivered by
+    Apple to your trusted devices.
+  {% endif %}
+</p>
+
+{% if security_key_blob %}
+<script>
+  (function () {
+    function wire(btn, src, label) {
+      if (!btn || !src) return;
+      btn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        var done = function () {
+          btn.textContent = 'Copied — paste into your terminal';
+          setTimeout(function () { btn.textContent = label; }, 4000);
+        };
+        // navigator.clipboard needs a secure context; fall back to the
+        // legacy selection path when served over plain http on a LAN.
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(src.value).then(done, function () {
+            src.select(); document.execCommand('copy'); done();
+          });
+        } else {
+          src.select(); document.execCommand('copy'); done();
+        }
+      });
+    }
+    wire(document.getElementById('copy-cmd'), document.getElementById('signer-cmd'), 'Copy command');
+    wire(document.getElementById('copy-cmd-offline'), document.getElementById('signer-cmd-offline'), 'Copy the self-contained version');
+  })();
+</script>
+{% endif %}
 
 {% endblock %}

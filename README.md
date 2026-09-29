@@ -282,6 +282,22 @@ State-changing endpoints require a CSRF cookie plus a matching token, so
 scripted callers must load a page first to obtain the cookie and echo the
 token back in an `X-CSRF-Token` header.
 
+### Sign in with a security key
+
+Once security keys are enrolled on an Apple ID, Apple stops offering 6-digit codes entirely and answers with a WebAuthn challenge instead. Until now that left such an account unable to re-authenticate at all.
+
+With the web UI enabled, open `/auth`. When Apple asks for a key, the page hands you one short command:
+
+```sh
+uv run https://raw.githubusercontent.com/mandarons/icloud-docker/v<version>/src/icloud_sign.py <challenge>
+```
+
+Run it on whichever machine has the key ([uv](https://docs.astral.sh/uv/) fetches its one dependency, `fido2`), touch the key, and paste the result back. The signer never sees your password and never contacts Apple. It prints what it is about to sign before asking for the touch, and returns the signature through the clipboard. The page links to the exact file first, and for a machine with no internet it also offers a self-contained version that carries the signer inline. Development builds, which have no release tag to point at, offer only that version.
+
+**Why a command and not a button:** WebAuthn ties Apple's challenge to `apple.com`, so no browser will sign it on another site's behalf, and browsers block raw access to security keys for the same reason. That restriction is what protects the account from phishing. The alternative is the pattern Windows Remote Desktop and Citrix ship as [WebAuthn redirection](https://learn.microsoft.com/en-us/azure/virtual-desktop/redirection-configure-webauthn): the session that needs the assertion relays the challenge to the machine holding the key, and only the signed assertion travels back.
+
+The sync loop recognises such an account on its own: it skips the 2FA push and the Telegram code listener (Apple sends no code), and its notifications point at `/auth` instead.
+
 ## Performance Optimization
 
 ### Parallel Downloads
