@@ -589,3 +589,54 @@ class TestMaybeRefreshTrust(unittest.TestCase):
             return_value=self._expiry(1),
         ):
             sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+
+
+class TestNotifySecurityKeyWording(unittest.TestCase):
+    """``notify._create_2fa_message`` must not promise a code to an account
+    that will never receive one."""
+
+    def test_security_key_account_points_at_the_ceremony(self):
+        from src import notify
+
+        with patch.object(notify, "_account_uses_security_key", return_value=True):
+            message, _ = notify._create_2fa_message(  # noqa: SLF001
+                username="a@icloud.com",
+                region="global",
+                dashboard_url="https://icloud.example.com",
+            )
+        self.assertIn("/auth/security-key", message)
+        self.assertIn("security key", message)
+
+    def test_code_account_keeps_the_original_wording(self):
+        from src import notify
+
+        with patch.object(notify, "_account_uses_security_key", return_value=False):
+            message, _ = notify._create_2fa_message(  # noqa: SLF001
+                username="a@icloud.com",
+                region="global",
+                dashboard_url="https://icloud.example.com",
+            )
+        self.assertIn("/auth", message)
+        self.assertNotIn("security key", message)
+
+    def test_lookup_reflects_recorded_state(self):
+        from src import notify
+
+        with patch(
+            "src.web_signals.get_auth_method",
+            return_value="security_key",
+        ):
+            self.assertTrue(notify._account_uses_security_key("a@icloud.com"))  # noqa: SLF001
+        with patch("src.web_signals.get_auth_method", return_value="code"):
+            self.assertFalse(notify._account_uses_security_key("a@icloud.com"))  # noqa: SLF001
+
+    def test_lookup_falls_back_to_generic_on_error(self):
+        """An unreadable state file must degrade to the generic wording,
+        not break the notification."""
+        from src import notify
+
+        with patch(
+            "src.web_signals.get_auth_method",
+            side_effect=RuntimeError("state corrupt"),
+        ):
+            self.assertFalse(notify._account_uses_security_key("a@icloud.com"))  # noqa: SLF001

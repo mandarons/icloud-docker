@@ -224,6 +224,7 @@ def _save_state(state: dict[str, dict[str, Any]]) -> None:
 
 _TRUST_STATE_KEY = "_trust"
 _AUTH_BLOCKED_STATE_KEY = "_auth_blocked"
+_AUTH_METHOD_STATE_KEY = "_auth_method"
 
 
 def record_trust_state(
@@ -277,6 +278,33 @@ def get_auth_blocked() -> dict[str, Any]:
     """Return the recorded auth-blocked state. Empty dict if never recorded."""
     entry = _load_state().get(_AUTH_BLOCKED_STATE_KEY)
     return entry if isinstance(entry, dict) else {}
+
+
+def record_auth_method(*, username: str, method: str) -> None:
+    """Remember which second factor Apple demands for this Apple ID.
+
+    Keyed by username because the factor is an account property, not a
+    container property -- an operator who repoints the container at a
+    different Apple ID must not inherit the previous account's mode.
+
+    ``method`` is "security_key" once Apple has answered with an
+    ``fsaChallenge`` (hardware key or passkey enrolled, which disables
+    6-digit codes entirely), otherwise "code".
+    """
+    state = _load_state()
+    entry = state.get(_AUTH_METHOD_STATE_KEY, {})
+    entry[username] = {"method": method, "last_seen": time.time()}
+    state[_AUTH_METHOD_STATE_KEY] = entry
+    _save_state(state)
+
+
+def get_auth_method(username: str) -> str | None:
+    """Return the recorded second factor for ``username``, or None if unknown."""
+    entry = _load_state().get(_AUTH_METHOD_STATE_KEY, {}).get(username)
+    if not isinstance(entry, dict):
+        return None
+    method = entry.get("method")
+    return method if isinstance(method, str) else None
 
 
 def format_relative_time(epoch_seconds: float, *, now: float | None = None) -> str:

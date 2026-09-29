@@ -28,6 +28,7 @@ Authentication is managed by `sync.py` and delegates to iCloudPy for the actual 
    - Sleep for `retry_login_interval` seconds
    - Return to main loop to retry authentication
    - If `retry_login_interval < 0`: exit immediately (oneshot auth)
+   - Security-key accounts (`_detect_security_key_account()`: Apple answers with an `fsaChallenge`): no 2FA push, no Telegram code listener, and the notification points at `/auth`, since Apple sends such an account no code
 
 5. **Trust cookie monitoring** (`_maybe_warn_trust_expiring()`)
    - Read `X-APPLE-WEBAUTH-HSA-TRUST` cookie expiry
@@ -50,6 +51,12 @@ The web UI provides an alternative auth flow:
 3. Password stored in `_PENDING_AUTH` (in-memory, 10-min TTL)
 4. 2FA code submitted via `POST /auth/code`
 5. On success: trust session established, keyring updated
+
+For an Apple ID with security keys enrolled, Apple returns a WebAuthn challenge instead of a code:
+1. `POST /auth/security-key/start` signs in and packs Apple's challenge into one base64 blob
+2. The page offers `uv run …/src/icloud_sign.py <blob>` for the machine holding the key (WebAuthn redirection: the challenge travels to the key, only the signed assertion travels back)
+3. `src/icloud_sign.py` prints what it will sign, asks for a touch, and copies the assertion
+4. `POST /auth/security-key` hands the assertion to icloudpy (`confirm_security_key`), trusts the session, and wakes the sync loop
 
 ## Cross-Cutting Concerns
 
