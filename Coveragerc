@@ -3,9 +3,11 @@ include =
     src/*
 omit =
     src/templates/*
+    src/icloud_sign.py
 
 [report]
 include =
     src/*
 omit =
     src/templates/*
+    src/icloud_sign.py

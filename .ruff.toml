@@ -94,6 +94,9 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 [lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "**/{tests,docs,tools}/*" = ["E402"]
+# Handed to the operator to run, not imported: it carries its own
+# dependency block and probes clipboard backends in a loop.
+"src/icloud_sign.py" = ["INP001", "PERF203"]
 
 
 [format]

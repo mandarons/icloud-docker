@@ -11,6 +11,8 @@ Domain terminology, acronyms, and project-specific vocabulary.
 | **Photos** | iCloud Photos — Apple's photo storage service. Synced via `sync_photos.py`. |
 | **Oneshot mode** | Running a single sync cycle then exiting. Enabled by setting `sync_interval` to `-1`. |
 | **Mount marker** | A sentinel file (e.g., `.mounted`) that must exist before sync proceeds. Prevents writes to unmounted directories. |
+| **Security key** | A FIDO2 hardware key enrolled on the Apple ID. Once one is enrolled Apple sends no 6-digit codes and answers 2FA with an `fsaChallenge` (WebAuthn) instead. |
+| **Signer** | `src/icloud_sign.py` — run by the operator on the machine holding the key; signs the relayed challenge and returns the assertion. |
 | **Trust cookie** | Apple's `X-APPLE-WEBAUTH-HSA-TRUST` cookie. ~90-day window before re-auth is required. |
 | **Hardlink** | filesystem link pointing to the same inode. Used for photo deduplication across albums. |
 | **HardlinkRegistry** | Class in `hardlink_registry.py` that tracks hardlinks across albums to prevent duplicates. |

@@ -23,6 +23,7 @@ This directory contains the application source code for iCloud Docker.
 | `config_utils.py` | Low-level config traversal utilities |
 | `config_logging.py` | Config-related logging helpers |
 | `web.py` | Flask web UI |
+| `icloud_sign.py` | Security-key signer the operator runs on the machine holding the key; not imported by the app |
 | `web_signals.py` | Cross-thread signalling |
 | `notify.py` | Multi-provider notifications |
 | `usage.py` | Anonymized usage tracking |
