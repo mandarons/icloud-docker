@@ -1,0 +1,2 @@
+INFO     root:sync.py:183 Trust token has 0d left (threshold 14d) -- refreshing.
+WARNING  root:sync.py:198 trust refresh failed: apple down

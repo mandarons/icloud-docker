@@ -1,0 +1,6 @@
+[38;5;39m2026-09-30 02:45:38,964 :: INFO :: root :: sync.py :: 1037 :: Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).[0m
+[38;5;39m2026-09-30 02:45:38,964 :: INFO :: root :: sync.py :: 1037 :: Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).[0m
+[38;5;39m2026-09-30 02:45:38,965 :: INFO :: root :: sync.py :: 1060 :: Telegram auth trigger received -- requesting 2FA push.[0m
+[38;5;39m2026-09-30 02:45:38,965 :: INFO :: root :: sync.py :: 1060 :: Telegram auth trigger received -- requesting 2FA push.[0m
+[38;5;39m2026-09-30 02:45:38,965 :: INFO :: root :: sync.py :: 1107 :: Telegram listen timeout reached with no usable code; retrying auth.[0m
+[38;5;39m2026-09-30 02:45:38,965 :: INFO :: root :: sync.py :: 1107 :: Telegram listen timeout reached with no usable code; retrying auth.[0m
