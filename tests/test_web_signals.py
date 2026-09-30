@@ -390,3 +390,54 @@ class TestTheReauthSentinelRoundTrips(unittest.TestCase):
                 web_signals.record_reauth_completed()
                 with patch("os.unlink", side_effect=PermissionError("nope")):
                     self.assertFalse(web_signals.consume_reauth_completed())
+
+
+class TestAuthMethodRecord(unittest.TestCase):
+    """``record_auth_method`` / ``get_auth_method`` — per-account memory of
+    which second factor Apple demands."""
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+        self._patcher = patch.object(web_signals, "_config_dir", return_value=self.tmp)
+        self._patcher.start()
+        self.addCleanup(self._patcher.stop)
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_unknown_account_returns_none(self):
+        self.assertIsNone(web_signals.get_auth_method("nobody@icloud.com"))
+
+    def test_round_trips_the_recorded_method(self):
+        web_signals.record_auth_method(
+            username="a@icloud.com",
+            method="security_key",
+        )
+        self.assertEqual(web_signals.get_auth_method("a@icloud.com"), "security_key")
+
+    def test_keyed_per_account_not_globally(self):
+        """The factor is an account property — repointing the container at
+        a second Apple ID must not inherit the first one's mode."""
+        web_signals.record_auth_method(username="a@icloud.com", method="security_key")
+        web_signals.record_auth_method(username="b@icloud.com", method="code")
+        self.assertEqual(web_signals.get_auth_method("a@icloud.com"), "security_key")
+        self.assertEqual(web_signals.get_auth_method("b@icloud.com"), "code")
+
+    def test_rerecording_overwrites(self):
+        """An account that drops its security keys reverts to codes."""
+        web_signals.record_auth_method(username="a@icloud.com", method="security_key")
+        web_signals.record_auth_method(username="a@icloud.com", method="code")
+        self.assertEqual(web_signals.get_auth_method("a@icloud.com"), "code")
+
+    def test_malformed_entry_returns_none(self):
+        """A hand-edited or truncated state file must not raise."""
+        web_signals._save_state({web_signals._AUTH_METHOD_STATE_KEY: {"a": "oops"}})  # noqa: SLF001
+        self.assertIsNone(web_signals.get_auth_method("a"))
+
+    def test_non_string_method_returns_none(self):
+        web_signals._save_state(  # noqa: SLF001
+            {web_signals._AUTH_METHOD_STATE_KEY: {"a": {"method": 7}}},  # noqa: SLF001
+        )
+        self.assertIsNone(web_signals.get_auth_method("a"))

@@ -34,6 +34,43 @@ LOGGER = get_logger()
 _TRUST_COOKIE_NAME = "X-APPLE-WEBAUTH-HSA-TRUST"
 
 
+def _detect_security_key_account(api, username: str) -> bool:
+    """True when Apple answers this account's second factor with an fsaChallenge.
+
+    Once security keys are enrolled Apple stops issuing 6-digit codes
+    altogether, so requesting a push sends nothing and listening for a
+    replied code waits for something that cannot arrive -- the loop did
+    both, every cycle, and told the user over Telegram to "reply the
+    6-digit code here". Detecting it here rather than waiting for someone
+    to open the dashboard is what lets the very first notification tell
+    the truth.
+
+    Recording the method also means ``notify`` picks the security-key
+    wording on this same pass, since it reads the same signal.
+
+    Best-effort in both directions: icloudpy without security-key support
+    has no such attribute, and no probe failure may break the retry loop.
+    """
+    try:
+        challenge = getattr(api, "security_key_challenge", None)
+    except Exception as e:  # noqa: BLE001 - a probe must never break the loop
+        LOGGER.debug(f"security-key probe failed: {e!s}")
+        return False
+    # Shape, not truthiness. icloudpy returns a mapping carrying "challenge"
+    # and "keyHandles", or None -- anything else (a stub, a changed API, a
+    # sentinel) must not be mistaken for Apple demanding a key, because the
+    # cost of a false positive is suppressing the real code flow.
+    if not (isinstance(challenge, dict) and challenge.get("challenge")):
+        return False
+    try:
+        from src import web_signals
+
+        web_signals.record_auth_method(username=username, method="security_key")
+    except Exception as e:  # noqa: BLE001 - wording is not worth an outage
+        LOGGER.debug(f"could not record auth method: {e!s}")
+    return True
+
+
 def _log_trust_revocation_hint(api) -> None:
     """Say so when Apple rejected a trust token that has not expired.
 
@@ -957,10 +994,21 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
     _publish_auth_blocked(True, reason="2fa_required")
+    # Decided before anything is sent: it selects the notification wording
+    # and suppresses two steps that cannot succeed on such an account.
+    security_key = _detect_security_key_account(api, username)
+    if security_key:
+        LOGGER.error(
+            "This account signs in with a security key, so Apple will not "
+            "send a 6-digit code. Complete the ceremony on the dashboard "
+            "(/auth); the push request and the code listener are skipped.",
+        )
     # Ask Apple to push a code before anything else -- including the exit
     # below: retry_login_interval < 0 is the mode where an operator is about
     # to intervene by hand, and a code on their devices is what they need.
-    _request_2fa_push_once(api, sync_state)
+    # Not for a security-key account: Apple sends those no code at all.
+    if not security_key:
+        _request_2fa_push_once(api, sync_state)
 
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
@@ -979,9 +1027,11 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
         last_send=sync_state.last_send,
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
-        reply_prompt=True,
+        # A security-key account cannot finish sign-in from a Telegram code,
+        # so it gets the standard alert pointing at the dashboard.
+        reply_prompt=not security_key,
     )
-    if config_parser.get_telegram_listen_enabled(config=config):
+    if not security_key and config_parser.get_telegram_listen_enabled(config=config):
         _wait_for_telegram_code(config=config, api=api, timeout_seconds=sleep_for)
     else:
         _auth_retry_sleep(sleep_for)

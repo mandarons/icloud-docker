@@ -1124,6 +1124,34 @@ class TestSync(unittest.TestCase):
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
         self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled")
 
+    @patch("src.sync.sleep")
+    @patch("src.sync.notify.send", return_value=None)
+    @patch("src.web_signals.record_auth_method")
+    def test_a_security_key_account_skips_the_push_and_the_listener(
+        self, _mock_record, mock_notify, _mock_sleep,
+    ):
+        """Apple issues no code for such an account, so requesting a push sends
+        nothing and listening for a replied code waits for something that can
+        never arrive. Both must be suppressed, and the log must say why."""
+        sync_state = sync.SyncState()
+        api = Mock()
+        api.security_key_challenge = {"challenge": "abc", "keyHandles": ["k"]}
+
+        with patch("src.sync._wait_for_telegram_code") as wait:
+            with patch(
+                "src.config_parser.get_telegram_listen_enabled", return_value=True,
+            ):
+                with self.assertLogs(level="ERROR") as captured:
+                    self.assertTrue(self._run_2fa_handler(sync_state, api))
+
+        api.trigger_2fa_push_notification.assert_not_called()
+        wait.assert_not_called()
+        # Nor may Telegram tell it to reply "auth" for a code.
+        self.assertIs(mock_notify.call_args.kwargs["reply_prompt"], False)
+        self.assertTrue(
+            any("signs in with a security key" in e for e in captured.output),
+        )
+
 
 class TestWebSignalsSyncIntegration(unittest.TestCase):
     """Cover sync.sync() ↔ web_signals integration paths.
@@ -1870,6 +1898,91 @@ class TestUnreadableConfigDoesNotKillTheDaemon(unittest.TestCase):
         slept.assert_not_called()
 
 
+class TestStaleLibraryStateCleanupIsBestEffort(unittest.TestCase):
+    """Clearing dashboard state is never worth blocking startup over."""
+
+    def test_a_failure_clearing_state_does_not_stop_the_loop(self):
+        from unittest.mock import patch
+
+        from src import sync, web_signals
+
+        config = {
+            "app": {"credentials": {"username": None, "retry_login_interval": -1}},
+        }
+        with (
+            patch.object(sync, "_load_configuration", return_value=config),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(
+                web_signals,
+                "clear_stale_library_states",
+                side_effect=OSError("read-only fs"),
+            ),
+            patch.object(sync, "_interruptible_sleep"),
+            patch("src.config_parser.get_username", return_value=None),
+        ):
+            sync.sync()
+
+
+class TestSecurityKeyAccountsSkipTheCodeFlow(unittest.TestCase):
+    """Once security keys are enrolled Apple stops issuing 6-digit codes, so
+    requesting a push sends nothing and listening for a replied code waits for
+    something that cannot arrive. Both ran every cycle, and Telegram told the
+    user to reply a code that Apple would never send."""
+
+    def test_a_pending_challenge_is_detected_and_recorded(self):
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _detect_security_key_account
+
+        api = MagicMock()
+        api.security_key_challenge = {"challenge": "abc", "keyHandles": ["k"]}
+        with patch("src.web_signals.record_auth_method") as record:
+            self.assertTrue(_detect_security_key_account(api, "a@b.com"))
+        record.assert_called_once_with(username="a@b.com", method="security_key")
+
+    def test_no_challenge_means_the_ordinary_code_flow(self):
+        from unittest.mock import MagicMock
+
+        from src.sync import _detect_security_key_account
+
+        api = MagicMock()
+        api.security_key_challenge = None
+        self.assertFalse(_detect_security_key_account(api, "a@b.com"))
+
+    def test_icloudpy_without_security_key_support_is_not_an_error(self):
+        from src.sync import _detect_security_key_account
+
+        class Old:
+            """No security_key_challenge attribute at all."""
+
+        self.assertFalse(_detect_security_key_account(Old(), "a@b.com"))
+
+    def test_a_probe_that_raises_does_not_break_the_retry_loop(self):
+        from src.sync import _detect_security_key_account
+
+        class Boom:
+            @property
+            def security_key_challenge(self):
+                msg = "apple said no"
+                raise RuntimeError(msg)
+
+        self.assertFalse(_detect_security_key_account(Boom(), "a@b.com"))
+
+    def test_recording_failure_still_reports_the_security_key(self):
+        """Wording is not worth losing the suppression that matters."""
+        from unittest.mock import MagicMock, patch
+
+        from src.sync import _detect_security_key_account
+
+        api = MagicMock()
+        api.security_key_challenge = {"challenge": "abc", "keyHandles": ["k"]}
+        with patch(
+            "src.web_signals.record_auth_method",
+            side_effect=OSError("read-only fs"),
+        ):
+            self.assertTrue(_detect_security_key_account(api, "a@b.com"))
+
 
 class TestSigninFailuresThroughTheRealIcloudpyPath(unittest.TestCase):
     """icloudpy wraps most sign-in errors in ICloudPyFailedLoginException,
@@ -1969,29 +2082,3 @@ class TestSigninFailuresThroughTheRealIcloudpyPath(unittest.TestCase):
         retrying, so the user has to be told -- notify.send is throttled."""
         _, notify = self._run_loop(401, {"errorMessage": "Invalid credentials"})
         notify.send.assert_called()
-
-
-class TestStaleLibraryStateCleanupIsBestEffort(unittest.TestCase):
-    """Clearing dashboard state is never worth blocking startup over."""
-
-    def test_a_failure_clearing_state_does_not_stop_the_loop(self):
-        from unittest.mock import patch
-
-        from src import sync, web_signals
-
-        config = {
-            "app": {"credentials": {"username": None, "retry_login_interval": -1}},
-        }
-        with (
-            patch.object(sync, "_load_configuration", return_value=config),
-            patch.object(sync, "alive"),
-            patch.object(sync, "_log_sync_intervals_at_startup"),
-            patch.object(
-                web_signals,
-                "clear_stale_library_states",
-                side_effect=OSError("read-only fs"),
-            ),
-            patch.object(sync, "_interruptible_sleep"),
-            patch("src.config_parser.get_username", return_value=None),
-        ):
-            sync.sync()

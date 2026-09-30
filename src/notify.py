@@ -31,6 +31,21 @@ def _is_throttled(last_send) -> bool:
     return last_send > datetime.datetime.now() - datetime.timedelta(hours=THROTTLE_HOURS)
 
 
+def _account_uses_security_key(username: str) -> bool:
+    """True when Apple has demanded a FIDO2 assertion for this Apple ID.
+
+    Recorded by the web UI the first time Apple answers with an
+    ``fsaChallenge``. Best-effort: an unreadable state file just means we
+    fall back to the generic wording.
+    """
+    try:
+        from src import web_signals
+
+        return web_signals.get_auth_method(username) == "security_key"
+    except Exception:  # pragma: no cover - wording must never break notify
+        return False
+
+
 def _create_2fa_message(
     username: str,
     region: str = "global",
@@ -52,9 +67,19 @@ def _create_2fa_message(
         Tuple of (message, subject)
     """
     if dashboard_url:
-        message = (
-            f"icloud-docker: iCloud login required. Sign in at {dashboard_url}/auth"
-        )
+        if _account_uses_security_key(username):
+            # A security-key account never receives a 6-digit code, so point
+            # straight at the ceremony rather than the code form.
+            message = (
+                f"icloud-docker: iCloud re-auth required for {username}. This "
+                f"account uses a security key -- Apple will not send a code. "
+                f"Open {dashboard_url}/auth/security-key and sign the challenge "
+                f"with your key."
+            )
+        else:
+            message = (
+                f"icloud-docker: iCloud login required. Sign in at {dashboard_url}/auth"
+            )
     else:
         region_opt = "" if region == "global" else f"--region={region} "
         message = f"""Two-step authentication for iCloud Drive, Photos (Docker) is required.
