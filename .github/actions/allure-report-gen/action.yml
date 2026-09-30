@@ -79,12 +79,16 @@ runs:
         GH_PAGES="${INPUT_GH_PAGES}"
         REPOSITORY_NAME="${INPUT_GITHUB_REPO##*/}"
 
+        # gh-pages stores per-project data under a sub-path, but run
+        # directories are always written into the TOP-LEVEL history dir
+        # so the workflow's "zip allure-history/*" picks them up directly.
+        # Only the gh-pages READS need the subfolder.
+        GH_PAGES_READ="${GH_PAGES}"
         if [ -n "${INPUT_SUBFOLDER}" ]; then
-          ALLURE_HISTORY="${ALLURE_HISTORY}/${INPUT_SUBFOLDER}"
-          GH_PAGES="${GH_PAGES}/${INPUT_SUBFOLDER}"
+          GH_PAGES_READ="${GH_PAGES}/${INPUT_SUBFOLDER}"
         fi
 
-        mkdir -p "${GH_PAGES}" "${ALLURE_HISTORY}"
+        mkdir -p "${GH_PAGES_READ}" "${ALLURE_HISTORY}"
 
         # ── Report URL ──────────────────────────────────────────────
         if [ -n "${INPUT_REPORT_URL}" ]; then
@@ -96,7 +100,7 @@ runs:
         echo "Report URL: ${GITHUB_PAGES_WEBSITE_URL}"
 
         # ── Carry history from gh-pages into allure-history ────────
-        cp -r "${GH_PAGES}/." "${ALLURE_HISTORY}/" 2>/dev/null || true
+        cp -r "${GH_PAGES_READ}/." "${ALLURE_HISTORY}/" 2>/dev/null || true
 
         # ── Prune old reports (keep_reports + 1) ───────────────────
         COUNT=$(ls "${ALLURE_HISTORY}" 2>/dev/null | wc -l)
@@ -127,7 +131,7 @@ runs:
         mv executor.json "${ALLURE_RESULTS}/"
 
         # ── Restore last-history into results for trend ────────────
-        cp -r "${GH_PAGES}/last-history/." "${ALLURE_RESULTS}/history/" 2>/dev/null || true
+        cp -r "${GH_PAGES_READ}/last-history/." "${ALLURE_RESULTS}/history/" 2>/dev/null || true
 
         # ── Generate ───────────────────────────────────────────────
         echo "Generating report from ${ALLURE_RESULTS} → ${ALLURE_REPORT}"
