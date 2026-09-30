@@ -115,17 +115,26 @@ class TestConfigSubdirsBelongToAbc(unittest.TestCase):
         with open(path, encoding="utf-8") as fh:
             self.lines = fh.read().splitlines()
 
-    def _index(self, predicate):
-        return next(i for i, line in enumerate(self.lines) if predicate(line.strip()))
+    def _index(self, predicate, what):
+        index = next((i for i, line in enumerate(self.lines) if predicate(line.strip())), None)
+        self.assertIsNotNone(index, f"{what} not found in docker-entrypoint.sh")
+        return index
 
     def test_both_subdirs_are_chowned_unconditionally_after_creation(self):
-        created = self._index(lambda line: line.startswith("mkdir -p") and "/config/python_keyring" in line)
+        created = self._index(
+            lambda line: line.startswith("mkdir -p") and "/config/python_keyring" in line,
+            "`mkdir -p` creating /config/python_keyring",
+        )
         chowned = self._index(
             lambda line: line.startswith("chown -R abc:abc")
             and "/config/session_data" in line
             and "/config/python_keyring" in line,
+            "unconditional `chown -R abc:abc /config/session_data /config/python_keyring`",
         )
-        handed_over = self._index(lambda line: line.startswith("exec su-exec abc"))
+        handed_over = self._index(
+            lambda line: line.startswith("exec su-exec abc"),
+            "`exec su-exec abc`",
+        )
         self.assertLess(created, chowned)
         self.assertLess(chowned, handed_over)
         # Not indented: the fix must not sit inside the conditional loop.
