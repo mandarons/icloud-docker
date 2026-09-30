@@ -2238,3 +2238,42 @@ class TestDriveDownloadHasATimeout(unittest.TestCase):
             m.download_file_task({"item": object(), "local_file": "/x",
                                   "is_package": False, "files": set(), "timeout": 47})
         self.assertEqual(dl.call_args.kwargs.get("timeout"), 47)
+
+
+class TestPackageMtimeSurvivesTheNfdRename(unittest.TestCase):
+    """download_file sets a package's mtime to iCloud's date_modified, then
+    the task renames the package's children to NFD. A rename updates its
+    parent directory's mtime, so any package with a non-ASCII name failed
+    package_exists and was downloaded again on every sync."""
+
+    def test_the_package_keeps_icloud_mtime_after_its_children_are_renamed(self):
+        import datetime
+        import unicodedata
+
+        with tempfile.TemporaryDirectory() as d:
+            package = os.path.join(d, "Notes.pages")
+            os.makedirs(package)
+            Path(package, unicodedata.normalize("NFC", "Résumé.txt")).write_text("x")
+            item = MagicMock()
+            item.date_modified = datetime.datetime(2020, 1, 1, 12, 0, 0)
+            expected = int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
+            os.utime(package, (expected, expected))
+
+            real_rename = os.rename
+
+            def rename_like_linux(src, dst):
+                # Some filesystems treat an NFC->NFD rename as a no-op; Linux
+                # does not, and bumps the parent's mtime like any rename.
+                real_rename(src, dst)
+                os.utime(os.path.dirname(dst), None)
+
+            with (
+                patch("src.drive_parallel_download.download_file", return_value=package),
+                patch("os.rename", side_effect=rename_like_linux),
+            ):
+                ok = sync_drive.download_file_task(
+                    {"item": item, "local_file": package, "is_package": True, "files": set()},
+                )
+
+            self.assertTrue(ok)
+            self.assertEqual(int(os.path.getmtime(package)), expected)
