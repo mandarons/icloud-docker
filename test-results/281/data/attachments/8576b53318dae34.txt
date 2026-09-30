@@ -1,0 +1,6 @@
+DEBUG    icloudpy.base:base.py:280 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:287 Session file does not exist
+DEBUG    icloudpy.base:base.py:352 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:456 Authentication completed successfully
+INFO     root:photo_file_utils.py:347 Downloading /tmp/tmpsr54jh9e/test_photo.jpg ...
+ERROR    root:photo_file_utils.py:421 Photo not found in iCloud Photos - /tmp/tmpsr54jh9e/test_photo.jpg: ObjectNotFoundException: Could not find document (NOT_FOUND)

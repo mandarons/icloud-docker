@@ -1,0 +1,14 @@
+[38;21m2026-09-30 04:19:49,803 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-09-30 04:19:49,803 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-09-30 04:19:49,803 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;5;39m2026-09-30 04:19:49,803 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;21m2026-09-30 04:19:49,804 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-30 04:19:49,804 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-30 04:19:49,809 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;21m2026-09-30 04:19:49,809 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;5;39m2026-09-30 04:19:49,810 :: INFO :: root :: drive_parallel_download.py :: 191 :: Starting parallel downloads with 1 threads for 1 files...[0m
+[38;5;39m2026-09-30 04:19:49,810 :: INFO :: root :: drive_parallel_download.py :: 191 :: Starting parallel downloads with 1 threads for 1 files...[0m
+[38;5;196m2026-09-30 04:19:49,810 :: ERROR :: root :: drive_parallel_download.py :: 213 :: Download task failed with exception: Download failed[0m
+[38;5;196m2026-09-30 04:19:49,810 :: ERROR :: root :: drive_parallel_download.py :: 213 :: Download task failed with exception: Download failed[0m
+[38;5;39m2026-09-30 04:19:49,810 :: INFO :: root :: drive_parallel_download.py :: 216 :: Parallel downloads completed: 0 successful, 1 failed[0m
+[38;5;39m2026-09-30 04:19:49,810 :: INFO :: root :: drive_parallel_download.py :: 216 :: Parallel downloads completed: 0 successful, 1 failed[0m
