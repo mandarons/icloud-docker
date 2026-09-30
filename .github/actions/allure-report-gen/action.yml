@@ -137,4 +137,11 @@ runs:
         cp -r "${ALLURE_REPORT}/." "${ALLURE_HISTORY}/${INPUT_GITHUB_RUN_NUM}/"
         cp -r "${ALLURE_REPORT}/history/." "${ALLURE_HISTORY}/last-history/" 2>/dev/null || true
 
+        # ── Create index redirect to latest run ─────────────────────
+        cat > "${ALLURE_HISTORY}/index.html" << INDEXEOF
+        <!DOCTYPE html>
+        <html><head><meta http-equiv="refresh" content="0; url=./${INPUT_GITHUB_RUN_NUM}/"></head>
+        <body><p>Redirecting to <a href="./${INPUT_GITHUB_RUN_NUM}/">latest report</a>…</p></body></html>
+        INDEXEOF
+
         echo "Allure report generated successfully."
