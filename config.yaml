@@ -100,6 +100,11 @@ drive:
   # HTTP read timeout in seconds for iCloud API requests (default: 30)
   # Prevents the sync process from hanging indefinitely on stalled connections
   # request_timeout: 30
+  # Keep packages (.key, .numbers, .app, …) as the downloaded single file
+  # instead of extracting them — one mtime+size per package (simpler dedup,
+  # easier round-trip back to iCloud) and far fewer inodes on NAS-style
+  # filesystems. Default false: extract into a bundle directory.
+  # flatten_packages: false
   # Optional: refuse to sync if a marker file is missing in the destination.
   # Prevents writing into a wrong directory when bind-mounts fail silently.
   # require_mount_marker: false
@@ -129,6 +134,12 @@ photos:
   # a stalled connection to Apple's CDN blocks its worker thread forever.
   # Between-bytes, not a total budget, so large videos are unaffected.
   # request_timeout: 30
+  # With file_sizes including both "original" and "original_alt", write edited
+  # photos as TWO files: the visible edited "current view", plus the untouched
+  # original as IMG_1234.HEIC.original.bak (no photo app recognises .bak as an
+  # image extension, so it stays hidden but filesystem-recoverable). Unedited
+  # photos are unaffected. Default false.
+  # preserve_originals_as_bak: false
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.

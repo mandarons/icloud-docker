@@ -8,9 +8,13 @@ The photos sync system (`src/sync_photos.py` + 6 helper modules) handles downloa
 - Support album-based organization with `all_albums` mode
 - Deduplicate across albums using hardlinks
 - Filter by file extensions and album preferences
-- Support multiple file sizes (original, medium, thumb, live_video)
+- Support multiple file sizes (original, medium, thumb, live_video, original_alt)
 - Handle date-based folder organization via `folder_format`
+- Name files via `photos.filename_format` (metadata/simple) or a single
+  `photos.file_format` template; optionally preserve originals of edited
+  photos as `*.original.bak` (`photos.preserve_originals_as_bak`)
 - Clean up obsolete local photos when enabled
+- Bound download streams with `photos.request_timeout` (default 30s)
 
 ## Module Map
 
@@ -58,6 +62,15 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 - `folder_format` uses strftime patterns (e.g., `"%Y/%m"`)
 - `enumeration_chunk_size` bounds peak memory (default 1000 photos/chunk)
 - HTTP 410 Gone triggers download URL refresh via `_refresh_photo_download_url()`
+- Downloads stream to a `.part` file and are size-verified against the CloudKit
+  version size before being moved into place — a partial or wrong-body transfer
+  never occupies the photo's path and never destroys the previous good copy
+- Photo renames (Live Photo self-heal, legacy migration) log what moved; a
+  rename that replaces an existing file logs a warning, and no rename may
+  start from the path the still legitimately occupies
+- Failed libraries are isolated (one unreadable library does not stop the
+  others) and are excluded from obsolete cleanup, which would otherwise read
+  their files as "server dropped these"
 - URL refresh MUST use CloudKit `records/lookup`, not `records/query` — `CPLMaster`
   is not a query-indexable type and querying it always fails with
   `Type is not marked indexable: CPLMaster (BAD_REQUEST)`
