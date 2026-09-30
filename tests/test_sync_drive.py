@@ -2276,4 +2276,5 @@ class TestPackageMtimeSurvivesTheNfdRename(unittest.TestCase):
                 )
 
             self.assertTrue(ok)
-            self.assertEqual(int(os.path.getmtime(package)), expected)
+            # The real check whose mismatch deletes and re-downloads the package.
+            self.assertTrue(sync_drive.package_exists(item=item, local_package_path=package))
