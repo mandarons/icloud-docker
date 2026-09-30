@@ -1,0 +1,1 @@
+[38;5;196m2026-09-30 21:10:03,036 :: ERROR :: root :: sync.py :: 486 :: Drive mount marker missing: /tmp/tmpu2dl18uc/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpu2dl18uc/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

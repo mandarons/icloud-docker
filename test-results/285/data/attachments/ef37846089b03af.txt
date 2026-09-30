@@ -1,0 +1,4 @@
+INFO     root:sync.py:1087 Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).
+INFO     root:sync.py:1128 Received 6-digit code via Telegram -- validating.
+WARNING  root:sync.py:1149 trust_session raised (non-fatal): trust glitch
+INFO     root:sync.py:1155 Telegram-driven 2FA succeeded; resuming sync.
