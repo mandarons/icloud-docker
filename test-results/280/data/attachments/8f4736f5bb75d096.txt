@@ -1,0 +1,10 @@
+[38;21m2026-09-30 02:57:38,828 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-09-30 02:57:38,828 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-09-30 02:57:38,828 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;5;39m2026-09-30 02:57:38,828 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;21m2026-09-30 02:57:38,829 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-30 02:57:38,829 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-09-30 02:57:38,838 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;21m2026-09-30 02:57:38,838 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;5;226m2026-09-30 02:57:38,840 :: WARNING :: root :: photo_file_utils.py :: 162 :: Download URL refresh has failed 6 times in a row - expired-URL (HTTP 410) recovery is not working, so affected photos will be reported as failed downloads. Most recent failure: test-123 - record not found in iCloud response[0m
+[38;5;226m2026-09-30 02:57:38,840 :: WARNING :: root :: photo_file_utils.py :: 162 :: Download URL refresh has failed 6 times in a row - expired-URL (HTTP 410) recovery is not working, so affected photos will be reported as failed downloads. Most recent failure: test-123 - record not found in iCloud response[0m
