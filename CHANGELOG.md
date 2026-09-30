@@ -7,27 +7,174 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Sign in with a hardware security key (WebAuthn). Apple IDs with a security key
+  enrolled get no 6-digit codes; the web UI now relays Apple's challenge to the
+  machine holding the key via a one-line `uv` command (`src/icloud_sign.py`),
+  and the sync loop recognises such an account — no 2FA push, no Telegram
+  listener, notifications point at `/auth`
+  ([#547](https://github.com/mandarons/icloud-docker/pull/547))
+- Complete iCloud 2FA from Telegram without a shell or web UI: set
+  `app.telegram.listen: true`, reply the auth keyword to get a code pushed,
+  then reply the 6-digit code ([#470](https://github.com/mandarons/icloud-docker/pull/470))
+- `photos.filename_format: simple` — plain `IMG_1234.HEIC` names matching
+  Apple/boredazfcuk style, so an existing boredazfcuk tree is recognised
+  without re-downloading; collisions fall back to the metadata name
+  ([#457](https://github.com/mandarons/icloud-docker/pull/457))
+- `photos.file_format` — a single `${photo.*}` template applied to all
+  versions, with `${photo.variant_suffix}` keeping originals un-suffixed
+  ([#457](https://github.com/mandarons/icloud-docker/pull/457))
+- `photos.preserve_originals_as_bak` — keep the untouched original of an
+  edited photo as `*.original.bak` beside the visible edited version, hidden
+  from photo browsers but recoverable (default off; needs `original_alt` in
+  `file_sizes`) ([#458](https://github.com/mandarons/icloud-docker/pull/458))
+- Per-library sync state on the web dashboard: "Syncing now", a relative
+  last-sync time, or "Failed" with the last completion underneath; the
+  dashboard lists only the libraries this container syncs
+  ([#546](https://github.com/mandarons/icloud-docker/pull/546))
+- Proactive trust-token refresh — `app.trust_refresh_days` (default 14,
+  0 disables, must exceed `trust_expiry_warn_days`) re-mints Apple's ~90-day
+  trust cookie on a schedule so a container restart months later resumes
+  without a second factor ([#530](https://github.com/mandarons/icloud-docker/pull/530))
+- Notifications name a *revoked* trust token distinctly from an expired one —
+  Apple drops trust on security events where refresh can't help
+  ([#530](https://github.com/mandarons/icloud-docker/pull/530))
+- Obsolete-delete safety ceiling: `photos.obsolete_delete_limit_percent`
+  (default 25, 0 disables) makes a cleanup run refuse and report instead of
+  deleting when more than that share of a destination would go
+  ([#535](https://github.com/mandarons/icloud-docker/pull/535))
+- Log rotation — `app.logger.max_bytes` (default 50 MB) and
+  `app.logger.backup_count` (default 3) bound the log file instead of letting
+  it grow with library size; `max_bytes: 0` hands it to external logrotate
+  ([#528](https://github.com/mandarons/icloud-docker/pull/528))
+- Completing a re-auth in the web UI now ends the sign-in retry wait
+  immediately instead of waiting out `retry_login_interval`
+  ([#531](https://github.com/mandarons/icloud-docker/pull/531))
+- A required 2FA re-auth now actually requests Apple's code push (best-effort,
+  once per re-auth episode) — trusted devices stay silent otherwise
+  ([#486](https://github.com/mandarons/icloud-docker/pull/486))
+- Photo renames (Live Photo self-heal, legacy layout migration) are logged;
+  one that replaces an existing file is logged as a warning
+  ([#457](https://github.com/mandarons/icloud-docker/pull/457))
+
+### Changed
+
+- Sign-in failures other than a 2FA prompt no longer exit the container:
+  API response errors and network faults back off (30-minute floor) instead of
+  crash-looping under `restart: unless-stopped`; rate-limited accounts are not
+  hammered ([#529](https://github.com/mandarons/icloud-docker/pull/529))
+- A per-service outage (e.g. `Zone does not exist`) is logged as a service
+  problem on the ordinary interval, not charged as a sign-in failure with the
+  rate-limit backoff; after a genuine sign-in failure the retry waits at least
+  the shortest configured sync interval ([#529](https://github.com/mandarons/icloud-docker/pull/529))
+- An unreadable or missing `config.yaml` no longer becomes a restart loop: the
+  loop waits for the file (dry-run reports and exits), and logging falls back
+  to defaults instead of dying at import ([#529](https://github.com/mandarons/icloud-docker/pull/529))
+- The dashboard reports `reauth_needed` — sync stopped, with a link to the auth
+  page — instead of a healthy account while the loop is actually failing
+  ([#531](https://github.com/mandarons/icloud-docker/pull/531))
+- Download timeouts: `drive.request_timeout` now applies to the download
+  stream itself (it previously only reached `is_package()`), and a new
+  `photos.request_timeout` does the same for photos — both default 30s,
+  between-bytes so large videos are unaffected; a stalled connection no longer
+  freezes a sync forever while the container reports healthy
+  ([#529](https://github.com/mandarons/icloud-docker/pull/529))
+- The Telegram reply prompt is sent only by the 2FA handler — a rejected
+  password or throttled sign-in no longer tells you to reply `auth`, which
+  would hide the real error ([#470](https://github.com/mandarons/icloud-docker/pull/470))
+- Updated icloudpy to 0.10.0 (security-key 2FA APIs) and requests to 2.34.2
+- Usage-tracking HTTP contract documented (`docs/systems/usage.md`): schemas,
+  samples, retry behaviour ([#511](https://github.com/mandarons/icloud-docker/pull/511))
+- CI: Allure test reports generated with native runner steps (no Docker-based
+  action); `.github/**` added to workflow path triggers
+- Dependency bumps: ruff 0.16.9, coverage 7.16.2, allure-pytest 2.16.1,
+  pre-commit 4.6.2, flask 3.1.3; GitHub Actions checkout v7, upload-artifact
+  v7, docker/login-action v4, github-script v9
+
 ### Fixed
 
 - Drive packages (`.key`, `.pxm`, `.band`, `.framework`, `.app`, …) are no longer
   re-downloaded on every sync. `package_exists()` compared the summed size of the
   *unpacked* directory against `item.size`, which is the size of the remote *zip* —
   never equal, so the up-to-date branch was unreachable
-  ([#525](https://github.com/mandarons/icloud-docker/issues/525))
+  ([#525](https://github.com/mandarons/icloud-docker/issues/525), [#526](https://github.com/mandarons/icloud-docker/pull/526))
+- Flat single-file package bundles (unrecognised MIME, or `drive.flatten_packages`)
+  are no longer re-downloaded every sync — their on-disk bytes are the archive
+  size, which never equals `item.size`; freshness now falls back to the mtime
+  `download_file` stamps ([#473](https://github.com/mandarons/icloud-docker/pull/473), [#550](https://github.com/mandarons/icloud-docker/pull/550))
 - Package extraction is gated on `zipfile.is_zipfile()` rather than the libmagic MIME
   string, which reports `application/octet-stream` for many of Apple's packageDownload
   zips. Previously those packages were never unpacked and the raw zip was left on disk
   under the package's own name ([#525](https://github.com/mandarons/icloud-docker/issues/525))
-
+- Two sibling iWork packages (bare-rooted internal zips) no longer collide with
+  `FileExistsError` — bare-rooted archives extract into their own bundle
+  subdirectory; self-prefixed ones (`.band`) keep the historical in-parent
+  extraction ([#473](https://github.com/mandarons/icloud-docker/pull/473))
+- Zip-slip: `_zip_entries_self_prefixed()` also recognises `../bundle/` traversal
+  ([#473](https://github.com/mandarons/icloud-docker/pull/473))
 - Expired download URL (HTTP 410) recovery now uses CloudKit `records/lookup` instead
   of `records/query`. `CPLMaster` is not a query-indexable type, so every refresh
   attempt failed with `Type is not marked indexable: CPLMaster (BAD_REQUEST)`, which
-  could stop large albums syncing entirely ([#521](https://github.com/mandarons/icloud-docker/issues/521))
+  could stop large albums syncing entirely ([#521](https://github.com/mandarons/icloud-docker/issues/521), [#522](https://github.com/mandarons/icloud-docker/pull/522))
+- A CloudKit *error record* returned inside a 410 refresh response is rejected
+  instead of being assigned as the photo's master record (surfaced later as
+  `KeyError: 'fields'`, charged to the download so the refresh warning never
+  fired) ([#522](https://github.com/mandarons/icloud-docker/pull/522))
+- Photo downloads are verified before replacing anything: stream to a `.part`
+  file, compare against the size iCloud declares, then move into place — a
+  partial or wrong-body transfer can no longer sit where the photo belongs or
+  destroy the previous good copy ([#545](https://github.com/mandarons/icloud-docker/pull/545))
+- Filename-collision handling no longer orphans the file it preserves: the
+  collided-with path is tracked so obsolete-cleanup leaves it alone (on a real
+  library a single pass deleted 185,207 files this way) ([#457](https://github.com/mandarons/icloud-docker/pull/457))
+- The Live Photo self-heal verifies the candidate is really the video (by
+  CloudKit size) before renaming, and never renames the still onto its own
+  path ([#457](https://github.com/mandarons/icloud-docker/pull/457))
+- No legacy rename may start from the path the still legitimately occupies —
+  under flat layouts syncing a `live_video_*` size could rename the still onto
+  the video's path, losing both ([#457](https://github.com/mandarons/icloud-docker/pull/457))
+- Obsolete-file cleanup never runs against the shared photos root: a library
+  with no `library_destinations` entry could otherwise delete every other
+  library's tree ([#534](https://github.com/mandarons/icloud-docker/pull/534))
+- One unreadable library no longer stops the others: per-library faults are
+  isolated, and failed libraries are excluded from obsolete cleanup (which
+  would otherwise read their files as "server dropped these")
+  ([#534](https://github.com/mandarons/icloud-docker/pull/534))
+- Stalled downloads time out instead of blocking a worker forever while the
+  container stays "healthy" (drive: observed 3-day freeze; photos: 4.5-hour
+  freeze) ([#529](https://github.com/mandarons/icloud-docker/pull/529))
+- The first-run auth form includes the CSRF token it needs
+  ([#533](https://github.com/mandarons/icloud-docker/pull/533))
+- A scalar `photos.filters.libraries: Family` (not a list) is treated as one
+  library instead of iterating the string one library per character
+  ([#546](https://github.com/mandarons/icloud-docker/pull/546))
+- Container entry point hands ownership of `session_data/` and
+  `python_keyring/` to the unprivileged user every start, so pre-existing
+  root-owned directories can't cause `Permission denied`
+  ([#549](https://github.com/mandarons/icloud-docker/pull/549))
+- Broken star-history chart in the README ([#518](https://github.com/mandarons/icloud-docker/pull/518))
+
+## [2.0.0] - 2026-08-07
+
+### Added
+
+- Per-library destination subdirectories (`photos.library_destinations`)
+  ([#456](https://github.com/mandarons/icloud-docker/pull/456))
+- Embedded web UI — sync dashboard + on-device 2FA re-auth flow
+  ([#464](https://github.com/mandarons/icloud-docker/pull/464))
 
 ### Changed
 
-- Repeated consecutive download URL refresh failures are logged at WARNING rather than
-  only DEBUG, so a systematically broken refresh path is visible by default
+- Comprehensive documentation overhaul ([#510](https://github.com/mandarons/icloud-docker/pull/510), [#498](https://github.com/mandarons/icloud-docker/pull/498))
+- Dependency bumps: flask 3.1.3, ruff 0.16.1, coverage 7.15.3, pre-commit 4.6.1;
+  GitHub Actions cache v6, setup-python v7, download-artifact v8,
+  build-push-action v7 (pinned refs)
+
+### Fixed
+
+- Preserve the mount marker file during `remove_obsolete` cleanup
+  ([#509](https://github.com/mandarons/icloud-docker/pull/509))
 
 ## [1.28.0] - 2026-07-27
 
@@ -450,7 +597,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Initial release
 
-[Unreleased]: https://github.com/mandarons/icloud-docker/compare/v1.28.0...HEAD
+[Unreleased]: https://github.com/mandarons/icloud-docker/compare/v2.0.0...HEAD
+
+[2.0.0]: https://github.com/mandarons/icloud-docker/compare/v1.28.0...v2.0.0
 
 [1.28.0]: https://github.com/mandarons/icloud-docker/compare/v1.27.0...v1.28.0
 [1.27.0]: https://github.com/mandarons/icloud-docker/compare/v1.26.0...v1.27.0

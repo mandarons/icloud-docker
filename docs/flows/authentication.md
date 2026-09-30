@@ -24,6 +24,8 @@ Authentication is managed by `sync.py` and delegates to iCloudPy for the actual 
    - If True: enter 2FA handling flow
 
 4. **2FA handling** (`_handle_2fa_required()`)
+   - Request Apple's 2FA code push (best-effort, once per re-auth episode —
+     latched so retries don't re-push and trip rate limits)
    - Send notification alert (24-hour rate limit)
    - Sleep for `retry_login_interval` seconds
    - Return to main loop to retry authentication
@@ -34,6 +36,18 @@ Authentication is managed by `sync.py` and delegates to iCloudPy for the actual 
    - Read `X-APPLE-WEBAUTH-HSA-TRUST` cookie expiry
    - Compare against `app.trust_expiry_warn_days` threshold
    - Send warning notification once per cookie value (debounced)
+   - The notification distinguishes a *revoked* trust token (Apple dropped
+     trust on a security event — new device, password/key change — where a
+     refresh schedule cannot help) from an ordinary expiry
+
+6. **Proactive trust refresh** (`_maybe_refresh_trust()`)
+   - When the trust cookie has fewer than `app.trust_refresh_days` days left
+     (default 14, 0 disables, must exceed `trust_expiry_warn_days`), call
+     `trust_session` on the live session so icloudpy persists a fresh token
+   - Best-effort: a failed or declined refresh is logged and sync continues —
+     the session in hand is still valid
+   - Goal: a container restart after months of uptime resumes without a
+     second factor
 
 ## China Region
 

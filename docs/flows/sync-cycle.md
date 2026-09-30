@@ -79,10 +79,17 @@ When `sync_interval` is negative (e.g., `-1`), the system runs once and exits:
 
 ## Cross-Cutting Concerns
 
-- **Error handling:** Auth failures trigger retry; notification failures are swallowed
+- **Error handling:** Only a 2FA prompt ends the auth attempt with a wait —
+  other sign-in failures (API errors, network faults) are caught and backed
+  off with a 30-minute floor instead of exiting the process; a per-service
+  outage after a successful sign-in is retried on the ordinary interval, never
+  charged as a sign-in failure; an unreadable `config.yaml` makes the loop
+  wait for the file rather than exit (dry-run reports and exits). Notification
+  failures are swallowed
 - **Performance:** Parallel downloads via ThreadPoolExecutor (auto or 1-16 threads)
 - **Mount safety:** Marker file checks prevent writes to unmounted directories
-- **Trust monitoring:** Cookie expiry warnings sent before 90-day trust window lapses
+- **Trust monitoring:** Cookie expiry warnings sent before 90-day trust window lapses;
+  the token is proactively re-minted when fewer than `app.trust_refresh_days` remain
 
 ## Related Docs
 
