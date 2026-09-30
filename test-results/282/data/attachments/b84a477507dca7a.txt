@@ -1,0 +1,4 @@
+[38;5;39m2026-09-30 16:38:11,347 :: INFO :: root :: photo_file_utils.py :: 347 :: Downloading /tmp/tmp2m0j3ss8/IMG_0002.JPG ...[0m
+[38;5;39m2026-09-30 16:38:11,347 :: INFO :: root :: photo_file_utils.py :: 347 :: Downloading /tmp/tmp2m0j3ss8/IMG_0002.JPG ...[0m
+[38;5;196m2026-09-30 16:38:11,347 :: ERROR :: root :: photo_file_utils.py :: 376 :: Incomplete download of /tmp/tmp2m0j3ss8/IMG_0002.JPG: got 5 of 5000 bytes. Will retry on the next sync.[0m
+[38;5;196m2026-09-30 16:38:11,347 :: ERROR :: root :: photo_file_utils.py :: 376 :: Incomplete download of /tmp/tmp2m0j3ss8/IMG_0002.JPG: got 5 of 5000 bytes. Will retry on the next sync.[0m
