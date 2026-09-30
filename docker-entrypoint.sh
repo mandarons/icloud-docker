@@ -48,6 +48,12 @@ for dir in /app /config /icloud /home/abc; do
     fi
 done
 
+# session_data and python_keyring are created above as root. The loop skips
+# /config when it is already owned by abc -- the usual bind mount -- so they
+# stayed root-owned, and the documented `su-exec abc icloud ...` 2FA command
+# could not write its session. Hand them to abc every time.
+chown -R abc:abc /config/session_data /config/python_keyring
+
 # Execute the main application as abc user
 echo "Starting iCloud Docker application..."
 exec su-exec abc /app/init.sh
