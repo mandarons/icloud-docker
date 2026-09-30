@@ -103,5 +103,34 @@ fi
         self.assertFalse(os.path.exists(self.new_keyring))
 
 
+
+class TestConfigSubdirsBelongToAbc(unittest.TestCase):
+    """The entrypoint runs as root and creates session_data and
+    python_keyring. Its ownership loop skips /config when /config is already
+    owned by abc (the usual bind mount), which left both root-owned and the
+    documented 2FA command unable to write its session file."""
+
+    def setUp(self):
+        path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "docker-entrypoint.sh")
+        with open(path, encoding="utf-8") as fh:
+            self.lines = fh.read().splitlines()
+
+    def _index(self, predicate):
+        return next(i for i, line in enumerate(self.lines) if predicate(line.strip()))
+
+    def test_both_subdirs_are_chowned_unconditionally_after_creation(self):
+        created = self._index(lambda line: line.startswith("mkdir -p") and "/config/python_keyring" in line)
+        chowned = self._index(
+            lambda line: line.startswith("chown -R abc:abc")
+            and "/config/session_data" in line
+            and "/config/python_keyring" in line,
+        )
+        handed_over = self._index(lambda line: line.startswith("exec su-exec abc"))
+        self.assertLess(created, chowned)
+        self.assertLess(chowned, handed_over)
+        # Not indented: the fix must not sit inside the conditional loop.
+        self.assertFalse(self.lines[chowned].startswith((" ", "\t")))
+
+
 if __name__ == "__main__":
     unittest.main()
