@@ -1,0 +1,6 @@
+[38;5;196m2026-09-30 17:44:19,233 :: ERROR :: root :: sync.py :: 995 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-09-30 17:44:19,233 :: ERROR :: root :: sync.py :: 995 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-09-30 17:44:19,234 :: INFO :: root :: sync.py :: 971 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-09-30 17:44:19,234 :: INFO :: root :: sync.py :: 971 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-09-30 17:44:19,234 :: INFO :: root :: sync.py :: 1016 :: retry_login_interval is < 0, exiting ...[0m
+[38;5;39m2026-09-30 17:44:19,234 :: INFO :: root :: sync.py :: 1016 :: retry_login_interval is < 0, exiting ...[0m

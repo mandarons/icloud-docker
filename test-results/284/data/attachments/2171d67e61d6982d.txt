@@ -1,0 +1,12 @@
+[38;21m2026-09-30 17:44:19,874 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-30 17:44:19,874 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-30 17:44:19,874 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-30 17:44:19,874 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-30 17:44:19,875 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: http://test.com[0m
+[38;21m2026-09-30 17:44:19,875 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: http://test.com[0m
+[38;21m2026-09-30 17:44:19,875 :: DEBUG :: root :: usage.py :: 321 :: Heartbeat failed: no response[0m
+[38;21m2026-09-30 17:44:19,875 :: DEBUG :: root :: usage.py :: 321 :: Heartbeat failed: no response[0m
+[38;21m2026-09-30 17:44:19,875 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-30 17:44:19,875 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-09-30 17:44:19,876 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-09-30 17:44:19,876 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
