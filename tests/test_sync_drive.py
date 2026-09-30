@@ -2240,41 +2240,98 @@ class TestDriveDownloadHasATimeout(unittest.TestCase):
         self.assertEqual(dl.call_args.kwargs.get("timeout"), 47)
 
 
-class TestPackageMtimeSurvivesTheNfdRename(unittest.TestCase):
-    """download_file sets a package's mtime to iCloud's date_modified, then
-    the task renames the package's children to NFD. A rename updates its
-    parent directory's mtime, so any package with a non-ASCII name failed
-    package_exists and was downloaded again on every sync."""
+class TestNonAsciiPackagesStayWhereTheNextSyncLooks(unittest.TestCase):
+    """Package contents used to be renamed to the NFD form of their whole
+    path, and the package itself too. On Linux NFC and NFD are different
+    names, so a non-ASCII parent folder made the rename fail, a non-ASCII
+    package name moved the package away from the NFC path the next sync
+    checks, and any real rename moved the package's mtime off iCloud's.
+    Each of those re-downloaded the package on every sync (#527)."""
 
-    def test_the_package_keeps_icloud_mtime_after_its_children_are_renamed(self):
+    def setUp(self):
         import datetime
+
+        self.tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        self.item = MagicMock()
+        self.item.date_modified = datetime.datetime(2020, 1, 1, 12, 0, 0)
+
+    def test_a_package_under_a_non_ascii_folder_is_recorded_as_it_is_on_disk(self):
         import unicodedata
 
-        with tempfile.TemporaryDirectory() as d:
-            package = os.path.join(d, "Notes.pages")
-            os.makedirs(package)
-            Path(package, unicodedata.normalize("NFC", "Résumé.txt")).write_text("x")
-            item = MagicMock()
-            item.date_modified = datetime.datetime(2020, 1, 1, 12, 0, 0)
-            expected = int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
-            os.utime(package, (expected, expected))
+        # The reporter's layout: a non-ASCII parent folder, created NFC as
+        # drive_folder_processing does, and a non-ASCII file inside.
+        parent = os.path.join(self.tmp, unicodedata.normalize("NFC", "südkreuz 2"))
+        package = os.path.join(parent, "Runner.app")
+        os.makedirs(package)
+        Path(package, unicodedata.normalize("NFC", "Résumé.txt")).write_text("x")
+        stamp = self.item.date_modified.replace(tzinfo=timezone.utc).timestamp()
+        os.utime(package, (stamp, stamp))
+        on_disk = {str(f) for f in Path(package).glob("**/*")}
+        files = set()
 
-            real_rename = os.rename
+        with (
+            patch("src.drive_parallel_download.download_file", return_value=package),
+            patch("os.rename", side_effect=AssertionError("nothing may be renamed")),
+        ):
+            ok = sync_drive.download_file_task(
+                {"item": self.item, "local_file": package, "is_package": True, "files": files},
+            )
 
-            def rename_like_linux(src, dst):
-                # Some filesystems treat an NFC->NFD rename as a no-op; Linux
-                # does not, and bumps the parent's mtime like any rename.
-                real_rename(src, dst)
-                os.utime(os.path.dirname(dst), None)
+        self.assertTrue(ok)
+        self.assertEqual(files, on_disk)
+        self.assertTrue(sync_drive.package_exists(item=self.item, local_package_path=package))
 
-            with (
-                patch("src.drive_parallel_download.download_file", return_value=package),
-                patch("os.rename", side_effect=rename_like_linux),
-            ):
-                ok = sync_drive.download_file_task(
-                    {"item": item, "local_file": package, "is_package": True, "files": set()},
-                )
 
-            self.assertTrue(ok)
-            # The real check whose mismatch deletes and re-downloads the package.
-            self.assertTrue(sync_drive.package_exists(item=item, local_package_path=package))
+class TestNonAsciiPackageDownloadKeepsItsNfcPath(unittest.TestCase):
+    """End to end with the Polish-named fixture package: the package and
+    everything recorded for it stay under the NFC path the next sync looks
+    up. The string comparison holds on macOS too, where NFC and NFD name
+    the same file."""
+
+    def setUp(self):
+        self.config = read_config(config_path=tests.CONFIG_PATH)
+        self.filters = dict(self.config["drive"]["filters"])
+        self.root = tests.DRIVE_DIR
+        os.makedirs(self.root, exist_ok=True)
+        self.addCleanup(shutil.rmtree, tests.TEMP_DIR, True)
+        service = data.ICloudPyServiceMock(data.AUTHENTICATED_USER, data.VALID_PASSWORD)
+        drive = service.drive
+        self.item = drive[drive.dir()[6]]["Sample"]["Fotoksiążka-Wzór.xmcf"]
+
+    def _assert_recorded_under_nfc(self, files, package):
+        import unicodedata
+
+        self.assertEqual(package, unicodedata.normalize("NFC", package))
+        self.assertTrue(files)
+        for f in files:
+            self.assertTrue(f.startswith(package + os.sep), f)
+        self.assertTrue(sync_drive.package_exists(item=self.item, local_package_path=package))
+
+    def test_parallel_path(self):
+        files = set()
+        info = sync_drive.collect_file_for_download(
+            item=self.item,
+            destination_path=self.root,
+            filters=self.filters["file_extensions"],
+            ignore=None,
+            files=files,
+        )
+        self.assertTrue(sync_drive.download_file_task(info))
+        self._assert_recorded_under_nfc(files - {info["local_file"]}, info["local_file"])
+
+    def test_legacy_path(self):
+        import unicodedata
+
+        files = set()
+        self.assertTrue(
+            sync_drive.process_file(
+                item=self.item,
+                destination_path=self.root,
+                filters=self.filters["file_extensions"],
+                ignore=None,
+                files=files,
+            ),
+        )
+        package = unicodedata.normalize("NFC", os.path.join(self.root, "Fotoksiążka-Wzór.xmcf"))
+        self._assert_recorded_under_nfc(files - {package}, package)

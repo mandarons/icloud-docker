@@ -8,7 +8,6 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import gzip
 import os
-import unicodedata
 import zipfile
 from shutil import copyfileobj
 
@@ -251,14 +250,11 @@ def _process_zip_package(local_file: str, archive_file: str) -> str:
         LOGGER.info(f"Unpacking {archive_file} to {extract_dir}")
         _safe_extractall(zf, extract_dir, safety_boundary)
 
-    # Handle Unicode normalization for cross-platform compatibility
-    normalized_path = unicodedata.normalize("NFD", local_file)
-    if normalized_path != local_file and os.path.exists(local_file):
-        # os.replace, not os.rename: same on POSIX, but rename refuses to
-        # overwrite an existing target on Windows, and the NFD name can
-        # already exist there.
-        os.replace(local_file, normalized_path)
-        local_file = normalized_path
+    # The package stays at the NFC path it was asked for. Renaming it to the
+    # NFD form of the whole path broke on Linux, where the two forms are
+    # different names: a non-ASCII parent folder made the rename fail, and a
+    # non-ASCII package name left it where the next sync (which looks for the
+    # NFC path) could not find it, so it was downloaded again every time.
 
     os.remove(archive_file)
     LOGGER.info(f"Successfully unpacked the package {archive_file}.")
