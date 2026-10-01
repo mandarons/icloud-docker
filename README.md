@@ -82,6 +82,12 @@ app:
     level: "info"
     # log filename icloud.log (default)
     filename: "/config/icloud.log"
+    # Rotate the log file rather than letting it grow without bound (one line
+    # is written per file considered each cycle, so a large library can reach
+    # several GB). Defaults: 50 MB per file, 3 backups. Set max_bytes to 0 if
+    # an external logrotate manages the file instead.
+    # max_bytes: 52428800
+    # backup_count: 3
   credentials:
     # iCloud drive username
     username: "please@replace.me"
@@ -103,12 +109,21 @@ app:
   #   public_url: ""     # externally reachable URL, embedded in notifications
   # Warn this many days before Apple's ~90-day trust cookie expires (default 7)
   # trust_expiry_warn_days: 7
+  # Re-mint the trust token when it has this many days left, so a container
+  # restart months later resumes without a second factor. Must exceed
+  # trust_expiry_warn_days. Set to 0 to disable. Default 14.
+  # trust_refresh_days: 14
   discord:
   # webhook_url: <your server webhook URL here>
   # username: icloud-docker #or any other name you prefer
   telegram:
   # bot_token: <your Telegram bot token>
   # chat_id: <your Telegram user or chat ID>
+  # listen: true         # also poll Telegram for replies so you can re-auth 2FA from your phone:
+  #                      # reply the auth keyword to have a code pushed to your Apple devices,
+  #                      # then reply the 6-digit code. Off by default. Requires bot_token + chat_id.
+  #                      # Use a 1:1 chat with the bot (group privacy mode hides plain messages).
+  # auth_keyword: auth   # reply word that triggers the 2FA push (default "auth", case-insensitive).
   pushover:
   # user_key: <your Pushover user key>
   # api_token: <your Pushover api token>
@@ -145,6 +160,13 @@ drive:
   # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: false
   sync_interval: 300
+  # HTTP read timeout in seconds for the download stream (default: 30).
+  # Prevents a stalled connection from freezing a sync forever.
+  # request_timeout: 30
+  # Keep packages (.key, .numbers, .app, …) as the downloaded single file
+  # instead of extracting them — lower inode footprint on NAS, simpler dedup.
+  # Default false (extract into a bundle directory).
+  # flatten_packages: false
   # Optional: refuse to sync if a marker file is missing in the destination.
   # require_mount_marker: false
   filters: # Optional - use it only if you want to download specific folders.
@@ -167,6 +189,18 @@ photos:
   destination: "photos"
   # Remove local photos that are not present on server (i.e. photos delete on server)
   remove_obsolete: false
+  # Optional, default 25. Ceiling on how much of a destination one cleanup run
+  # may delete, as a percentage of the files found there. Above this share the
+  # run reports what it would have removed and deletes nothing. 0 disables it.
+  # obsolete_delete_limit_percent: 25
+  # HTTP read timeout in seconds for photo downloads (default: 30). Between-bytes,
+  # not a total budget, so large videos are unaffected.
+  # request_timeout: 30
+  # With file_sizes including both "original" and "original_alt", write edited
+  # photos as the visible edited version plus the untouched original as
+  # *.original.bak (hidden from photo browsers, filesystem-recoverable).
+  # Default false.
+  # preserve_originals_as_bak: false
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.
@@ -246,7 +280,12 @@ The output reports per-library counts of: `would_skip` (already up-to-date), `si
 
 An optional embedded dashboard that shows sync status and lets you complete
 2FA re-authentication from a browser — useful on a headless box where
-`docker exec` isn't convenient. Disabled by default; enable with:
+`docker exec` isn't convenient. The dashboard tracks state per library —
+"Syncing now", a relative last-sync time, or "Failed" with the last
+completion underneath — and lists only the libraries this container
+actually syncs. When the sync loop is failing it reports that (with a link
+to the auth page) instead of a healthy account. Disabled by default;
+enable with:
 
 ```yaml
 app:
@@ -264,6 +303,7 @@ app:
 | `app.web_ui.port` | `8080` | TCP port. |
 | `app.web_ui.public_url` | *(unset)* | Externally reachable URL embedded in notifications, so the re-auth link works from your phone. Falls back to `http://host:port` with a one-time warning. |
 | `app.trust_expiry_warn_days` | `7` | Warn this many days before Apple's ~90-day trust cookie expires, so re-auth can be scheduled rather than discovered mid-sync. |
+| `app.trust_refresh_days` | `14` | Proactively re-mint the trust token when it has this many days left, so restarts keep resuming without a second factor. Must exceed `trust_expiry_warn_days`; `0` disables. |
 
 ### Security model — read before exposing it
 

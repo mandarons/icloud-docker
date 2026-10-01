@@ -6,7 +6,11 @@ The sync engine (`src/sync.py`) is the central orchestrator that manages the ent
 
 - Authenticate with iCloud (keyring or env password)
 - Manage adaptive countdown timers for Drive and Photos
-- Handle 2FA requirements with retry logic
+- Handle 2FA requirements with retry logic (code push requested once per
+  episode; Telegram and web-UI re-auth both wake the wait)
+- Back off and continue on sign-in/service failures — never exit the loop on
+  a fault the retry can absorb
+- Refresh the trust token proactively before it expires
 - Execute dry-run mode for pre-flight validation
 - Coordinate notifications and usage telemetry
 - Support oneshot mode (single sync then exit)
@@ -22,7 +26,8 @@ The sync engine does NOT perform actual file downloads — it delegates to `sync
 | `sync()` | Main loop — called from `main.py` |
 | `_authenticate_and_get_api()` | Create authenticated iCloudPy session |
 | `_calculate_next_sync_schedule()` | Adaptive timer algorithm |
-| `_handle_2fa_required()` | 2FA retry with notification |
+| `_handle_2fa_required()` | 2FA retry: request code push, notify, wait |
+| `_maybe_refresh_trust()` | Proactive trust-token refresh below `trust_refresh_days` |
 | `_perform_drive_sync()` | Wrap drive sync with stats collection |
 | `_perform_photos_sync()` | Wrap photos sync with stats collection |
 | `_perform_dry_run()` | Validate config without writing files |
@@ -34,6 +39,8 @@ The sync engine does NOT perform actual file downloads — it delegates to `sync
 - Oneshot mode exits when ALL configured intervals are negative
 - Mount marker checks prevent writes to unmounted directories
 - Trust cookie expiry warnings use debounce (one warning per cookie value)
+- The loop never exits on sign-in failures other than a 2FA prompt; backoff
+  is at least the shortest configured sync interval
 
 ## Dependencies
 

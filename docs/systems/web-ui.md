@@ -5,7 +5,15 @@ The web UI (`src/web.py`) provides an optional Flask-based dashboard for monitor
 ## Responsibilities
 
 - Serve dashboard page showing sync status and config paths
-- Handle Apple ID password submission and 2FA code entry
+- Show per-library sync state ("Syncing now", relative last-sync, or "Failed"
+  with the last completion); list only libraries this container syncs
+- Surface `reauth_needed` published by the loop when sync is stopped, instead
+  of deriving health from on-disk signals alone
+- End the sign-in retry wait as soon as any auth path completes a re-auth
+  (the force-sync sentinel is deliberately separate — completing a sign-in
+  does not queue a full re-enumeration)
+- Handle Apple ID password submission and 2FA code entry, plus security-key
+  (WebAuthn) relay for Apple IDs with a key enrolled
 - Provide CSRF protection via cookie + token matching
 - Display recent log lines
 - Signal the sync loop for immediate force-sync via `web_signals.py`

@@ -13,6 +13,12 @@ on:
       - requirements.txt
       - run-ci.sh
       - .github/**
+      # Docs and sample config also run the gates — a docs-only PR that
+      # matches no path starts no run, and "no rows" reads as absence, not green.
+      - README.md
+      - CHANGELOG.md
+      - config.yaml
+      - docs/**
   workflow_dispatch:
 jobs:
   cache-requirements-install:
