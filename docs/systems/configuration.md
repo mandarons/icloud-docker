@@ -26,6 +26,11 @@ The config system is a pure data layer — it does NOT perform sync operations, 
 | `prepare_drive_destination(config)` | Create and return drive dest path |
 | `prepare_photos_destination(config)` | Create and return photos dest path |
 | `get_photos_obsolete_delete_limit_percent(config)` | Max share of a destination one cleanup may delete |
+| `get_trust_refresh_days(config)` | Days-left threshold for proactive trust-token refresh (default 14, 0 disables) |
+| `get_drive_flatten_packages(config)` | Keep packages as single files instead of extracting (default false) |
+| `get_photos_filename_format(config)` | `metadata` (legacy) or `simple` plain names (default `metadata`) |
+| `get_photos_file_format(config)` / `get_photos_variant_separator(config)` | Single `${photo.*}` template for all versions + variant separator |
+| `get_photos_preserve_originals_as_bak(config)` | Write originals of edited photos as `*.original.bak` (default false) |
 | `get_web_ui_enabled(config)` | Check if web UI is enabled |
 | `get_telegram_listen_enabled(config)` | `app.telegram.listen` — complete 2FA by replying in Telegram (default off) |
 | `get_telegram_auth_keyword(config)` | `app.telegram.auth_keyword` — the reply that requests a 2FA push (default `auth`, lower-cased) |

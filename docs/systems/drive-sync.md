@@ -7,9 +7,12 @@ The drive sync system (`src/sync_drive.py` + 7 helper modules) handles downloadi
 - Walk iCloud Drive directory tree recursively
 - Download files with parallel threads (ThreadPoolExecutor)
 - Filter files/folders by glob patterns and extensions
-- Detect and auto-extract ZIP packages and gzip streams
+- Detect and auto-extract ZIP packages and gzip streams (or keep them as
+  single files when `drive.flatten_packages` is enabled)
 - Remove obsolete local files when `remove_obsolete` is enabled
 - Handle file existence checks to avoid re-downloading
+- Bound download streams with `drive.request_timeout` (default 30s) so a
+  stalled connection cannot freeze a worker forever
 
 ## Module Map
 
@@ -50,7 +53,16 @@ Drive sync is purely a download system — it does NOT upload files to iCloud. I
   zips, and a failed unpack leaves the raw archive on disk under the package's name
 - Package freshness is decided by `date_modified` **only**. `item.size` is the size of
   the remote zip while the local package is an unpacked directory, so the two are never
-  comparable
+  comparable. For flat single-file bundles (unrecognised MIME or
+  `drive.flatten_packages`) the on-disk size is the archive size, so freshness
+  falls back to the mtime `download_file` stamps (`package_bundle_unchanged()`)
+- After the NFD rename pass over a package's children, the package directory's
+  mtime is re-stamped to `date_modified` — a successful rename bumps its parent
+  to "now", which would otherwise fail the freshness check and re-download the
+  package on every sync
+- Bare-rooted package zips (iWork-style entries) extract into their own bundle
+  subdirectory; self-prefixed zips (`.band`-style) extract into the parent.
+  `_zip_entries_self_prefixed()` must recognise `../bundle/` traversal too
 - Thread count is capped at `min(CPU_COUNT, 8)`, max 16
 - `files_lock` protects shared `files` set in parallel workers
 
