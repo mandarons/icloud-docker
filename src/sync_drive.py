@@ -131,10 +131,6 @@ def process_file(
         flatten_packages=config_parser.get_drive_flatten_packages(config),
     )
     if local_file and item_is_package:
-        for f in Path(local_file).glob("**/*"):
-            f = str(f)
-            f_normalized = unicodedata.normalize("NFD", f)
-            if os.path.exists(f):
-                os.rename(f, f_normalized)
-                files.add(f_normalized)
+        # As in download_file_task: record the contents as they are on disk.
+        files.update(str(f) for f in Path(local_file).glob("**/*"))
     return bool(local_file)
