@@ -51,8 +51,8 @@ The sync cycle is the core operational loop that alternates between Drive and Ph
    - Send notification if configured and thresholds met
 
 10. **Schedule next sync** (`_calculate_next_sync_schedule()`)
-    - Adaptive algorithm determines which service syncs next
-    - Subtracts elapsed time from other service's timer
+    - Sleeps until the sooner service is due and subtracts that from both timers
+    - A one-shot service (`sync_interval < 0`) that has already run is never scheduled again
 
 11. **Interruptible sleep** (`_interruptible_sleep()`)
     - Sleep in 2-second chunks
@@ -62,13 +62,11 @@ The sync cycle is the core operational loop that alternates between Drive and Ph
 
 ```
 if both services configured:
-    if drive_timer <= photos_timer:
-        if timers equal and > 10s: wait full interval, sync both
-        else: sync drive, subtract drive_time from photos_timer
-    else:
-        sync photos, subtract photos_time from drive_timer
-else if only drive: sync drive
-else if only photos: sync photos
+    sleep = min of the non-negative timers (a negative one is a finished one-shot)
+    subtract sleep from both timers
+    sync whichever timer reached zero (both, when they were equal)
+else if only drive: sleep drive_timer, sync drive
+else if only photos: sleep photos_timer, sync photos
 ```
 
 ## Oneshot Mode
