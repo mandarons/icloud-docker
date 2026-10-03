@@ -176,6 +176,18 @@ class TestConfigParser(unittest.TestCase):
             config_parser.get_retry_login_interval(config=None),
         )
 
+    def test_get_retry_login_interval_can_stay_quiet(self):
+        """``_handle_sync_error`` reuses this interval to back off a sync
+        that failed after sign-in; the getter's "Retrying login every N
+        seconds." would describe something that is not happening."""
+        from unittest.mock import patch
+
+        config = read_config(config_path=tests.CONFIG_PATH)
+        with patch.object(config_parser, "log_config_found_info") as logged:
+            interval = config_parser.get_retry_login_interval(config=config, log_messages=False)
+        self.assertEqual(config["app"]["credentials"]["retry_login_interval"], interval)
+        logged.assert_not_called()
+
     def test_get_photos_sync_interval(self):
         """Given sync interval."""
         config = read_config(config_path=tests.CONFIG_PATH)

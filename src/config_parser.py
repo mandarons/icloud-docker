@@ -116,11 +116,15 @@ def get_username(config: dict) -> str | None:
     return validate_and_strip_username(username, config_path)
 
 
-def get_retry_login_interval(config: dict) -> int:
+def get_retry_login_interval(config: dict, log_messages: bool = True) -> int:
     """Return retry login interval from config.
 
     Args:
         config: Configuration dictionary
+        log_messages: Whether to log informational messages (default: True).
+            Callers that reuse this interval for something other than a
+            login retry pass False, so the log does not claim a login is
+            being retried when it is not.
 
     Returns:
         Retry login interval in seconds
@@ -129,13 +133,15 @@ def get_retry_login_interval(config: dict) -> int:
 
     if not traverse_config_path(config=config, config_path=config_path):
         retry_login_interval = DEFAULT_RETRY_LOGIN_INTERVAL_SEC
-        log_config_not_found_warning(
-            config_path,
-            f"not found. Using default {retry_login_interval} seconds ...",
-        )
+        if log_messages:
+            log_config_not_found_warning(
+                config_path,
+                f"not found. Using default {retry_login_interval} seconds ...",
+            )
     else:
         retry_login_interval = get_config_value(config=config, config_path=config_path)
-        log_config_found_info(f"Retrying login every {retry_login_interval} seconds.")
+        if log_messages:
+            log_config_found_info(f"Retrying login every {retry_login_interval} seconds.")
 
     return retry_login_interval
 

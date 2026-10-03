@@ -16,6 +16,11 @@ DEFAULT_PHOTOS_DESTINATION = "photos"
 DEFAULT_RETRY_LOGIN_INTERVAL_SEC = 600  # 10 minutes
 DEFAULT_SYNC_INTERVAL_SEC = 1800  # 30 minutes
 DEFAULT_REQUEST_TIMEOUT_SEC = 30  # 30 seconds
+# How soon to look again while Apple is still indexing a photo library.
+# Indexing ends without notice, so on a long photos sync_interval a plain
+# "wait for the next cycle" leaves Photos hours behind for no reason. Only
+# ever shortens the wait: the retry is min(this, photos sync_interval).
+PHOTOS_INDEXING_RETRY_SEC = 1800  # 30 minutes
 # Share of a destination that obsolete-cleanup may delete in one run before
 # it refuses and reports instead. A sync does not normally make a quarter of
 # a library obsolete; when it appears to, a tracking bug is likelier than a

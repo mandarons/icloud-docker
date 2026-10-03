@@ -568,6 +568,34 @@ def _signal_library(action: str, library: str, **kwargs) -> None:
         LOGGER.debug(f"web_signals: {action} for {library} raised: {e!s}")
 
 
+def is_photos_indexing(error) -> bool:
+    """True when ``error`` is Apple saying a photo library is still indexing.
+
+    icloudpy raises this as a plain ServiceNotActivated, with only the
+    message to tell it apart, and it is account-wide rather than
+    per-library: ``PhotosService`` checks the primary zone's indexing
+    state in its own constructor, and its ``libraries`` property builds a
+    ``PhotoLibrary`` for every zone of the account in one pass -- each of
+    which raises this if that zone's index is unfinished, with nothing
+    cached on failure. So while any one zone is indexing, Photos cannot
+    be opened at all.
+    """
+    return isinstance(error, exceptions.ICloudPyServiceNotActivatedException) and "indexing" in str(error)
+
+
+def _raise_if_photos_indexing(error) -> None:
+    """Let a Photos-wide indexing wait escape the per-library handler.
+
+    ``_LIBRARY_FAULTS`` covers ServiceNotActivated so that one dead zone
+    cannot stop the others, but indexing is not one library's problem:
+    none of them can be read (see ``is_photos_indexing``). Isolating it
+    would mark every configured library failed and run the pass to
+    completion, when the whole of Photos simply has to wait.
+    """
+    if is_photos_indexing(error):
+        raise error
+
+
 def _note_library_failure(library, error, failed_libraries) -> None:
     """Record a library we could not read, and say so in the log.
 
@@ -631,6 +659,7 @@ def _sync_all_photos_first_for_hardlinks(
                     return result
                 break
         except _LIBRARY_FAULTS as e:
+            _raise_if_photos_indexing(e)
             _note_library_failure(library, e, failed_libraries)
     return 0, 0
 
@@ -725,6 +754,7 @@ def _sync_albums_by_configuration(
         # Per-iteration by design: isolating one library from the next is
         # the whole point, so the handler cannot be hoisted out of the loop.
         except _LIBRARY_FAULTS as e:  # noqa: PERF203
+            _raise_if_photos_indexing(e)
             _note_library_failure(library, e, failed_libraries)
             _signal_library("record_library_finished", library, ok=False, error=str(e))
     return total_successful, total_failed
