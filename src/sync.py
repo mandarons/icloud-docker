@@ -14,6 +14,7 @@ from src import (
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
+    PHOTOS_INDEXING_RETRY_SEC,
     config_parser,
     configure_icloudpy_logging,
     get_logger,
@@ -625,8 +626,18 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
                 pass
 
         LOGGER.info("Syncing photos...")
-        sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
+        try:
+            sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
+        except exceptions.ICloudPyServiceNotActivatedException as e:
+            # With no interval there is no next cycle to wait for -- a
+            # one-shot run must still report this through the normal error
+            # path rather than schedule a retry it will never take.
+            if not sync_photos.is_photos_indexing(e) or photos_sync_interval <= 0:
+                raise
+            _wait_for_photos_indexing(sync_state, photos_sync_interval)
+            return None
         LOGGER.info("Photos synced")
+        _signal_photos_indexing(waiting=False)
 
         # Count files after sync
         files_after = set()
@@ -692,6 +703,47 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         sync_state.photos_time_remaining = photos_sync_interval
         return stats
     return None
+
+
+def _wait_for_photos_indexing(sync_state: SyncState, photos_sync_interval: int) -> None:
+    """Skip Photos this cycle because Apple has not finished indexing it.
+
+    Nothing could be listed, so nothing may be cleaned up either -- an
+    empty listing and an unreadable one look identical to obsolete-file
+    cleanup. Drive is unaffected and carries on.
+
+    The retry only ever shortens the wait (``min`` with the configured
+    interval). It is not a login retry: the session is resumed per cycle
+    like any other, and ``retry_login_interval`` is not involved.
+    """
+    retry = min(PHOTOS_INDEXING_RETRY_SEC, photos_sync_interval)
+    again = f"{retry // 60} minutes" if retry >= 120 else f"{retry} seconds"
+    LOGGER.warning(
+        "Apple has not finished indexing this iCloud Photos library, so it cannot "
+        f"be read yet. Nothing on disk was changed. Trying Photos again in {again}.",
+    )
+    sync_state.photos_time_remaining = retry
+    _signal_photos_indexing(waiting=True)
+
+
+def _signal_photos_indexing(*, waiting: bool) -> None:
+    """Publish (or clear) the dashboard's "waiting for Apple" note.
+
+    Recorded against the Photos service, not a library: no library can be
+    read while this is true, so no library row could carry it.
+    """
+    try:
+        from src import web_signals as _ws
+
+        _ws.record_photos_indexing(waiting=waiting)
+        if waiting:
+            # The library being opened when this surfaced is still marked
+            # "syncing now" and never got started. Left alone it reads as
+            # a library syncing forever, next to a note saying Photos
+            # cannot be read at all.
+            _ws.clear_stale_library_states()
+    except Exception as e:  # noqa: BLE001 -- dashboard state must never break sync
+        LOGGER.debug(f"web_signals: record_photos_indexing raised: {e!s}")
 
 
 def _perform_dry_run(config, api, check_files: int | None = None) -> None:
@@ -1211,14 +1263,16 @@ def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval)
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sync failed and will be retried: {error!s}")
-    sleep_for = config_parser.get_retry_login_interval(config=config)
+    # log_messages=False: this is not a login retry, and the getter's
+    # "Retrying login every N seconds." would say otherwise.
+    sleep_for = config_parser.get_retry_login_interval(config=config, log_messages=False)
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
         return False
     configured = [i for i in (drive_sync_interval, photos_sync_interval) if i > 0]
     if configured:
         sleep_for = max(sleep_for, min(configured))
-    _log_retry_time(sleep_for)
+    _log_retry_time(sleep_for, what="sync")
     # This can be a whole sync interval; the "Sync now" button must still
     # cut it short, as it does on the normal scheduling path.
     _interruptible_sleep(sleep_for)
@@ -1259,17 +1313,18 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
     return True
 
 
-def _log_retry_time(sleep_for: int):
+def _log_retry_time(sleep_for: int, what: str = "login"):
     """
     Log the next retry time.
 
     Args:
         sleep_for: Sleep duration in seconds
+        what: What is being retried; a failed sync is not a failed login
     """
     next_sync = (
         datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
     ).strftime("%c")
-    LOGGER.info(f"Retrying login at {next_sync} ...")
+    LOGGER.info(f"Retrying {what} at {next_sync} ...")
 
 
 def _calculate_next_sync_schedule(config, sync_state: SyncState):

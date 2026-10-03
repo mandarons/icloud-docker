@@ -619,6 +619,30 @@ class TestDashboard(unittest.TestCase):
         self.assertIn("Photos", body)
         self.assertIn("Drive", body)
 
+    def test_photos_says_when_it_is_waiting_for_apple_to_index(self):
+        """On the service, not a library row: while Apple indexes one zone
+        no library can be read, so no row could carry it. How long the
+        wait has been running is the only actionable part of it."""
+        import time
+        from unittest.mock import patch
+
+        entry = {"waiting": True, "since": time.time() - 7200}
+        with patch.object(web.web_signals, "get_photos_indexing", return_value=entry):
+            body = web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
+        self.assertIn("Waiting for Apple to finish indexing", body)
+        self.assertIn("started 2 h ago", body)
+
+        # A wait recorded by an older build has no start time; still shown.
+        with patch.object(web.web_signals, "get_photos_indexing", return_value={"waiting": True}):
+            body = web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
+        self.assertIn("Waiting for Apple to finish indexing", body)
+        self.assertNotIn("&middot; started", body)
+
+    def test_the_indexing_note_is_absent_when_photos_is_not_waiting(self):
+        """Which is almost always: it must not be a permanent fixture."""
+        body = web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
+        self.assertNotIn("Waiting for Apple", body)
+
     def test_dashboard_has_log_section(self):
         client = web.create_app(testing=True).test_client()
         body = client.get("/").data.decode("utf-8")

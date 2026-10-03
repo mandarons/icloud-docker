@@ -300,6 +300,7 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
             if service == "photos"
             else []
         ),
+        "indexing": _photos_indexing() if service == "photos" else None,
         "stats": stats,
         "force_sync_pending": service in web_signals.pending_force_syncs(),
     }
@@ -405,6 +406,20 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         "trust_expires_at": trust_expires_at,
         "trust_days_remaining": trust_days_remaining,
     }
+
+
+def _photos_indexing() -> dict[str, Any] | None:
+    """The Apple-side indexing wait Photos is in, if it is in one.
+
+    None when it is not, so the dashboard shows nothing in the normal
+    case. Service-level rather than per-library: no library is readable
+    while this is true (see ``sync_photos.is_photos_indexing``).
+    """
+    entry = web_signals.get_photos_indexing()
+    if not entry.get("waiting"):
+        return None
+    since = entry.get("since")
+    return {"since_relative": web_signals.format_relative_time(since) if since else None}
 
 
 def _build_libraries(configured: list[str], library_destinations: dict[str, str]) -> list[dict[str, Any]]:

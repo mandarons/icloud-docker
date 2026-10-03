@@ -1354,7 +1354,7 @@ class TestSyncPhotos(unittest.TestCase):
         from src.sync_photos import create_hardlink
 
         # Test with invalid source path (should fail)
-        result = create_hardlink("/nonexistent/source.jpg", "/tmp/dest.jpg")
+        result = create_hardlink("/nonexistent/source.jpg", "/tmp/dest.jpg")  # nosec B108 -- never created: the source does not exist
         self.assertFalse(result)
 
     def test_collect_photo_with_hardlink_source(self):
@@ -2840,6 +2840,27 @@ class TestObsoleteDeleteLimit(unittest.TestCase):
             )
             self.assertEqual(len(removed), 5)
             self.assertTrue(Path(base, ".mounted").is_file())
+
+
+class _IndexingPhotos:
+    """A photo service Apple has not finished indexing.
+
+    Faithful to icloudpy 0.10.0: ``PhotosService.libraries`` builds a
+    ``PhotoLibrary`` for every zone of the account in one loop, each
+    constructor raising ServiceNotActivated if that zone's index is
+    unfinished, and ``_libraries`` is not cached on failure. So every
+    access raises while any one zone is indexing.
+    """
+
+    @property
+    def libraries(self):
+        """Raise what icloudpy raises, message and all."""
+        from icloudpy import exceptions
+
+        msg = "iCloud Photo Library not finished indexing.  Please try again in a few minutes"
+        raise exceptions.ICloudPyServiceNotActivatedException(msg, None)
+
+
 class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
     """An account can be shown libraries it never created -- zones left
     behind by Apple's own backend migrations -- and some answer every query
@@ -3068,6 +3089,59 @@ class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
         failed = [c for c in signal.call_args_list if c.kwargs.get("ok") is False]
         self.assertEqual(len(failed), 1)
         self.assertIn("ZONE_NOT_FOUND", failed[0].kwargs["error"])
+
+    def test_indexing_is_not_isolated_as_one_librarys_fault(self):
+        """Isolation is for a zone that is broken while the others work.
+        Indexing breaks none of them and blocks all of them, so swallowing
+        it here would mark every library failed, log every one of them as
+        an error, and still run the pass to completion. It has to reach
+        the sync loop, which waits instead."""
+        from unittest.mock import patch
+
+        from icloudpy import exceptions
+
+        from src import sync_photos
+
+        libs = ["PrimarySync", "SharedSync-1"]
+        failed = set()
+        with (
+            patch.object(sync_photos, "_signal_library") as signal,
+            self.assertRaises(exceptions.ICloudPyServiceNotActivatedException),
+        ):
+            sync_photos._sync_albums_by_configuration(  # noqa: SLF001
+                _IndexingPhotos(), libs, False, "/dest",
+                {"albums": None, "file_sizes": ["original"], "extensions": None},
+                set(), "%Y/%m", None, {}, failed_libraries=failed,
+            )
+
+        self.assertEqual(failed, set(), "nothing may be recorded as a failed library")
+        finished = [c for c in signal.call_args_list if c.args[0] == "record_library_finished"]
+        self.assertEqual(finished, [], "no library finished: none of them could be opened")
+
+    def test_indexing_also_escapes_the_hardlink_pre_pass(self):
+        """The 'All Photos' first pass has a per-library handler of its own."""
+        from icloudpy import exceptions
+
+        from src import sync_photos
+
+        with self.assertRaises(exceptions.ICloudPyServiceNotActivatedException):
+            sync_photos._sync_all_photos_first_for_hardlinks(  # noqa: SLF001
+                _IndexingPhotos(), ["PrimarySync"], "/dest",
+                {"albums": None, "file_sizes": ["original"], "extensions": None},
+                set(), "%Y/%m", None, {},
+            )
+
+    def test_only_the_indexing_message_counts_as_indexing(self):
+        """Apple sends indexing as a plain ServiceNotActivated, so the
+        message is the only thing separating a wait from a dead zone."""
+        from icloudpy import exceptions
+
+        from src import sync_photos
+
+        not_activated = exceptions.ICloudPyServiceNotActivatedException
+        self.assertTrue(sync_photos.is_photos_indexing(not_activated("not finished indexing", None)))
+        self.assertFalse(sync_photos.is_photos_indexing(not_activated("ZONE_NOT_FOUND", None)))
+        self.assertFalse(sync_photos.is_photos_indexing(ValueError("indexing")))
 
     def test_a_dashboard_write_failure_never_breaks_the_sync(self):
         """Reporting progress is never worth failing a sync over."""
