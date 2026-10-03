@@ -1297,32 +1297,20 @@ def _calculate_next_sync_schedule(config, sync_state: SyncState):
         sleep_for = sync_state.drive_time_remaining
         sync_state.enable_sync_drive = True
         sync_state.enable_sync_photos = False
-    elif (
-        has_drive
-        and has_photos
-        and sync_state.drive_time_remaining <= sync_state.photos_time_remaining
-    ):
-        # Special case: if both timers are equal and large (> 10 seconds), wait for the full interval
-        # This fixes the bug where equal large intervals cause immediate re-sync
-        if (
-            sync_state.drive_time_remaining == sync_state.photos_time_remaining
-            and sync_state.drive_time_remaining > 10
-        ):
-            sleep_for = sync_state.drive_time_remaining
-            sync_state.enable_sync_drive = True
-            sync_state.enable_sync_photos = True
-        else:
-            sleep_for = (
-                sync_state.photos_time_remaining - sync_state.drive_time_remaining
-            )
-            sync_state.photos_time_remaining -= sync_state.drive_time_remaining
-            sync_state.enable_sync_drive = True
-            sync_state.enable_sync_photos = False
     else:
-        sleep_for = sync_state.drive_time_remaining - sync_state.photos_time_remaining
-        sync_state.drive_time_remaining -= sync_state.photos_time_remaining
-        sync_state.enable_sync_drive = False
-        sync_state.enable_sync_photos = True
+        # Sleep until the sooner of the two is due, and take that time off
+        # both countdowns. Whichever reaches zero syncs next; equal timers
+        # sync together. A negative countdown is a one-shot service
+        # (sync_interval < 0) that has already run: it is never due again,
+        # so it takes no part, and must never become a negative sleep.
+        pending = [t for t in (sync_state.drive_time_remaining, sync_state.photos_time_remaining) if t >= 0]
+        sleep_for = min(pending) if pending else 0
+        if sync_state.drive_time_remaining >= 0:
+            sync_state.drive_time_remaining -= sleep_for
+        if sync_state.photos_time_remaining >= 0:
+            sync_state.photos_time_remaining -= sleep_for
+        sync_state.enable_sync_drive = sync_state.drive_time_remaining == 0
+        sync_state.enable_sync_photos = sync_state.photos_time_remaining == 0
 
     return sleep_for
 

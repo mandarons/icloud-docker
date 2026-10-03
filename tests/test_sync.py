@@ -387,8 +387,12 @@ class TestSync(unittest.TestCase):
         ]
         with self.assertRaises(Exception):
             sync.sync()
-        self.assertEqual(mock_sync_drive.sync_drive.call_count, 6)
-        self.assertEqual(mock_sync_photos.sync_photos.call_count, 3)
+        # Seven 1-second sleeps after the startup pass: Drive (every 1s)
+        # syncs at t=0..7, Photos (every 2s) at t=0, 2, 4 and 6. No sleep is
+        # ever longer than the shorter interval, and none is zero.
+        self.assertEqual([c.args for c in mock_sleep.call_args_list], [(1,)] * 8)
+        self.assertEqual(mock_sync_drive.sync_drive.call_count, 8)
+        self.assertEqual(mock_sync_photos.sync_photos.call_count, 4)
 
     @patch("src.sync.sync_drive")
     def test_perform_drive_sync_collects_existing_files(self, mock_sync_drive):
@@ -935,8 +939,10 @@ class TestSync(unittest.TestCase):
             e for e in captured[1] if "All configured sync intervals are negative, exiting oneshot mode..." in e
         ]
         self.assertEqual(len(oneshot_messages), 0)
-        # Verify sleep was called (indicating the loop continued)
+        # The loop continued, waiting for Photos -- not a negative sleep for
+        # the one-shot Drive that has already run (time.sleep(-1) raises).
         mock_sleep.assert_called_once()
+        self.assertGreater(mock_sleep.call_args.args[0], 0)
 
     @patch("src.sync.notify.send_sync_summary")
     @patch("src.sync._perform_photos_sync", return_value=None)
@@ -1056,6 +1062,60 @@ class TestSync(unittest.TestCase):
         self.assertTrue(sync_state.enable_sync_photos, "Photos sync should be enabled")
         self.assertEqual(sync_state.drive_time_remaining, 1800, "Drive timer should be reduced")
 
+    def test_calculate_next_sync_schedule_sleeps_until_the_sooner_service(self):
+        """The sleep is the time to the next due service, not the gap between them.
+
+        Drive every hour and Photos every 12 hours used to sleep 11 hours
+        before the next Drive sync, because the difference of the two
+        timers was taken as the sleep.
+        """
+        config = {
+            "drive": {"sync_interval": 3600},
+            "photos": {"sync_interval": 43200},
+        }
+        sync_state = sync.SyncState()
+        sync_state.drive_time_remaining = 3600
+        sync_state.photos_time_remaining = 43200
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        self.assertEqual(sleep_for, 3600)
+        self.assertTrue(sync_state.enable_sync_drive)
+        self.assertFalse(sync_state.enable_sync_photos)
+        self.assertEqual(sync_state.photos_time_remaining, 39600)
+
+        # And the other way round.
+        sync_state.drive_time_remaining = 43200
+        sync_state.photos_time_remaining = 3600
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        self.assertEqual(sleep_for, 3600)
+        self.assertFalse(sync_state.enable_sync_drive)
+        self.assertTrue(sync_state.enable_sync_photos)
+        self.assertEqual(sync_state.drive_time_remaining, 39600)
+
+    def test_calculate_next_sync_schedule_skips_a_one_shot_service_that_has_run(self):
+        """A one-shot service leaves a negative countdown behind; it must not
+        become the sleep (``time.sleep(-1)`` raises) or be re-enabled."""
+        config = {"drive": {"sync_interval": -1}, "photos": {"sync_interval": 300}}
+        sync_state = sync.SyncState()
+        sync_state.drive_time_remaining = -1
+        sync_state.photos_time_remaining = 300
+
+        sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
+
+        self.assertEqual(sleep_for, 300)
+        self.assertFalse(sync_state.enable_sync_drive)
+        self.assertTrue(sync_state.enable_sync_photos)
+        self.assertEqual(sync_state.drive_time_remaining, -1)
+
+        # Both one-shot and both done: nothing is due, and the sleep is not negative.
+        sync_state.photos_time_remaining = -1
+        self.assertEqual(sync._calculate_next_sync_schedule(config, sync_state), 0)  # noqa: SLF001
+        self.assertFalse(sync_state.enable_sync_drive)
+        self.assertFalse(sync_state.enable_sync_photos)
+
     def test_calculate_next_sync_schedule_drive_only(self):
         """Test scheduling when only drive is configured."""
         config = {
@@ -1103,7 +1163,7 @@ class TestSync(unittest.TestCase):
         # Should have 0 sleep (immediate sync) but only drive should be enabled
         self.assertEqual(sleep_for, 0, "Should have immediate sync when both timers are 0")
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
-        self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled for first sync")
+        self.assertTrue(sync_state.enable_sync_photos, "Photos is due too, so it syncs in the same pass")
 
     def test_calculate_next_sync_schedule_equal_small_timers(self):
         """Test scheduling when both timers are equal but small (≤ 10 seconds)."""
@@ -1119,10 +1179,9 @@ class TestSync(unittest.TestCase):
 
         sleep_for = sync._calculate_next_sync_schedule(config, sync_state)  # noqa: SLF001
 
-        # Should use original logic for small timers: sleep_for = 0, only drive enabled
-        self.assertEqual(sleep_for, 0, "Should have 0 sleep for small equal timers")
+        self.assertEqual(sleep_for, 5, "Should wait until both are due")
         self.assertTrue(sync_state.enable_sync_drive, "Drive sync should be enabled")
-        self.assertFalse(sync_state.enable_sync_photos, "Photos sync should be disabled")
+        self.assertTrue(sync_state.enable_sync_photos, "Photos sync should be enabled")
 
     @patch("src.sync.sleep")
     @patch("src.sync.notify.send", return_value=None)
