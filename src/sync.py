@@ -223,9 +223,22 @@ def _maybe_refresh_trust(config, api) -> None:
         )
         if api.trust_session():
             refreshed = _read_trust_cookie_expiry(api)
+            expires_at_iso = refreshed.isoformat() if refreshed else None
             LOGGER.info(
-                "Trust refreshed; now expires "
-                f"{refreshed.isoformat() if refreshed else 'unknown'}.",
+                f"Trust refreshed; now expires {expires_at_iso or 'unknown'}.",
+            )
+            # Webhook-only: no other transport reports a refresh, and a
+            # receiver tracking the trust window needs the new expiry as
+            # much as it needs the warning that preceded it.
+            refresh_data = {"days_remaining_before": days_remaining}
+            if expires_at_iso:
+                # Omitted rather than null when the cookie is unreadable.
+                refresh_data["expires_at"] = expires_at_iso
+            notify.post_event_to_webhook(
+                config,
+                "trust_refreshed",
+                f"iCloud trust token refreshed; now expires {expires_at_iso or 'unknown'}",
+                refresh_data,
             )
         else:
             LOGGER.warning(
@@ -915,8 +928,8 @@ def _check_services_configured(config):
     return "drive" in config or "photos" in config
 
 
-def _cycle_did_nothing(config, drive_stats, photos_stats) -> bool:
-    """True when this cycle synced no service at all.
+def _cycle_nothing_synced_reason(config, drive_stats, photos_stats) -> str | None:
+    """Why this cycle synced no service at all, or None if one did.
 
     Such a cycle is indistinguishable from a clean one by its stats -- no
     errors, no counts -- so reporting it as a success is how a monitor stays
@@ -936,11 +949,28 @@ def _cycle_did_nothing(config, drive_stats, photos_stats) -> bool:
         photos_stats: Result of ``_perform_photos_sync``
 
     Returns:
-        True if no service ran this cycle
+        ``nothing_synced``, ``mount_marker_missing``, or None if a service ran
     """
     if not _check_services_configured(config):
-        return True
-    return drive_stats is None and photos_stats is None
+        return "nothing_synced"
+    if drive_stats is None and photos_stats is None:
+        return "mount_marker_missing"
+    return None
+
+
+def _cycle_end_message(has_errors: bool, nothing_reason: str | None) -> str:
+    """The human text for the end-of-cycle event.
+
+    Kept out of ``sync()`` only because the branch it sits in is already four
+    levels deep.
+    """
+    if nothing_reason == "nothing_synced":
+        return "iCloud sync cycle synced nothing: no drive or photos section is configured"
+    if nothing_reason:
+        return "iCloud sync cycle synced nothing: the mount marker is missing"
+    if has_errors:
+        return "iCloud sync cycle completed with errors"
+    return "iCloud sync cycle completed"
 
 
 def _send_usage_statistics(config, summary: SyncSummary) -> None:
@@ -1074,10 +1104,16 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
     _publish_auth_blocked(True, reason="2fa_required")
-    notify.ping_webhook(config=config, event="failure")
-    # Decided before anything is sent: it selects the notification wording
-    # and suppresses two steps that cannot succeed on such an account.
+    # Decided before anything is sent: it selects the notification wording,
+    # the reason a receiver sees, and suppresses two steps that cannot
+    # succeed on such an account.
     security_key = _detect_security_key_account(api, username)
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle aborted: 2FA is required",
+        data={"reason": "security_key_required" if security_key else "two_factor_required"},
+    )
     if security_key:
         LOGGER.error(
             "This account signs in with a security key, so Apple will not "
@@ -1111,6 +1147,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
         # A security-key account cannot finish sign-in from a Telegram code,
         # so it gets the standard alert pointing at the dashboard.
         reply_prompt=not security_key,
+        event="security_key_required" if security_key else "two_factor_required",
     )
     if not security_key and config_parser.get_telegram_listen_enabled(config=config):
         _wait_for_telegram_code(config=config, api=api, timeout_seconds=sleep_for)
@@ -1250,7 +1287,12 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sign-in failed and will be retried: {error!s}")
-    notify.ping_webhook(config=config, event="failure")
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle aborted: sign-in failed",
+        data={"reason": "sign_in_failed"},
+    )
     sleep_for = config_parser.get_retry_login_interval(config=config)
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
@@ -1268,6 +1310,7 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
             last_send=sync_state.last_send,
             region=config_parser.get_region(config=config),
             dashboard_url=_resolve_dashboard_url(config),
+            event="sign_in_failed",
         )
     # Ends early on a completed web-UI re-auth, but not on "Sync now":
     # nothing a button does may shorten a throttle backoff.
@@ -1293,7 +1336,12 @@ def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval)
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sync failed and will be retried: {error!s}")
-    notify.ping_webhook(config=config, event="failure")
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle failed and will be retried",
+        data={"reason": "sync_error"},
+    )
     # log_messages=False: this is not a login retry, and the getter's
     # "Retrying login every N seconds." would say otherwise.
     sleep_for = config_parser.get_retry_login_interval(config=config, log_messages=False)
@@ -1325,7 +1373,12 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
     LOGGER.error(
         "Password is not stored in keyring. Please save the password in keyring.",
     )
-    notify.ping_webhook(config=config, event="failure")
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle aborted: no password in the keyring",
+        data={"reason": "password_missing"},
+    )
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -1340,6 +1393,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         last_send=sync_state.last_send,
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
+        event="password_missing",
     )
     _auth_retry_sleep(sleep_for)
     return True
@@ -1495,6 +1549,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
         # Log sync intervals once at startup
         if not startup_logged:
             _log_sync_intervals_at_startup(config)
+            notify.warn_unknown_webhook_events(config)
             # The state file outlives the container, so a restart mid-library
             # would leave the dashboard showing it as still syncing. Nothing
             # can legitimately be in flight here.
@@ -1562,9 +1617,13 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     sync_state.two_fa_triggered = False
 
                     # Signed in and about to sync: open the cycle on any
-                    # configured ping URL. Fire-and-forget, and a no-op when
-                    # no webhook is configured (see notify.ping_webhook).
-                    notify.ping_webhook(config=config, event="start")
+                    # configured webhook. Fire-and-forget, and a no-op when
+                    # none is configured (see notify.send_cycle_event).
+                    notify.send_cycle_event(
+                        config=config,
+                        boundary="start",
+                        message="iCloud sync cycle started",
+                    )
 
                     # Create summary for this sync cycle
                     summary = SyncSummary()
@@ -1588,20 +1647,32 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     summary.photo_stats = photos_stats
                     summary.sync_end_time = datetime.datetime.now()
 
-                    # Close the cycle on the ping URLs. Failed downloads
+                    # Close the cycle on the webhooks. Failed downloads
                     # counted in the stats make this a failure even though
                     # the cycle itself ran to completion -- a monitor that
                     # reported success here would stay green while the
                     # library silently fell behind. So does a cycle that
-                    # synced nothing at all (see _cycle_did_nothing).
-                    cycle_failed = summary.has_errors() or _cycle_did_nothing(
+                    # synced nothing at all. The statistics ride along, so a
+                    # POST receiver sees them without app.notifications.
+                    has_errors = summary.has_errors()
+                    nothing_reason = _cycle_nothing_synced_reason(
                         config,
                         drive_stats,
                         photos_stats,
                     )
-                    notify.ping_webhook(
+                    # Every sync_failed names a reason, including this one: a
+                    # receiver should never have to infer why from the
+                    # statistics. (Only Photos counts failed downloads, so
+                    # has_errors never means a Drive failure today.)
+                    reason = nothing_reason or ("download_errors" if has_errors else None)
+                    cycle_data = notify.summary_event_data(summary)
+                    if reason:
+                        cycle_data["reason"] = reason
+                    notify.send_cycle_event(
                         config=config,
-                        event="failure" if cycle_failed else "success",
+                        boundary="failure" if reason else "success",
+                        message=_cycle_end_message(has_errors, nothing_reason),
+                        data=cycle_data,
                     )
 
                     # Persist per-service last-sync state for the web

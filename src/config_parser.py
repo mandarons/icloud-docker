@@ -1492,6 +1492,68 @@ def get_webhook_url(config: dict, event: str) -> str | None:
     return str(value).strip() or None
 
 
+def get_webhook_post_url(config: dict) -> str | None:
+    """Return ``app.webhooks.url`` -- the endpoint every event is POSTed to.
+
+    Distinct from the ``start``/``success``/``failure`` GET pings: those report
+    a cycle boundary to a monitor, this one receives the whole notification
+    stream as JSON. Either, both or neither may be configured.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        The URL if configured and non-blank, None otherwise
+    """
+    return get_webhook_url(config=config, event="url")
+
+
+def get_webhook_events(config: dict) -> list[str] | None:
+    """Return the ``app.webhooks.events`` allow-list, or None for "all".
+
+    None and a configured list mean different things: no key at all sends
+    every event, while an explicit (even empty) list sends only what it
+    names. A non-list value is treated as absent rather than as an empty
+    filter, so a typo cannot silently mute the endpoint.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        List of event names, or None when unfiltered
+    """
+    value = get_config_value_or_none(config=config, config_path=["app", "webhooks", "events"])
+    if not isinstance(value, list):
+        return None
+    return [str(event).strip() for event in value]
+
+
+def get_webhook_headers(config: dict) -> dict[str, str]:
+    """Return the extra request headers for ``app.webhooks.url``.
+
+    Receivers behind an authenticating proxy need a bearer token or an API
+    key, which has no other home in the config. Values are credentials and
+    are never logged.
+
+    Args:
+        config: Configuration dictionary
+
+    A key left without a value in YAML parses as None; such an entry is
+    dropped rather than sent as the string "None".
+
+    Returns:
+        Mapping of header name to value; empty when unconfigured
+    """
+    value = get_config_value_or_none(config=config, config_path=["app", "webhooks", "headers"])
+    if not isinstance(value, dict):
+        return {}
+    return {
+        str(name): str(header_value)
+        for name, header_value in value.items()
+        if header_value is not None
+    }
+
+
 # =============================================================================
 # Sync Summary Notification Configuration Functions
 # =============================================================================
