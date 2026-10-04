@@ -1001,3 +1001,298 @@ class TestSyncLifecycleWebhooks(unittest.TestCase):
         logged = " ".join(str(call) for call in logger_mock.warning.call_args_list)
         self.assertIn("ConnectionError", logged)
         self.assertNotIn(self.URL, logged)
+
+
+class TestWebhookEventTransport(unittest.TestCase):
+    """The webhook is a transport in the same dispatch as Telegram and
+    email, so what matters is that it inherits that dispatch's behaviour --
+    the shared 24h throttle above all -- and that the payload a receiver
+    parses stays the shape we documented."""
+
+    URL = "https://receiver.test/hook"
+    CONFIG = {"app": {"webhooks": {"url": URL}}}
+
+    def _summary(self, errors=False, photos=False):
+        from src.sync_stats import DriveStats, PhotoStats, SyncSummary
+
+        summary = SyncSummary()
+        drive = DriveStats(files_downloaded=5, files_skipped=2, files_removed=1, bytes_downloaded=1024)
+        drive.duration_seconds = 1.2345
+        if errors:
+            drive.errors.append("some/file.pdf")
+        summary.drive_stats = drive
+        if photos:
+            photo_stats = PhotoStats(photos_downloaded=3, photos_hardlinked=1, bytes_saved_by_hardlinks=99)
+            photo_stats.albums_synced.append("Album 1")
+            summary.photo_stats = photo_stats
+        summary.sync_end_time = summary.sync_start_time + datetime.timedelta(seconds=4)
+        return summary
+
+    # --- the payload contract -------------------------------------------------
+
+    def test_the_payload_shape_is_the_documented_one(self):
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            self.assertTrue(
+                notify.post_event_to_webhook(self.CONFIG, "sync_started", "text", {"reason": "because"}),
+            )
+        self.assertEqual(post_mock.call_args.args, (self.URL,))
+        payload = post_mock.call_args.kwargs["json"]
+        self.assertEqual(sorted(payload), ["data", "event", "message", "timestamp"])
+        self.assertEqual(payload["event"], "sync_started")
+        self.assertEqual(payload["message"], "text")
+        self.assertEqual(payload["data"], {"reason": "because"})
+        self.assertEqual(post_mock.call_args.kwargs["timeout"], notify.WEBHOOK_TIMEOUT_SECONDS)
+        stamped = datetime.datetime.fromisoformat(payload["timestamp"])
+        self.assertEqual(stamped.utcoffset(), datetime.timedelta(0))
+
+    def test_an_event_without_data_still_carries_the_key(self):
+        """A receiver indexing payload["data"] must not have to guard it."""
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            notify.post_event_to_webhook(self.CONFIG, "sync_started", "text")
+        self.assertEqual(post_mock.call_args.kwargs["json"]["data"], {})
+
+    def test_nothing_is_posted_without_a_url(self):
+        with patch("src.notify.requests.post") as post_mock:
+            self.assertFalse(notify.post_event_to_webhook({}, "sync_started", "text"))
+            post_mock.assert_not_called()
+
+    def test_configured_headers_are_sent(self):
+        config = {"app": {"webhooks": {"url": self.URL, "headers": {"Authorization": "Bearer s3cret"}}}}
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            notify.post_event_to_webhook(config, "sync_started", "text")
+        self.assertEqual(post_mock.call_args.kwargs["headers"], {"Authorization": "Bearer s3cret"})
+
+    def test_no_headers_configured_sends_none(self):
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            notify.post_event_to_webhook(self.CONFIG, "sync_started", "text")
+        self.assertIsNone(post_mock.call_args.kwargs["headers"])
+
+    # --- failures stay quiet about the credentials ----------------------------
+
+    def test_an_error_response_is_reported_without_the_url(self):
+        with patch("src.notify.requests.post") as post_mock, patch("src.notify.LOGGER") as logger_mock:
+            post_mock.return_value = Mock(ok=False, status_code=500)
+            self.assertFalse(notify.post_event_to_webhook(self.CONFIG, "sync_failed", "text"))
+        logged = " ".join(str(call) for call in logger_mock.warning.call_args_list)
+        self.assertIn("sync_failed", logged)
+        self.assertNotIn(self.URL, logged)
+
+    def test_a_network_failure_leaks_neither_url_nor_headers(self):
+        config = {"app": {"webhooks": {"url": self.URL, "headers": {"Authorization": "Bearer s3cret"}}}}
+        boom = requests.exceptions.ConnectionError(f"Failed to establish a new connection to {self.URL}")
+        with patch("src.notify.requests.post", side_effect=boom), patch("src.notify.LOGGER") as logger_mock:
+            self.assertFalse(notify.post_event_to_webhook(config, "sync_summary", "text"))
+        logged = " ".join(str(call) for call in logger_mock.warning.call_args_list)
+        self.assertIn("ConnectionError", logged)
+        self.assertNotIn(self.URL, logged)
+        self.assertNotIn("s3cret", logged)
+
+    # --- the events filter ----------------------------------------------------
+
+    def test_an_absent_filter_sends_everything(self):
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            for event in notify.WEBHOOK_EVENTS:
+                self.assertTrue(notify.post_event_to_webhook(self.CONFIG, event, "text"))
+        self.assertEqual(post_mock.call_count, len(notify.WEBHOOK_EVENTS))
+
+    def test_a_filter_sends_only_what_it_names(self):
+        config = {"app": {"webhooks": {"url": self.URL, "events": ["sync_failed"]}}}
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            self.assertTrue(notify.post_event_to_webhook(config, "sync_failed", "text"))
+            self.assertFalse(notify.post_event_to_webhook(config, "sync_succeeded", "text"))
+        self.assertEqual(post_mock.call_count, 1)
+
+    def test_an_empty_filter_sends_nothing(self):
+        config = {"app": {"webhooks": {"url": self.URL, "events": []}}}
+        with patch("src.notify.requests.post") as post_mock:
+            self.assertFalse(notify.post_event_to_webhook(config, "sync_failed", "text"))
+            post_mock.assert_not_called()
+
+    def test_unknown_filter_entries_warn_once_naming_them(self):
+        config = {"app": {"webhooks": {"url": self.URL, "events": ["sync_failed", "sync_finished", "oops"]}}}
+        with patch("src.notify.LOGGER") as logger_mock:
+            notify.warn_unknown_webhook_events(config)
+        self.assertEqual(logger_mock.warning.call_count, 1)
+        logged = str(logger_mock.warning.call_args)
+        self.assertIn("oops", logged)
+        self.assertIn("sync_finished", logged)
+        self.assertNotIn("sync_failed,", logged.split("Known events")[0])
+
+    def test_a_correct_filter_warns_about_nothing(self):
+        config = {"app": {"webhooks": {"url": self.URL, "events": list(notify.WEBHOOK_EVENTS)}}}
+        with patch("src.notify.LOGGER") as logger_mock:
+            notify.warn_unknown_webhook_events(config)
+            notify.warn_unknown_webhook_events({})
+        logger_mock.warning.assert_not_called()
+
+    # --- riding the existing dispatch ----------------------------------------
+
+    def test_the_shared_24h_throttle_applies_to_a_webhook_only_install(self):
+        """The whole point of being a transport in ``send()`` rather than a
+        parallel path: with no other provider configured the webhook alone
+        arms the window, and the second alert inside 24h is not sent."""
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            first = notify.send(self.CONFIG, "a@icloud.com")
+            self.assertIsInstance(first, datetime.datetime)
+            self.assertEqual(post_mock.call_count, 1)
+
+            second = notify.send(self.CONFIG, "a@icloud.com", last_send=first)
+            self.assertEqual(second, first)
+            self.assertEqual(post_mock.call_count, 1)
+
+    def test_an_auth_alert_names_its_event_and_carries_the_dashboard(self):
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            notify.send(
+                self.CONFIG,
+                "a@icloud.com",
+                dashboard_url="https://icloud.test",
+                event="password_missing",
+            )
+        payload = post_mock.call_args.kwargs["json"]
+        self.assertEqual(payload["event"], "password_missing")
+        self.assertEqual(
+            payload["data"],
+            {"username": "a@icloud.com", "dashboard_url": "https://icloud.test"},
+        )
+        self.assertIn("icloud.test", payload["message"])
+
+    def test_an_auth_alert_omits_an_unset_dashboard_instead_of_nulling_it(self):
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            notify.send(self.CONFIG, "a@icloud.com")
+        self.assertEqual(post_mock.call_args.kwargs["json"]["data"], {"username": "a@icloud.com"})
+
+    def test_a_trust_warning_carries_the_days_remaining(self):
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            notify.send_trust_expiring(self.CONFIG, "a@icloud.com", 3)
+        payload = post_mock.call_args.kwargs["json"]
+        self.assertEqual(payload["event"], "trust_expiring")
+        self.assertEqual(payload["data"], {"username": "a@icloud.com", "days_remaining": 3})
+
+    def test_a_dry_run_sends_nothing_but_still_reports_sent(self):
+        with patch("src.notify.requests.post") as post_mock:
+            self.assertIsInstance(notify.send(self.CONFIG, "a@icloud.com", dry_run=True), datetime.datetime)
+            self.assertIsInstance(
+                notify.send_trust_expiring(self.CONFIG, "a@icloud.com", 3, dry_run=True),
+                datetime.datetime,
+            )
+            post_mock.assert_not_called()
+
+    def test_a_rejected_event_reports_failure(self):
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=False, status_code=503)
+            self.assertIsNone(notify.send(self.CONFIG, "a@icloud.com"))
+
+    # --- sync summary ---------------------------------------------------------
+
+    def test_the_summary_payload_carries_the_stats_not_just_the_text(self):
+        config = {
+            "app": {
+                "webhooks": {"url": self.URL},
+                "notifications": {"sync_summary": {"enabled": True}},
+            },
+        }
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            self.assertTrue(notify.send_sync_summary(config, self._summary(photos=True)))
+        payload = post_mock.call_args.kwargs["json"]
+        self.assertEqual(payload["event"], "sync_summary")
+        self.assertEqual(payload["data"]["has_errors"], False)
+        self.assertEqual(payload["data"]["duration_seconds"], 4.0)
+        self.assertEqual(
+            payload["data"]["drive"],
+            {
+                "files_downloaded": 5,
+                "files_skipped": 2,
+                "files_removed": 1,
+                "bytes_downloaded": 1024,
+                "duration_seconds": 1.234,
+                "errors": 0,
+            },
+        )
+        self.assertEqual(payload["data"]["photos"]["photos_downloaded"], 3)
+        self.assertEqual(payload["data"]["photos"]["albums_synced"], ["Album 1"])
+
+    def test_a_drive_only_summary_has_no_photos_key(self):
+        data = notify.summary_event_data(self._summary(errors=True))
+        self.assertNotIn("photos", data)
+        self.assertEqual(data["drive"]["errors"], 1)
+        self.assertTrue(data["has_errors"])
+
+    def test_a_dry_run_summary_does_not_report_sent_without_a_url(self):
+        """Without the URL check in the no-throttle sender, a dry run would
+        log 'sync summary sent' on an install that has no webhook at all."""
+        from src.notify import _send_webhook_no_throttle
+
+        self.assertFalse(_send_webhook_no_throttle({}, "sync_summary", "text", {}, True))
+        config = {"app": {"notifications": {"sync_summary": {"enabled": True}}}}
+        self.assertFalse(notify.send_sync_summary(config, self._summary(), dry_run=True))
+
+    def test_a_dry_run_summary_reports_sent_when_a_url_is_configured(self):
+        from src.notify import _send_webhook_no_throttle
+
+        with patch("src.notify.requests.post") as post_mock:
+            self.assertTrue(_send_webhook_no_throttle(self.CONFIG, "sync_summary", "text", {}, True))
+            post_mock.assert_not_called()
+
+    # --- cycle boundaries reach both transports -------------------------------
+
+    def test_a_boundary_pings_the_monitor_and_posts_the_event(self):
+        config = {
+            "app": {
+                "webhooks": {
+                    "url": self.URL,
+                    "success": "https://hc-ping.com/uuid",
+                },
+            },
+        }
+        with (
+            patch("src.notify.requests.get") as get_mock,
+            patch("src.notify.requests.post") as post_mock,
+        ):
+            get_mock.return_value = Mock(ok=True)
+            post_mock.return_value = Mock(ok=True)
+            notify.send_cycle_event(config, "success", "done", {"reason": "none"})
+        get_mock.assert_called_once_with("https://hc-ping.com/uuid", timeout=notify.WEBHOOK_TIMEOUT_SECONDS)
+        self.assertEqual(post_mock.call_args.kwargs["json"]["event"], "sync_succeeded")
+
+    def test_each_boundary_has_its_own_event_name(self):
+        with patch("src.notify.requests.post") as post_mock:
+            post_mock.return_value = Mock(ok=True)
+            for boundary in ("start", "success", "failure"):
+                notify.send_cycle_event(self.CONFIG, boundary, "text")
+        self.assertEqual(
+            [call.kwargs["json"]["event"] for call in post_mock.call_args_list],
+            ["sync_started", "sync_succeeded", "sync_failed"],
+        )
+
+
+class TestWebhookQuietWhenUnconfigured(unittest.TestCase):
+    """Most installs will never set a webhook. None of this may cost them a
+    log line, which is why the URL is checked before the throttle."""
+
+    def test_no_url_means_no_throttle_log(self):
+        with patch("src.notify.LOGGER") as logger_mock:
+            self.assertIsNone(
+                notify.notify_webhook({}, "sync_failed", "text", last_send=datetime.datetime.now()),
+            )
+        logger_mock.info.assert_not_called()
+
+    def test_a_configured_webhook_still_reports_the_throttle(self):
+        config = {"app": {"webhooks": {"url": "https://receiver.test/hook"}}}
+        with patch("src.notify.LOGGER") as logger_mock:
+            last_send = datetime.datetime.now()
+            self.assertEqual(
+                notify.notify_webhook(config, "sync_failed", "text", last_send=last_send),
+                last_send,
+            )
+        self.assertEqual(logger_mock.info.call_count, 1)

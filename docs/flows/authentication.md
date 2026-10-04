@@ -26,7 +26,10 @@ Authentication is managed by `sync.py` and delegates to iCloudPy for the actual 
 4. **2FA handling** (`_handle_2fa_required()`)
    - Request Apple's 2FA code push (best-effort, once per re-auth episode —
      latched so retries don't re-push and trip rate limits)
-   - Send notification alert (24-hour rate limit)
+   - Send notification alert (24-hour rate limit), including the webhook
+     event `two_factor_required` (or `security_key_required`) when
+     `app.webhooks.url` is set — the webhook is a transport in the same
+     dispatch, so it shares that rate limit
    - Sleep for `retry_login_interval` seconds
    - Return to main loop to retry authentication
    - If `retry_login_interval < 0`: exit immediately (oneshot auth)

@@ -3,6 +3,7 @@
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import copy
+import datetime
 import os
 import shutil
 import unittest
@@ -2314,7 +2315,7 @@ class TestSyncLifecycleWebhooks(unittest.TestCase):
             patch.object(sync, "_send_usage_statistics"),
             patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
             patch("src.notify.send_sync_summary"),
-            patch("src.notify.ping_webhook") as ping,
+            patch("src.notify.send_cycle_event") as cycle,
             patch("src.config_parser.get_username", return_value="a@icloud.com"),
         ):
             if dry_run:
@@ -2322,7 +2323,8 @@ class TestSyncLifecycleWebhooks(unittest.TestCase):
             else:
                 with self.assertRaises(SystemExit):
                     sync.sync()
-        return [call.kwargs["event"] for call in ping.call_args_list]
+        self.cycle_calls = cycle.call_args_list
+        return [call.kwargs["boundary"] for call in self.cycle_calls]
 
     def test_a_clean_cycle_opens_and_closes(self):
         self.assertEqual(self._events_of_one_cycle(drive_stats=DriveStats()), ["start", "success"])
@@ -2336,6 +2338,11 @@ class TestSyncLifecycleWebhooks(unittest.TestCase):
             self._events_of_one_cycle(drive_stats=DriveStats(), photos_stats=stats),
             ["start", "failure"],
         )
+        self.assertEqual(self.cycle_calls[-1].kwargs["data"]["reason"], "download_errors")
+
+    def test_a_clean_cycle_carries_no_reason(self):
+        self._events_of_one_cycle(drive_stats=DriveStats())
+        self.assertNotIn("reason", self.cycle_calls[-1].kwargs["data"])
 
     def test_a_dry_run_pings_nothing(self):
         self.assertEqual(self._events_of_one_cycle(dry_run=True), [])
@@ -2345,10 +2352,11 @@ class TestSyncLifecycleWebhooks(unittest.TestCase):
             patch.object(sync, "_auth_retry_sleep"),
             patch.object(sync, "_interruptible_sleep"),
             patch("src.notify.send"),
-            patch("src.notify.ping_webhook") as ping,
+            patch("src.notify.send_cycle_event") as cycle,
         ):
             self.assertTrue(call_handler())
-        return [call.kwargs["event"] for call in ping.call_args_list]
+        self.cycle_calls = cycle.call_args_list
+        return [call.kwargs["boundary"] for call in self.cycle_calls]
 
     def test_a_pending_second_factor_is_a_failure(self):
         config = copy.deepcopy(self.CONFIG)
@@ -2426,7 +2434,7 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
             patch.object(sync, "_send_usage_statistics"),
             patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
             patch("src.notify.send_sync_summary"),
-            patch("src.notify.ping_webhook") as ping,
+            patch("src.notify.send_cycle_event") as cycle,
             patch("src.config_parser.get_username", return_value="a@icloud.com"),
         ):
             if loops:
@@ -2436,21 +2444,25 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
                 # With nothing configured every interval is negative, so the
                 # loop leaves oneshot-style instead of reaching the sleep.
                 sync.sync()
-        return [call.kwargs["event"] for call in ping.call_args_list][-1]
+        closing = cycle.call_args_list[-1]
+        return closing.kwargs["boundary"], closing.kwargs["data"].get("reason")
 
     def test_a_mount_marker_skipping_every_service_is_a_failure(self):
-        self.assertEqual(self._boundary(drive_stats=None, photos_stats=None), "failure")
+        self.assertEqual(
+            self._boundary(drive_stats=None, photos_stats=None),
+            ("failure", "mount_marker_missing"),
+        )
 
     def test_one_service_not_being_due_is_an_ordinary_success(self):
         """The regression this guards: Photos on a 900s interval is simply
         not due on a Drive cycle, and that must not read as a fault."""
         self.assertEqual(
             self._boundary(drive_stats=DriveStats(), photos_stats=None),
-            "success",
+            ("success", None),
         )
         self.assertEqual(
             self._boundary(drive_stats=None, photos_stats=PhotoStats()),
-            "success",
+            ("success", None),
         )
 
     def test_nothing_configured_to_sync_is_a_failure(self):
@@ -2462,5 +2474,193 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
         }
         self.assertEqual(
             self._boundary(drive_stats=None, photos_stats=None, config=config, loops=False),
-            "failure",
+            ("failure", "nothing_synced"),
         )
+
+
+class TestSyncWebhookEvents(unittest.TestCase):
+    """The POST endpoint sees the whole lifecycle, so each hook point has to
+    name its own event rather than reporting a generic failure: a receiver
+    that cannot tell "waiting for a code" from "Apple refused the password"
+    cannot act on either."""
+
+    CONFIG = {
+        "app": {
+            "credentials": {"username": "a@icloud.com", "retry_login_interval": 600},
+            "webhooks": {"url": "https://receiver.test/hook"},
+        },
+        "drive": {"destination": "drive", "sync_interval": 300},
+    }
+
+    def _alert_event(self, call_handler):
+        """Run a retry handler and return the event name it told notify.send."""
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "_interruptible_sleep"),
+            patch("src.notify.send_cycle_event"),
+            patch("src.notify.send") as send_mock,
+        ):
+            self.assertTrue(call_handler())
+        return send_mock.call_args.kwargs["event"]
+
+    def test_a_pending_code_is_distinguishable_from_a_refused_sign_in(self):
+        config = copy.deepcopy(self.CONFIG)
+        api = Mock()
+        api.security_key_challenge = None
+        self.assertEqual(
+            self._alert_event(
+                lambda: sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api),  # noqa: SLF001
+            ),
+            "two_factor_required",
+        )
+        self.assertEqual(
+            self._alert_event(
+                lambda: sync._handle_auth_transport_error(  # noqa: SLF001
+                    config,
+                    "a@icloud.com",
+                    sync.SyncState(),
+                    exceptions.ICloudPyFailedLoginException("401"),
+                ),
+            ),
+            "sign_in_failed",
+        )
+        self.assertEqual(
+            self._alert_event(
+                lambda: sync._handle_password_error(config, "a@icloud.com", sync.SyncState()),  # noqa: SLF001
+            ),
+            "password_missing",
+        )
+
+    def test_a_security_key_account_gets_its_own_event(self):
+        """Apple sends such an account no code at all, so a receiver that
+        prompts for one would be sending the user on a fool's errand."""
+        config = copy.deepcopy(self.CONFIG)
+        api = Mock()
+        api.security_key_challenge = {"challenge": "c", "keyHandles": ["k"]}
+        with patch("src.web_signals.record_auth_method"):
+            self.assertEqual(
+                self._alert_event(
+                    lambda: sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api),  # noqa: SLF001
+                ),
+                "security_key_required",
+            )
+
+    def test_a_security_key_cycle_failure_says_security_key(self):
+        """The reason has to be computed after detection, or every
+        security-key account reports a 2FA prompt that will never arrive."""
+        config = copy.deepcopy(self.CONFIG)
+        api = Mock()
+        api.security_key_challenge = {"challenge": "c", "keyHandles": ["k"]}
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch("src.web_signals.record_auth_method"),
+            patch("src.notify.send"),
+            patch("src.notify.send_cycle_event") as cycle,
+        ):
+            sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api)  # noqa: SLF001
+        self.assertEqual(cycle.call_args.kwargs["data"]["reason"], "security_key_required")
+
+    def test_each_cycle_failure_says_why(self):
+        config = copy.deepcopy(self.CONFIG)
+        reasons = []
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "_interruptible_sleep"),
+            patch("src.notify.send"),
+            patch("src.notify.send_cycle_event") as cycle,
+        ):
+            api = Mock()
+            api.security_key_challenge = None
+            sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api)  # noqa: SLF001
+            sync._handle_password_error(config, "a@icloud.com", sync.SyncState())  # noqa: SLF001
+            sync._handle_auth_transport_error(  # noqa: SLF001
+                config,
+                "a@icloud.com",
+                sync.SyncState(),
+                exceptions.ICloudPyFailedLoginException("401"),
+            )
+            sync._handle_sync_error(config, Exception("zone"), 300, 500)  # noqa: SLF001
+            reasons = [call.kwargs["data"]["reason"] for call in cycle.call_args_list]
+        self.assertEqual(
+            reasons,
+            ["two_factor_required", "password_missing", "sign_in_failed", "sync_error"],
+        )
+
+    def test_a_successful_refresh_reports_the_new_expiry(self):
+        """Nothing else notifies on a refresh, so the webhook is the only way
+        a receiver tracking the trust window learns it moved."""
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        api = Mock()
+        api.trust_session.return_value = True
+        with (
+            patch.object(
+                sync,
+                "_read_trust_cookie_expiry",
+                side_effect=[
+                    now + datetime.timedelta(days=3, minutes=1),
+                    now + datetime.timedelta(days=90),
+                ],
+            ),
+            patch("src.notify.post_event_to_webhook") as post_mock,
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        event, message, data = post_mock.call_args.args[1:]
+        self.assertEqual(event, "trust_refreshed")
+        self.assertIn("refreshed", message)
+        self.assertEqual(data["days_remaining_before"], 3)
+        self.assertEqual(data["expires_at"], (now + datetime.timedelta(days=90)).isoformat())
+
+    def test_an_unreadable_expiry_is_omitted_rather_than_nulled(self):
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        api = Mock()
+        api.trust_session.return_value = True
+        with (
+            patch.object(
+                sync,
+                "_read_trust_cookie_expiry",
+                side_effect=[now + datetime.timedelta(days=3, minutes=1), None],
+            ),
+            patch("src.notify.post_event_to_webhook") as post_mock,
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        self.assertEqual(post_mock.call_args.args[3], {"days_remaining_before": 3})
+
+    def test_a_declined_refresh_reports_nothing(self):
+        api = Mock()
+        api.trust_session.return_value = False
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        with (
+            patch.object(sync, "_read_trust_cookie_expiry", return_value=now + datetime.timedelta(days=3)),
+            patch("src.notify.post_event_to_webhook") as post_mock,
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        post_mock.assert_not_called()
+
+    def test_the_cycle_end_event_carries_the_stats(self):
+        """A webhook-only install never enables app.notifications, so the
+        cycle event is where its statistics have to live."""
+        api = Mock()
+        api.requires_2sa = False
+        stats = DriveStats(files_downloaded=4)
+        with (
+            patch.object(sync, "_load_configuration", return_value=copy.deepcopy(self.CONFIG)),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(sync, "_authenticate_and_get_api", return_value=api),
+            patch.object(sync, "_maybe_refresh_trust"),
+            patch.object(sync, "_maybe_warn_trust_expiring"),
+            patch.object(sync, "_perform_drive_sync", return_value=stats),
+            patch.object(sync, "_perform_photos_sync", return_value=None),
+            patch.object(sync, "_send_usage_statistics"),
+            patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
+            patch("src.notify.requests.get"),
+            patch("src.notify.requests.post") as post_mock,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            post_mock.return_value = Mock(ok=True)
+            with self.assertRaises(SystemExit):
+                sync.sync()
+        posted = [call.kwargs["json"] for call in post_mock.call_args_list]
+        self.assertEqual([p["event"] for p in posted], ["sync_started", "sync_succeeded"])
+        self.assertEqual(posted[1]["data"]["drive"]["files_downloaded"], 4)
+        self.assertFalse(posted[1]["data"]["has_errors"])

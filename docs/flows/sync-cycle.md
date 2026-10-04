@@ -25,8 +25,9 @@ The sync cycle is the core operational loop that alternates between Drive and Ph
    - Create iCloudPy service instance
    - If 2FA required: handle and retry
 
-5. **Cycle-start ping** (`notify.ping_webhook(event="start")`)
-   - GET `app.webhooks.start` if configured — signed in, about to sync
+5. **Cycle-start webhook** (`notify.send_cycle_event(boundary="start")`)
+   - GET `app.webhooks.start` and POST `sync_started` to `app.webhooks.url`,
+     whichever is configured — signed in, about to sync
    - Skipped in dry-run mode: the dry run returns before this point. A dry
      run whose SIGN-IN fails does report, through the retry handlers below,
      exactly as the other notification channels already do
@@ -45,18 +46,22 @@ The sync cycle is the core operational loop that alternates between Drive and Ph
    - Calculate stats (downloaded, skipped, hardlinked, bytes)
    - Reset photos countdown timer
 
-8. **Cycle-end ping** (`notify.ping_webhook(event="success"|"failure")`)
-   - GET `app.webhooks.success`, or `app.webhooks.failure` when the cycle's
-     stats carry any error — a monitor that went green here would stay green
-     while downloads kept failing. Only `PhotoStats.errors` is ever populated
-     in production, so a failed Drive download does not reach this point
+8. **Cycle-end webhook** (`notify.send_cycle_event(boundary="success"|"failure")`)
+   - The `success` ping and `sync_succeeded`, or `failure` and `sync_failed`
+     with `reason: download_errors`, when the cycle's stats carry any error --
+     a monitor that went green here would stay green while downloads kept
+     failing. Only `PhotoStats.errors` is ever populated in production, so a
+     failed Drive download does not reach this point
    - Also `failure` when the cycle synced nothing at all: every due service
      skipped by the mount marker, or no service configured
-     (`_cycle_did_nothing()`). One service merely not being due is the
-     ordinary unequal-interval case and still reports `success`
+     (`_cycle_nothing_synced_reason()`, which names which). One service
+     merely not being due is the ordinary unequal-interval case and still
+     reports `success`
+   - The POSTed event carries the full statistics, so a webhook-only install
+     needs no `app.notifications.sync_summary`
    - The retry handlers (2FA required, missing keyring password, refused
-     sign-in, post-sign-in service error) ping `failure` instead, once per
-     retry, since the cycle never reached its end
+     sign-in, post-sign-in service error) report `failure` instead, once per
+     retry with a `data.reason`, since the cycle never reached its end
 
 9. **Statistics recording** (`web_signals.record_sync_completion()`)
    - Persist per-service last-sync state for web dashboard
