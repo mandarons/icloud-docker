@@ -15,7 +15,7 @@ from icloudpy import exceptions
 
 import tests
 from src import ENV_ICLOUD_PASSWORD_KEY, config_parser, read_config, sync
-from src.sync_stats import DriveStats
+from src.sync_stats import DriveStats, PhotoStats
 from tests import data
 
 
@@ -2277,3 +2277,190 @@ class TestSigninFailuresThroughTheRealIcloudpyPath(unittest.TestCase):
         retrying, so the user has to be told -- notify.send is throttled."""
         _, notify = self._run_loop(401, {"errorMessage": "Invalid credentials"})
         notify.send.assert_called()
+
+
+class TestSyncLifecycleWebhooks(unittest.TestCase):
+    """Where the pings sit matters more than how they are sent. A success
+    ping on a cycle that logged failed downloads would keep a monitor green
+    while the library quietly fell behind, and a ping during a dry run would
+    report a sync that never happened."""
+
+    CONFIG = {
+        "app": {
+            "credentials": {"username": "a@icloud.com", "retry_login_interval": 600},
+            "webhooks": {
+                "start": "https://hc-ping.com/uuid/start",
+                "success": "https://hc-ping.com/uuid",
+                "failure": "https://hc-ping.com/uuid/fail",
+            },
+        },
+        "drive": {"destination": "drive", "sync_interval": 300},
+    }
+
+    def _events_of_one_cycle(self, drive_stats=None, photos_stats=None, dry_run=False):
+        """Run a single sync cycle and return the webhook events it fired."""
+        api = Mock()
+        api.requires_2sa = False
+        with (
+            patch.object(sync, "_load_configuration", return_value=copy.deepcopy(self.CONFIG)),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(sync, "_authenticate_and_get_api", return_value=api),
+            patch.object(sync, "_maybe_refresh_trust"),
+            patch.object(sync, "_maybe_warn_trust_expiring"),
+            patch.object(sync, "_perform_dry_run"),
+            patch.object(sync, "_perform_drive_sync", return_value=drive_stats),
+            patch.object(sync, "_perform_photos_sync", return_value=photos_stats),
+            patch.object(sync, "_send_usage_statistics"),
+            patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
+            patch("src.notify.send_sync_summary"),
+            patch("src.notify.ping_webhook") as ping,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            if dry_run:
+                sync.sync(dry_run=True)
+            else:
+                with self.assertRaises(SystemExit):
+                    sync.sync()
+        return [call.kwargs["event"] for call in ping.call_args_list]
+
+    def test_a_clean_cycle_opens_and_closes(self):
+        self.assertEqual(self._events_of_one_cycle(drive_stats=DriveStats()), ["start", "success"])
+
+    def test_failed_downloads_close_the_cycle_as_a_failure(self):
+        """On PhotoStats deliberately: DriveStats.errors is never populated
+        in production, so a Drive failure cannot reach this boundary today."""
+        stats = PhotoStats()
+        stats.errors.append("1 photo download(s) failed")
+        self.assertEqual(
+            self._events_of_one_cycle(drive_stats=DriveStats(), photos_stats=stats),
+            ["start", "failure"],
+        )
+
+    def test_a_dry_run_pings_nothing(self):
+        self.assertEqual(self._events_of_one_cycle(dry_run=True), [])
+
+    def _handler_events(self, call_handler):
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "_interruptible_sleep"),
+            patch("src.notify.send"),
+            patch("src.notify.ping_webhook") as ping,
+        ):
+            self.assertTrue(call_handler())
+        return [call.kwargs["event"] for call in ping.call_args_list]
+
+    def test_a_pending_second_factor_is_a_failure(self):
+        config = copy.deepcopy(self.CONFIG)
+        api = Mock()
+        api.security_key_challenge = None
+        self.assertEqual(
+            self._handler_events(
+                lambda: sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api),  # noqa: SLF001
+            ),
+            ["failure"],
+        )
+
+    def test_a_missing_keyring_password_is_a_failure(self):
+        config = copy.deepcopy(self.CONFIG)
+        self.assertEqual(
+            self._handler_events(
+                lambda: sync._handle_password_error(config, "a@icloud.com", sync.SyncState()),  # noqa: SLF001
+            ),
+            ["failure"],
+        )
+
+    def test_a_sign_in_failure_is_a_failure(self):
+        config = copy.deepcopy(self.CONFIG)
+        error = exceptions.ICloudPyFailedLoginException("401")
+        self.assertEqual(
+            self._handler_events(
+                lambda: sync._handle_auth_transport_error(  # noqa: SLF001
+                    config, "a@icloud.com", sync.SyncState(), error,
+                ),
+            ),
+            ["failure"],
+        )
+
+    def test_a_failure_after_sign_in_is_a_failure(self):
+        config = copy.deepcopy(self.CONFIG)
+        self.assertEqual(
+            self._handler_events(
+                lambda: sync._handle_sync_error(config, Exception("zone unavailable"), 300, 500),  # noqa: SLF001
+            ),
+            ["failure"],
+        )
+
+
+class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
+    """A cycle where every due service was skipped carries no errors and no
+    counts, so it is indistinguishable from a clean one by its stats. Pinging
+    success there is how a monitor stays green while nothing at all is being
+    downloaded.
+
+    The trap is the opposite case: with unequal intervals the scheduler
+    enables only the service whose timer expired, so one service returning
+    nothing is the ordinary cycle, not a fault."""
+
+    CONFIG = {
+        "app": {
+            "credentials": {"username": "a@icloud.com", "retry_login_interval": 600},
+            "webhooks": {"success": "https://hc-ping.com/uuid"},
+        },
+        "drive": {"destination": "drive", "sync_interval": 300},
+        "photos": {"destination": "photos", "sync_interval": 900},
+    }
+
+    def _boundary(self, drive_stats, photos_stats, config=None, loops=True):
+        api = Mock()
+        api.requires_2sa = False
+        with (
+            patch.object(sync, "_load_configuration", return_value=copy.deepcopy(config or self.CONFIG)),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(sync, "_authenticate_and_get_api", return_value=api),
+            patch.object(sync, "_maybe_refresh_trust"),
+            patch.object(sync, "_maybe_warn_trust_expiring"),
+            patch.object(sync, "_perform_drive_sync", return_value=drive_stats),
+            patch.object(sync, "_perform_photos_sync", return_value=photos_stats),
+            patch.object(sync, "_send_usage_statistics"),
+            patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
+            patch("src.notify.send_sync_summary"),
+            patch("src.notify.ping_webhook") as ping,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            if loops:
+                with self.assertRaises(SystemExit):
+                    sync.sync()
+            else:
+                # With nothing configured every interval is negative, so the
+                # loop leaves oneshot-style instead of reaching the sleep.
+                sync.sync()
+        return [call.kwargs["event"] for call in ping.call_args_list][-1]
+
+    def test_a_mount_marker_skipping_every_service_is_a_failure(self):
+        self.assertEqual(self._boundary(drive_stats=None, photos_stats=None), "failure")
+
+    def test_one_service_not_being_due_is_an_ordinary_success(self):
+        """The regression this guards: Photos on a 900s interval is simply
+        not due on a Drive cycle, and that must not read as a fault."""
+        self.assertEqual(
+            self._boundary(drive_stats=DriveStats(), photos_stats=None),
+            "success",
+        )
+        self.assertEqual(
+            self._boundary(drive_stats=None, photos_stats=PhotoStats()),
+            "success",
+        )
+
+    def test_nothing_configured_to_sync_is_a_failure(self):
+        config = {
+            "app": {
+                "credentials": {"username": "a@icloud.com", "retry_login_interval": 600},
+                "webhooks": {"success": "https://hc-ping.com/uuid"},
+            },
+        }
+        self.assertEqual(
+            self._boundary(drive_stats=None, photos_stats=None, config=config, loops=False),
+            "failure",
+        )

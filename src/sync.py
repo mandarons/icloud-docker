@@ -915,6 +915,34 @@ def _check_services_configured(config):
     return "drive" in config or "photos" in config
 
 
+def _cycle_did_nothing(config, drive_stats, photos_stats) -> bool:
+    """True when this cycle synced no service at all.
+
+    Such a cycle is indistinguishable from a clean one by its stats -- no
+    errors, no counts -- so reporting it as a success is how a monitor stays
+    green while nothing whatsoever is being downloaded. It happens two ways:
+    nothing is configured to sync, or every service that was due got skipped
+    by the mount-marker failsafe (the only path on which a configured, due
+    service returns no stats).
+
+    Not to be confused with a service that simply was not due. With unequal
+    intervals ``_calculate_next_sync_schedule`` enables only the service
+    whose timer expired, so one of the two returning None is the ordinary
+    case -- hence "no stats at all" rather than "any stats missing".
+
+    Args:
+        config: Configuration dictionary
+        drive_stats: Result of ``_perform_drive_sync``
+        photos_stats: Result of ``_perform_photos_sync``
+
+    Returns:
+        True if no service ran this cycle
+    """
+    if not _check_services_configured(config):
+        return True
+    return drive_stats is None and photos_stats is None
+
+
 def _send_usage_statistics(config, summary: SyncSummary) -> None:
     """Send anonymized usage statistics.
 
@@ -1046,6 +1074,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
     _publish_auth_blocked(True, reason="2fa_required")
+    notify.ping_webhook(config=config, event="failure")
     # Decided before anything is sent: it selects the notification wording
     # and suppresses two steps that cannot succeed on such an account.
     security_key = _detect_security_key_account(api, username)
@@ -1221,6 +1250,7 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sign-in failed and will be retried: {error!s}")
+    notify.ping_webhook(config=config, event="failure")
     sleep_for = config_parser.get_retry_login_interval(config=config)
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
@@ -1263,6 +1293,7 @@ def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval)
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sync failed and will be retried: {error!s}")
+    notify.ping_webhook(config=config, event="failure")
     # log_messages=False: this is not a login retry, and the getter's
     # "Retrying login every N seconds." would say otherwise.
     sleep_for = config_parser.get_retry_login_interval(config=config, log_messages=False)
@@ -1294,6 +1325,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
     LOGGER.error(
         "Password is not stored in keyring. Please save the password in keyring.",
     )
+    notify.ping_webhook(config=config, event="failure")
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -1529,6 +1561,11 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     # re-auth episode requests a fresh push exactly once.
                     sync_state.two_fa_triggered = False
 
+                    # Signed in and about to sync: open the cycle on any
+                    # configured ping URL. Fire-and-forget, and a no-op when
+                    # no webhook is configured (see notify.ping_webhook).
+                    notify.ping_webhook(config=config, event="start")
+
                     # Create summary for this sync cycle
                     summary = SyncSummary()
 
@@ -1550,6 +1587,22 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     summary.drive_stats = drive_stats
                     summary.photo_stats = photos_stats
                     summary.sync_end_time = datetime.datetime.now()
+
+                    # Close the cycle on the ping URLs. Failed downloads
+                    # counted in the stats make this a failure even though
+                    # the cycle itself ran to completion -- a monitor that
+                    # reported success here would stay green while the
+                    # library silently fell behind. So does a cycle that
+                    # synced nothing at all (see _cycle_did_nothing).
+                    cycle_failed = summary.has_errors() or _cycle_did_nothing(
+                        config,
+                        drive_stats,
+                        photos_stats,
+                    )
+                    notify.ping_webhook(
+                        config=config,
+                        event="failure" if cycle_failed else "success",
+                    )
 
                     # Persist per-service last-sync state for the web
                     # dashboard. Best-effort — if the JSON write fails

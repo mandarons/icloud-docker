@@ -137,6 +137,18 @@ app:
     # port: 587
     # If your email provider doesn't handle TLS
     # no_tls: true
+  # Monitoring pings (optional). Each is a URL fetched with a plain GET at a
+  # point in the sync cycle; any subset may be set. Shaped for
+  # Healthchecks.io, which infers "the sync stopped running" from a missing
+  # ping -- something no outbound notification can tell you. Set the check's
+  # period from your SHORTEST sync_interval and its grace to cover your
+  # LONGEST sync. The URL is a credential and this app never logs it (at
+  # logger.level debug the HTTP library logs request paths, as it does for
+  # your Telegram token).
+  # webhooks:
+  #   start: "https://hc-ping.com/<uuid>/start"
+  #   success: "https://hc-ping.com/<uuid>"
+  #   failure: "https://hc-ping.com/<uuid>/fail"
   region: global # For China server users, set this to - china (default: global)
   # Maximum number of parallel download threads for both drive and photos
   # auto: automatically set based on CPU cores (default, max 8)
@@ -556,6 +568,34 @@ app:
 - **Outlook**: `smtp-mail.outlook.com:587`
 - **Yahoo**: `smtp.mail.yahoo.com:587`
 - **AWS SES**: `email-smtp.region.amazonaws.com:587`
+
+#### Monitoring Webhooks (Healthchecks.io)
+
+The other providers tell you what a sync did. None of them can tell you that a sync stopped happening — a container that dies, or a loop wedged on a sign-in Apple keeps refusing, simply goes quiet. A monitoring service infers that from a ping it expected and did not get, so `app.webhooks` exposes the three cycle boundaries as plain URLs:
+
+```yaml
+app:
+  webhooks:
+    start: "https://hc-ping.com/<uuid>/start"     # a sync cycle is beginning
+    success: "https://hc-ping.com/<uuid>"         # the cycle finished cleanly
+    failure: "https://hc-ping.com/<uuid>/fail"    # the cycle failed, or finished with errors
+```
+
+Each URL is optional and independent — set only `failure` if that is all you want. The URLs above are the Healthchecks.io ping endpoints for one check, so the three together give you run duration, a failure alert, and an alert when the container stops pinging at all. Any service that accepts a GET works the same way (Uptime Kuma push monitors, Better Stack heartbeats, your own endpoint).
+
+| Event | Fires when |
+|-------|-----------|
+| `start` | Sign-in succeeded and the cycle is about to sync |
+| `success` | The cycle completed, no photo download failed, and at least one service actually synced |
+| `failure` | A photo download failed; or the cycle synced nothing at all (every due service skipped for a missing mount marker, or no `drive:`/`photos:` section configured); or it never got that far — 2FA required, no password in the keyring, sign-in refused, or a service error after sign-in |
+
+Note the asymmetry in the download-failure case: only Photos counts failed downloads into the sync statistics today, so a Drive file that fails to download does not by itself turn a cycle into a `failure`. A dry run that signs in sends nothing; one whose sign-in fails reports it like any other cycle, as the other notification channels already do.
+
+**Setting the check's schedule.** The container pings once per sync cycle, and a cycle happens whenever either service's timer expires — so the expected period is your **shortest** `sync_interval`, plus however long that service takes to run. The grace should cover your **longest** sync comfortably, because a cycle that is busy downloading a large library sends nothing until it finishes. With `drive.sync_interval: 300` and `photos.sync_interval: 900`, a period of 5 minutes and a grace of an hour or two is a reasonable start; widen the grace rather than chase false alarms. Note that `failure` repeats on every retry while a sign-in problem persists (by design — the check should stay red), so expect a run of them rather than one.
+
+A ping URL is a credential: anyone holding it can report your check healthy. This app never logs it. Note that at `app.logger.level: debug` the HTTP library underneath (`urllib3`) logs request paths, which include the ping URL — the same already applies to your Telegram bot token, so treat a debug-level log file as sensitive either way.
+
+Each ping gets a 10-second timeout and no retries. A failed ping is logged at warning and otherwise ignored: the monitor's own grace period covers it, and nothing about a sync should depend on a monitoring service being up. There is no POST body and no payload templating; the sync summary notification (above) is what carries the statistics.
 
 ### Advanced Configuration
 

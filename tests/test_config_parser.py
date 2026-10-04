@@ -898,3 +898,37 @@ class TestPhotosRequestTimeout(unittest.TestCase):
     def test_configured_value_is_used(self):
         cfg = {"photos": {"request_timeout": 120}}
         self.assertEqual(config_parser.get_photos_request_timeout(config=cfg), 120)
+
+
+class TestWebhookUrls(unittest.TestCase):
+    """Three independent, optional URLs. Every one is consulted on every sync
+    cycle, so the absent case has to be both cheap and quiet."""
+
+    def test_unset_is_none(self):
+        self.assertIsNone(config_parser.get_webhook_url(config={}, event="start"))
+
+    def test_configured_value_is_used(self):
+        cfg = {"app": {"webhooks": {"success": "https://hc-ping.com/uuid"}}}
+        self.assertEqual(
+            config_parser.get_webhook_url(config=cfg, event="success"),
+            "https://hc-ping.com/uuid",
+        )
+
+    def test_events_are_independent(self):
+        cfg = {"app": {"webhooks": {"failure": "https://hc-ping.com/uuid/fail"}}}
+        self.assertIsNone(config_parser.get_webhook_url(config=cfg, event="success"))
+        self.assertEqual(
+            config_parser.get_webhook_url(config=cfg, event="failure"),
+            "https://hc-ping.com/uuid/fail",
+        )
+
+    def test_surrounding_whitespace_is_trimmed(self):
+        cfg = {"app": {"webhooks": {"start": "  https://hc-ping.com/uuid/start  "}}}
+        self.assertEqual(
+            config_parser.get_webhook_url(config=cfg, event="start"),
+            "https://hc-ping.com/uuid/start",
+        )
+
+    def test_a_blank_value_is_not_a_url(self):
+        cfg = {"app": {"webhooks": {"start": "   "}}}
+        self.assertIsNone(config_parser.get_webhook_url(config=cfg, event="start"))

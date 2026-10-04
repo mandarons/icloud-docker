@@ -3,7 +3,9 @@
 import datetime
 import unittest
 from email import message_from_string
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
+import requests
 
 from src import config_parser, notify
 from src.email_message import EmailMessage as Message
@@ -940,3 +942,62 @@ class TestNotify(unittest.TestCase):
 
         result = _should_send_sync_summary(config, summary)
         self.assertFalse(result)  # Should not send because has errors but on_error is False
+
+
+class TestSyncLifecycleWebhooks(unittest.TestCase):
+    """A ping URL is the whole credential, so the one thing these tests
+    guard beyond "it does a GET" is that no failure path logs it."""
+
+    URL = "https://hc-ping.com/11111111-2222-3333-4444-555555555555"
+
+    def test_nothing_is_sent_when_no_url_is_configured(self):
+        """The common case: three events are consulted every cycle and a user
+        with no webhooks configured must pay nothing for it."""
+        with patch("src.notify.requests.get") as get_mock:
+            self.assertFalse(notify.ping_webhook({}, "success"))
+            get_mock.assert_not_called()
+
+    def test_a_configured_url_is_fetched_with_a_timeout(self):
+        config = {"app": {"webhooks": {"success": self.URL}}}
+        with patch("src.notify.requests.get") as get_mock:
+            get_mock.return_value = Mock(ok=True)
+            self.assertTrue(notify.ping_webhook(config, "success"))
+            get_mock.assert_called_once_with(self.URL, timeout=notify.WEBHOOK_TIMEOUT_SECONDS)
+
+    def test_each_event_reads_its_own_url(self):
+        config = {"app": {"webhooks": {"start": self.URL + "/start", "failure": self.URL + "/fail"}}}
+        with patch("src.notify.requests.get") as get_mock:
+            get_mock.return_value = Mock(ok=True)
+            notify.ping_webhook(config, "start")
+            notify.ping_webhook(config, "failure")
+            self.assertFalse(notify.ping_webhook(config, "success"))
+        self.assertEqual(
+            [call.args[0] for call in get_mock.call_args_list],
+            [self.URL + "/start", self.URL + "/fail"],
+        )
+
+    def test_a_blank_url_is_not_a_url(self):
+        config = {"app": {"webhooks": {"success": "   "}}}
+        with patch("src.notify.requests.get") as get_mock:
+            self.assertFalse(notify.ping_webhook(config, "success"))
+            get_mock.assert_not_called()
+
+    def test_an_error_response_is_reported_without_the_url(self):
+        config = {"app": {"webhooks": {"failure": self.URL}}}
+        with patch("src.notify.requests.get") as get_mock, patch("src.notify.LOGGER") as logger_mock:
+            get_mock.return_value = Mock(ok=False, status_code=404)
+            self.assertFalse(notify.ping_webhook(config, "failure"))
+        logged = " ".join(str(call) for call in logger_mock.warning.call_args_list)
+        self.assertIn("failure webhook", logged)
+        self.assertNotIn(self.URL, logged)
+
+    def test_a_network_failure_is_swallowed_without_the_url(self):
+        """requests' own exception text carries the full URL, which is why
+        only the exception type is logged."""
+        config = {"app": {"webhooks": {"start": self.URL}}}
+        boom = requests.exceptions.ConnectionError(f"Failed to establish a new connection to {self.URL}")
+        with patch("src.notify.requests.get", side_effect=boom), patch("src.notify.LOGGER") as logger_mock:
+            self.assertFalse(notify.ping_webhook(config, "start"))
+        logged = " ".join(str(call) for call in logger_mock.warning.call_args_list)
+        self.assertIn("ConnectionError", logged)
+        self.assertNotIn(self.URL, logged)
