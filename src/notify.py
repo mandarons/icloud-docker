@@ -986,3 +986,45 @@ def _send_email_no_throttle(config, message: str, subject: str, dry_run: bool) -
     except Exception as e:
         LOGGER.error(f"Failed to send sync summary email: {e!s}")
         return False
+
+
+# =============================================================================
+# Sync Lifecycle Webhook Functions
+# =============================================================================
+
+# Short enough that a dead endpoint cannot stall a sync cycle, long enough
+# for a cold serverless receiver.
+WEBHOOK_TIMEOUT_SECONDS = 10
+
+
+def ping_webhook(config, event: str) -> bool:
+    """GET the ping URL configured for ``event``, if there is one.
+
+    Built for Healthchecks.io-style monitors: the URL itself carries the
+    identity of the check, so the request needs no body, no auth header and
+    no retry -- the monitor's own grace period covers a dropped ping.
+
+    A ping URL is a credential: anyone holding it can report the check
+    healthy. Nothing here may log it, not even indirectly -- a ``requests``
+    exception stringifies to the full URL, so only the exception type is
+    logged.
+
+    Args:
+        config: Configuration dictionary
+        event: Event name -- ``start``, ``success`` or ``failure``
+
+    Returns:
+        True if the ping was delivered, False if not configured or it failed
+    """
+    url = config_parser.get_webhook_url(config=config, event=event)
+    if not url:
+        return False
+    try:
+        response = requests.get(url, timeout=WEBHOOK_TIMEOUT_SECONDS)
+    except Exception as e:
+        LOGGER.warning(f"Failed to ping the {event} webhook: {type(e).__name__}")
+        return False
+    if response.ok:
+        return True
+    LOGGER.warning(f"The {event} webhook returned HTTP {response.status_code}")
+    return False

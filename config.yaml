@@ -30,7 +30,7 @@ app:
   #   host: "127.0.0.1"         # default 127.0.0.1 (loopback only). "0.0.0.0" = all interfaces — proxy required
   #   port: 8080                # default 8080
   #   public_url: ""            # default unset. Your externally reachable URL (e.g. https://icloud.example.com)
-                                # — embedded in notifications so the re-auth link works from your phone
+  #                             # — embedded in notifications so the re-auth link works from your phone
   # Warn this many days before Apple's ~90-day trust cookie expires, so a
   # re-auth can be scheduled instead of discovered mid-sync. Default 7.
   # trust_expiry_warn_days: 7
@@ -84,6 +84,18 @@ app:
   # port: 587
   # If your email provider doesn't handle TLS
   # no_tls: true
+  # Monitoring pings (optional). Each is a URL fetched with a plain GET at a
+  # point in the sync cycle; any subset may be set. Shaped for
+  # Healthchecks.io, which infers "the sync stopped running" from a missing
+  # ping -- something no outbound notification can tell you. Set the check's
+  # period from your SHORTEST sync_interval and its grace to cover your
+  # LONGEST sync. The URL is a credential and this app never logs it (at
+  # logger.level debug the HTTP library logs request paths, as it does for
+  # your Telegram token).
+  # webhooks:
+  #   start: "https://hc-ping.com/<uuid>/start"
+  #   success: "https://hc-ping.com/<uuid>"
+  #   failure: "https://hc-ping.com/<uuid>/fail"
   # valid values are - global (default - uses .com) or china (uses .com.cn)
   region: global
   # Re-trust the session when the trust token has this many days left.

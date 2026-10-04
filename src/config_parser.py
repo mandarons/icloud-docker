@@ -1469,6 +1469,29 @@ def get_pushover_notification_priority(config: dict) -> int | None:
     return get_config_value_or_none(config=config, config_path=config_path)
 
 
+def get_webhook_url(config: dict, event: str) -> str | None:
+    """Return the ping URL configured for a sync-lifecycle event.
+
+    ``app.webhooks.start`` / ``success`` / ``failure`` are each optional and
+    independent. Looked up quietly rather than through
+    ``get_notification_config_value``: every event is consulted on every sync
+    cycle, so the "not found" warning the other notification getters log would
+    become three lines per cycle for anyone not using webhooks.
+
+    Args:
+        config: Configuration dictionary
+        event: Event name -- ``start``, ``success`` or ``failure``
+
+    Returns:
+        The URL if configured and non-blank, None otherwise
+    """
+    config_path = ["app", "webhooks", event]
+    value = get_config_value_or_none(config=config, config_path=config_path)
+    if not value:
+        return None
+    return str(value).strip() or None
+
+
 # =============================================================================
 # Sync Summary Notification Configuration Functions
 # =============================================================================
