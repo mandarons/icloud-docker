@@ -334,7 +334,12 @@ class TestReplyPromptOnlyFromThe2faHandler(unittest.TestCase):
     @patch("src.sync._auth_retry_sleep")
     @patch("src.sync.notify.send", return_value=None)
     def test_password_error_sends_the_standard_alert(self, mock_send, _sleep):
-        sync._handle_password_error(self.config, "user", SyncState())  # noqa: SLF001
+        sync._handle_password_error(  # noqa: SLF001
+            self.config,
+            "user",
+            SyncState(),
+            sync.exceptions.ICloudPyNoStoredPasswordAvailableException("no saved session"),
+        )
         mock_send.assert_called_once()
         self.assertFalse(mock_send.call_args.kwargs.get("reply_prompt", False))
 

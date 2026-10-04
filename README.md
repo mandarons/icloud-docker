@@ -73,6 +73,24 @@ docker exec -it icloud /bin/sh -c "su-exec abc icloud --username=<icloud-usernam
 
 Follow the steps to authenticate.
 
+#### Two ways to run unattended
+
+The container can keep syncing with or without an Apple ID password on disk. Both run unattended; they differ in what happens months later.
+
+**Password stored** (`ENV_ICLOUD_PASSWORD`, or answering yes to `icloud`'s "Save password in keyring?" prompt) — indefinite unattended operation. When Apple's trusted session lapses the container signs in again by itself and only needs a human for the second factor. The cost is the credential at rest: on a headless host Python's `keyring` resolves to `keyrings.alt.file.PlaintextKeyring`, so the password sits in cleartext in `/config/python_keyring/keyring_pass.cfg`. That is an Apple ID password, which also reaches Find My, iCloud backups, purchases and account recovery.
+
+**No password** — unattended until Apple's trust window closes, then a human signs in once. With no password configured the container resumes the saved session in `/config/session_data` and never attempts a credential sign-in. Nothing derived from your password is written to disk. When the session stops being accepted, sync stops with `No Apple ID password is stored and the saved session is no longer valid …`, sends the usual 2FA notification and waits `retry_login_interval` between attempts; set `app.trust_expiry_warn_days` so the warning arrives before that, not after. How often that happens is Apple's call, not a documented interval — `app.trust_refresh_days` rolls the window forward while the session is healthy, which should make it rare, though that refresh has not been verified against Apple over a full trust lifetime in this mode.
+
+**Signing in again without storing a password.** Run the `docker exec … icloud …` command above and answer **no** to `Save password in keyring?`. The web dashboard works too: its "Refresh trust" button needs no password at all while the session is still alive, and a sign-in through `/auth` that *did* need your password persists it to the keyring — which puts the container back into the first mode.
+
+**Switching an existing container to password-free.** Two things, because either one alone is not enough: remove `ENV_ICLOUD_PASSWORD` from the environment (it is copied into the keyring on every cycle it is set), *and* delete the keyring entry:
+
+```
+docker exec icloud su-exec abc python3 -c "import keyring; keyring.delete_password('icloudpy://icloud-password', '<icloud-username>')"
+```
+
+It prints a `PasswordDeleteError` if there was no entry to delete, which is how you confirm there wasn't one. `icloud --delete-from-keyring` also deletes it, but then continues into an interactive password prompt, so it needs `docker exec -it` and a Ctrl-C to get out of.
+
 ## Sample Configuration File
 
 ```yaml
@@ -868,7 +886,7 @@ To set up multiple iCloud accounts, repeat these steps for each UGREEN user and 
 | Variable | Default | Description |
 |---|---|---|
 | `ENV_CONFIG_FILE_PATH` | `/config/config.yaml` | Path to the configuration file inside the container. |
-| `ENV_ICLOUD_PASSWORD` | *(unset)* | iCloud password for automatic login. If unset, manual `docker exec` login is required. |
+| `ENV_ICLOUD_PASSWORD` | *(unset)* | iCloud password for automatic login. Stored in the container's keyring on first use. If unset and the keyring is empty, the container runs off the saved session alone and needs a manual `docker exec` login once Apple stops accepting it — see [Two ways to run unattended](#two-ways-to-run-unattended). |
 | `APP_VERSION` | `dev` | Application version, automatically set during Docker build. Used for usage tracking and displayed in the web UI. |
 | `ICLOUD_DOCKER_CONFIG_DIR` | `/config` | Overrides the base config directory. Session data and keyring are stored relative to this path. The usage cache (`.data`) lives under the root destination (`app.root`). |
 | `PUID` | *(unset)* | User ID for file ownership. |

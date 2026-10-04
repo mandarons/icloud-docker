@@ -400,6 +400,11 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         "marker_filename": marker_filename,
         "services": services,
         "auth_state": _detect_auth_state(username=username),
+        # Which mode the container is in, and why the loop says it is stuck.
+        # Without these the pill tells a password-free install that its
+        # keyring is populated and blames every stoppage on a second factor.
+        "password_stored": _password_is_stored(username) if username else False,
+        "auth_blocked_reason": web_signals.get_auth_blocked().get("reason"),
         "auth_method": web_signals.get_auth_method(username) if username else None,
         "force_sync_pending": web_signals.pending_force_syncs(),
         "trust_expires_at": trust_expires_at,
@@ -443,19 +448,53 @@ def _build_libraries(configured: list[str], library_destinations: dict[str, str]
     return rows
 
 
+def _password_is_stored(username: str) -> bool:
+    """True when a password is cached for this Apple ID."""
+    try:
+        from icloudpy import utils as icloudpy_utils
+
+        return bool(icloudpy_utils.password_exists_in_keyring(username))
+    except Exception as e:  # pragma: no cover - advisory, never breaks a render
+        LOGGER.debug(f"Web UI keyring probe raised: {e!s}")
+        return False
+
+
+def _saved_session_exists(username: str) -> bool:
+    r"""True when this Apple ID has a session file carrying a session token.
+
+    icloudpy names the file after the apple id with every non-``\w``
+    character dropped, plus ``.session`` (``ICloudPyService.session_path``),
+    and resumes from its ``session_token``. A file for *some other* account,
+    or one without that key, is not a credential this container can use --
+    and in a password-free setup it is the only credential there is.
+    """
+    sanitised = "".join(c for c in username if re.match(r"\w", c))
+    try:
+        with open(
+            os.path.join(DEFAULT_COOKIE_DIRECTORY, f"{sanitised}.session"),
+            encoding="utf-8",
+        ) as handle:
+            return bool(json.load(handle).get("session_token"))
+    except (OSError, ValueError):
+        return False
+
+
 def _detect_auth_state(username: str | None) -> str:
     """Best-effort check of whether the sync loop can actually authenticate.
 
     Returns one of:
       - ``not_configured`` — no ``app.credentials.username`` in config.
-      - ``setup_needed`` — username set, but the keyring has no password
-        cached. The container's first 2FA flow hasn't been completed.
-      - ``ready`` — username set + keyring entry present. Sync loop can
-        resume the session on the next retry.
+      - ``setup_needed`` — username set, but neither a cached keyring
+        password nor a saved session. The container's first 2FA flow
+        hasn't been completed.
+      - ``ready`` — username set, plus either a keyring entry or a saved
+        session. Sync loop can resume the session on the next retry.
+      - ``reauth_needed`` — a credential is present but the sync loop has
+        reported that it cannot authenticate with it.
 
     Distinct from a *live* iCloud session check (which would require
-    hitting Apple). This is the cheap on-disk signal users see today
-    when sync.py's loop prints ``Password is not stored in keyring``.
+    hitting Apple). This is the cheap on-disk signal behind the pill the
+    dashboard shows before the sync loop has reported anything.
     """
     if not username:
         return "not_configured"
@@ -467,6 +506,15 @@ def _detect_auth_state(username: str | None) -> str:
             # signal still looks correct while an account is stuck on a
             # second factor, so "keyring populated" alone would render a
             # green dashboard over a sync that has not run for weeks.
+            if web_signals.get_auth_blocked().get("blocked"):
+                return "reauth_needed"
+            return "ready"
+        # An empty keyring is a supported configuration, not an unfinished
+        # setup: the sync loop runs off the saved session alone when no
+        # password is stored. Judge such a container on its session, or the
+        # dashboard would tell a deliberately password-free operator to go
+        # and finish a setup that is already finished.
+        if _saved_session_exists(username):
             if web_signals.get_auth_blocked().get("blocked"):
                 return "reauth_needed"
             return "ready"
@@ -749,16 +797,19 @@ def create_app(testing: bool = False) -> Flask:
                 LOGGER.warning(f"Web UI trust_session failed (non-fatal): {e!s}")
 
             # Persist password to keyring so the sync-loop's next retry
-            # picks up the trusted session without prompting.
-            try:
-                from icloudpy import utils as icloudpy_utils
+            # picks up the trusted session without prompting. A session-only
+            # re-auth has no password to persist, and writing one there would
+            # silently move the container out of password-free mode.
+            if password is not None:
+                try:
+                    from icloudpy import utils as icloudpy_utils
 
-                icloudpy_utils.store_password_in_keyring(
-                    username=username,
-                    password=password,
-                )
-            except Exception as e:
-                LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
+                    icloudpy_utils.store_password_in_keyring(
+                        username=username,
+                        password=password,
+                    )
+                except Exception as e:
+                    LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
 
             _wake_sync_loop()
             return redirect(url_for("dashboard"))
@@ -1099,7 +1150,7 @@ def create_app(testing: bool = False) -> Flask:
 
     @app.route("/auth/refresh-trust", methods=["POST"])
     def auth_refresh_trust():
-        """One-tap re-auth using the keyring-cached password.
+        """One-tap re-auth that reuses whatever credential the container has.
 
         When Apple's trusted-session lifetime is winding down (or has
         already expired since the last sync attempt), this lets the user
@@ -1109,10 +1160,14 @@ def create_app(testing: bool = False) -> Flask:
 
         Flow:
           1. Look up keyring password by username from config.
-          2. If absent → bounce to /auth so the user enters a new one.
-          3. If present → spin up a transient ICloudPyService, fire the
-             2FA push if needed, stash the live session under the same
-             _PENDING_AUTH dict /auth/code already consumes.
+          2. If absent → carry on without one. ``trust_session`` and the 2FA
+             push both work from the saved session, so a password-free
+             container can still use this button; only a session Apple has
+             already stopped accepting needs a human with a password, and
+             that case is reported as such.
+          3. Spin up a transient client, fire the 2FA push if needed, stash
+             the live session under the same _PENDING_AUTH dict /auth/code
+             already consumes.
           4. Redirect to /auth — UI is now in "enter 6-digit code" mode.
         """
         rejection = _require_csrf()
@@ -1139,10 +1194,17 @@ def create_app(testing: bool = False) -> Flask:
                 400,
             )
 
+        from icloudpy import exceptions as icloudpy_exceptions
+
         try:
             from icloudpy import utils as icloudpy_utils
 
             password = icloudpy_utils.get_password_from_keyring(username)
+        except icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException:
+            # Password-free container. Not an error, and not a reason to
+            # refuse: the saved session is credential enough for both
+            # trust_session and the 2FA push.
+            password = None
         except Exception as e:
             LOGGER.exception("Web UI: keyring lookup raised")
             return (
@@ -1152,22 +1214,36 @@ def create_app(testing: bool = False) -> Flask:
                 ),
                 500,
             )
-        if not password:
-            return (
-                _render_auth(
-                    message=("No password in keyring — submit one below to complete the first-time auth."),
-                    message_kind="warn",
-                ),
-                400,
-            )
 
         try:
-            import icloudpy
+            if password is None:
+                # Session-only: the client refuses to sign in with
+                # credentials, so a dead session surfaces as the
+                # no-password exception below rather than a sign-in attempt.
+                from src import sync
 
-            api = icloudpy.ICloudPyService(
-                apple_id=username,
-                password=password,
-                cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+                api = sync.get_api_instance(username=username, password=None)
+            else:
+                import icloudpy
+
+                api = icloudpy.ICloudPyService(
+                    apple_id=username,
+                    password=password,
+                    cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+                )
+        except icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException:
+            LOGGER.info("Web UI refresh-trust: no password and the saved session is not usable")
+            return (
+                _render_auth(
+                    message=(
+                        "The saved session is no longer valid and no password is stored. "
+                        "Enter your Apple ID password below, or run the documented "
+                        "`icloud --username=… --session-directory=…` command to sign in "
+                        "without storing one."
+                    ),
+                    message_kind="err",
+                ),
+                400,
             )
         except Exception as e:
             LOGGER.exception("Web UI refresh-trust: ICloudPyService raised")

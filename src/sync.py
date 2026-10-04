@@ -4,6 +4,7 @@ __author__ = "Mandar Patil <mandarons@pm.me>"
 import datetime
 import os
 import re
+import secrets
 from time import sleep
 
 import requests
@@ -285,9 +286,86 @@ def _maybe_warn_trust_expiring(config, api, username: str) -> None:
         LOGGER.warning(f"trust-expiring check failed: {e!s}")
 
 
+_SESSION_ONLY_HELP = (
+    "Store an Apple ID password to let the container re-authenticate on its "
+    "own, or create a new session by signing in from the web dashboard or "
+    "with the documented `icloud --username=... --session-directory=...` "
+    "command."
+)
+
+# Apple answers a session it will no longer accept with one of these, and
+# icloudpy surfaces the status as the exception's ``code``. Anything else --
+# a 500, a 503, a bad gateway -- is an outage that says nothing about the
+# session, so it belongs to the loop's transport handler rather than being
+# reported to the user as "sign in again". (icloudpy itself lumps 500 in
+# with the re-auth statuses when it rewrites the reason; that conflation
+# must not reach the user as an instruction.)
+_SESSION_REJECTED_CODES = frozenset({401, 421, 450})
+
+# icloudpy reads the keyring for a ``None`` password -- the very lookup
+# session-only mode exists to avoid -- and, given ``""``, its log filter
+# rewrites every log line with asterisks between each character. A random
+# placeholder avoids both; ``SessionOnlyICloudPyService`` never sends it.
+_SESSION_ONLY_PLACEHOLDER_PASSWORD = secrets.token_urlsafe(32)
+
+
+class SessionOnlyICloudPyService(ICloudPyService):
+    """An iCloud client allowed to resume a saved session and nothing else.
+
+    icloudpy's ``authenticate()`` tries the saved session token first and
+    falls back to a full SRP sign-in when it does not validate. With no
+    password that fallback cannot succeed, and letting it run would post a
+    placeholder credential to Apple's sign-in endpoint on every retry --
+    the fastest way to get an Apple ID throttled or locked. So this
+    override stops after the session check and reports the missing
+    password instead, which the loop's existing handler already turns into
+    a notification and a backoff.
+    """
+
+    def authenticate(self, force_refresh=False, service=None):
+        """Validate the saved session; never sign in with credentials.
+
+        Raises ``ICloudPyNoStoredPasswordAvailableException`` when the
+        session is missing or Apple has rejected it; any other API error
+        propagates untouched, since an outage is not an expired session.
+
+        ``force_refresh`` is refused as defence in depth rather than
+        because anything here asks for it: icloudpy's only caller is its
+        Find My 450 handler, which this app never reaches. Honouring it
+        would mean a credential sign-in, which is the one thing this class
+        exists to prevent, so it is refused wherever it came from.
+        """
+        if force_refresh or not self.session_data.get("session_token"):
+            msg = f"No Apple ID password is stored and there is no saved session to resume. {_SESSION_ONLY_HELP}"
+            raise exceptions.ICloudPyNoStoredPasswordAvailableException(msg)
+
+        try:
+            self.data = self._validate_token()
+        except exceptions.ICloudPyAPIResponseException as error:
+            if error.code not in _SESSION_REJECTED_CODES:
+                # An outage leaves the session perfectly good; reporting it as
+                # expired would send the user off to re-authenticate for
+                # nothing. Let the loop's transport handler have it.
+                raise
+            msg = f"No Apple ID password is stored and the saved session is no longer valid. {_SESSION_ONLY_HELP}"
+            raise exceptions.ICloudPyNoStoredPasswordAvailableException(msg) from error
+
+        if "webservices" not in self.data:
+            # icloudpy returns the response untouched when a failed /validate
+            # carries no recognised error field, so ``self.data`` can be an
+            # error body. Upstream would raise KeyError here and kill the
+            # process -- with `restart: unless-stopped` that is a restart loop
+            # hitting Apple on every boot.
+            msg = f"No Apple ID password is stored and Apple did not accept the saved session. {_SESSION_ONLY_HELP}"
+            raise exceptions.ICloudPyNoStoredPasswordAvailableException(msg)
+
+        self._webservices = self.data["webservices"]
+        LOGGER.debug("Resumed the saved session without a password")
+
+
 def get_api_instance(
     username: str,
-    password: str,
+    password: str | None,
     cookie_directory: str | None = None,
     server_region: str = "global",
 ) -> ICloudPyService:
@@ -296,7 +374,10 @@ def get_api_instance(
 
     Args:
         username: iCloud username/Apple ID
-        password: iCloud password
+        password: iCloud password, or ``None`` to run in session-only
+            mode -- the client then resumes the saved session in
+            ``cookie_directory`` and refuses to sign in with credentials
+            (see ``SessionOnlyICloudPyService``).
         cookie_directory: Directory to store authentication cookies.
             When ``None`` (the default), resolved late from
             ``src.DEFAULT_COOKIE_DIRECTORY`` so test fixtures that
@@ -317,8 +398,12 @@ def get_api_instance(
         import sys
 
         cookie_directory = sys.modules["src"].DEFAULT_COOKIE_DIRECTORY
+    service_class = ICloudPyService
+    if password is None:
+        service_class = SessionOnlyICloudPyService
+        password = _SESSION_ONLY_PLACEHOLDER_PASSWORD
     return (
-        ICloudPyService(
+        service_class(
             apple_id=username,
             password=password,
             cookie_directory=cookie_directory,
@@ -326,7 +411,7 @@ def get_api_instance(
             setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
         )
         if server_region == "china"
-        else ICloudPyService(
+        else service_class(
             apple_id=username,
             password=password,
             cookie_directory=cookie_directory,
@@ -353,6 +438,11 @@ class SyncState:
         # re-auth episode. Reset to False on each successful authentication so
         # a fresh episode triggers exactly one push (see _handle_2fa_required).
         self.two_fa_triggered = False
+        # Whether this cycle is running without a stored password, i.e. off
+        # the saved session alone. Set by _authenticate_and_get_api; the error
+        # handlers need it because nothing in that mode can be fixed by
+        # retrying with a password the container does not have.
+        self.session_only = False
 
 
 def _load_configuration():
@@ -415,22 +505,41 @@ def _retrieve_password(username: str):
         return utils.get_password_from_keyring(username=username)
 
 
-def _authenticate_and_get_api(config, username: str):
+def _authenticate_and_get_api(config, username: str, sync_state: SyncState | None = None):
     """
     Authenticate user and return iCloud API instance.
 
     Args:
         config: Configuration dictionary
         username: iCloud username
+        sync_state: Current sync state, whose ``session_only`` flag is set
+            here so the error handlers can tell the two modes apart
 
     Returns:
         ICloudPyService instance
 
     Raises:
-        ICloudPyNoStoredPasswordAvailableException: If password not available
+        ICloudPyNoStoredPasswordAvailableException: If no password is
+            configured *and* the saved session cannot be resumed.
     """
     server_region = config_parser.get_region(config=config)
-    password = _retrieve_password(username)
+    try:
+        password = _retrieve_password(username)
+    except exceptions.ICloudPyNoStoredPasswordAvailableException:
+        # No password anywhere is a choice, not necessarily a misconfiguration:
+        # an operator who would rather not keep an Apple ID password on disk
+        # can run unattended off the saved session alone until Apple's trust
+        # window closes. Resuming it is worth attempting before declaring
+        # failure -- the loop used to report "password is not stored" without
+        # ever looking at a perfectly valid session.
+        LOGGER.debug(
+            "No Apple ID password is configured -- resuming the saved session.",
+        )
+        password = None
+    if sync_state is not None:
+        # Set before the client is built, so it is already right if building
+        # it is what fails.
+        sync_state.session_only = password is None
     return get_api_instance(
         username=username,
         password=password,
@@ -1158,6 +1267,32 @@ def _wait_for_telegram_code(config, api, timeout_seconds: int) -> bool:
     return False
 
 
+def _needs_a_human(sync_state: SyncState, error) -> bool:
+    """Whether a sign-in failure warrants the "re-auth required" alert.
+
+    A rejected password always does: retrying cannot fix it.
+
+    In session-only mode one more case does, because it cannot be told
+    apart from a rejected session. icloudpy keeps the HTTP status on the
+    exception only for a non-JSON body or its own re-auth statuses
+    (``_SESSION_REJECTED_CODES``), so a JSON-bodied 401 arrives with
+    ``code`` as ``None``. Those are the ones that would otherwise leave a
+    container only a human can revive retrying in silence forever.
+
+    Everything else is an outage -- a 5xx that kept its status, a dropped
+    connection, a DNS failure -- and says nothing about the session. Those
+    are logged and retried. Waking someone daily to re-authenticate over
+    Apple having a bad hour is the alert this function exists to withhold.
+    """
+    if isinstance(error, exceptions.ICloudPyFailedLoginException):
+        return True
+    return (
+        sync_state.session_only
+        and isinstance(error, exceptions.ICloudPyAPIResponseException)
+        and error.code is None
+    )
+
+
 def _handle_auth_transport_error(config, username: str, sync_state: SyncState, error):
     """Back off after a sign-in failure Apple did not express as a 2FA prompt.
 
@@ -1175,11 +1310,17 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
         return False
     sleep_for = max(sleep_for, _AUTH_BACKOFF_FLOOR_SEC)
     _log_retry_time(sleep_for)
-    if isinstance(error, exceptions.ICloudPyFailedLoginException):
-        # icloudpy raises this for a rejected password as well as for a
-        # throttle or a 5xx, and a wrong password never heals by retrying --
-        # so say so. notify.send is throttled, so this is not a message per
-        # retry.
+    if sync_state.session_only:
+        # The loop is not syncing and only a human can change that, so the
+        # dashboard is told -- its wording for this reason allows for an
+        # outage and asks for nothing.
+        _publish_auth_blocked(True, reason="sign_in_failed")
+    if _needs_a_human(sync_state, error):
+        # notify.send's text is "iCloud re-auth required", so it is reserved
+        # for the cases where that is actually true: a rejected password,
+        # which never heals by retrying, and -- in session-only mode -- a
+        # failure that cannot be told apart from a rejected session. It is
+        # throttled, so this is not a message per retry.
         sync_state.last_send = notify.send(
             config=config,
             username=username,
@@ -1225,7 +1366,7 @@ def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval)
     return True
 
 
-def _handle_password_error(config, username: str, sync_state: SyncState):
+def _handle_password_error(config, username: str, sync_state: SyncState, error):
     """
     Handle password not available error.
 
@@ -1233,13 +1374,18 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         config: Configuration dictionary
         username: iCloud username
         sync_state: Current sync state
+        error: The raised exception, whose message names which way
+            session-only mode failed -- no session at all, or a session
+            Apple no longer accepts.
 
     Returns:
         bool: True if should continue (retry), False if should exit
     """
-    LOGGER.error(
-        "Password is not stored in keyring. Please save the password in keyring.",
-    )
+    LOGGER.error(str(error))
+    # The dashboard's own on-disk check reads an empty keyring as "setup
+    # needed", which is the wrong instruction here: the session, not the
+    # password, is what has to be replaced.
+    _publish_auth_blocked(True, reason="session_unusable")
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -1459,7 +1605,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
         if username:
             authenticated = False
             try:
-                api = _authenticate_and_get_api(config, username)
+                api = _authenticate_and_get_api(config, username, sync_state)
                 authenticated = True
 
                 # Dry-run path: authenticate, enumerate, log, exit.
@@ -1583,8 +1729,8 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         break
                     continue
 
-            except exceptions.ICloudPyNoStoredPasswordAvailableException:
-                if not _handle_password_error(config, username, sync_state):
+            except exceptions.ICloudPyNoStoredPasswordAvailableException as e:
+                if not _handle_password_error(config, username, sync_state, e):
                     break
                 continue
             except exceptions.ICloudPyFailedLoginException as e:
