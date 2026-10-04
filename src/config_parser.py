@@ -203,6 +203,18 @@ def get_sync_interval(
         default=DEFAULT_SYNC_INTERVAL_SEC,
     )
 
+    # 0 is neither an interval nor one-shot (negative): a service that is
+    # always due would sync back to back with no sleep, which is the
+    # fastest way to get throttled by Apple. Treat it as unset.
+    if sync_interval == 0:
+        if log_messages:
+            log_invalid_config_value(
+                config_path,
+                sync_interval,
+                f"a positive number of seconds, or negative for one-shot. Using default {DEFAULT_SYNC_INTERVAL_SEC}",
+            )
+        sync_interval = DEFAULT_SYNC_INTERVAL_SEC
+
     if log_messages:
         if sync_interval == DEFAULT_SYNC_INTERVAL_SEC:
             log_config_not_found_warning(

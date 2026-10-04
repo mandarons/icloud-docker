@@ -80,6 +80,20 @@ class TestConfigParser(unittest.TestCase):
             config_parser.get_drive_sync_interval(config=None),
         )
 
+    def test_a_zero_sync_interval_falls_back_to_the_default(self):
+        """0 would make the service due on every pass and sync with no sleep."""
+        for getter, section in (
+            (config_parser.get_drive_sync_interval, "drive"),
+            (config_parser.get_photos_sync_interval, "photos"),
+        ):
+            with self.subTest(section=section):
+                config = read_config(config_path=tests.CONFIG_PATH)
+                config[section]["sync_interval"] = 0
+                with self.assertLogs(level="WARNING") as logs:
+                    self.assertEqual(DEFAULT_SYNC_INTERVAL_SEC, getter(config=config))
+                self.assertTrue(any("Invalid value '0'" in line for line in logs.output))
+                self.assertEqual(DEFAULT_SYNC_INTERVAL_SEC, getter(config=config, log_messages=False))
+
     def test_get_drive_sync_interval_silent(self):
         """Test that silent mode returns same value."""
         config = read_config(config_path=tests.CONFIG_PATH)
