@@ -56,7 +56,7 @@ Notifications are fire-and-forget — failures are logged and swallowed so they 
 | `trust_expiring` | `send_trust_expiring()` | `username`, `dashboard_url`, `days_remaining` |
 | `trust_refreshed` | `_maybe_refresh_trust()` succeeded — no other transport reports it | `expires_at` (omitted if unreadable), `days_remaining_before` |
 
-`sync_failed` reasons: `download_errors`, `mount_marker_missing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sync_error`. `WEBHOOK_EVENTS` is the authoritative event list and the only names `app.webhooks.events` recognises.
+`sync_failed` reasons: `download_errors`, `mount_marker_missing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sign_in_error` (the sign-in attempt did not complete: a network fault or an Apple service error), `sync_error`. `WEBHOOK_EVENTS` is the authoritative event list and the only names `app.webhooks.events` recognises.
 
 Guidance for receivers: the alert events are throttled human notices (one per day at most), so automation that needs current state should key on `sync_failed` and its `data.reason`, which is sent every cycle and every retry.
 
