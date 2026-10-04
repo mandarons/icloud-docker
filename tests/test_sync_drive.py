@@ -2335,3 +2335,68 @@ class TestNonAsciiPackageDownloadKeepsItsNfcPath(unittest.TestCase):
         )
         package = unicodedata.normalize("NFC", os.path.join(self.root, "Fotoksiążka-Wzór.xmcf"))
         self._assert_recorded_under_nfc(files - {package}, package)
+
+
+class TestALeftoverNfdCopyIsReported(unittest.TestCase):
+    """Earlier versions renamed non-ASCII packages to NFD. After upgrading,
+    the package is downloaded again under its NFC name and the old copy is
+    never looked at -- and with remove_obsolete off (the default) nothing
+    would remove it or say it is there."""
+
+    def _warnings_for(self, *, leftover_exists, same_file):
+        import unicodedata
+
+        from src import drive_package_processing
+
+        local_file = unicodedata.normalize("NFC", "/drive/Fotoksiążka-Wzór.xmcf")
+        with (
+            patch("os.path.exists", return_value=leftover_exists),
+            patch("os.path.samefile", return_value=same_file),
+            self.assertLogs(level="DEBUG") as logs,
+        ):
+            drive_package_processing.LOGGER.debug("start")
+            drive_package_processing._warn_about_a_leftover_nfd_copy(local_file)  # noqa: SLF001
+        return [line for line in logs.output if line.startswith("WARNING")]
+
+    def test_a_separate_nfd_copy_is_reported(self):
+        warnings = self._warnings_for(leftover_exists=True, same_file=False)
+        self.assertEqual(len(warnings), 1)
+        self.assertIn("drive.remove_obsolete", warnings[0])
+
+    def test_nothing_to_report_without_a_leftover(self):
+        self.assertEqual(self._warnings_for(leftover_exists=False, same_file=False), [])
+
+    def test_nothing_to_report_where_both_forms_are_one_file(self):
+        """macOS: the NFD path resolves to the package itself."""
+        self.assertEqual(self._warnings_for(leftover_exists=True, same_file=True), [])
+
+    def test_an_ascii_name_has_no_other_form(self):
+        from src import drive_package_processing
+
+        with patch("os.path.exists") as exists:
+            drive_package_processing._warn_about_a_leftover_nfd_copy("/drive/Report.pages")  # noqa: SLF001
+        exists.assert_not_called()
+
+    def test_obsolete_cleanup_removes_the_leftover_and_keeps_the_package(self):
+        """The migration claim: with remove_obsolete on, the NFD copy goes and
+        the NFC re-download stays. Needs a filesystem where the two forms are
+        different names (Linux, as in CI)."""
+        import unicodedata
+
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, True)
+        nfc = os.path.join(tmp, unicodedata.normalize("NFC", "Fotoksiążka-Wzór.xmcf"))
+        nfd = os.path.join(tmp, unicodedata.normalize("NFD", "Fotoksiążka-Wzór.xmcf"))
+        os.makedirs(nfc)
+        try:
+            os.makedirs(nfd)
+        except FileExistsError:
+            self.skipTest("NFC and NFD name the same file on this filesystem")
+        Path(nfc, "doc.xml").write_text("new")
+        Path(nfd, "doc.xml").write_text("old")
+        keep = {nfc, os.path.join(nfc, "doc.xml")}
+
+        sync_drive.remove_obsolete(destination_path=tmp, files=keep)
+
+        self.assertTrue(Path(nfc, "doc.xml").is_file())
+        self.assertFalse(os.path.exists(nfd))

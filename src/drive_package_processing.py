@@ -8,6 +8,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import gzip
 import os
+import unicodedata
 import zipfile
 from shutil import copyfileobj
 
@@ -35,8 +36,7 @@ def process_package(
     """Process and extract a downloaded package file.
 
     This function handles different archive types (ZIP, gzip) and extracts them
-    to the appropriate location. It also handles Unicode normalization for
-    cross-platform compatibility.
+    to the appropriate location.
 
     Args:
         local_file: Path to the downloaded package file
@@ -258,7 +258,29 @@ def _process_zip_package(local_file: str, archive_file: str) -> str:
 
     os.remove(archive_file)
     LOGGER.info(f"Successfully unpacked the package {archive_file}.")
+    _warn_about_a_leftover_nfd_copy(local_file)
     return local_file
+
+
+def _warn_about_a_leftover_nfd_copy(local_file: str) -> None:
+    """Point out a copy an earlier version left at the NFD form of the path.
+
+    Those versions renamed non-ASCII packages to NFD; the package is now
+    downloaded again under its NFC name, and the old copy is never looked
+    at again. Obsolete cleanup removes it, but only when
+    ``drive.remove_obsolete`` is on, which is not the default -- so say so
+    rather than let it sit there at double the size. Fires when the package
+    is downloaded, which for an unchanged package is once. On a filesystem
+    where both forms name the same file (macOS), there is nothing to report.
+    """
+    leftover = unicodedata.normalize("NFD", local_file)
+    if leftover == local_file or not os.path.exists(leftover) or os.path.samefile(leftover, local_file):
+        return
+    LOGGER.warning(
+        f"An older copy of {local_file} is still at {leftover!r}, left by an earlier "
+        f"version that renamed packages to NFD. It is no longer synced: delete it, "
+        f"or set drive.remove_obsolete: true to have it cleaned up.",
+    )
 
 
 def _process_gzip_package(
