@@ -56,10 +56,10 @@ Drive sync is purely a download system — it does NOT upload files to iCloud. I
   comparable. For flat single-file bundles (unrecognised MIME or
   `drive.flatten_packages`) the on-disk size is the archive size, so freshness
   falls back to the mtime `download_file` stamps (`package_bundle_unchanged()`)
-- After the NFD rename pass over a package's children, the package directory's
-  mtime is re-stamped to `date_modified` — a successful rename bumps its parent
-  to "now", which would otherwise fail the freshness check and re-download the
-  package on every sync
+- A package and its contents keep the names they were extracted with (NFC, like
+  every other Drive path) and are recorded as they are on disk. Nothing is renamed
+  afterwards, so no mtime re-stamp is needed: `download_file` is the last writer of
+  the package's mtime, and the `glob` that records its contents only reads
 - Bare-rooted package zips (iWork-style entries) extract into their own bundle
   subdirectory; self-prefixed zips (`.band`-style) extract into the parent.
   `_zip_entries_self_prefixed()` must recognise `../bundle/` traversal too
