@@ -648,12 +648,12 @@ The payload shape is stable:
 |-------|-----------|--------|
 | `sync_started` | Sign-in succeeded and the cycle is about to sync | — |
 | `sync_succeeded` | The cycle completed, no photo download failed, and a service actually synced | full sync statistics (as above) |
-| `sync_failed` | A photo download failed; the cycle synced nothing; or it never got that far | statistics, plus a `reason` — always present: `download_errors`, `mount_marker_missing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sync_error` |
+| `sync_failed` | A photo download failed; the cycle synced nothing; or it never got that far | statistics, plus a `reason` — always present: `download_errors`, `mount_marker_missing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sign_in_error`, `sync_error` |
 | `sync_summary` | The sync-summary notification is sent (needs `app.notifications.sync_summary.enabled`, and respects its `min_downloads` / `on_success` / `on_error`) | full sync statistics |
 | `two_factor_required` | iCloud wants a 6-digit code | `username`, `dashboard_url` |
 | `security_key_required` | The account signs in with a hardware security key, so Apple will send no code at all | `username`, `dashboard_url` |
 | `password_missing` | No password in the keyring | `username`, `dashboard_url` |
-| `sign_in_failed` | Apple rejected the sign-in itself — a wrong password, a throttle, or a 5xx during sign-in (`ICloudPyFailedLoginException` specifically; a network fault or a service error after a successful sign-in is `sync_failed` with `reason: sync_error`) | `username`, `dashboard_url` |
+| `sign_in_failed` | Apple rejected the sign-in itself — a wrong password, a throttle, or a 5xx during sign-in (`ICloudPyFailedLoginException` specifically; a sign-in that never completed because of a network fault or an Apple service error is `sync_failed` with `reason: sign_in_error`, and a fault after a successful sign-in is `reason: sync_error`) | `username`, `dashboard_url` |
 | `trust_expiring` | The ~90-day trust window is closing (once per cookie value) | `username`, `dashboard_url`, `days_remaining` |
 | `trust_refreshed` | The trust token was proactively re-minted. Webhook-only: no other transport reports this | `expires_at`, `days_remaining_before` |
 

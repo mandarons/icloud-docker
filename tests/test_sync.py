@@ -12,6 +12,7 @@ from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import requests
 from icloudpy import exceptions
 
 import tests
@@ -2579,11 +2580,18 @@ class TestSyncWebhookEvents(unittest.TestCase):
                 sync.SyncState(),
                 exceptions.ICloudPyFailedLoginException("401"),
             )
+            # Offline at boot: the attempt never completed; nothing was refused.
+            sync._handle_auth_transport_error(  # noqa: SLF001
+                config,
+                "a@icloud.com",
+                sync.SyncState(),
+                requests.exceptions.ConnectionError("offline"),
+            )
             sync._handle_sync_error(config, Exception("zone"), 300, 500)  # noqa: SLF001
             reasons = [call.kwargs["data"]["reason"] for call in cycle.call_args_list]
         self.assertEqual(
             reasons,
-            ["two_factor_required", "password_missing", "sign_in_failed", "sync_error"],
+            ["two_factor_required", "password_missing", "sign_in_failed", "sign_in_error", "sync_error"],
         )
 
     def test_a_successful_refresh_reports_the_new_expiry(self):

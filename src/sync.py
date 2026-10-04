@@ -1287,11 +1287,19 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sign-in failed and will be retried: {error!s}")
+    # Only a refusal from Apple's sign-in is sign_in_failed, matching the
+    # alert below. A network fault or an Apple service error means the
+    # attempt never completed, which needs no one to intervene.
+    rejected = isinstance(error, exceptions.ICloudPyFailedLoginException)
     notify.send_cycle_event(
         config=config,
         boundary="failure",
-        message="iCloud sync cycle aborted: sign-in failed",
-        data={"reason": "sign_in_failed"},
+        message=(
+            "iCloud sync cycle aborted: sign-in failed"
+            if rejected
+            else "iCloud sync cycle aborted: sign-in did not complete"
+        ),
+        data={"reason": "sign_in_failed" if rejected else "sign_in_error"},
     )
     sleep_for = config_parser.get_retry_login_interval(config=config)
     if sleep_for < 0:
