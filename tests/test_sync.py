@@ -2248,6 +2248,36 @@ class TestSyncingWithoutAStoredPassword(unittest.TestCase):
             sync._authenticate_and_get_api({}, data.AUTHENTICATED_USER)  # noqa: SLF001
         self.assertIsNone(mock_get_api.call_args.kwargs["password"])
 
+    def test_a_blank_password_counts_as_no_password(self):
+        """Compose turns an unset ${VAR} into "", which must select
+        session-only mode -- not send an empty password to Apple's sign-in --
+        and must not overwrite a stored password with it."""
+        for keyring_value in (None, ""):
+            with self.subTest(keyring=keyring_value):
+                missing = exceptions.ICloudPyNoStoredPasswordAvailableException()
+                with (
+                    patch.dict(os.environ, {ENV_ICLOUD_PASSWORD_KEY: ""}),
+                    patch.object(sync.utils, "store_password_in_keyring") as stored,
+                    patch.object(
+                        sync.utils,
+                        "get_password_from_keyring",
+                        side_effect=missing if keyring_value is None else None,
+                        return_value=keyring_value,
+                    ),
+                    self.assertRaises(exceptions.ICloudPyNoStoredPasswordAvailableException),
+                ):
+                    sync._retrieve_password(data.AUTHENTICATED_USER)  # noqa: SLF001
+                stored.assert_not_called()
+
+    def test_a_blank_variable_does_not_hide_a_stored_password(self):
+        with (
+            patch.dict(os.environ, {ENV_ICLOUD_PASSWORD_KEY: ""}),
+            patch.object(sync.utils, "store_password_in_keyring") as stored,
+            patch.object(sync.utils, "get_password_from_keyring", return_value="stored"),
+        ):
+            self.assertEqual(sync._retrieve_password(data.AUTHENTICATED_USER), "stored")  # noqa: SLF001
+        stored.assert_not_called()
+
     def test_the_error_says_what_to_do_and_tells_the_dashboard(self):
         """The old wording ("save the password in keyring") is the wrong
         instruction for a deliberately password-free setup: it is the

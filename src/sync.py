@@ -497,12 +497,19 @@ def _retrieve_password(username: str):
     Raises:
         ICloudPyNoStoredPasswordAvailableException: If password not available
     """
-    if ENV_ICLOUD_PASSWORD_KEY in os.environ:
-        password = os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
+    # A blank value counts as no password. Compose substitutes "" for an
+    # unset ${VAR}, and storing it would also overwrite a real keyring
+    # entry; returning it would skip session-only mode and send an empty
+    # password to Apple's sign-in on every retry.
+    password = os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
+    if password:
         utils.store_password_in_keyring(username=username, password=password)
         return password
-    else:
-        return utils.get_password_from_keyring(username=username)
+    password = utils.get_password_from_keyring(username=username)
+    if not password:
+        msg = f"The stored password for {username} is empty."
+        raise exceptions.ICloudPyNoStoredPasswordAvailableException(msg)
+    return password
 
 
 def _authenticate_and_get_api(config, username: str, sync_state: SyncState | None = None):

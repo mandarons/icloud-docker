@@ -83,7 +83,7 @@ The container can keep syncing with or without an Apple ID password on disk. Bot
 
 **Signing in again without storing a password.** Run the `docker exec … icloud …` command above and answer **no** to `Save password in keyring?`. The web dashboard works too: its "Refresh trust" button needs no password at all while the session is still alive, and a sign-in through `/auth` that *did* need your password persists it to the keyring — which puts the container back into the first mode.
 
-**Switching an existing container to password-free.** Two things, because either one alone is not enough: remove `ENV_ICLOUD_PASSWORD` from the environment (it is copied into the keyring on every cycle it is set), *and* delete the keyring entry:
+**Switching an existing container to password-free.** Two things, because either one alone is not enough: remove `ENV_ICLOUD_PASSWORD` from the environment (it is copied into the keyring on every cycle it is set; an empty value counts as unset), *and* delete the keyring entry:
 
 ```
 docker exec icloud su-exec abc python3 -c "import keyring; keyring.delete_password('icloudpy://icloud-password', '<icloud-username>')"
@@ -886,7 +886,7 @@ To set up multiple iCloud accounts, repeat these steps for each UGREEN user and 
 | Variable | Default | Description |
 |---|---|---|
 | `ENV_CONFIG_FILE_PATH` | `/config/config.yaml` | Path to the configuration file inside the container. |
-| `ENV_ICLOUD_PASSWORD` | *(unset)* | iCloud password for automatic login. Stored in the container's keyring on first use. If unset and the keyring is empty, the container runs off the saved session alone and needs a manual `docker exec` login once Apple stops accepting it — see [Two ways to run unattended](#two-ways-to-run-unattended). |
+| `ENV_ICLOUD_PASSWORD` | *(unset)* | iCloud password for automatic login. Stored in the container's keyring on first use. If unset (or empty) and the keyring is empty, the container runs off the saved session alone and needs a manual `docker exec` login once Apple stops accepting it — see [Two ways to run unattended](#two-ways-to-run-unattended). |
 | `APP_VERSION` | `dev` | Application version, automatically set during Docker build. Used for usage tracking and displayed in the web UI. |
 | `ICLOUD_DOCKER_CONFIG_DIR` | `/config` | Overrides the base config directory. Session data and keyring are stored relative to this path. The usage cache (`.data`) lives under the root destination (`app.root`). |
 | `PUID` | *(unset)* | User ID for file ownership. |
