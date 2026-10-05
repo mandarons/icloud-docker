@@ -648,7 +648,7 @@ The payload shape is stable:
 |-------|-----------|--------|
 | `sync_started` | Sign-in succeeded and the cycle is about to sync | — |
 | `sync_succeeded` | The cycle completed, no photo download failed, and a service actually synced | full sync statistics (as above) |
-| `sync_failed` | A photo download failed; the cycle synced nothing; or it never got that far | statistics, plus a `reason` — always present: `download_errors`, `mount_marker_missing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sign_in_error`, `sync_error` |
+| `sync_failed` | A photo download failed; the cycle synced nothing; or it never got that far | statistics, plus a `reason` — always present: `download_errors`, `mount_marker_missing`, `photos_indexing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sign_in_error`, `sync_error` |
 | `sync_summary` | The sync-summary notification is sent (needs `app.notifications.sync_summary.enabled`, and respects its `min_downloads` / `on_success` / `on_error`) | full sync statistics |
 | `two_factor_required` | iCloud wants a 6-digit code | `username`, `dashboard_url` |
 | `security_key_required` | The account signs in with a hardware security key, so Apple will send no code at all | `username`, `dashboard_url` |
