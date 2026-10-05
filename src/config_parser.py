@@ -1043,6 +1043,34 @@ def get_photos_preserve_originals_as_bak(config: dict) -> bool:
     return bool(value) if value is not None else False
 
 
+def get_recycle_bin_enabled(config: dict) -> bool:
+    """Whether obsolete-file cleanup moves things to the recycle bin.
+
+    ``app.recycle_bin.enabled``. Off by default: cleanup deletes, as before.
+    The bin never widens what cleanup removes; ``remove_obsolete`` still
+    decides that.
+    """
+    value = get_config_value_or_none(config=config, config_path=["app", "recycle_bin", "enabled"])
+    return bool(value) if value is not None else False
+
+
+def get_recycle_bin_retention_days(config: dict) -> int | None:
+    """Days the recycle bin keeps what cleanup moved there; None keeps forever.
+
+    ``app.recycle_bin.retention_days``. Anything but a positive whole number
+    is reported and treated as unset -- keeping forever is the safe reading
+    of a value that cannot be trusted.
+    """
+    config_path = ["app", "recycle_bin", "retention_days"]
+    value = get_config_value_or_none(config=config, config_path=config_path)
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+        log_invalid_config_value(config_path, value, "a positive number of days; keeping deleted files forever")
+        return None
+    return value
+
+
 def get_photos_library_destinations(config: dict) -> dict[str, str]:
     """Get per-library destination subdirectory mapping from photos config.
 
