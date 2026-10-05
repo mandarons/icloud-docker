@@ -9,7 +9,6 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import os
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import timezone
 from pathlib import Path
 from threading import Lock
 from typing import Any
@@ -158,19 +157,13 @@ def download_file_task(download_info: dict[str, Any]) -> bool:
             return False
 
         if is_package:
+            # Record the package's contents exactly as they are on disk, so
+            # obsolete-file cleanup keeps them. They used to be renamed to the
+            # NFD form of their whole path first, which on Linux failed under
+            # a non-ASCII parent folder and otherwise moved the package's
+            # mtime off iCloud's, so package_exists re-downloaded it every sync.
             with files_lock:
-                for f in Path(downloaded_file).glob("**/*"):
-                    f = str(f)
-                    f_normalized = unicodedata.normalize("NFD", f)
-                    if os.path.exists(f):
-                        os.rename(f, f_normalized)
-                        files.add(f_normalized)
-                # A rename updates its parent directory's mtime, and
-                # package_exists compares the package's mtime with iCloud's
-                # date_modified -- so a package with any non-ASCII name was
-                # downloaded again on every sync. Put iCloud's time back.
-                modified = item.date_modified.replace(tzinfo=timezone.utc).timestamp()
-                os.utime(downloaded_file, (modified, modified))
+                files.update(str(f) for f in Path(downloaded_file).glob("**/*"))
 
         LOGGER.debug(f"[Thread] Completed download of {local_file}")
         return True

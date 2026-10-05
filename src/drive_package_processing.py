@@ -36,8 +36,7 @@ def process_package(
     """Process and extract a downloaded package file.
 
     This function handles different archive types (ZIP, gzip) and extracts them
-    to the appropriate location. It also handles Unicode normalization for
-    cross-platform compatibility.
+    to the appropriate location.
 
     Args:
         local_file: Path to the downloaded package file
@@ -251,18 +250,37 @@ def _process_zip_package(local_file: str, archive_file: str) -> str:
         LOGGER.info(f"Unpacking {archive_file} to {extract_dir}")
         _safe_extractall(zf, extract_dir, safety_boundary)
 
-    # Handle Unicode normalization for cross-platform compatibility
-    normalized_path = unicodedata.normalize("NFD", local_file)
-    if normalized_path != local_file and os.path.exists(local_file):
-        # os.replace, not os.rename: same on POSIX, but rename refuses to
-        # overwrite an existing target on Windows, and the NFD name can
-        # already exist there.
-        os.replace(local_file, normalized_path)
-        local_file = normalized_path
+    # The package stays at the NFC path it was asked for. Renaming it to the
+    # NFD form of the whole path broke on Linux, where the two forms are
+    # different names: a non-ASCII parent folder made the rename fail, and a
+    # non-ASCII package name left it where the next sync (which looks for the
+    # NFC path) could not find it, so it was downloaded again every time.
 
     os.remove(archive_file)
     LOGGER.info(f"Successfully unpacked the package {archive_file}.")
+    _warn_about_a_leftover_nfd_copy(local_file)
     return local_file
+
+
+def _warn_about_a_leftover_nfd_copy(local_file: str) -> None:
+    """Point out a copy an earlier version left at the NFD form of the path.
+
+    Those versions renamed non-ASCII packages to NFD; the package is now
+    downloaded again under its NFC name, and the old copy is never looked
+    at again. Obsolete cleanup removes it, but only when
+    ``drive.remove_obsolete`` is on, which is not the default -- so say so
+    rather than let it sit there at double the size. Fires when the package
+    is downloaded, which for an unchanged package is once. On a filesystem
+    where both forms name the same file (macOS), there is nothing to report.
+    """
+    leftover = unicodedata.normalize("NFD", local_file)
+    if leftover == local_file or not os.path.exists(leftover) or os.path.samefile(leftover, local_file):
+        return
+    LOGGER.warning(
+        f"An older copy of {local_file} is still at {leftover!r}, left by an earlier "
+        f"version that renamed packages to NFD. It is no longer synced: delete it, "
+        f"or set drive.remove_obsolete: true to have it cleaned up.",
+    )
 
 
 def _process_gzip_package(
