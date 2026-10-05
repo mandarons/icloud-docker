@@ -26,6 +26,7 @@ The config system is a pure data layer — it does NOT perform sync operations, 
 | `prepare_drive_destination(config)` | Create and return drive dest path |
 | `prepare_photos_destination(config)` | Create and return photos dest path |
 | `get_photos_obsolete_delete_limit_percent(config)` | Max share of a destination one cleanup may delete |
+| `get_recycle_bin_enabled(config)` / `get_recycle_bin_retention_days(config)` | Move cleanup removals to `<root>/Recently Deleted/` instead of deleting; days to keep (None keeps forever) |
 | `get_trust_refresh_days(config)` | Days-left threshold for proactive trust-token refresh (default 14, 0 disables) |
 | `get_drive_flatten_packages(config)` | Keep packages as single files instead of extracting (default false) |
 | `get_photos_filename_format(config)` | `metadata` (legacy) or `simple` plain names (default `metadata`) |

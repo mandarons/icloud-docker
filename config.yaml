@@ -17,6 +17,12 @@ app:
     retry_login_interval: 600
   # Drive destination
   root: "/icloud"
+  # Optional: when remove_obsolete cleans something up, move it to
+  # <root>/Recently Deleted/<drive|photos>/<date>/ instead of deleting it.
+  # retention_days purges day folders older than that; omit to keep forever.
+  # recycle_bin:
+  #   enabled: true
+  #   retention_days: 30
   # Optional embedded web UI — dashboard + on-device 2FA re-auth flow.
   # Disabled by default. SECURITY: the UI has no login of its own; it
   # accepts your Apple ID password on POST /auth/password. The default
@@ -30,7 +36,7 @@ app:
   #   host: "127.0.0.1"         # default 127.0.0.1 (loopback only). "0.0.0.0" = all interfaces — proxy required
   #   port: 8080                # default 8080
   #   public_url: ""            # default unset. Your externally reachable URL (e.g. https://icloud.example.com)
-                                # — embedded in notifications so the re-auth link works from your phone
+  #                             # — embedded in notifications so the re-auth link works from your phone
   # Warn this many days before Apple's ~90-day trust cookie expires, so a
   # re-auth can be scheduled instead of discovered mid-sync. Default 7.
   # trust_expiry_warn_days: 7
