@@ -1,0 +1,14 @@
+[38;21m2026-10-05 00:26:06,901 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-10-05 00:26:06,901 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-10-05 00:26:06,901 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;5;39m2026-10-05 00:26:06,901 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;21m2026-10-05 00:26:06,902 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-05 00:26:06,902 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-05 00:26:06,911 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;21m2026-10-05 00:26:06,911 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;5;39m2026-10-05 00:26:06,913 :: INFO :: root :: photo_file_utils.py :: 347 :: Downloading /tmp/tmpxxrnx8lx/test_photo.jpg ...[0m
+[38;5;39m2026-10-05 00:26:06,913 :: INFO :: root :: photo_file_utils.py :: 347 :: Downloading /tmp/tmpxxrnx8lx/test_photo.jpg ...[0m
+[38;5;226m2026-10-05 00:26:06,913 :: WARNING :: root :: photo_file_utils.py :: 404 :: Download URL expired (410) for /tmp/tmpxxrnx8lx/test_photo.jpg. Refreshing URL and retrying (attempt 1/2)...[0m
+[38;5;226m2026-10-05 00:26:06,913 :: WARNING :: root :: photo_file_utils.py :: 404 :: Download URL expired (410) for /tmp/tmpxxrnx8lx/test_photo.jpg. Refreshing URL and retrying (attempt 1/2)...[0m
+[38;5;226m2026-10-05 00:26:06,914 :: WARNING :: root :: photo_file_utils.py :: 162 :: Download URL refresh has failed 3 times in a row - expired-URL (HTTP 410) recovery is not working, so affected photos will be reported as failed downloads. Most recent failure: <unknown> - photo missing _master_record or recordName[0m
+[38;5;226m2026-10-05 00:26:06,914 :: WARNING :: root :: photo_file_utils.py :: 162 :: Download URL refresh has failed 3 times in a row - expired-URL (HTTP 410) recovery is not working, so affected photos will be reported as failed downloads. Most recent failure: <unknown> - photo missing _master_record or recordName[0m

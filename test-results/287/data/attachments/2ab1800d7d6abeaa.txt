@@ -1,0 +1,12 @@
+[38;21m2026-10-05 00:25:55,423 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading KWallet[0m
+[38;21m2026-10-05 00:25:55,424 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading SecretService[0m
+[38;21m2026-10-05 00:25:55,446 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading Windows[0m
+[38;21m2026-10-05 00:25:55,448 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading chainer[0m
+[38;21m2026-10-05 00:25:55,448 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading libsecret[0m
+[38;21m2026-10-05 00:25:55,449 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading macOS[0m
+[38;21m2026-10-05 00:25:55,499 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading Gnome[0m
+[38;21m2026-10-05 00:25:55,502 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading Google[0m
+[38;21m2026-10-05 00:25:55,503 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading Windows (alt)[0m
+[38;21m2026-10-05 00:25:55,507 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading file[0m
+[38;21m2026-10-05 00:25:55,508 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading keyczar[0m
+[38;21m2026-10-05 00:25:55,508 :: DEBUG :: keyring.backend :: backend.py :: 243 :: Loading multi[0m
