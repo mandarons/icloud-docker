@@ -1,4 +1,0 @@
-WARNING  root:photo_path_utils.py:311 Renaming /tmp/tmpbnedq978/IMG_DDDD.HEIC over existing /tmp/tmpbnedq978/IMG_DDDD.HEIC
-DEBUG    root:photo_file_utils.py:293 Change detected: local_file_size is 100 and remote_file_size is 200.
-INFO     root:photo_download_manager.py:268 Filename collision for IMG_DDDD.HEIC (id=photo-b-id); using suffix path /tmp/tmpbnedq978/IMG_DDDD__original__cGhvdG8tYi1pZA==.HEIC to preserve both photos.
-DEBUG    root:photo_file_utils.py:290 No changes detected. Skipping the file /tmp/tmpbnedq978/IMG_DDDD__original__cGhvdG8tYi1pZA==.HEIC ...

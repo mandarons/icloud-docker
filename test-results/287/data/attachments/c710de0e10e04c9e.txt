@@ -1,1 +1,0 @@
-[38;5;196m2026-10-05 00:25:54,774 :: ERROR :: root :: sync.py :: 486 :: Drive mount marker missing: /tmp/tmp_w4t6y3g/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmp_w4t6y3g/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

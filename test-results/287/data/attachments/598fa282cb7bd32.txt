@@ -1,4 +1,0 @@
-INFO     root:sync.py:1087 Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).
-INFO     root:sync.py:1110 Telegram auth trigger received -- requesting 2FA push.
-WARNING  root:sync.py:1114 trigger_2fa_push_notification raised: no device
-INFO     root:sync.py:1157 Telegram listen timeout reached with no usable code; retrying auth.

@@ -1,8 +1,0 @@
-[38;5;196m2026-10-05 00:26:13,533 :: ERROR :: root :: sync.py :: 995 :: Error: 2FA is required. Please log in.[0m
-[38;5;196m2026-10-05 00:26:13,533 :: ERROR :: root :: sync.py :: 995 :: Error: 2FA is required. Please log in.[0m
-[38;5;226m2026-10-05 00:26:13,534 :: WARNING :: root :: sync.py :: 968 :: Failed to request 2FA push notification; will retry next cycle: 'NoneType' object has no attribute 'trigger_2fa_push_notification'[0m
-[38;5;226m2026-10-05 00:26:13,534 :: WARNING :: root :: sync.py :: 968 :: Failed to request 2FA push notification; will retry next cycle: 'NoneType' object has no attribute 'trigger_2fa_push_notification'[0m
-[38;5;39m2026-10-05 00:26:13,535 :: INFO :: root :: sync.py :: 1272 :: Retrying login at Mon Oct  5 00:27:13 2026 ...[0m
-[38;5;39m2026-10-05 00:26:13,535 :: INFO :: root :: sync.py :: 1272 :: Retrying login at Mon Oct  5 00:27:13 2026 ...[0m
-[38;5;226m2026-10-05 00:26:13,535 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
-[38;5;226m2026-10-05 00:26:13,535 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m

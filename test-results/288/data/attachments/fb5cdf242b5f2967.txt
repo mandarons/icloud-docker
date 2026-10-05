@@ -1,0 +1,3 @@
+[38;5;226m2026-10-05 00:28:52,183 :: WARNING :: root :: photo_path_utils.py :: 311 :: Renaming /tmp/tmpaf547evc/IMG_CCCC.HEIC over existing /tmp/tmpaf547evc/IMG_CCCC.HEIC[0m
+[38;21m2026-10-05 00:28:52,184 :: DEBUG :: root :: photo_file_utils.py :: 293 :: Change detected: local_file_size is 9999 and remote_file_size is 12345.[0m
+[38;5;39m2026-10-05 00:28:52,184 :: INFO :: root :: photo_download_manager.py :: 268 :: Filename collision for IMG_CCCC.HEIC (id=different-id-cccc); using suffix path /tmp/tmpaf547evc/IMG_CCCC__original__ZGlmZmVyZW50LWlkLWNjY2M=.HEIC to preserve both photos.[0m

@@ -1,0 +1,1 @@
+[38;5;196m2026-10-05 00:28:55,865 :: ERROR :: root :: sync.py :: 487 :: Drive mount marker missing: /tmp/tmpl959kpkd/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpl959kpkd/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m
