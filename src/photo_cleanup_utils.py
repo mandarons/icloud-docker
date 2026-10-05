@@ -18,6 +18,7 @@ def remove_obsolete_files(
     tracked_files: set[str] | None,
     exclude_filenames: set[str] | None = None,
     limit_percent: int = DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT,
+    recycle_bin=None,
 ) -> set[str]:
     """Remove local obsolete files that are no longer on server.
 
@@ -27,6 +28,8 @@ def remove_obsolete_files(
         exclude_filenames: Set of filenames (basename only) that must never
             be removed even if they are not in ``tracked_files``.  Used to
             protect the mount-marker sentinel file from cleanup.
+        recycle_bin: ``RecycleBin`` to move removed files to instead of
+            deleting them. The delete limit applies the same either way.
 
     Returns:
         Set of paths that were removed
@@ -35,6 +38,8 @@ def remove_obsolete_files(
 
     if not (destination_path and tracked_files is not None):
         return removed_paths
+    if recycle_bin:
+        recycle_bin.purge()
 
     # Decide everything before deleting anything. Cleanup is the only
     # destructive step in a sync, and it infers deletions from the absence
@@ -46,8 +51,10 @@ def remove_obsolete_files(
     for path in Path(destination_path).rglob("*"):
         if not path.is_file():
             continue
-        present += 1
         local_file = str(path.absolute())
+        if recycle_bin and recycle_bin.contains(local_file):
+            continue  # what is in the bin is not part of the library
+        present += 1
         if local_file in tracked_files:
             continue
         if exclude_filenames and path.name in exclude_filenames:
@@ -73,8 +80,12 @@ def remove_obsolete_files(
             return removed_paths
 
     for path, local_file in candidates:
-        LOGGER.info(f"Removing {local_file} ...")
-        path.unlink(missing_ok=True)
+        if recycle_bin:
+            LOGGER.info(f"Moving {local_file} to the recycle bin ...")
+            recycle_bin.discard(local_file, destination_path)
+        else:
+            LOGGER.info(f"Removing {local_file} ...")
+            path.unlink(missing_ok=True)
         removed_paths.add(local_file)
 
     return removed_paths
