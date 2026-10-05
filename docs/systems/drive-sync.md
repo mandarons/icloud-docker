@@ -9,7 +9,8 @@ The drive sync system (`src/sync_drive.py` + 7 helper modules) handles downloadi
 - Filter files/folders by glob patterns and extensions
 - Detect and auto-extract ZIP packages and gzip streams (or keep them as
   single files when `drive.flatten_packages` is enabled)
-- Remove obsolete local files when `remove_obsolete` is enabled
+- Remove obsolete local files when `remove_obsolete` is enabled — or, with
+  `app.recycle_bin.enabled`, move them to `<root>/Recently Deleted/drive/<date>/`
 - Handle file existence checks to avoid re-downloading
 - Bound download streams with `drive.request_timeout` (default 30s) so a
   stalled connection cannot freeze a worker forever

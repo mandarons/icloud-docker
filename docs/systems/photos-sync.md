@@ -82,6 +82,11 @@ Photos sync is purely a download system. It writes to the local filesystem at th
   0 disables). Cleanup infers deletions from absence in the run's
   tracked-file set, so a bug that leaves paths untracked reads as "the
   server dropped these"; above the limit the run reports and deletes nothing
+- With `app.recycle_bin.enabled`, cleanup moves what it would delete to
+  `<root>/Recently Deleted/photos/<date>/` (`src/recycle_bin.py`). The bin
+  decides only how, never what: the limit and the failed-library exclusions
+  apply unchanged, and files already in the bin are neither cleaned up nor
+  counted toward the limit
 
 ## Dependencies
 

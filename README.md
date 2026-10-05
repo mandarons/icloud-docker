@@ -710,6 +710,22 @@ app:
       min_downloads: 10  # Only notify for significant syncs
 ```
 
+#### Recycle Bin
+
+With `remove_obsolete: true`, files that are gone from iCloud are deleted from disk on the next sync. The recycle bin moves them aside instead:
+
+```yaml
+app:
+  root: "/icloud"
+  recycle_bin:
+    enabled: true
+    retention_days: 30   # optional; omit to keep everything forever
+```
+
+Removed files land in `<root>/Recently Deleted/drive/` or `<root>/Recently Deleted/photos/`, in a folder per day, at the same path they had under the destination (`Recently Deleted/photos/2026-10-04/2024/05/IMG_1234.HEIC`). To restore one, move it back. Day folders older than `retention_days` are deleted at the start of each cleanup.
+
+The bin never widens what cleanup removes: with `remove_obsolete: false` nothing is cleaned up and nothing reaches the bin, and `obsolete_delete_limit_percent` still applies.
+
 #### Environment-Based Configuration
 
 Use environment variables for sensitive data:
