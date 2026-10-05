@@ -2420,7 +2420,12 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
         "photos": {"destination": "photos", "sync_interval": 900},
     }
 
-    def _boundary(self, drive_stats, photos_stats, config=None, loops=True):
+    def _boundary(self, drive_stats, photos_stats, config=None, loops=True, photos_indexing=False):
+        def photos(config, api, sync_state, interval):
+            # What _wait_for_photos_indexing leaves behind for the cycle.
+            sync_state.photos_indexing = photos_indexing
+            return photos_stats
+
         api = Mock()
         api.requires_2sa = False
         with (
@@ -2431,7 +2436,7 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
             patch.object(sync, "_maybe_refresh_trust"),
             patch.object(sync, "_maybe_warn_trust_expiring"),
             patch.object(sync, "_perform_drive_sync", return_value=drive_stats),
-            patch.object(sync, "_perform_photos_sync", return_value=photos_stats),
+            patch.object(sync, "_perform_photos_sync", side_effect=photos),
             patch.object(sync, "_send_usage_statistics"),
             patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
             patch("src.notify.send_sync_summary"),
@@ -2446,6 +2451,7 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
                 # loop leaves oneshot-style instead of reaching the sleep.
                 sync.sync()
         closing = cycle.call_args_list[-1]
+        self.cycle_message = closing.kwargs.get("message", "")
         return closing.kwargs["boundary"], closing.kwargs["data"].get("reason")
 
     def test_a_mount_marker_skipping_every_service_is_a_failure(self):
@@ -2453,6 +2459,15 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
             self._boundary(drive_stats=None, photos_stats=None),
             ("failure", "mount_marker_missing"),
         )
+
+    def test_a_photos_cycle_waiting_on_apple_says_so(self):
+        """Photos skipped for Apple's indexing, Drive not due: nothing synced,
+        but the mount is fine and nobody should go looking at it."""
+        self.assertEqual(
+            self._boundary(drive_stats=None, photos_stats=None, photos_indexing=True),
+            ("failure", "photos_indexing"),
+        )
+        self.assertIn("indexing", self.cycle_message)
 
     def test_one_service_not_being_due_is_an_ordinary_success(self):
         """The regression this guards: Photos on a 900s interval is simply

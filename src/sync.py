@@ -367,6 +367,9 @@ class SyncState:
         # re-auth episode. Reset to False on each successful authentication so
         # a fresh episode triggers exactly one push (see _handle_2fa_required).
         self.two_fa_triggered = False
+        # Set when this cycle skipped Photos because Apple is still indexing
+        # it, so the cycle's webhook can say so rather than blame the mount.
+        self.photos_indexing = False
 
 
 def _load_configuration():
@@ -736,6 +739,7 @@ def _wait_for_photos_indexing(sync_state: SyncState, photos_sync_interval: int) 
         f"be read yet. Nothing on disk was changed. Trying Photos again in {again}.",
     )
     sync_state.photos_time_remaining = retry
+    sync_state.photos_indexing = True
     _signal_photos_indexing(waiting=True)
 
 
@@ -928,15 +932,15 @@ def _check_services_configured(config):
     return "drive" in config or "photos" in config
 
 
-def _cycle_nothing_synced_reason(config, drive_stats, photos_stats) -> str | None:
+def _cycle_nothing_synced_reason(config, drive_stats, photos_stats, photos_indexing=False) -> str | None:
     """Why this cycle synced no service at all, or None if one did.
 
     Such a cycle is indistinguishable from a clean one by its stats -- no
     errors, no counts -- so reporting it as a success is how a monitor stays
     green while nothing whatsoever is being downloaded. It happens two ways:
     nothing is configured to sync, or every service that was due got skipped
-    by the mount-marker failsafe (the only path on which a configured, due
-    service returns no stats).
+    -- by the mount-marker failsafe, or (Photos) because Apple has not
+    finished indexing the library.
 
     Not to be confused with a service that simply was not due. With unequal
     intervals ``_calculate_next_sync_schedule`` enables only the service
@@ -947,14 +951,16 @@ def _cycle_nothing_synced_reason(config, drive_stats, photos_stats) -> str | Non
         config: Configuration dictionary
         drive_stats: Result of ``_perform_drive_sync``
         photos_stats: Result of ``_perform_photos_sync``
+        photos_indexing: Whether this cycle skipped Photos for indexing
 
     Returns:
-        ``nothing_synced``, ``mount_marker_missing``, or None if a service ran
+        ``nothing_synced``, ``photos_indexing``, ``mount_marker_missing``,
+        or None if a service ran
     """
     if not _check_services_configured(config):
         return "nothing_synced"
     if drive_stats is None and photos_stats is None:
-        return "mount_marker_missing"
+        return "photos_indexing" if photos_indexing else "mount_marker_missing"
     return None
 
 
@@ -966,6 +972,8 @@ def _cycle_end_message(has_errors: bool, nothing_reason: str | None) -> str:
     """
     if nothing_reason == "nothing_synced":
         return "iCloud sync cycle synced nothing: no drive or photos section is configured"
+    if nothing_reason == "photos_indexing":
+        return "iCloud sync cycle synced nothing: Apple has not finished indexing Photos"
     if nothing_reason:
         return "iCloud sync cycle synced nothing: the mount marker is missing"
     if has_errors:
@@ -1637,6 +1645,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     summary = SyncSummary()
 
                     # Perform syncs and collect statistics
+                    sync_state.photos_indexing = False
                     drive_stats = _perform_drive_sync(
                         config,
                         api,
@@ -1667,6 +1676,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         config,
                         drive_stats,
                         photos_stats,
+                        sync_state.photos_indexing,
                     )
                     # Every sync_failed names a reason, including this one: a
                     # receiver should never have to infer why from the
