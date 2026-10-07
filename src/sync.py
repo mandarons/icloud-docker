@@ -4,6 +4,7 @@ __author__ = "Mandar Patil <mandarons@pm.me>"
 import datetime
 import os
 import re
+import secrets
 from time import sleep
 
 import requests
@@ -223,9 +224,22 @@ def _maybe_refresh_trust(config, api) -> None:
         )
         if api.trust_session():
             refreshed = _read_trust_cookie_expiry(api)
+            expires_at_iso = refreshed.isoformat() if refreshed else None
             LOGGER.info(
-                "Trust refreshed; now expires "
-                f"{refreshed.isoformat() if refreshed else 'unknown'}.",
+                f"Trust refreshed; now expires {expires_at_iso or 'unknown'}.",
+            )
+            # Webhook-only: no other transport reports a refresh, and a
+            # receiver tracking the trust window needs the new expiry as
+            # much as it needs the warning that preceded it.
+            refresh_data = {"days_remaining_before": days_remaining}
+            if expires_at_iso:
+                # Omitted rather than null when the cookie is unreadable.
+                refresh_data["expires_at"] = expires_at_iso
+            notify.post_event_to_webhook(
+                config,
+                "trust_refreshed",
+                f"iCloud trust token refreshed; now expires {expires_at_iso or 'unknown'}",
+                refresh_data,
             )
         else:
             LOGGER.warning(
@@ -286,9 +300,86 @@ def _maybe_warn_trust_expiring(config, api, username: str) -> None:
         LOGGER.warning(f"trust-expiring check failed: {e!s}")
 
 
+_SESSION_ONLY_HELP = (
+    "Store an Apple ID password to let the container re-authenticate on its "
+    "own, or create a new session by signing in from the web dashboard or "
+    "with the documented `icloud --username=... --session-directory=...` "
+    "command."
+)
+
+# Apple answers a session it will no longer accept with one of these, and
+# icloudpy surfaces the status as the exception's ``code``. Anything else --
+# a 500, a 503, a bad gateway -- is an outage that says nothing about the
+# session, so it belongs to the loop's transport handler rather than being
+# reported to the user as "sign in again". (icloudpy itself lumps 500 in
+# with the re-auth statuses when it rewrites the reason; that conflation
+# must not reach the user as an instruction.)
+_SESSION_REJECTED_CODES = frozenset({401, 421, 450})
+
+# icloudpy reads the keyring for a ``None`` password -- the very lookup
+# session-only mode exists to avoid -- and, given ``""``, its log filter
+# rewrites every log line with asterisks between each character. A random
+# placeholder avoids both; ``SessionOnlyICloudPyService`` never sends it.
+_SESSION_ONLY_PLACEHOLDER_PASSWORD = secrets.token_urlsafe(32)
+
+
+class SessionOnlyICloudPyService(ICloudPyService):
+    """An iCloud client allowed to resume a saved session and nothing else.
+
+    icloudpy's ``authenticate()`` tries the saved session token first and
+    falls back to a full SRP sign-in when it does not validate. With no
+    password that fallback cannot succeed, and letting it run would post a
+    placeholder credential to Apple's sign-in endpoint on every retry --
+    the fastest way to get an Apple ID throttled or locked. So this
+    override stops after the session check and reports the missing
+    password instead, which the loop's existing handler already turns into
+    a notification and a backoff.
+    """
+
+    def authenticate(self, force_refresh=False, service=None):
+        """Validate the saved session; never sign in with credentials.
+
+        Raises ``ICloudPyNoStoredPasswordAvailableException`` when the
+        session is missing or Apple has rejected it; any other API error
+        propagates untouched, since an outage is not an expired session.
+
+        ``force_refresh`` is refused as defence in depth rather than
+        because anything here asks for it: icloudpy's only caller is its
+        Find My 450 handler, which this app never reaches. Honouring it
+        would mean a credential sign-in, which is the one thing this class
+        exists to prevent, so it is refused wherever it came from.
+        """
+        if force_refresh or not self.session_data.get("session_token"):
+            msg = f"No Apple ID password is stored and there is no saved session to resume. {_SESSION_ONLY_HELP}"
+            raise exceptions.ICloudPyNoStoredPasswordAvailableException(msg)
+
+        try:
+            self.data = self._validate_token()
+        except exceptions.ICloudPyAPIResponseException as error:
+            if error.code not in _SESSION_REJECTED_CODES:
+                # An outage leaves the session perfectly good; reporting it as
+                # expired would send the user off to re-authenticate for
+                # nothing. Let the loop's transport handler have it.
+                raise
+            msg = f"No Apple ID password is stored and the saved session is no longer valid. {_SESSION_ONLY_HELP}"
+            raise exceptions.ICloudPyNoStoredPasswordAvailableException(msg) from error
+
+        if "webservices" not in self.data:
+            # icloudpy returns the response untouched when a failed /validate
+            # carries no recognised error field, so ``self.data`` can be an
+            # error body. Upstream would raise KeyError here and kill the
+            # process -- with `restart: unless-stopped` that is a restart loop
+            # hitting Apple on every boot.
+            msg = f"No Apple ID password is stored and Apple did not accept the saved session. {_SESSION_ONLY_HELP}"
+            raise exceptions.ICloudPyNoStoredPasswordAvailableException(msg)
+
+        self._webservices = self.data["webservices"]
+        LOGGER.debug("Resumed the saved session without a password")
+
+
 def get_api_instance(
     username: str,
-    password: str,
+    password: str | None,
     cookie_directory: str | None = None,
     server_region: str = "global",
 ) -> ICloudPyService:
@@ -297,7 +388,10 @@ def get_api_instance(
 
     Args:
         username: iCloud username/Apple ID
-        password: iCloud password
+        password: iCloud password, or ``None`` to run in session-only
+            mode -- the client then resumes the saved session in
+            ``cookie_directory`` and refuses to sign in with credentials
+            (see ``SessionOnlyICloudPyService``).
         cookie_directory: Directory to store authentication cookies.
             When ``None`` (the default), resolved late from
             ``src.DEFAULT_COOKIE_DIRECTORY`` so test fixtures that
@@ -318,8 +412,12 @@ def get_api_instance(
         import sys
 
         cookie_directory = sys.modules["src"].DEFAULT_COOKIE_DIRECTORY
+    service_class = ICloudPyService
+    if password is None:
+        service_class = SessionOnlyICloudPyService
+        password = _SESSION_ONLY_PLACEHOLDER_PASSWORD
     return (
-        ICloudPyService(
+        service_class(
             apple_id=username,
             password=password,
             cookie_directory=cookie_directory,
@@ -327,7 +425,7 @@ def get_api_instance(
             setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
         )
         if server_region == "china"
-        else ICloudPyService(
+        else service_class(
             apple_id=username,
             password=password,
             cookie_directory=cookie_directory,
@@ -354,6 +452,14 @@ class SyncState:
         # re-auth episode. Reset to False on each successful authentication so
         # a fresh episode triggers exactly one push (see _handle_2fa_required).
         self.two_fa_triggered = False
+        # Whether this cycle is running without a stored password, i.e. off
+        # the saved session alone. Set by _authenticate_and_get_api; the error
+        # handlers need it because nothing in that mode can be fixed by
+        # retrying with a password the container does not have.
+        self.session_only = False
+        # Set when this cycle skipped Photos because Apple is still indexing
+        # it, so the cycle's webhook can say so rather than blame the mount.
+        self.photos_indexing = False
 
 
 def _load_configuration():
@@ -408,30 +514,56 @@ def _retrieve_password(username: str):
     Raises:
         ICloudPyNoStoredPasswordAvailableException: If password not available
     """
-    if ENV_ICLOUD_PASSWORD_KEY in os.environ:
-        password = os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
+    # A blank value counts as no password. Compose substitutes "" for an
+    # unset ${VAR}, and storing it would also overwrite a real keyring
+    # entry; returning it would skip session-only mode and send an empty
+    # password to Apple's sign-in on every retry.
+    password = os.environ.get(ENV_ICLOUD_PASSWORD_KEY)
+    if password:
         utils.store_password_in_keyring(username=username, password=password)
         return password
-    else:
-        return utils.get_password_from_keyring(username=username)
+    password = utils.get_password_from_keyring(username=username)
+    if not password:
+        msg = f"The stored password for {username} is empty."
+        raise exceptions.ICloudPyNoStoredPasswordAvailableException(msg)
+    return password
 
 
-def _authenticate_and_get_api(config, username: str):
+def _authenticate_and_get_api(config, username: str, sync_state: SyncState | None = None):
     """
     Authenticate user and return iCloud API instance.
 
     Args:
         config: Configuration dictionary
         username: iCloud username
+        sync_state: Current sync state, whose ``session_only`` flag is set
+            here so the error handlers can tell the two modes apart
 
     Returns:
         ICloudPyService instance
 
     Raises:
-        ICloudPyNoStoredPasswordAvailableException: If password not available
+        ICloudPyNoStoredPasswordAvailableException: If no password is
+            configured *and* the saved session cannot be resumed.
     """
     server_region = config_parser.get_region(config=config)
-    password = _retrieve_password(username)
+    try:
+        password = _retrieve_password(username)
+    except exceptions.ICloudPyNoStoredPasswordAvailableException:
+        # No password anywhere is a choice, not necessarily a misconfiguration:
+        # an operator who would rather not keep an Apple ID password on disk
+        # can run unattended off the saved session alone until Apple's trust
+        # window closes. Resuming it is worth attempting before declaring
+        # failure -- the loop used to report "password is not stored" without
+        # ever looking at a perfectly valid session.
+        LOGGER.debug(
+            "No Apple ID password is configured -- resuming the saved session.",
+        )
+        password = None
+    if sync_state is not None:
+        # Set before the client is built, so it is already right if building
+        # it is what fails.
+        sync_state.session_only = password is None
     return get_api_instance(
         username=username,
         password=password,
@@ -723,6 +855,7 @@ def _wait_for_photos_indexing(sync_state: SyncState, photos_sync_interval: int) 
         f"be read yet. Nothing on disk was changed. Trying Photos again in {again}.",
     )
     sync_state.photos_time_remaining = retry
+    sync_state.photos_indexing = True
     _signal_photos_indexing(waiting=True)
 
 
@@ -915,6 +1048,55 @@ def _check_services_configured(config):
     return "drive" in config or "photos" in config
 
 
+def _cycle_nothing_synced_reason(config, drive_stats, photos_stats, photos_indexing=False) -> str | None:
+    """Why this cycle synced no service at all, or None if one did.
+
+    Such a cycle is indistinguishable from a clean one by its stats -- no
+    errors, no counts -- so reporting it as a success is how a monitor stays
+    green while nothing whatsoever is being downloaded. It happens two ways:
+    nothing is configured to sync, or every service that was due got skipped
+    -- by the mount-marker failsafe, or (Photos) because Apple has not
+    finished indexing the library.
+
+    Not to be confused with a service that simply was not due. With unequal
+    intervals ``_calculate_next_sync_schedule`` enables only the service
+    whose timer expired, so one of the two returning None is the ordinary
+    case -- hence "no stats at all" rather than "any stats missing".
+
+    Args:
+        config: Configuration dictionary
+        drive_stats: Result of ``_perform_drive_sync``
+        photos_stats: Result of ``_perform_photos_sync``
+        photos_indexing: Whether this cycle skipped Photos for indexing
+
+    Returns:
+        ``nothing_synced``, ``photos_indexing``, ``mount_marker_missing``,
+        or None if a service ran
+    """
+    if not _check_services_configured(config):
+        return "nothing_synced"
+    if drive_stats is None and photos_stats is None:
+        return "photos_indexing" if photos_indexing else "mount_marker_missing"
+    return None
+
+
+def _cycle_end_message(has_errors: bool, nothing_reason: str | None) -> str:
+    """The human text for the end-of-cycle event.
+
+    Kept out of ``sync()`` only because the branch it sits in is already four
+    levels deep.
+    """
+    if nothing_reason == "nothing_synced":
+        return "iCloud sync cycle synced nothing: no drive or photos section is configured"
+    if nothing_reason == "photos_indexing":
+        return "iCloud sync cycle synced nothing: Apple has not finished indexing Photos"
+    if nothing_reason:
+        return "iCloud sync cycle synced nothing: the mount marker is missing"
+    if has_errors:
+        return "iCloud sync cycle completed with errors"
+    return "iCloud sync cycle completed"
+
+
 def _send_usage_statistics(config, summary: SyncSummary) -> None:
     """Send anonymized usage statistics.
 
@@ -1046,9 +1228,16 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
     _publish_auth_blocked(True, reason="2fa_required")
-    # Decided before anything is sent: it selects the notification wording
-    # and suppresses two steps that cannot succeed on such an account.
+    # Decided before anything is sent: it selects the notification wording,
+    # the reason a receiver sees, and suppresses two steps that cannot
+    # succeed on such an account.
     security_key = _detect_security_key_account(api, username)
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle aborted: 2FA is required",
+        data={"reason": "security_key_required" if security_key else "two_factor_required"},
+    )
     if security_key:
         LOGGER.error(
             "This account signs in with a security key, so Apple will not "
@@ -1082,6 +1271,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
         # A security-key account cannot finish sign-in from a Telegram code,
         # so it gets the standard alert pointing at the dashboard.
         reply_prompt=not security_key,
+        event="security_key_required" if security_key else "two_factor_required",
     )
     if not security_key and config_parser.get_telegram_listen_enabled(config=config):
         _wait_for_telegram_code(config=config, api=api, timeout_seconds=sleep_for)
@@ -1210,6 +1400,32 @@ def _wait_for_telegram_code(config, api, timeout_seconds: int) -> bool:
     return False
 
 
+def _needs_a_human(sync_state: SyncState, error) -> bool:
+    """Whether a sign-in failure warrants the "re-auth required" alert.
+
+    A rejected password always does: retrying cannot fix it.
+
+    In session-only mode one more case does, because it cannot be told
+    apart from a rejected session. icloudpy keeps the HTTP status on the
+    exception only for a non-JSON body or its own re-auth statuses
+    (``_SESSION_REJECTED_CODES``), so a JSON-bodied 401 arrives with
+    ``code`` as ``None``. Those are the ones that would otherwise leave a
+    container only a human can revive retrying in silence forever.
+
+    Everything else is an outage -- a 5xx that kept its status, a dropped
+    connection, a DNS failure -- and says nothing about the session. Those
+    are logged and retried. Waking someone daily to re-authenticate over
+    Apple having a bad hour is the alert this function exists to withhold.
+    """
+    if isinstance(error, exceptions.ICloudPyFailedLoginException):
+        return True
+    return (
+        sync_state.session_only
+        and isinstance(error, exceptions.ICloudPyAPIResponseException)
+        and error.code is None
+    )
+
+
 def _handle_auth_transport_error(config, username: str, sync_state: SyncState, error):
     """Back off after a sign-in failure Apple did not express as a 2FA prompt.
 
@@ -1221,23 +1437,44 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sign-in failed and will be retried: {error!s}")
+    # sign_in_failed is reserved for what the alert below treats as needing
+    # a human. A network fault or an Apple service error means the attempt
+    # never completed, which needs no one to intervene.
+    rejected = _needs_a_human(sync_state, error)
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message=(
+            "iCloud sync cycle aborted: sign-in failed"
+            if rejected
+            else "iCloud sync cycle aborted: sign-in did not complete"
+        ),
+        data={"reason": "sign_in_failed" if rejected else "sign_in_error"},
+    )
     sleep_for = config_parser.get_retry_login_interval(config=config)
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
         return False
     sleep_for = max(sleep_for, _AUTH_BACKOFF_FLOOR_SEC)
     _log_retry_time(sleep_for)
-    if isinstance(error, exceptions.ICloudPyFailedLoginException):
-        # icloudpy raises this for a rejected password as well as for a
-        # throttle or a 5xx, and a wrong password never heals by retrying --
-        # so say so. notify.send is throttled, so this is not a message per
-        # retry.
+    if sync_state.session_only:
+        # The loop is not syncing and only a human can change that, so the
+        # dashboard is told -- its wording for this reason allows for an
+        # outage and asks for nothing.
+        _publish_auth_blocked(True, reason="sign_in_failed")
+    if rejected:
+        # notify.send's text is "iCloud re-auth required", so it is reserved
+        # for the cases where that is actually true: a rejected password,
+        # which never heals by retrying, and -- in session-only mode -- a
+        # failure that cannot be told apart from a rejected session. It is
+        # throttled, so this is not a message per retry.
         sync_state.last_send = notify.send(
             config=config,
             username=username,
             last_send=sync_state.last_send,
             region=config_parser.get_region(config=config),
             dashboard_url=_resolve_dashboard_url(config),
+            event="sign_in_failed",
         )
     # Ends early on a completed web-UI re-auth, but not on "Sync now":
     # nothing a button does may shorten a throttle backoff.
@@ -1263,6 +1500,12 @@ def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval)
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sync failed and will be retried: {error!s}")
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle failed and will be retried",
+        data={"reason": "sync_error"},
+    )
     # log_messages=False: this is not a login retry, and the getter's
     # "Retrying login every N seconds." would say otherwise.
     sleep_for = config_parser.get_retry_login_interval(config=config, log_messages=False)
@@ -1279,7 +1522,7 @@ def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval)
     return True
 
 
-def _handle_password_error(config, username: str, sync_state: SyncState):
+def _handle_password_error(config, username: str, sync_state: SyncState, error):
     """
     Handle password not available error.
 
@@ -1287,12 +1530,23 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         config: Configuration dictionary
         username: iCloud username
         sync_state: Current sync state
+        error: The raised exception, whose message names which way
+            session-only mode failed -- no session at all, or a session
+            Apple no longer accepts.
 
     Returns:
         bool: True if should continue (retry), False if should exit
     """
-    LOGGER.error(
-        "Password is not stored in keyring. Please save the password in keyring.",
+    LOGGER.error(str(error))
+    # The dashboard's own on-disk check reads an empty keyring as "setup
+    # needed", which is the wrong instruction here: the session, not the
+    # password, is what has to be replaced.
+    _publish_auth_blocked(True, reason="session_unusable")
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle aborted: no stored password and no usable saved session",
+        data={"reason": "password_missing"},
     )
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
@@ -1308,6 +1562,7 @@ def _handle_password_error(config, username: str, sync_state: SyncState):
         last_send=sync_state.last_send,
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
+        event="password_missing",
     )
     _auth_retry_sleep(sleep_for)
     return True
@@ -1463,6 +1718,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
         # Log sync intervals once at startup
         if not startup_logged:
             _log_sync_intervals_at_startup(config)
+            notify.warn_unknown_webhook_events(config)
             # The state file outlives the container, so a restart mid-library
             # would leave the dashboard showing it as still syncing. Nothing
             # can legitimately be in flight here.
@@ -1502,7 +1758,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
         if username:
             authenticated = False
             try:
-                api = _authenticate_and_get_api(config, username)
+                api = _authenticate_and_get_api(config, username, sync_state)
                 authenticated = True
 
                 # Dry-run path: authenticate, enumerate, log, exit.
@@ -1529,10 +1785,20 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     # re-auth episode requests a fresh push exactly once.
                     sync_state.two_fa_triggered = False
 
+                    # Signed in and about to sync: open the cycle on any
+                    # configured webhook. Fire-and-forget, and a no-op when
+                    # none is configured (see notify.send_cycle_event).
+                    notify.send_cycle_event(
+                        config=config,
+                        boundary="start",
+                        message="iCloud sync cycle started",
+                    )
+
                     # Create summary for this sync cycle
                     summary = SyncSummary()
 
                     # Perform syncs and collect statistics
+                    sync_state.photos_indexing = False
                     drive_stats = _perform_drive_sync(
                         config,
                         api,
@@ -1550,6 +1816,35 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     summary.drive_stats = drive_stats
                     summary.photo_stats = photos_stats
                     summary.sync_end_time = datetime.datetime.now()
+
+                    # Close the cycle on the webhooks. Failed downloads
+                    # counted in the stats make this a failure even though
+                    # the cycle itself ran to completion -- a monitor that
+                    # reported success here would stay green while the
+                    # library silently fell behind. So does a cycle that
+                    # synced nothing at all. The statistics ride along, so a
+                    # POST receiver sees them without app.notifications.
+                    has_errors = summary.has_errors()
+                    nothing_reason = _cycle_nothing_synced_reason(
+                        config,
+                        drive_stats,
+                        photos_stats,
+                        sync_state.photos_indexing,
+                    )
+                    # Every sync_failed names a reason, including this one: a
+                    # receiver should never have to infer why from the
+                    # statistics. (Only Photos counts failed downloads, so
+                    # has_errors never means a Drive failure today.)
+                    reason = nothing_reason or ("download_errors" if has_errors else None)
+                    cycle_data = notify.summary_event_data(summary)
+                    if reason:
+                        cycle_data["reason"] = reason
+                    notify.send_cycle_event(
+                        config=config,
+                        boundary="failure" if reason else "success",
+                        message=_cycle_end_message(has_errors, nothing_reason),
+                        data=cycle_data,
+                    )
 
                     # Persist per-service last-sync state for the web
                     # dashboard. Best-effort — if the JSON write fails
@@ -1626,8 +1921,8 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         break
                     continue
 
-            except exceptions.ICloudPyNoStoredPasswordAvailableException:
-                if not _handle_password_error(config, username, sync_state):
+            except exceptions.ICloudPyNoStoredPasswordAvailableException as e:
+                if not _handle_password_error(config, username, sync_state, e):
                     break
                 continue
             except exceptions.ICloudPyFailedLoginException as e:

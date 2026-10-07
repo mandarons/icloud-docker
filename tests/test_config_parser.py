@@ -898,3 +898,90 @@ class TestPhotosRequestTimeout(unittest.TestCase):
     def test_configured_value_is_used(self):
         cfg = {"photos": {"request_timeout": 120}}
         self.assertEqual(config_parser.get_photos_request_timeout(config=cfg), 120)
+
+
+class TestWebhookUrls(unittest.TestCase):
+    """Three independent, optional URLs. Every one is consulted on every sync
+    cycle, so the absent case has to be both cheap and quiet."""
+
+    def test_unset_is_none(self):
+        self.assertIsNone(config_parser.get_webhook_url(config={}, event="start"))
+
+    def test_configured_value_is_used(self):
+        cfg = {"app": {"webhooks": {"success": "https://hc-ping.com/uuid"}}}
+        self.assertEqual(
+            config_parser.get_webhook_url(config=cfg, event="success"),
+            "https://hc-ping.com/uuid",
+        )
+
+    def test_events_are_independent(self):
+        cfg = {"app": {"webhooks": {"failure": "https://hc-ping.com/uuid/fail"}}}
+        self.assertIsNone(config_parser.get_webhook_url(config=cfg, event="success"))
+        self.assertEqual(
+            config_parser.get_webhook_url(config=cfg, event="failure"),
+            "https://hc-ping.com/uuid/fail",
+        )
+
+    def test_surrounding_whitespace_is_trimmed(self):
+        cfg = {"app": {"webhooks": {"start": "  https://hc-ping.com/uuid/start  "}}}
+        self.assertEqual(
+            config_parser.get_webhook_url(config=cfg, event="start"),
+            "https://hc-ping.com/uuid/start",
+        )
+
+    def test_a_blank_value_is_not_a_url(self):
+        cfg = {"app": {"webhooks": {"start": "   "}}}
+        self.assertIsNone(config_parser.get_webhook_url(config=cfg, event="start"))
+
+
+class TestWebhookEventConfig(unittest.TestCase):
+    """The POST endpoint and its two optional modifiers. A typo in either
+    modifier must not silently mute the endpoint."""
+
+    def test_post_url_unset_is_none(self):
+        self.assertIsNone(config_parser.get_webhook_post_url(config={}))
+
+    def test_post_url_is_read_from_app_webhooks_url(self):
+        cfg = {"app": {"webhooks": {"url": "https://receiver.test/hook"}}}
+        self.assertEqual(config_parser.get_webhook_post_url(config=cfg), "https://receiver.test/hook")
+
+    def test_an_absent_events_filter_is_none_not_empty(self):
+        """None means "every event"; an empty list means "no event". The
+        difference is the whole behaviour of an unconfigured install."""
+        self.assertIsNone(config_parser.get_webhook_events(config={}))
+
+    def test_a_configured_events_filter_is_returned_trimmed(self):
+        cfg = {"app": {"webhooks": {"events": [" sync_failed ", "trust_expiring"]}}}
+        self.assertEqual(
+            config_parser.get_webhook_events(config=cfg),
+            ["sync_failed", "trust_expiring"],
+        )
+
+    def test_an_empty_events_filter_stays_empty(self):
+        cfg = {"app": {"webhooks": {"events": []}}}
+        self.assertEqual(config_parser.get_webhook_events(config=cfg), [])
+
+    def test_a_non_list_events_filter_is_treated_as_absent(self):
+        cfg = {"app": {"webhooks": {"events": "sync_failed"}}}
+        self.assertIsNone(config_parser.get_webhook_events(config=cfg))
+
+    def test_headers_default_to_empty(self):
+        self.assertEqual(config_parser.get_webhook_headers(config={}), {})
+
+    def test_headers_are_stringified(self):
+        cfg = {"app": {"webhooks": {"headers": {"X-Token": 12345}}}}
+        self.assertEqual(config_parser.get_webhook_headers(config=cfg), {"X-Token": "12345"})
+
+    def test_a_non_mapping_headers_value_is_ignored(self):
+        cfg = {"app": {"webhooks": {"headers": ["X-Token: abc"]}}}
+        self.assertEqual(config_parser.get_webhook_headers(config=cfg), {})
+
+
+class TestWebhookHeaderEdgeCases(unittest.TestCase):
+    """`Authorization:` with nothing after it is a plausible typo, and
+    sending the literal string "None" as a bearer token is worse than
+    sending no header at all."""
+
+    def test_a_valueless_header_is_dropped(self):
+        cfg = {"app": {"webhooks": {"headers": {"Authorization": None, "X-Token": "abc"}}}}
+        self.assertEqual(config_parser.get_webhook_headers(config=cfg), {"X-Token": "abc"})
