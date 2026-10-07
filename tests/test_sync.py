@@ -2640,6 +2640,12 @@ class TestSyncingWithoutAStoredPassword(unittest.TestCase):
         )
         notifier.send.assert_called_once()
         self.assertEqual(published.call_args.kwargs["reason"], "sign_in_failed")
+        # The webhook agrees with the alert: a monitor keyed on the reason
+        # must not read this as a fault that clears by itself.
+        self.assertEqual(
+            notifier.send_cycle_event.call_args.kwargs["data"]["reason"],
+            "sign_in_failed",
+        )
 
     def test_an_outage_never_asks_a_session_only_container_to_re_authenticate(self):
         """The whole point of classifying: notify.send's text is "iCloud
@@ -2658,6 +2664,10 @@ class TestSyncingWithoutAStoredPassword(unittest.TestCase):
             with self.subTest(error=type(error).__name__):
                 notifier, published = self._transport_error_in_session_only_mode(error)
                 notifier.send.assert_not_called()
+                self.assertEqual(
+                    notifier.send_cycle_event.call_args.kwargs["data"]["reason"],
+                    "sign_in_error",
+                )
                 # Still reported as a stoppage: the loop is not syncing, and
                 # the dashboard's wording for this reason allows for an
                 # outage and asks for nothing.

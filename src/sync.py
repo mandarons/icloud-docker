@@ -1437,10 +1437,10 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sign-in failed and will be retried: {error!s}")
-    # Only a refusal from Apple's sign-in is sign_in_failed, matching the
-    # alert below. A network fault or an Apple service error means the
-    # attempt never completed, which needs no one to intervene.
-    rejected = isinstance(error, exceptions.ICloudPyFailedLoginException)
+    # sign_in_failed is reserved for what the alert below treats as needing
+    # a human. A network fault or an Apple service error means the attempt
+    # never completed, which needs no one to intervene.
+    rejected = _needs_a_human(sync_state, error)
     notify.send_cycle_event(
         config=config,
         boundary="failure",
@@ -1462,7 +1462,7 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
         # dashboard is told -- its wording for this reason allows for an
         # outage and asks for nothing.
         _publish_auth_blocked(True, reason="sign_in_failed")
-    if _needs_a_human(sync_state, error):
+    if rejected:
         # notify.send's text is "iCloud re-auth required", so it is reserved
         # for the cases where that is actually true: a rejected password,
         # which never heals by retrying, and -- in session-only mode -- a

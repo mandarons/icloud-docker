@@ -52,7 +52,7 @@ Notifications are fire-and-forget — failures are logged and swallowed so they 
 | `two_factor_required` | `send()` from `_handle_2fa_required` | `username`, `dashboard_url` |
 | `security_key_required` | Same, for an account Apple answers with an `fsaChallenge` | `username`, `dashboard_url` |
 | `password_missing` | `send()` from `_handle_password_error` | `username`, `dashboard_url` |
-| `sign_in_failed` | `send()` from `_handle_auth_transport_error`, which fires it only for `ICloudPyFailedLoginException` | `username`, `dashboard_url` |
+| `sign_in_failed` | `send()` from `_handle_auth_transport_error`, which fires it only for `ICloudPyFailedLoginException` and, in session-only mode, an API error with no status (`_needs_a_human`); the cycle's `sync_failed` reason follows the same rule | `username`, `dashboard_url` |
 | `trust_expiring` | `send_trust_expiring()` | `username`, `dashboard_url`, `days_remaining` |
 | `trust_refreshed` | `_maybe_refresh_trust()` succeeded — no other transport reports it | `expires_at` (omitted if unreadable), `days_remaining_before` |
 
