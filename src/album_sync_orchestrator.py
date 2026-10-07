@@ -7,9 +7,10 @@ that coordinates photo filtering, download collection, and parallel execution.
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
 import os
+import time
 from typing import Any
 
-from src import DEFAULT_ENUMERATION_CHUNK_SIZE, config_parser, get_logger
+from src import BUFFERED_DOWNLOAD_MAX_AGE_SEC, DEFAULT_ENUMERATION_CHUNK_SIZE, config_parser, get_logger
 from src.hardlink_registry import HardlinkRegistry
 from src.photo_download_manager import (
     DownloadTaskInfo,
@@ -20,6 +21,12 @@ from src.photo_filter_utils import is_photo_wanted
 from src.photo_path_utils import normalize_file_path
 
 LOGGER = get_logger()
+
+
+def _now() -> float:
+    """Monotonic clock for buffer ageing; a seam for tests."""
+    return time.monotonic()
+
 
 # DEFAULT_ENUMERATION_CHUNK_SIZE lives in src/__init__.py (with the other
 # DEFAULT_* config constants) and is re-exported here for backward-compat.
@@ -178,7 +185,12 @@ def _collect_and_execute_album_in_chunks(
 
     Buffers up to ``chunk_size`` download tasks, then drains them via
     ``execute_parallel_downloads`` and clears the buffer before
-    collecting the next chunk. Memory is bounded by chunk_size, not by
+    collecting the next chunk. The buffer also drains once its oldest
+    task is ``BUFFERED_DOWNLOAD_MAX_AGE_SEC`` old, so download URLs (which
+    expire ~30-40 minutes after listing) do not wait out a long walk of
+    photos already on disk. That is checked between photos, so it is a
+    bound on the usual wait, not a guarantee; a URL that still expires is
+    recovered by the expired-URL refresh. Memory is bounded by chunk_size, not by
     len(album). Semantically equivalent to building the full task list
     and downloading once — same total counts, same per-photo
     side-effects — but resident-set stays flat instead of growing
@@ -210,11 +222,13 @@ def _collect_and_execute_album_in_chunks(
         chunk_size = DEFAULT_ENUMERATION_CHUNK_SIZE
 
     buffer: list[DownloadTaskInfo] = []
+    # When the buffer must drain regardless of size; None while it is empty.
+    drain_by: float | None = None
     total_successful = 0
     total_failed = 0
 
     def _drain():
-        nonlocal total_successful, total_failed, buffer
+        nonlocal total_successful, total_failed, buffer, drain_by
         if not buffer:
             return
         succ, fail = execute_parallel_downloads(buffer, config)
@@ -226,20 +240,23 @@ def _collect_and_execute_album_in_chunks(
         # an already-passed list) and lets the old chunk's task objects
         # (and the photo refs they hold) be collected immediately.
         buffer = []
+        drain_by = None
 
     for photo in album:
-        buffer.extend(
-            _collect_photo_download_tasks(
-                photo,
-                destination_path,
-                file_sizes,
-                extensions,
-                files,
-                folder_format,
-                hardlink_registry,
-            ),
+        tasks = _collect_photo_download_tasks(
+            photo,
+            destination_path,
+            file_sizes,
+            extensions,
+            files,
+            folder_format,
+            hardlink_registry,
         )
-        if len(buffer) >= chunk_size:
+        if tasks and drain_by is None:
+            drain_by = _now() + BUFFERED_DOWNLOAD_MAX_AGE_SEC
+        buffer.extend(tasks)
+        aged_out = drain_by is not None and _now() >= drain_by
+        if len(buffer) >= chunk_size or aged_out:
             _drain()
 
     _drain()  # final partial chunk

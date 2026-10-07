@@ -60,8 +60,8 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 - `use_hardlinks` mode requires `all_albums: true`
 - `HardlinkRegistry` tracks hardlinks across albums to prevent duplicates
 - `folder_format` uses strftime patterns (e.g., `"%Y/%m"`)
-- `enumeration_chunk_size` bounds peak memory (default 1000 photos/chunk)
-- HTTP 410 Gone triggers download URL refresh via `_refresh_photo_download_url()`
+- `enumeration_chunk_size` bounds peak memory (default 1000 photos/chunk). The download buffer also drains once its oldest task is `BUFFERED_DOWNLOAD_MAX_AGE_SEC` old (10 minutes, checked between photos, so best effort; the URL refresh covers what still expires), because download URLs expire ~30-40 minutes after the listing that returned them and, on a mostly backed-up library, pending downloads trickle in across the whole walk
+- HTTP 410 Gone triggers download URL refresh via `_refresh_photo_download_url()`, which looks the record up in its own `zoneID` (from the master record), falling back to the service's zone. icloudpy gives every asset the photos service, whose zone is the primary library, so a Shared Library asset looked up there is never found
 - Downloads stream to a `.part` file and are size-verified against the CloudKit
   version size before being moved into place — a partial or wrong-body transfer
   never occupies the photo's path and never destroys the previous good copy

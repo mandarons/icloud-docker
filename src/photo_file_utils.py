@@ -192,6 +192,10 @@ def _refresh_photo_download_url(photo) -> bool:
     """
     try:
         record_name = photo._master_record["recordName"]  # noqa: SLF001
+        # The record's own zone. icloudpy gives every asset the photos
+        # service, whose zone is always the primary library, so a Shared
+        # Library asset looked up there is never found.
+        record_zone = photo._master_record.get("zoneID")  # noqa: SLF001
     except (AttributeError, KeyError, TypeError):
         _note_refresh_failure("<unknown>", "photo missing _master_record or recordName")
         return False
@@ -204,7 +208,7 @@ def _refresh_photo_download_url(photo) -> bool:
     endpoint = getattr(service, "_service_endpoint", None)
     session = getattr(service, "session", None)
     params = getattr(service, "params", None)
-    zone_id = getattr(service, "zone_id", None)
+    zone_id = record_zone if isinstance(record_zone, dict) and record_zone else getattr(service, "zone_id", None)
 
     if not all([endpoint, session, params, zone_id]):
         _note_refresh_failure(record_name, "photo._service missing required attributes")
