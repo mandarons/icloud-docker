@@ -1542,13 +1542,10 @@ def _handle_password_error(config, username: str, sync_state: SyncState, error):
     # needed", which is the wrong instruction here: the session, not the
     # password, is what has to be replaced.
     _publish_auth_blocked(True, reason="session_unusable")
-    LOGGER.error(
-        "Password is not stored in keyring. Please save the password in keyring.",
-    )
     notify.send_cycle_event(
         config=config,
         boundary="failure",
-        message="iCloud sync cycle aborted: no password in the keyring",
+        message="iCloud sync cycle aborted: no stored password and no usable saved session",
         data={"reason": "password_missing"},
     )
     sleep_for = config_parser.get_retry_login_interval(config=config)

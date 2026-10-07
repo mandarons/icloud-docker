@@ -2801,7 +2801,12 @@ class TestSyncLifecycleWebhooks(unittest.TestCase):
         config = copy.deepcopy(self.CONFIG)
         self.assertEqual(
             self._handler_events(
-                lambda: sync._handle_password_error(config, "a@icloud.com", sync.SyncState()),  # noqa: SLF001
+                lambda: sync._handle_password_error(  # noqa: SLF001
+                    config,
+                    "a@icloud.com",
+                    sync.SyncState(),
+                    exceptions.ICloudPyNoStoredPasswordAvailableException("no session"),
+                ),
             ),
             ["failure"],
         )
@@ -2969,7 +2974,12 @@ class TestSyncWebhookEvents(unittest.TestCase):
         )
         self.assertEqual(
             self._alert_event(
-                lambda: sync._handle_password_error(config, "a@icloud.com", sync.SyncState()),  # noqa: SLF001
+                lambda: sync._handle_password_error(  # noqa: SLF001
+                    config,
+                    "a@icloud.com",
+                    sync.SyncState(),
+                    exceptions.ICloudPyNoStoredPasswordAvailableException("no session"),
+                ),
             ),
             "password_missing",
         )
@@ -3015,7 +3025,12 @@ class TestSyncWebhookEvents(unittest.TestCase):
             api = Mock()
             api.security_key_challenge = None
             sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api)  # noqa: SLF001
-            sync._handle_password_error(config, "a@icloud.com", sync.SyncState())  # noqa: SLF001
+            sync._handle_password_error(  # noqa: SLF001
+                config,
+                "a@icloud.com",
+                sync.SyncState(),
+                exceptions.ICloudPyNoStoredPasswordAvailableException("no session"),
+            )
             sync._handle_auth_transport_error(  # noqa: SLF001
                 config,
                 "a@icloud.com",
