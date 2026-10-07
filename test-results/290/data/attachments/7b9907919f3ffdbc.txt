@@ -1,0 +1,2 @@
+WARNING  root:web.py:1061 Web UI security-key keyring persist failed: keyring boom
+INFO     root:web.py:1084 Web UI: security-key re-auth succeeded; session trusted.

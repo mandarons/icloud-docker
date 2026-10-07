@@ -1,0 +1,4 @@
+[38;5;39m2026-10-07 17:55:06,211 :: INFO :: root :: sync.py :: 221 :: Trust token has 2d left (threshold 14d) -- refreshing.[0m
+[38;5;39m2026-10-07 17:55:06,211 :: INFO :: root :: sync.py :: 221 :: Trust token has 2d left (threshold 14d) -- refreshing.[0m
+[38;5;226m2026-10-07 17:55:06,212 :: WARNING :: root :: sync.py :: 244 :: Proactive trust refresh was declined by Apple -- a second factor will be needed at the next cold start.[0m
+[38;5;226m2026-10-07 17:55:06,212 :: WARNING :: root :: sync.py :: 244 :: Proactive trust refresh was declined by Apple -- a second factor will be needed at the next cold start.[0m

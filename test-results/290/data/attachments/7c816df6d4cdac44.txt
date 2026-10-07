@@ -1,0 +1,2 @@
+INFO     root:sync.py:1213 Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).
+INFO     root:sync.py:1283 Telegram listen timeout reached with no usable code; retrying auth.

@@ -1,0 +1,8 @@
+[38;5;39m2026-10-07 17:55:18,423 :: INFO :: root :: sync.py :: 1213 :: Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).[0m
+[38;5;39m2026-10-07 17:55:18,423 :: INFO :: root :: sync.py :: 1213 :: Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).[0m
+[38;5;39m2026-10-07 17:55:18,424 :: INFO :: root :: sync.py :: 1254 :: Received 6-digit code via Telegram -- validating.[0m
+[38;5;39m2026-10-07 17:55:18,424 :: INFO :: root :: sync.py :: 1254 :: Received 6-digit code via Telegram -- validating.[0m
+[38;5;226m2026-10-07 17:55:18,424 :: WARNING :: root :: sync.py :: 1258 :: validate_2fa_code raised: api down -- waiting for another code.[0m
+[38;5;226m2026-10-07 17:55:18,424 :: WARNING :: root :: sync.py :: 1258 :: validate_2fa_code raised: api down -- waiting for another code.[0m
+[38;5;39m2026-10-07 17:55:18,424 :: INFO :: root :: sync.py :: 1283 :: Telegram listen timeout reached with no usable code; retrying auth.[0m
+[38;5;39m2026-10-07 17:55:18,424 :: INFO :: root :: sync.py :: 1283 :: Telegram listen timeout reached with no usable code; retrying auth.[0m

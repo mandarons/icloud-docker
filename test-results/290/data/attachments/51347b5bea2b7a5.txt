@@ -1,0 +1,1 @@
+[38;5;196m2026-10-07 17:54:58,612 :: ERROR :: root :: sync.py :: 503 :: Photos mount marker missing: /tmp/tmpwfbranhu/never-mounted/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpwfbranhu/never-mounted/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

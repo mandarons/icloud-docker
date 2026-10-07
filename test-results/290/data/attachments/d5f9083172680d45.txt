@@ -1,0 +1,3 @@
+INFO     root:sync.py:1213 Listening on Telegram for 'auth' trigger or 6-digit code (timeout 10s).
+INFO     root:sync.py:1254 Received 6-digit code via Telegram -- validating.
+INFO     root:sync.py:1281 Telegram-driven 2FA succeeded; resuming sync.
