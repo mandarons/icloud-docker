@@ -2,7 +2,8 @@
 
 When ``app.recycle_bin.enabled`` is set, files and folders that obsolete-file
 cleanup would delete are moved to ``<app.root>/Recently Deleted/<service>/
-<YYYY-MM-DD>/<path relative to the service destination>`` instead, and kept
+<YYYY-MM-DD>/<path relative to the service destination>`` instead (with the
+library's folder first when Photos libraries have their own destinations), and kept
 for ``app.recycle_bin.retention_days`` (or forever when that is unset).
 
 The bin only changes *how* cleanup removes something, never *what* it
@@ -10,6 +11,7 @@ removes: with ``remove_obsolete`` off, nothing is cleaned up and nothing
 reaches the bin.
 """
 
+import copy
 import datetime
 import os
 import shutil
@@ -43,6 +45,19 @@ class RecycleBin:
         self.path = os.path.abspath(os.path.join(root, BIN_DIRECTORY_NAME, service))
         self.retention_days = retention_days
         self.today = today or datetime.date.today()
+        self.subfolder = ""
+
+    def within(self, subfolder: str) -> "RecycleBin":
+        """The same bin, filing what it receives under ``subfolder`` in each day.
+
+        Several destinations can share one service's bin -- each Photos
+        library in ``library_destinations`` has its own -- and the same
+        relative path in two of them must land in two places, or nothing
+        says where either belongs.
+        """
+        scoped = copy.copy(self)
+        scoped.subfolder = subfolder
+        return scoped
 
     def contains(self, path: str) -> bool:
         """True if ``path`` is the bin or inside it.
@@ -67,13 +82,20 @@ class RecycleBin:
         relative = os.path.relpath(
             os.path.abspath(path), os.path.abspath(destination_path),
         )
-        target = os.path.join(self.path, self.today.isoformat(), relative)
+        day = os.path.join(self.path, self.today.isoformat())
+        target = os.path.normpath(os.path.join(day, self.subfolder, relative))
+        if not target.startswith(day + os.sep):
+            msg = f"Recycle bin: {path} would be filed outside the bin, at {target}"
+            raise ValueError(msg)
         os.makedirs(os.path.dirname(target), exist_ok=True)
         # The same path can be removed twice in a day (re-downloaded, then
-        # dropped again); keep both rather than overwrite the first.
+        # dropped again); keep both rather than overwrite the first. The
+        # number goes before a file's extension, so renaming it back to the
+        # original name is all a restore takes.
+        stem, extension = (target, "") if os.path.isdir(path) else os.path.splitext(target)
         candidate, n = target, 2
         while os.path.lexists(candidate):
-            candidate = f"{target} ({n})"
+            candidate = f"{stem} ({n}){extension}"
             n += 1
         shutil.move(path, candidate)
         return candidate

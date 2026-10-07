@@ -500,7 +500,7 @@ def sync_photos(config, photos):
                     files,
                     exclude_filenames=exclude,
                     limit_percent=limit,
-                    recycle_bin=bin_,
+                    recycle_bin=bin_ and bin_.within(_bin_subfolder(lib_dest, destination_path, library)),
                 )
         elif failed_libraries:
             # One shared destination: ``files`` cannot say which library a
@@ -520,6 +520,20 @@ def sync_photos(config, photos):
             )
 
     return total_successful, total_failed
+
+
+def _bin_subfolder(lib_dest: str, destination_path: str, library: str) -> str:
+    """Where a library's files go inside the shared Photos bin.
+
+    The library's folder under the Photos destination, as it appears on
+    disk, so a restore is the same relative move. A mapping that points
+    outside the destination has no such folder, so the library's own name
+    stands in for it.
+    """
+    relative = os.path.relpath(lib_dest, destination_path)
+    if relative == os.pardir or relative.startswith(os.pardir + os.sep):
+        return library
+    return relative
 
 
 def _library_destination(base_destination: str, library: str, library_destinations: dict) -> str:
