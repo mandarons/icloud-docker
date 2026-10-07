@@ -27,6 +27,12 @@ PHOTOS_INDEXING_RETRY_SEC = 1800  # 30 minutes
 # real mass deletion. 0 disables the limit.
 DEFAULT_OBSOLETE_DELETE_LIMIT_PERCENT = 25
 DEFAULT_ENUMERATION_CHUNK_SIZE = 1000  # photos buffered per streaming chunk
+# Oldest a buffered photo download may get before the buffer is drained
+# early. Download URLs expire ~30-40 minutes after the listing that returned
+# them, and on a mostly backed-up library the few photos to fetch trickle in
+# across the whole walk. This keeps their wait short; anything that still
+# expires is recovered by the expired-URL refresh.
+BUFFERED_DOWNLOAD_MAX_AGE_SEC = 600  # 10 minutes
 DEFAULT_CONFIG_FILE_NAME = "config.yaml"
 ENV_ICLOUD_PASSWORD_KEY = "ENV_ICLOUD_PASSWORD"
 ENV_CONFIG_FILE_PATH_KEY = "ENV_CONFIG_FILE_PATH"
