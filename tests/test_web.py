@@ -555,6 +555,28 @@ class TestAuthCodePost(unittest.TestCase):
         with web._AUTH_LOCK:  # noqa: SLF001
             self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
+    def test_a_session_only_re_auth_persists_no_password(self):
+        """A refresh-trust started without a password leaves None in the
+        pending dict. Writing that to the keyring would be meaningless; not
+        guarding it at all is how a password-free container would quietly
+        acquire a stored credential."""
+        from unittest.mock import MagicMock, patch
+
+        fake_api = MagicMock()
+        fake_api.validate_2fa_code.return_value = True
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["api"] = fake_api  # noqa: SLF001
+            web._PENDING_AUTH["username"] = "user@test.com"  # noqa: SLF001
+            web._PENDING_AUTH["password"] = None  # noqa: SLF001
+
+        with patch("icloudpy.utils.store_password_in_keyring") as keyring:
+            client = web.create_app(testing=True).test_client()
+            response = _csrf_post(client, "/auth/code", data={"code": "123456"})
+
+        self.assertEqual(response.status_code, 302)
+        fake_api.trust_session.assert_called_once()
+        keyring.assert_not_called()
+
     def test_trust_session_failure_still_succeeds(self):
         """trust_session() raising is non-fatal — the code already worked,
         we should still redirect + clear pending. Just log a warning."""
@@ -786,8 +808,21 @@ class TestAuthRefreshTrust(unittest.TestCase):
         self.assertIn(b"No app.credentials.username", response.data)
 
     def test_refresh_trust_handles_no_keyring_password(self):
-        """No cached password → some user-visible response (not 5xx)."""
-        with patch("icloudpy.utils.get_password_from_keyring", return_value=None):
+        """No cached password → some user-visible response (not 5xx).
+
+        Patches ``get_api_instance`` so no client is built for real: with no
+        password the route now goes down the session-only path, and a test
+        must not depend on whatever session files other tests left behind.
+        """
+        from icloudpy import exceptions as icloudpy_exceptions
+
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value=None),
+            patch(
+                "src.sync.get_api_instance",
+                side_effect=icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException("no session"),
+            ),
+        ):
             response = _csrf_post(
                 self._client(),
                 "/auth/refresh-trust",
@@ -836,6 +871,59 @@ class TestAuthRefreshTrust(unittest.TestCase):
                 follow_redirects=False,
             )
         self.assertIn(response.status_code, (200, 302))
+
+    def test_refresh_trust_works_from_the_session_alone(self):
+        """A password-free container sees the ``ready`` pill and its
+        "Refresh trust" button. That button used to 500 on the keyring
+        lookup. Neither ``trust_session`` nor the 2FA push needs a
+        password, so it is served from the saved session instead."""
+        from unittest.mock import MagicMock
+
+        from icloudpy import exceptions as icloudpy_exceptions
+
+        fake_service = MagicMock()
+        fake_service.requires_2fa = True
+        with (
+            patch(
+                "icloudpy.utils.get_password_from_keyring",
+                side_effect=icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException(),
+            ),
+            patch("src.sync.get_api_instance", return_value=fake_service) as session_only,
+            patch("icloudpy.ICloudPyService") as with_password,
+        ):
+            response = _csrf_post(
+                self._client(),
+                "/auth/refresh-trust",
+                follow_redirects=False,
+            )
+        self.assertIn(response.status_code, (200, 302))
+        self.assertIsNone(session_only.call_args.kwargs["password"])
+        with_password.assert_not_called()
+        # And nothing was left behind that /auth/code could persist.
+        self.assertIsNone(web._PENDING_AUTH.get("password"))  # noqa: SLF001
+
+    def test_refresh_trust_says_so_when_the_session_is_dead_and_there_is_no_password(self):
+        """The old wording ("your stored password may be stale") is wrong
+        for a container that has no stored password."""
+        from icloudpy import exceptions as icloudpy_exceptions
+
+        with (
+            patch(
+                "icloudpy.utils.get_password_from_keyring",
+                side_effect=icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException(),
+            ),
+            patch(
+                "src.sync.get_api_instance",
+                side_effect=icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException(),
+            ),
+        ):
+            response = _csrf_post(
+                self._client(),
+                "/auth/refresh-trust",
+                follow_redirects=False,
+            )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"no longer valid and no password is stored", response.data)
 
     def test_refresh_trust_icloudpy_construction_exception_handled(self):
         """If ICloudPyService construction itself raises (network down,
@@ -1432,12 +1520,87 @@ class TestAuthStateReflectsSyncLoop(unittest.TestCase):
                 "ready",
             )
 
-    def test_setup_needed_still_wins_without_a_keyring_entry(self):
-        with patch("icloudpy.utils.password_exists_in_keyring", return_value=False):
+    def test_setup_needed_without_a_keyring_entry_or_a_session(self):
+        with (
+            patch("icloudpy.utils.password_exists_in_keyring", return_value=False),
+            patch("src.web._saved_session_exists", return_value=False),
+        ):
             self.assertEqual(
                 web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
                 "setup_needed",
             )
+
+    def test_a_saved_session_is_ready_even_with_no_password_stored(self):
+        """Running with no password on disk is a supported configuration, so
+        an empty keyring is not an unfinished setup -- telling such an
+        operator to go and authenticate would be wrong."""
+        with (
+            patch("icloudpy.utils.password_exists_in_keyring", return_value=False),
+            patch("src.web._saved_session_exists", return_value=True),
+            patch("src.web_signals.get_auth_blocked", return_value={"blocked": False}),
+        ):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "ready",
+            )
+
+    def test_a_dead_session_with_no_password_asks_for_a_re_auth(self):
+        with (
+            patch("icloudpy.utils.password_exists_in_keyring", return_value=False),
+            patch("src.web._saved_session_exists", return_value=True),
+            patch("src.web_signals.get_auth_blocked", return_value={"blocked": True}),
+        ):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "reauth_needed",
+            )
+
+    def test_a_brand_new_install_is_told_to_set_up_not_to_re_authenticate(self):
+        """The sync loop publishes auth-blocked on its first cycle whether or
+        not anything was ever set up, so the blocked flag alone must not turn
+        a first-time install into "re-authenticate" -- there is nothing to
+        re-authenticate with."""
+        with (
+            patch("icloudpy.utils.password_exists_in_keyring", return_value=False),
+            patch("src.web._saved_session_exists", return_value=False),
+            patch("src.web_signals.get_auth_blocked", return_value={"blocked": True}),
+        ):
+            self.assertEqual(
+                web._detect_auth_state(username="a@icloud.com"),  # noqa: SLF001
+                "setup_needed",
+            )
+
+    def _with_cookie_dir(self, files):
+        """Run the probe against a temp cookie directory holding ``files``."""
+        import json
+        import tempfile
+        from unittest.mock import patch as _patch
+
+        with tempfile.TemporaryDirectory() as cookie_dir:
+            for name, body in files.items():
+                with open(os.path.join(cookie_dir, name), "w", encoding="utf-8") as handle:
+                    handle.write(body if isinstance(body, str) else json.dumps(body))
+            with _patch.object(web, "DEFAULT_COOKIE_DIRECTORY", cookie_dir):
+                return web._saved_session_exists("a@icloud.com")  # noqa: SLF001
+
+    def test_the_session_probe_finds_this_accounts_session(self):
+        self.assertTrue(self._with_cookie_dir({"aicloudcom.session": {"session_token": "t"}}))
+
+    def test_the_session_probe_ignores_another_accounts_session(self):
+        """icloudpy resumes from the file named after *this* apple id. A
+        leftover file for a different account is not a credential this
+        container can use, and reading it as one would show a green pill
+        over a container that cannot sync."""
+        self.assertFalse(self._with_cookie_dir({"bicloudcom.session": {"session_token": "t"}}))
+
+    def test_the_session_probe_ignores_a_session_without_a_token(self):
+        """``__init__`` writes the file before there is anything to resume
+        from, so its mere existence proves nothing."""
+        self.assertFalse(self._with_cookie_dir({"aicloudcom.session": {"client_id": "x"}}))
+
+    def test_the_session_probe_survives_unreadable_or_corrupt_files(self):
+        self.assertFalse(self._with_cookie_dir({}))
+        self.assertFalse(self._with_cookie_dir({"aicloudcom.session": "{not json"}))
 
 
 class TestSyncPublishesAuthState(unittest.TestCase):
@@ -1569,3 +1732,58 @@ class TestPerLibraryDashboardRows(unittest.TestCase):
         for service in payload["services"]:
             if service["name"] == "Drive":
                 self.assertEqual(service["libraries"], [])
+
+
+class TestTheDashboardWordsTheModeCorrectly(unittest.TestCase):
+    """The pill is the only place most people ever read this, so it has to
+    say what is actually true of the container in front of them."""
+
+    def _render(self, **status_overrides):
+        status = {
+            "config_loaded": True,
+            "config_path": "/config/config.yaml",
+            "username": "a@icloud.com",
+            "region": "global",
+            "marker_filename": ".mounted",
+            "services": [],
+            "auth_state": "ready",
+            "password_stored": True,
+            "auth_blocked_reason": None,
+            "auth_method": None,
+            "force_sync_pending": {},
+            "trust_expires_at": None,
+            "trust_days_remaining": None,
+            "libraries": [],
+        }
+        status.update(status_overrides)
+        with (
+            patch.object(web, "_build_status", return_value=status),
+            patch.object(web, "_tail_log_file", return_value=[]),
+        ):
+            return web.create_app(testing=True).test_client().get("/").data
+
+    def test_ready_does_not_claim_a_populated_keyring(self):
+        """"keyring populated" is simply false in session-only mode, and it
+        is the wrong thing to reassure anyone with even when it is true --
+        what matters is that the loop is signed in."""
+        body = self._render(password_stored=False)
+        self.assertNotIn(b"keyring populated", body)
+        self.assertIn(b"signed in, sync loop authenticated", body)
+        self.assertIn(b"no password stored", body)
+
+    def test_ready_with_a_password_says_nothing_about_the_session(self):
+        body = self._render(password_stored=True)
+        self.assertIn(b"signed in, sync loop authenticated", body)
+        self.assertNotIn(b"no password stored", body)
+
+    def test_a_stopped_sync_is_described_by_the_published_reason(self):
+        cases = {
+            "session_unusable": b"saved session is no longer valid",
+            "sign_in_failed": b"can be an outage",
+            "2fa_required": b"asking for a second factor",
+            None: b"asking for a second factor",
+        }
+        for reason, expected in cases.items():
+            with self.subTest(reason=reason):
+                body = self._render(auth_state="reauth_needed", auth_blocked_reason=reason)
+                self.assertIn(expected, body)

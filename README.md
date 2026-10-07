@@ -73,6 +73,24 @@ docker exec -it icloud /bin/sh -c "su-exec abc icloud --username=<icloud-usernam
 
 Follow the steps to authenticate.
 
+#### Two ways to run unattended
+
+The container can keep syncing with or without an Apple ID password on disk. Both run unattended; they differ in what happens months later.
+
+**Password stored** (`ENV_ICLOUD_PASSWORD`, or answering yes to `icloud`'s "Save password in keyring?" prompt) — indefinite unattended operation. When Apple's trusted session lapses the container signs in again by itself and only needs a human for the second factor. The cost is the credential at rest: on a headless host Python's `keyring` resolves to `keyrings.alt.file.PlaintextKeyring`, so the password sits in cleartext in `/config/python_keyring/keyring_pass.cfg`. That is an Apple ID password, which also reaches Find My, iCloud backups, purchases and account recovery.
+
+**No password** — unattended until Apple's trust window closes, then a human signs in once. With no password configured the container resumes the saved session in `/config/session_data` and never attempts a credential sign-in. Nothing derived from your password is written to disk. When the session stops being accepted, sync stops with `No Apple ID password is stored and the saved session is no longer valid …`, sends the usual 2FA notification and waits `retry_login_interval` between attempts; set `app.trust_expiry_warn_days` so the warning arrives before that, not after. How often that happens is Apple's call, not a documented interval — `app.trust_refresh_days` rolls the window forward while the session is healthy, which should make it rare, though that refresh has not been verified against Apple over a full trust lifetime in this mode.
+
+**Signing in again without storing a password.** Run the `docker exec … icloud …` command above and answer **no** to `Save password in keyring?`. The web dashboard works too: its "Refresh trust" button needs no password at all while the session is still alive, and a sign-in through `/auth` that *did* need your password persists it to the keyring — which puts the container back into the first mode.
+
+**Switching an existing container to password-free.** Two things, because either one alone is not enough: remove `ENV_ICLOUD_PASSWORD` from the environment (it is copied into the keyring on every cycle it is set; an empty value counts as unset), *and* delete the keyring entry:
+
+```
+docker exec icloud su-exec abc python3 -c "import keyring; keyring.delete_password('icloudpy://icloud-password', '<icloud-username>')"
+```
+
+It prints a `PasswordDeleteError` if there was no entry to delete, which is how you confirm there wasn't one. `icloud --delete-from-keyring` also deletes it, but then continues into an interactive password prompt, so it needs `docker exec -it` and a Ctrl-C to get out of.
+
 ## Sample Configuration File
 
 ```yaml
@@ -652,8 +670,8 @@ The payload shape is stable:
 | `sync_summary` | The sync-summary notification is sent (needs `app.notifications.sync_summary.enabled`, and respects its `min_downloads` / `on_success` / `on_error`) | full sync statistics |
 | `two_factor_required` | iCloud wants a 6-digit code | `username`, `dashboard_url` |
 | `security_key_required` | The account signs in with a hardware security key, so Apple will send no code at all | `username`, `dashboard_url` |
-| `password_missing` | No password in the keyring | `username`, `dashboard_url` |
-| `sign_in_failed` | Apple rejected the sign-in itself — a wrong password, a throttle, or a 5xx during sign-in (`ICloudPyFailedLoginException` specifically; a sign-in that never completed because of a network fault or an Apple service error is `sync_failed` with `reason: sign_in_error`, and a fault after a successful sign-in is `reason: sync_error`) | `username`, `dashboard_url` |
+| `password_missing` | No password is stored and the saved session can't be resumed | `username`, `dashboard_url` |
+| `sign_in_failed` | Apple rejected the sign-in itself — a wrong password, a throttle, or a 5xx during sign-in (`ICloudPyFailedLoginException` specifically, plus, when no password is stored, an Apple error that can't be told apart from a rejected session; a sign-in that never completed because of a network fault or an Apple service error is `sync_failed` with `reason: sign_in_error`, and a fault after a successful sign-in is `reason: sync_error`) | `username`, `dashboard_url` |
 | `trust_expiring` | The ~90-day trust window is closing (once per cookie value) | `username`, `dashboard_url`, `days_remaining` |
 | `trust_refreshed` | The trust token was proactively re-minted. Webhook-only: no other transport reports this | `expires_at`, `days_remaining_before` |
 
@@ -972,7 +990,7 @@ To set up multiple iCloud accounts, repeat these steps for each UGREEN user and 
 | Variable | Default | Description |
 |---|---|---|
 | `ENV_CONFIG_FILE_PATH` | `/config/config.yaml` | Path to the configuration file inside the container. |
-| `ENV_ICLOUD_PASSWORD` | *(unset)* | iCloud password for automatic login. If unset, manual `docker exec` login is required. |
+| `ENV_ICLOUD_PASSWORD` | *(unset)* | iCloud password for automatic login. Stored in the container's keyring on first use. If unset (or empty) and the keyring is empty, the container runs off the saved session alone and needs a manual `docker exec` login once Apple stops accepting it — see [Two ways to run unattended](#two-ways-to-run-unattended). |
 | `APP_VERSION` | `dev` | Application version, automatically set during Docker build. Used for usage tracking and displayed in the web UI. |
 | `ICLOUD_DOCKER_CONFIG_DIR` | `/config` | Overrides the base config directory. Session data and keyring are stored relative to this path. The usage cache (`.data`) lives under the root destination (`app.root`). |
 | `PUID` | *(unset)* | User ID for file ownership. |
