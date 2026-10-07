@@ -15,6 +15,7 @@ from src import (
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
+    PHOTOS_INDEXING_RETRY_SEC,
     config_parser,
     configure_icloudpy_logging,
     get_logger,
@@ -223,9 +224,22 @@ def _maybe_refresh_trust(config, api) -> None:
         )
         if api.trust_session():
             refreshed = _read_trust_cookie_expiry(api)
+            expires_at_iso = refreshed.isoformat() if refreshed else None
             LOGGER.info(
-                "Trust refreshed; now expires "
-                f"{refreshed.isoformat() if refreshed else 'unknown'}.",
+                f"Trust refreshed; now expires {expires_at_iso or 'unknown'}.",
+            )
+            # Webhook-only: no other transport reports a refresh, and a
+            # receiver tracking the trust window needs the new expiry as
+            # much as it needs the warning that preceded it.
+            refresh_data = {"days_remaining_before": days_remaining}
+            if expires_at_iso:
+                # Omitted rather than null when the cookie is unreadable.
+                refresh_data["expires_at"] = expires_at_iso
+            notify.post_event_to_webhook(
+                config,
+                "trust_refreshed",
+                f"iCloud trust token refreshed; now expires {expires_at_iso or 'unknown'}",
+                refresh_data,
             )
         else:
             LOGGER.warning(
@@ -443,6 +457,9 @@ class SyncState:
         # handlers need it because nothing in that mode can be fixed by
         # retrying with a password the container does not have.
         self.session_only = False
+        # Set when this cycle skipped Photos because Apple is still indexing
+        # it, so the cycle's webhook can say so rather than blame the mount.
+        self.photos_indexing = False
 
 
 def _load_configuration():
@@ -741,8 +758,18 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
                 pass
 
         LOGGER.info("Syncing photos...")
-        sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
+        try:
+            sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
+        except exceptions.ICloudPyServiceNotActivatedException as e:
+            # With no interval there is no next cycle to wait for -- a
+            # one-shot run must still report this through the normal error
+            # path rather than schedule a retry it will never take.
+            if not sync_photos.is_photos_indexing(e) or photos_sync_interval <= 0:
+                raise
+            _wait_for_photos_indexing(sync_state, photos_sync_interval)
+            return None
         LOGGER.info("Photos synced")
+        _signal_photos_indexing(waiting=False)
 
         # Count files after sync
         files_after = set()
@@ -808,6 +835,48 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         sync_state.photos_time_remaining = photos_sync_interval
         return stats
     return None
+
+
+def _wait_for_photos_indexing(sync_state: SyncState, photos_sync_interval: int) -> None:
+    """Skip Photos this cycle because Apple has not finished indexing it.
+
+    Nothing could be listed, so nothing may be cleaned up either -- an
+    empty listing and an unreadable one look identical to obsolete-file
+    cleanup. Drive is unaffected and carries on.
+
+    The retry only ever shortens the wait (``min`` with the configured
+    interval). It is not a login retry: the session is resumed per cycle
+    like any other, and ``retry_login_interval`` is not involved.
+    """
+    retry = min(PHOTOS_INDEXING_RETRY_SEC, photos_sync_interval)
+    again = f"{retry // 60} minutes" if retry >= 120 else f"{retry} seconds"
+    LOGGER.warning(
+        "Apple has not finished indexing this iCloud Photos library, so it cannot "
+        f"be read yet. Nothing on disk was changed. Trying Photos again in {again}.",
+    )
+    sync_state.photos_time_remaining = retry
+    sync_state.photos_indexing = True
+    _signal_photos_indexing(waiting=True)
+
+
+def _signal_photos_indexing(*, waiting: bool) -> None:
+    """Publish (or clear) the dashboard's "waiting for Apple" note.
+
+    Recorded against the Photos service, not a library: no library can be
+    read while this is true, so no library row could carry it.
+    """
+    try:
+        from src import web_signals as _ws
+
+        _ws.record_photos_indexing(waiting=waiting)
+        if waiting:
+            # The library being opened when this surfaced is still marked
+            # "syncing now" and never got started. Left alone it reads as
+            # a library syncing forever, next to a note saying Photos
+            # cannot be read at all.
+            _ws.clear_stale_library_states()
+    except Exception as e:  # noqa: BLE001 -- dashboard state must never break sync
+        LOGGER.debug(f"web_signals: record_photos_indexing raised: {e!s}")
 
 
 def _perform_dry_run(config, api, check_files: int | None = None) -> None:
@@ -979,6 +1048,55 @@ def _check_services_configured(config):
     return "drive" in config or "photos" in config
 
 
+def _cycle_nothing_synced_reason(config, drive_stats, photos_stats, photos_indexing=False) -> str | None:
+    """Why this cycle synced no service at all, or None if one did.
+
+    Such a cycle is indistinguishable from a clean one by its stats -- no
+    errors, no counts -- so reporting it as a success is how a monitor stays
+    green while nothing whatsoever is being downloaded. It happens two ways:
+    nothing is configured to sync, or every service that was due got skipped
+    -- by the mount-marker failsafe, or (Photos) because Apple has not
+    finished indexing the library.
+
+    Not to be confused with a service that simply was not due. With unequal
+    intervals ``_calculate_next_sync_schedule`` enables only the service
+    whose timer expired, so one of the two returning None is the ordinary
+    case -- hence "no stats at all" rather than "any stats missing".
+
+    Args:
+        config: Configuration dictionary
+        drive_stats: Result of ``_perform_drive_sync``
+        photos_stats: Result of ``_perform_photos_sync``
+        photos_indexing: Whether this cycle skipped Photos for indexing
+
+    Returns:
+        ``nothing_synced``, ``photos_indexing``, ``mount_marker_missing``,
+        or None if a service ran
+    """
+    if not _check_services_configured(config):
+        return "nothing_synced"
+    if drive_stats is None and photos_stats is None:
+        return "photos_indexing" if photos_indexing else "mount_marker_missing"
+    return None
+
+
+def _cycle_end_message(has_errors: bool, nothing_reason: str | None) -> str:
+    """The human text for the end-of-cycle event.
+
+    Kept out of ``sync()`` only because the branch it sits in is already four
+    levels deep.
+    """
+    if nothing_reason == "nothing_synced":
+        return "iCloud sync cycle synced nothing: no drive or photos section is configured"
+    if nothing_reason == "photos_indexing":
+        return "iCloud sync cycle synced nothing: Apple has not finished indexing Photos"
+    if nothing_reason:
+        return "iCloud sync cycle synced nothing: the mount marker is missing"
+    if has_errors:
+        return "iCloud sync cycle completed with errors"
+    return "iCloud sync cycle completed"
+
+
 def _send_usage_statistics(config, summary: SyncSummary) -> None:
     """Send anonymized usage statistics.
 
@@ -1110,9 +1228,16 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
     """
     LOGGER.error("Error: 2FA is required. Please log in.")
     _publish_auth_blocked(True, reason="2fa_required")
-    # Decided before anything is sent: it selects the notification wording
-    # and suppresses two steps that cannot succeed on such an account.
+    # Decided before anything is sent: it selects the notification wording,
+    # the reason a receiver sees, and suppresses two steps that cannot
+    # succeed on such an account.
     security_key = _detect_security_key_account(api, username)
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle aborted: 2FA is required",
+        data={"reason": "security_key_required" if security_key else "two_factor_required"},
+    )
     if security_key:
         LOGGER.error(
             "This account signs in with a security key, so Apple will not "
@@ -1146,6 +1271,7 @@ def _handle_2fa_required(config, username: str, sync_state: SyncState, api):
         # A security-key account cannot finish sign-in from a Telegram code,
         # so it gets the standard alert pointing at the dashboard.
         reply_prompt=not security_key,
+        event="security_key_required" if security_key else "two_factor_required",
     )
     if not security_key and config_parser.get_telegram_listen_enabled(config=config):
         _wait_for_telegram_code(config=config, api=api, timeout_seconds=sleep_for)
@@ -1311,6 +1437,20 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sign-in failed and will be retried: {error!s}")
+    # Only a refusal from Apple's sign-in is sign_in_failed, matching the
+    # alert below. A network fault or an Apple service error means the
+    # attempt never completed, which needs no one to intervene.
+    rejected = isinstance(error, exceptions.ICloudPyFailedLoginException)
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message=(
+            "iCloud sync cycle aborted: sign-in failed"
+            if rejected
+            else "iCloud sync cycle aborted: sign-in did not complete"
+        ),
+        data={"reason": "sign_in_failed" if rejected else "sign_in_error"},
+    )
     sleep_for = config_parser.get_retry_login_interval(config=config)
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
@@ -1334,6 +1474,7 @@ def _handle_auth_transport_error(config, username: str, sync_state: SyncState, e
             last_send=sync_state.last_send,
             region=config_parser.get_region(config=config),
             dashboard_url=_resolve_dashboard_url(config),
+            event="sign_in_failed",
         )
     # Ends early on a completed web-UI re-auth, but not on "Sync now":
     # nothing a button does may shorten a throttle backoff.
@@ -1359,14 +1500,22 @@ def _handle_sync_error(config, error, drive_sync_interval, photos_sync_interval)
     Returns True to keep looping, False to exit.
     """
     LOGGER.error(f"Sync failed and will be retried: {error!s}")
-    sleep_for = config_parser.get_retry_login_interval(config=config)
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle failed and will be retried",
+        data={"reason": "sync_error"},
+    )
+    # log_messages=False: this is not a login retry, and the getter's
+    # "Retrying login every N seconds." would say otherwise.
+    sleep_for = config_parser.get_retry_login_interval(config=config, log_messages=False)
     if sleep_for < 0:
         LOGGER.info("retry_login_interval is < 0, exiting ...")
         return False
     configured = [i for i in (drive_sync_interval, photos_sync_interval) if i > 0]
     if configured:
         sleep_for = max(sleep_for, min(configured))
-    _log_retry_time(sleep_for)
+    _log_retry_time(sleep_for, what="sync")
     # This can be a whole sync interval; the "Sync now" button must still
     # cut it short, as it does on the normal scheduling path.
     _interruptible_sleep(sleep_for)
@@ -1393,6 +1542,15 @@ def _handle_password_error(config, username: str, sync_state: SyncState, error):
     # needed", which is the wrong instruction here: the session, not the
     # password, is what has to be replaced.
     _publish_auth_blocked(True, reason="session_unusable")
+    LOGGER.error(
+        "Password is not stored in keyring. Please save the password in keyring.",
+    )
+    notify.send_cycle_event(
+        config=config,
+        boundary="failure",
+        message="iCloud sync cycle aborted: no password in the keyring",
+        data={"reason": "password_missing"},
+    )
     sleep_for = config_parser.get_retry_login_interval(config=config)
 
     if sleep_for < 0:
@@ -1407,22 +1565,24 @@ def _handle_password_error(config, username: str, sync_state: SyncState, error):
         last_send=sync_state.last_send,
         region=server_region,
         dashboard_url=_resolve_dashboard_url(config),
+        event="password_missing",
     )
     _auth_retry_sleep(sleep_for)
     return True
 
 
-def _log_retry_time(sleep_for: int):
+def _log_retry_time(sleep_for: int, what: str = "login"):
     """
     Log the next retry time.
 
     Args:
         sleep_for: Sleep duration in seconds
+        what: What is being retried; a failed sync is not a failed login
     """
     next_sync = (
         datetime.datetime.now() + datetime.timedelta(seconds=sleep_for)
     ).strftime("%c")
-    LOGGER.info(f"Retrying login at {next_sync} ...")
+    LOGGER.info(f"Retrying {what} at {next_sync} ...")
 
 
 def _calculate_next_sync_schedule(config, sync_state: SyncState):
@@ -1450,32 +1610,20 @@ def _calculate_next_sync_schedule(config, sync_state: SyncState):
         sleep_for = sync_state.drive_time_remaining
         sync_state.enable_sync_drive = True
         sync_state.enable_sync_photos = False
-    elif (
-        has_drive
-        and has_photos
-        and sync_state.drive_time_remaining <= sync_state.photos_time_remaining
-    ):
-        # Special case: if both timers are equal and large (> 10 seconds), wait for the full interval
-        # This fixes the bug where equal large intervals cause immediate re-sync
-        if (
-            sync_state.drive_time_remaining == sync_state.photos_time_remaining
-            and sync_state.drive_time_remaining > 10
-        ):
-            sleep_for = sync_state.drive_time_remaining
-            sync_state.enable_sync_drive = True
-            sync_state.enable_sync_photos = True
-        else:
-            sleep_for = (
-                sync_state.photos_time_remaining - sync_state.drive_time_remaining
-            )
-            sync_state.photos_time_remaining -= sync_state.drive_time_remaining
-            sync_state.enable_sync_drive = True
-            sync_state.enable_sync_photos = False
     else:
-        sleep_for = sync_state.drive_time_remaining - sync_state.photos_time_remaining
-        sync_state.drive_time_remaining -= sync_state.photos_time_remaining
-        sync_state.enable_sync_drive = False
-        sync_state.enable_sync_photos = True
+        # Sleep until the sooner of the two is due, and take that time off
+        # both countdowns. Whichever reaches zero syncs next; equal timers
+        # sync together. A negative countdown is a one-shot service
+        # (sync_interval < 0) that has already run: it is never due again,
+        # so it takes no part, and must never become a negative sleep.
+        pending = [t for t in (sync_state.drive_time_remaining, sync_state.photos_time_remaining) if t >= 0]
+        sleep_for = min(pending) if pending else 0
+        if sync_state.drive_time_remaining >= 0:
+            sync_state.drive_time_remaining -= sleep_for
+        if sync_state.photos_time_remaining >= 0:
+            sync_state.photos_time_remaining -= sleep_for
+        sync_state.enable_sync_drive = sync_state.drive_time_remaining == 0
+        sync_state.enable_sync_photos = sync_state.photos_time_remaining == 0
 
     return sleep_for
 
@@ -1573,6 +1721,7 @@ def sync(dry_run: bool = False, check_files: int | None = None):
         # Log sync intervals once at startup
         if not startup_logged:
             _log_sync_intervals_at_startup(config)
+            notify.warn_unknown_webhook_events(config)
             # The state file outlives the container, so a restart mid-library
             # would leave the dashboard showing it as still syncing. Nothing
             # can legitimately be in flight here.
@@ -1639,10 +1788,20 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     # re-auth episode requests a fresh push exactly once.
                     sync_state.two_fa_triggered = False
 
+                    # Signed in and about to sync: open the cycle on any
+                    # configured webhook. Fire-and-forget, and a no-op when
+                    # none is configured (see notify.send_cycle_event).
+                    notify.send_cycle_event(
+                        config=config,
+                        boundary="start",
+                        message="iCloud sync cycle started",
+                    )
+
                     # Create summary for this sync cycle
                     summary = SyncSummary()
 
                     # Perform syncs and collect statistics
+                    sync_state.photos_indexing = False
                     drive_stats = _perform_drive_sync(
                         config,
                         api,
@@ -1660,6 +1819,35 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     summary.drive_stats = drive_stats
                     summary.photo_stats = photos_stats
                     summary.sync_end_time = datetime.datetime.now()
+
+                    # Close the cycle on the webhooks. Failed downloads
+                    # counted in the stats make this a failure even though
+                    # the cycle itself ran to completion -- a monitor that
+                    # reported success here would stay green while the
+                    # library silently fell behind. So does a cycle that
+                    # synced nothing at all. The statistics ride along, so a
+                    # POST receiver sees them without app.notifications.
+                    has_errors = summary.has_errors()
+                    nothing_reason = _cycle_nothing_synced_reason(
+                        config,
+                        drive_stats,
+                        photos_stats,
+                        sync_state.photos_indexing,
+                    )
+                    # Every sync_failed names a reason, including this one: a
+                    # receiver should never have to infer why from the
+                    # statistics. (Only Photos counts failed downloads, so
+                    # has_errors never means a Drive failure today.)
+                    reason = nothing_reason or ("download_errors" if has_errors else None)
+                    cycle_data = notify.summary_event_data(summary)
+                    if reason:
+                        cycle_data["reason"] = reason
+                    notify.send_cycle_event(
+                        config=config,
+                        boundary="failure" if reason else "success",
+                        message=_cycle_end_message(has_errors, nothing_reason),
+                        data=cycle_data,
+                    )
 
                     # Persist per-service last-sync state for the web
                     # dashboard. Best-effort — if the JSON write fails

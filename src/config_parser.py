@@ -116,11 +116,15 @@ def get_username(config: dict) -> str | None:
     return validate_and_strip_username(username, config_path)
 
 
-def get_retry_login_interval(config: dict) -> int:
+def get_retry_login_interval(config: dict, log_messages: bool = True) -> int:
     """Return retry login interval from config.
 
     Args:
         config: Configuration dictionary
+        log_messages: Whether to log informational messages (default: True).
+            Callers that reuse this interval for something other than a
+            login retry pass False, so the log does not claim a login is
+            being retried when it is not.
 
     Returns:
         Retry login interval in seconds
@@ -129,13 +133,15 @@ def get_retry_login_interval(config: dict) -> int:
 
     if not traverse_config_path(config=config, config_path=config_path):
         retry_login_interval = DEFAULT_RETRY_LOGIN_INTERVAL_SEC
-        log_config_not_found_warning(
-            config_path,
-            f"not found. Using default {retry_login_interval} seconds ...",
-        )
+        if log_messages:
+            log_config_not_found_warning(
+                config_path,
+                f"not found. Using default {retry_login_interval} seconds ...",
+            )
     else:
         retry_login_interval = get_config_value(config=config, config_path=config_path)
-        log_config_found_info(f"Retrying login every {retry_login_interval} seconds.")
+        if log_messages:
+            log_config_found_info(f"Retrying login every {retry_login_interval} seconds.")
 
     return retry_login_interval
 
@@ -196,6 +202,18 @@ def get_sync_interval(
         config_path=config_path,
         default=DEFAULT_SYNC_INTERVAL_SEC,
     )
+
+    # 0 is neither an interval nor one-shot (negative): a service that is
+    # always due would sync back to back with no sleep, which is the
+    # fastest way to get throttled by Apple. Treat it as unset.
+    if sync_interval == 0:
+        if log_messages:
+            log_invalid_config_value(
+                config_path,
+                sync_interval,
+                f"a positive number of seconds, or negative for one-shot. Using default {DEFAULT_SYNC_INTERVAL_SEC}",
+            )
+        sync_interval = DEFAULT_SYNC_INTERVAL_SEC
 
     if log_messages:
         if sync_interval == DEFAULT_SYNC_INTERVAL_SEC:
@@ -1449,6 +1467,91 @@ def get_pushover_notification_priority(config: dict) -> int | None:
     """
     config_path = ["app", "pushover", "priority"]
     return get_config_value_or_none(config=config, config_path=config_path)
+
+
+def get_webhook_url(config: dict, event: str) -> str | None:
+    """Return the ping URL configured for a sync-lifecycle event.
+
+    ``app.webhooks.start`` / ``success`` / ``failure`` are each optional and
+    independent. Looked up quietly rather than through
+    ``get_notification_config_value``: every event is consulted on every sync
+    cycle, so the "not found" warning the other notification getters log would
+    become three lines per cycle for anyone not using webhooks.
+
+    Args:
+        config: Configuration dictionary
+        event: Event name -- ``start``, ``success`` or ``failure``
+
+    Returns:
+        The URL if configured and non-blank, None otherwise
+    """
+    config_path = ["app", "webhooks", event]
+    value = get_config_value_or_none(config=config, config_path=config_path)
+    if not value:
+        return None
+    return str(value).strip() or None
+
+
+def get_webhook_post_url(config: dict) -> str | None:
+    """Return ``app.webhooks.url`` -- the endpoint every event is POSTed to.
+
+    Distinct from the ``start``/``success``/``failure`` GET pings: those report
+    a cycle boundary to a monitor, this one receives the whole notification
+    stream as JSON. Either, both or neither may be configured.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        The URL if configured and non-blank, None otherwise
+    """
+    return get_webhook_url(config=config, event="url")
+
+
+def get_webhook_events(config: dict) -> list[str] | None:
+    """Return the ``app.webhooks.events`` allow-list, or None for "all".
+
+    None and a configured list mean different things: no key at all sends
+    every event, while an explicit (even empty) list sends only what it
+    names. A non-list value is treated as absent rather than as an empty
+    filter, so a typo cannot silently mute the endpoint.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        List of event names, or None when unfiltered
+    """
+    value = get_config_value_or_none(config=config, config_path=["app", "webhooks", "events"])
+    if not isinstance(value, list):
+        return None
+    return [str(event).strip() for event in value]
+
+
+def get_webhook_headers(config: dict) -> dict[str, str]:
+    """Return the extra request headers for ``app.webhooks.url``.
+
+    Receivers behind an authenticating proxy need a bearer token or an API
+    key, which has no other home in the config. Values are credentials and
+    are never logged.
+
+    Args:
+        config: Configuration dictionary
+
+    A key left without a value in YAML parses as None; such an entry is
+    dropped rather than sent as the string "None".
+
+    Returns:
+        Mapping of header name to value; empty when unconfigured
+    """
+    value = get_config_value_or_none(config=config, config_path=["app", "webhooks", "headers"])
+    if not isinstance(value, dict):
+        return {}
+    return {
+        str(name): str(header_value)
+        for name, header_value in value.items()
+        if header_value is not None
+    }
 
 
 # =============================================================================

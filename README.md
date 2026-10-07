@@ -155,6 +155,34 @@ app:
     # port: 587
     # If your email provider doesn't handle TLS
     # no_tls: true
+  # Webhooks (optional). Two independent things, either or both:
+  #
+  # start/success/failure are bare GET pings for a monitor such as
+  # Healthchecks.io, which infers "the sync stopped running" from a ping it
+  # expected and did not get -- something no outbound notification can tell
+  # you. Set the check's period from your SHORTEST sync_interval and its
+  # grace to cover your LONGEST sync.
+  #
+  # url receives every notification the app sends, plus the sync-cycle
+  # events, as a JSON POST:
+  #   {"event": ..., "message": ..., "timestamp": ..., "data": {...}}
+  # for a receiver that acts on them (Home Assistant, n8n, ntfy behind a
+  # proxy, your own endpoint). events filters it; omit for everything.
+  # headers is for receivers behind an authenticating proxy.
+  #
+  # URLs and header values are credentials and this app never logs them (at
+  # logger.level debug the HTTP library logs request paths, as it does for
+  # your Telegram token).
+  # webhooks:
+  #   start: "https://hc-ping.com/<uuid>/start"
+  #   success: "https://hc-ping.com/<uuid>"
+  #   failure: "https://hc-ping.com/<uuid>/fail"
+  #   url: "https://receiver.example.com/icloud"
+  #   events:              # optional allow-list; omit to receive all of them
+  #     - sync_failed
+  #     - two_factor_required
+  #   headers:             # optional, for an authenticating receiver
+  #     Authorization: "Bearer <token>"
   region: global # For China server users, set this to - china (default: global)
   # Maximum number of parallel download threads for both drive and photos
   # auto: automatically set based on CPU cores (default, max 8)
@@ -574,6 +602,82 @@ app:
 - **Outlook**: `smtp-mail.outlook.com:587`
 - **Yahoo**: `smtp.mail.yahoo.com:587`
 - **AWS SES**: `email-smtp.region.amazonaws.com:587`
+
+#### Webhooks
+
+The other providers tell you what a sync did. None of them can tell you that a sync *stopped happening* — a container that dies, or a loop wedged on a sign-in Apple keeps refusing, simply goes quiet — and none of them can be acted on by a program. `app.webhooks` covers both gaps with two independent mechanisms; configure either or both.
+
+**Monitoring pings (`start` / `success` / `failure`)** are bare GETs at the sync-cycle boundaries, for a monitor that alarms on the ping it did not get:
+
+```yaml
+app:
+  webhooks:
+    start: "https://hc-ping.com/<uuid>/start"     # a sync cycle is beginning
+    success: "https://hc-ping.com/<uuid>"         # the cycle finished cleanly
+    failure: "https://hc-ping.com/<uuid>/fail"    # the cycle failed, or finished with errors
+```
+
+Each URL is optional and independent — set only `failure` if that is all you want. The URLs above are the Healthchecks.io ping endpoints for one check, so the three together give you run duration, a failure alert, and an alert when the container stops pinging at all. Any service that accepts a GET works the same way (Uptime Kuma push monitors, Better Stack heartbeats, your own endpoint).
+
+| Event | Fires when |
+|-------|-----------|
+| `start` | Sign-in succeeded and the cycle is about to sync |
+| `success` | The cycle completed, no photo download failed, and at least one service actually synced |
+| `failure` | A photo download failed; or the cycle synced nothing at all (every due service skipped for a missing mount marker, or no `drive:`/`photos:` section configured); or it never got that far — 2FA required, no password in the keyring, sign-in refused, or a service error after sign-in |
+
+Note the asymmetry in the download-failure case: only Photos counts failed downloads into the sync statistics today, so a Drive file that fails to download does not by itself turn a cycle into a `failure`. A dry run that signs in sends nothing; one whose sign-in fails reports it like any other cycle, as the other notification channels already do.
+
+**Setting the check's schedule.** The container pings once per sync cycle, and a cycle happens whenever either service's timer expires — so the expected period is your **shortest** `sync_interval`, plus however long that service takes to run. The grace should cover your **longest** sync comfortably, because a cycle that is busy downloading a large library sends nothing until it finishes. With `drive.sync_interval: 300` and `photos.sync_interval: 900`, a period of 5 minutes and a grace of an hour or two is a reasonable start; widen the grace rather than chase false alarms. Note that `failure` repeats on every retry while a sign-in problem persists (by design — the check should stay red), so expect a run of them rather than one.
+
+A failed ping is logged at warning and otherwise ignored: the monitor's own grace period covers it, and nothing about a sync should depend on a monitoring service being up. A ping carries no body; the event endpoint below is what carries detail.
+
+**An event endpoint (`url`)** receives every notification this app sends, plus the sync-cycle events, as a JSON POST — one place for a receiver that reacts rather than reads (Home Assistant, n8n, ntfy behind a proxy, a script of your own):
+
+```yaml
+app:
+  webhooks:
+    url: "https://receiver.example.com/icloud"
+    events:                      # optional allow-list; omit to receive every event
+      - sync_failed
+      - two_factor_required
+    headers:                     # optional, for a receiver behind an authenticating proxy
+      Authorization: "Bearer <token>"
+```
+
+The payload shape is stable:
+
+```json
+{
+  "event": "sync_succeeded",
+  "message": "iCloud sync cycle completed",
+  "timestamp": "2026-10-03T21:14:07.512431+00:00",
+  "data": {
+    "has_errors": false,
+    "duration_seconds": 184.221,
+    "drive": {"files_downloaded": 12, "files_skipped": 4310, "files_removed": 0, "bytes_downloaded": 48216104, "duration_seconds": 61.08, "errors": 0},
+    "photos": {"photos_downloaded": 37, "photos_skipped": 51022, "photos_hardlinked": 4, "bytes_downloaded": 391048212, "bytes_saved_by_hardlinks": 10485760, "albums_synced": ["Recents"], "duration_seconds": 123.14, "errors": 0}
+  }
+}
+```
+
+`message` is the same human text the other transports send, so a receiver can forward it verbatim; `data` is the structured form for receivers that act on numbers. `timestamp` is ISO-8601 UTC. `data` is always present, possibly empty, and omits a key rather than sending `null` for it.
+
+| Event | Fires when | `data` |
+|-------|-----------|--------|
+| `sync_started` | Sign-in succeeded and the cycle is about to sync | — |
+| `sync_succeeded` | The cycle completed, no photo download failed, and a service actually synced | full sync statistics (as above) |
+| `sync_failed` | A photo download failed; the cycle synced nothing; or it never got that far | statistics, plus a `reason` — always present: `download_errors`, `mount_marker_missing`, `photos_indexing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sign_in_error`, `sync_error` |
+| `sync_summary` | The sync-summary notification is sent (needs `app.notifications.sync_summary.enabled`, and respects its `min_downloads` / `on_success` / `on_error`) | full sync statistics |
+| `two_factor_required` | iCloud wants a 6-digit code | `username`, `dashboard_url` |
+| `security_key_required` | The account signs in with a hardware security key, so Apple will send no code at all | `username`, `dashboard_url` |
+| `password_missing` | No password in the keyring | `username`, `dashboard_url` |
+| `sign_in_failed` | Apple rejected the sign-in itself — a wrong password, a throttle, or a 5xx during sign-in (`ICloudPyFailedLoginException` specifically; a sign-in that never completed because of a network fault or an Apple service error is `sync_failed` with `reason: sign_in_error`, and a fault after a successful sign-in is `reason: sync_error`) | `username`, `dashboard_url` |
+| `trust_expiring` | The ~90-day trust window is closing (once per cookie value) | `username`, `dashboard_url`, `days_remaining` |
+| `trust_refreshed` | The trust token was proactively re-minted. Webhook-only: no other transport reports this | `expires_at`, `days_remaining_before` |
+
+**Which events to key on.** The four alert events ride the same dispatch as Telegram and email, which means they inherit the **same 24-hour throttle**: treat them as throttled notices meant for a human, one per day at most. If you want to drive automation off the current state — an alarm that clears itself, a dashboard tile, a retry counter — key on `sync_failed` and its `data.reason` instead, which is sent on every cycle and every retry and therefore always reflects now. A dry run that signs in sends nothing; one whose sign-in fails reports it like any other cycle, as the other notification channels already do. `dashboard_url` appears only when the web UI is configured. The Apple ID appears in `data.username` because it is already in the message text every other transport sends.
+
+Everything here is fire-and-forget: a 10-second timeout, no retries, every exception swallowed, and failures logged at warning. Nothing about a sync depends on a receiver being up. URLs and header values are credentials — anyone holding a ping URL can report your check healthy — and this app never logs either, not even on failure (a `requests` exception stringifies to the full URL, so only the exception type is logged). At `app.logger.level: debug` the HTTP library underneath (`urllib3`) logs request paths, which include a ping URL; that is already true of your Telegram bot token, so treat a debug-level log file as sensitive either way. Misspelled names in `events` are reported once at container start rather than silently matching nothing.
 
 ### Advanced Configuration
 

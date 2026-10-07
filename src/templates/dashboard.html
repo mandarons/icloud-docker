@@ -88,6 +88,11 @@
         <div class="card-subtitle">every {{ (service.sync_interval_s // 3600) }} h</div>
       </div>
     </div>
+    {% if service.indexing %}
+    <div class="pill warn" style="margin-bottom: 14px;">
+      Waiting for Apple to finish indexing{% if service.indexing.since_relative %} &middot; started {{ service.indexing.since_relative }}{% endif %}
+    </div>
+    {% endif %}
     <dl class="kv">
       <dt>Destination</dt>
       <dd class="mono">

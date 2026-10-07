@@ -34,6 +34,10 @@ The config system is a pure data layer — it does NOT perform sync operations, 
 | `get_web_ui_enabled(config)` | Check if web UI is enabled |
 | `get_telegram_listen_enabled(config)` | `app.telegram.listen` — complete 2FA by replying in Telegram (default off) |
 | `get_telegram_auth_keyword(config)` | `app.telegram.auth_keyword` — the reply that requests a 2FA push (default `auth`, lower-cased) |
+| `get_webhook_url(config, event)` | `app.webhooks.start` / `success` / `failure` — monitoring ping URL for a cycle boundary (quiet lookup; each optional) |
+| `get_webhook_post_url(config)` | `app.webhooks.url` — endpoint every event is POSTed to as JSON |
+| `get_webhook_events(config)` | `app.webhooks.events` — event allow-list; `None` means every event, `[]` means none |
+| `get_webhook_headers(config)` | `app.webhooks.headers` — extra request headers (credentials; never logged) |
 
 ## Config Access Pattern
 

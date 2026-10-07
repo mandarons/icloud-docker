@@ -301,6 +301,23 @@ class TestPerLibrarySyncState(unittest.TestCase):
         self.assertEqual(entry["error"], "ZONE_NOT_FOUND")
         self.assertEqual(entry["completed_at"], was)
 
+    def test_a_photos_indexing_wait_is_dated_once_and_cleared_on_success(self):
+        """The wait can run for days across many cycles, so the first
+        sighting's time is the one worth keeping. Clearing is a no-op when
+        there was no wait, so an ordinary cycle does not rewrite the file."""
+        self.assertEqual(self.ws.get_photos_indexing(), {})
+
+        self.ws.record_photos_indexing(waiting=False)
+        self.assertEqual(self.ws.get_photos_indexing(), {})
+
+        self.ws.record_photos_indexing(waiting=True)
+        since = self.ws.get_photos_indexing()["since"]
+        self.ws.record_photos_indexing(waiting=True)
+        self.assertEqual(self.ws.get_photos_indexing()["since"], since)
+
+        self.ws.record_photos_indexing(waiting=False)
+        self.assertFalse(self.ws.get_photos_indexing()["waiting"])
+
     def test_a_restart_does_not_leave_a_library_syncing_forever(self):
         """The state file outlives the container."""
         self.ws.record_library_started("PrimarySync")

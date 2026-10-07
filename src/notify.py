@@ -472,6 +472,7 @@ def send(
     region="global",
     dashboard_url=None,
     reply_prompt=False,
+    event="two_factor_required",
 ):
     """
     Send 2FA notification to all configured notification services.
@@ -492,6 +493,10 @@ def send(
             password, a throttled sign-in) must not set it: sign-in never
             reaches 2FA there, so the reply flow cannot work and the prompt
             would hide the real error from Telegram.
+        event: Webhook event name for this alert. The message is the same
+            for every caller, but a receiver acting on it needs to know
+            whether a code is wanted, a keyring entry is missing or Apple
+            refused the sign-in -- see ``WEBHOOK_EVENTS``.
 
     Returns:
         Timestamp when notifications were sent, or None if all failed
@@ -535,11 +540,19 @@ def send(
         last_send=last_send,
         dry_run=dry_run,
     )
+    webhook_sent = notify_webhook(
+        config=config,
+        event=event,
+        message=message,
+        last_send=last_send,
+        dry_run=dry_run,
+        data=_event_data(username=username, dashboard_url=dashboard_url),
+    )
 
     # Return the timestamp if any notification was sent successfully
     sent_timestamps = [
         t
-        for t in [telegram_sent, discord_sent, pushover_sent, email_sent]
+        for t in [telegram_sent, discord_sent, pushover_sent, email_sent, webhook_sent]
         if t is not None
     ]
     return sent_timestamps[0] if sent_timestamps else None
@@ -606,9 +619,21 @@ def send_trust_expiring(
         last_send=last_send,
         dry_run=dry_run,
     )
+    webhook_sent = notify_webhook(
+        config=config,
+        event="trust_expiring",
+        message=message,
+        last_send=last_send,
+        dry_run=dry_run,
+        data=_event_data(
+            username=username,
+            dashboard_url=dashboard_url,
+            days_remaining=days_remaining,
+        ),
+    )
     sent_timestamps = [
         t
-        for t in [telegram_sent, discord_sent, pushover_sent, email_sent]
+        for t in [telegram_sent, discord_sent, pushover_sent, email_sent, webhook_sent]
         if t is not None
     ]
     return sent_timestamps[0] if sent_timestamps else None
@@ -880,9 +905,16 @@ def send_sync_summary(config, summary, dry_run=False):
     discord_sent = _send_discord_no_throttle(config, message, dry_run)
     pushover_sent = _send_pushover_no_throttle(config, message, dry_run)
     email_sent = _send_email_no_throttle(config, message, subject, dry_run)
+    webhook_sent = _send_webhook_no_throttle(
+        config,
+        "sync_summary",
+        message,
+        summary_event_data(summary),
+        dry_run,
+    )
 
     # Return True if any notification was sent successfully
-    any_sent = any([telegram_sent, discord_sent, pushover_sent, email_sent])
+    any_sent = any([telegram_sent, discord_sent, pushover_sent, email_sent, webhook_sent])
     if any_sent:
         LOGGER.info("Sync summary notification sent successfully")
     return any_sent
@@ -986,3 +1018,263 @@ def _send_email_no_throttle(config, message: str, subject: str, dry_run: bool) -
     except Exception as e:
         LOGGER.error(f"Failed to send sync summary email: {e!s}")
         return False
+
+
+# =============================================================================
+# Sync Lifecycle Webhook Functions
+# =============================================================================
+
+# Short enough that a dead endpoint cannot stall a sync cycle, long enough
+# for a cold serverless receiver.
+WEBHOOK_TIMEOUT_SECONDS = 10
+
+
+def ping_webhook(config, event: str) -> bool:
+    """GET the ping URL configured for ``event``, if there is one.
+
+    Built for Healthchecks.io-style monitors: the URL itself carries the
+    identity of the check, so the request needs no body, no auth header and
+    no retry -- the monitor's own grace period covers a dropped ping.
+
+    A ping URL is a credential: anyone holding it can report the check
+    healthy. Nothing here may log it, not even indirectly -- a ``requests``
+    exception stringifies to the full URL, so only the exception type is
+    logged.
+
+    Args:
+        config: Configuration dictionary
+        event: Event name -- ``start``, ``success`` or ``failure``
+
+    Returns:
+        True if the ping was delivered, False if not configured or it failed
+    """
+    url = config_parser.get_webhook_url(config=config, event=event)
+    if not url:
+        return False
+    try:
+        response = requests.get(url, timeout=WEBHOOK_TIMEOUT_SECONDS)
+    except Exception as e:
+        LOGGER.warning(f"Failed to ping the {event} webhook: {type(e).__name__}")
+        return False
+    if response.ok:
+        return True
+    LOGGER.warning(f"The {event} webhook returned HTTP {response.status_code}")
+    return False
+
+
+# Every event name a receiver can see, and the only names
+# ``app.webhooks.events`` recognises. All but ``trust_refreshed`` mirror a
+# notification the other transports already get; that one is webhook-only
+# because nothing else notifies on a successful refresh.
+WEBHOOK_EVENTS = (
+    "sync_started",
+    "sync_succeeded",
+    "sync_failed",
+    "sync_summary",
+    "two_factor_required",
+    "security_key_required",
+    "password_missing",
+    "sign_in_failed",
+    "trust_expiring",
+    "trust_refreshed",
+)
+
+# Sync-cycle boundary -> (ping config key, POSTed event name). The ping keys
+# are what a monitor is configured with; the event names are what a receiver
+# switches on.
+_CYCLE_EVENTS = {
+    "start": "sync_started",
+    "success": "sync_succeeded",
+    "failure": "sync_failed",
+}
+
+
+def _event_data(**fields) -> dict:
+    """Drop the unset fields so a payload never carries explicit nulls."""
+    return {name: value for name, value in fields.items() if value is not None}
+
+
+def summary_event_data(summary) -> dict:
+    """Structured form of a sync summary, for receivers that act on numbers.
+
+    The message text other transports get is formatted for humans; a webhook
+    receiver should not have to parse it back out.
+    """
+    data: dict = {
+        "has_errors": summary.has_errors(),
+        "duration_seconds": round(summary.total_duration_seconds(), 3),
+    }
+    if summary.drive_stats:
+        drive = summary.drive_stats
+        data["drive"] = {
+            "files_downloaded": drive.files_downloaded,
+            "files_skipped": drive.files_skipped,
+            "files_removed": drive.files_removed,
+            "bytes_downloaded": drive.bytes_downloaded,
+            "duration_seconds": round(drive.duration_seconds, 3),
+            "errors": len(drive.errors),
+        }
+    if summary.photo_stats:
+        photos = summary.photo_stats
+        data["photos"] = {
+            "photos_downloaded": photos.photos_downloaded,
+            "photos_skipped": photos.photos_skipped,
+            "photos_hardlinked": photos.photos_hardlinked,
+            "bytes_downloaded": photos.bytes_downloaded,
+            "bytes_saved_by_hardlinks": photos.bytes_saved_by_hardlinks,
+            "albums_synced": list(photos.albums_synced),
+            "duration_seconds": round(photos.duration_seconds, 3),
+            "errors": len(photos.errors),
+        }
+    return data
+
+
+def _webhook_wants(config, event: str) -> bool:
+    """Whether ``app.webhooks.events`` selects this event (absent = all)."""
+    selected = config_parser.get_webhook_events(config=config)
+    return True if selected is None else event in selected
+
+
+def warn_unknown_webhook_events(config) -> None:
+    """Report misspelled ``app.webhooks.events`` entries once, at startup.
+
+    A name that matches no event is inert, which looks exactly like a
+    receiver that stopped working. The filter itself is consulted for every
+    event of every cycle -- far too often to warn from there.
+    """
+    selected = config_parser.get_webhook_events(config=config)
+    if not selected:
+        return
+    unknown = sorted({event for event in selected if event not in WEBHOOK_EVENTS})
+    if unknown:
+        LOGGER.warning(
+            f"app.webhooks.events names {', '.join(unknown)}, which match no event and will "
+            f"never fire. Known events: {', '.join(WEBHOOK_EVENTS)}.",
+        )
+
+
+def post_event_to_webhook(config, event: str, message: str, data: dict | None = None) -> bool:
+    """POST one event to ``app.webhooks.url`` as JSON.
+
+    Payload shape is part of the config surface and must stay stable::
+
+        {"event": ..., "message": ..., "timestamp": ..., "data": {...}}
+
+    ``message`` is the same human text the other transports send, so a
+    receiver can forward it verbatim; ``data`` carries the structured form.
+
+    The URL and the configured headers are credentials, so no failure path
+    may log either -- a ``requests`` exception stringifies to the full URL,
+    hence only the exception type.
+
+    Args:
+        config: Configuration dictionary
+        event: One of ``WEBHOOK_EVENTS``
+        message: Human-readable text for this event
+        data: Event-specific structured fields
+
+    Returns:
+        True if the receiver accepted the event, False otherwise
+    """
+    url = config_parser.get_webhook_post_url(config=config)
+    if not url or not _webhook_wants(config, event):
+        return False
+    payload = {
+        "event": event,
+        "message": message,
+        "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+        "data": data or {},
+    }
+    try:
+        response = requests.post(
+            url,
+            json=payload,
+            headers=config_parser.get_webhook_headers(config=config) or None,
+            timeout=WEBHOOK_TIMEOUT_SECONDS,
+        )
+    except Exception as e:
+        LOGGER.warning(f"Failed to post the {event} webhook event: {type(e).__name__}")
+        return False
+    if response.ok:
+        return True
+    LOGGER.warning(f"The webhook returned HTTP {response.status_code} for {event}")
+    return False
+
+
+def notify_webhook(config, event, message, last_send=None, dry_run=False, data=None):
+    """Send a webhook event with throttling and error handling.
+
+    Shaped like ``notify_telegram`` / ``notify_discord`` on purpose: it is
+    called from the same dispatch, so it inherits the 24h throttle those
+    alerts already share rather than carrying one of its own.
+
+    Args:
+        config: Configuration dictionary
+        event: One of ``WEBHOOK_EVENTS``
+        message: Message to send
+        last_send: Timestamp of last send for throttling
+        dry_run: If True, don't actually send the event
+        data: Event-specific structured fields
+
+    Returns:
+        Timestamp when the event was sent, or last_send if throttled, or
+        None if not configured or failed
+    """
+    # Before the throttle check, unlike the other transports: an install
+    # with no webhook must not gain a log line it never asked for.
+    if not config_parser.get_webhook_post_url(config=config):
+        return None
+
+    if _is_throttled(last_send):
+        LOGGER.info("Throttling webhook to once a day")
+        return last_send
+
+    sent_on = _get_current_timestamp()
+    if dry_run or post_event_to_webhook(config, event, message, data):
+        return sent_on
+    return None
+
+
+def _send_webhook_no_throttle(config, event: str, message: str, data: dict, dry_run: bool) -> bool:
+    """Post a webhook event without throttling.
+
+    Mirrors the other ``_send_*_no_throttle`` senders, including the
+    "configured but dry-run" answer: without the URL check a dry run would
+    report the summary as sent on an install that has no webhook at all.
+
+    Args:
+        config: Configuration dictionary
+        event: One of ``WEBHOOK_EVENTS``
+        message: Message to send
+        data: Event-specific structured fields
+        dry_run: If True, don't actually send
+
+    Returns:
+        True if sent successfully, False otherwise
+    """
+    if not config_parser.get_webhook_post_url(config=config):
+        return False
+
+    if dry_run:
+        return True
+
+    return post_event_to_webhook(config, event, message, data)
+
+
+def send_cycle_event(config, boundary: str, message: str, data: dict | None = None) -> None:
+    """Report a sync-cycle boundary on both webhook transports.
+
+    The monitor gets a bare ping (it only needs to know the cycle happened);
+    the POST endpoint gets the named event with whatever the cycle knows, so
+    one receiver can follow the whole lifecycle. Unthrottled either way: a
+    monitor measures the gap between pings, and a failure that repeats every
+    retry is the signal, not noise.
+
+    Args:
+        config: Configuration dictionary
+        boundary: ``start``, ``success`` or ``failure``
+        message: Human-readable text for this boundary
+        data: Event-specific structured fields
+    """
+    ping_webhook(config, boundary)
+    post_event_to_webhook(config, _CYCLE_EVENTS[boundary], message, data)
