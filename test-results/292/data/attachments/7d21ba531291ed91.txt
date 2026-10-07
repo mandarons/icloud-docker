@@ -1,0 +1,11 @@
+[38;5;196m2026-10-07 18:51:41,457 :: ERROR :: root :: web.py :: 1527 :: Web UI: could not publish ceremony session[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 1519, in _publish_ceremony_session
+    for name in os.listdir(cookie_dir):
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1114, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1118, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1173, in _execute_mock_call
+    raise effect
+OSError: gone

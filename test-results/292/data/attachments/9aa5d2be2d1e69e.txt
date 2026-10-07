@@ -1,0 +1,11 @@
+DEBUG    icloudpy.base:base.py:280 Using session file /tmp/tmpt10551jj/aicloudcom.session
+DEBUG    icloudpy.base:base.py:498 Checking session token validity
+DEBUG    icloudpy.base.http:base.py:76 POST https://setup.icloud.com/setup/ws/1/validate null
+DEBUG    icloudpy.base:base.py:95 Saved session data to file
+DEBUG    icloudpy.base:base.py:99 Cookies saved to /tmp/tmpt10551jj/aicloudcom
+DEBUG    icloudpy.base.http:base.py:123 error (421). Retrying ...
+DEBUG    requests.sessions.http:base.py:76 POST https://setup.icloud.com/setup/ws/1/validate null
+DEBUG    icloudpy.base:base.py:95 Saved session data to file
+DEBUG    icloudpy.base:base.py:99 Cookies saved to /tmp/tmpt10551jj/aicloudcom
+ERROR    icloudpy.base:base.py:176 Authentication required for Account. (421)
+DEBUG    icloudpy.base:base.py:504 Invalid authentication token

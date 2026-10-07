@@ -1,0 +1,6 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:233 Posting new installation to: http://test.com
+DEBUG    root:usage.py:239 Successfully registered new installation: 10a7f833-e0c9-4f61-8ed8-1e7baa4b4a37
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data

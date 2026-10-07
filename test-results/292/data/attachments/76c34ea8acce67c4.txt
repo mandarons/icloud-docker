@@ -1,0 +1,7 @@
+DEBUG    icloudpy.base:base.py:280 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:287 Session file does not exist
+DEBUG    icloudpy.base:base.py:352 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:456 Authentication completed successfully
+ERROR    root:sync.py:1229 Error: 2FA is required. Please log in.
+INFO     root:config_logging.py:35 Retrying login every 600 seconds.
+INFO     root:sync.py:1582 Retrying login at Wed Oct  7 19:01:42 2026 ...

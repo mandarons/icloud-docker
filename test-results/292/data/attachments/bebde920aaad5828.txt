@@ -1,0 +1,2 @@
+[38;5;226m2026-10-07 18:51:41,328 :: WARNING :: root :: web.py :: 1460 :: Web UI: session failed to authenticate: No iCloudPy password for a@icloud.com could be found in the system keychain.  Use the `--store-in-keyring` command-line option for storing a password for this username.[0m
+[38;5;226m2026-10-07 18:51:41,328 :: WARNING :: root :: web.py :: 1120 :: Web UI security-key: assertion accepted but sign-in still wants a factor.[0m

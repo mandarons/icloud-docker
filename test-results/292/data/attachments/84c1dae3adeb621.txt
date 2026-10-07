@@ -1,0 +1,18 @@
+[38;5;226m2026-10-07 18:51:44,979 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;226m2026-10-07 18:51:44,979 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;226m2026-10-07 18:51:44,979 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-10-07 18:51:44,979 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;21m2026-10-07 18:51:44,980 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloud_test_config_9narv2us/session_data/aicloudcom.session[0m
+[38;21m2026-10-07 18:51:44,980 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloud_test_config_9narv2us/session_data/aicloudcom.session[0m
+[38;5;39m2026-10-07 18:51:44,980 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;5;39m2026-10-07 18:51:44,980 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;21m2026-10-07 18:51:44,980 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as a@icloud.com[0m
+[38;21m2026-10-07 18:51:44,980 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as a@icloud.com[0m
+[38;5;196m2026-10-07 18:51:44,981 :: ERROR :: icloudpy.base :: base.py :: 176 :: Unknown reason[0m
+[38;5;196m2026-10-07 18:51:44,981 :: ERROR :: icloudpy.base :: base.py :: 176 :: Unknown reason[0m
+[38;5;196m2026-10-07 18:51:44,981 :: ERROR :: root :: sync.py :: 1439 :: Sign-in failed and will be retried: ('Failed to initiate srp authentication.', ICloudPyAPIResponseException('Unknown reason'))[0m
+[38;5;196m2026-10-07 18:51:44,981 :: ERROR :: root :: sync.py :: 1439 :: Sign-in failed and will be retried: ('Failed to initiate srp authentication.', ICloudPyAPIResponseException('Unknown reason'))[0m
+[38;5;39m2026-10-07 18:51:44,981 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every -1 seconds.[0m
+[38;5;39m2026-10-07 18:51:44,981 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every -1 seconds.[0m
+[38;5;39m2026-10-07 18:51:44,981 :: INFO :: root :: sync.py :: 1456 :: retry_login_interval is < 0, exiting ...[0m
+[38;5;39m2026-10-07 18:51:44,981 :: INFO :: root :: sync.py :: 1456 :: retry_login_interval is < 0, exiting ...[0m
