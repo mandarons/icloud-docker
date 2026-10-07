@@ -1,0 +1,26 @@
+[38;5;196m2026-10-07 17:57:58,582 :: ERROR :: root :: sync.py :: 1113 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-10-07 17:57:58,582 :: ERROR :: root :: sync.py :: 1113 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-10-07 17:57:58,584 :: INFO :: root :: sync.py :: 1089 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-10-07 17:57:58,584 :: INFO :: root :: sync.py :: 1089 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-10-07 17:57:58,584 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,584 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,584 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:07:58 2026 ...[0m
+[38;5;39m2026-10-07 17:57:58,584 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:07:58 2026 ...[0m
+[38;5;226m2026-10-07 17:57:58,584 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-10-07 17:57:58,584 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-10-07 17:57:58,586 :: ERROR :: root :: sync.py :: 1297 :: Sign-in failed and will be retried: 401[0m
+[38;5;196m2026-10-07 17:57:58,586 :: ERROR :: root :: sync.py :: 1297 :: Sign-in failed and will be retried: 401[0m
+[38;5;39m2026-10-07 17:57:58,587 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,587 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,587 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:27:58 2026 ...[0m
+[38;5;39m2026-10-07 17:57:58,587 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:27:58 2026 ...[0m
+[38;5;226m2026-10-07 17:57:58,587 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-10-07 17:57:58,587 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-10-07 17:57:58,589 :: ERROR :: root :: sync.py :: 1389 :: Password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;196m2026-10-07 17:57:58,589 :: ERROR :: root :: sync.py :: 1389 :: Password is not stored in keyring. Please save the password in keyring.[0m
+[38;5;39m2026-10-07 17:57:58,590 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,590 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,590 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:07:58 2026 ...[0m
+[38;5;39m2026-10-07 17:57:58,590 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:07:58 2026 ...[0m
+[38;5;226m2026-10-07 17:57:58,590 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-10-07 17:57:58,590 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m

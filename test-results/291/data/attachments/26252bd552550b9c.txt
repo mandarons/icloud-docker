@@ -1,0 +1,20 @@
+[38;5;226m2026-10-07 17:57:58,018 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;226m2026-10-07 17:57:58,018 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;196m2026-10-07 17:57:58,021 :: ERROR :: root :: sync.py :: 1113 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-10-07 17:57:58,021 :: ERROR :: root :: sync.py :: 1113 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-10-07 17:57:58,024 :: INFO :: root :: sync.py :: 1089 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-10-07 17:57:58,024 :: INFO :: root :: sync.py :: 1089 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-10-07 17:57:58,024 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,024 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,025 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:07:58 2026 ...[0m
+[38;5;39m2026-10-07 17:57:58,025 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:07:58 2026 ...[0m
+[38;5;226m2026-10-07 17:57:58,025 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-10-07 17:57:58,025 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-10-07 17:57:58,026 :: ERROR :: root :: sync.py :: 1113 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-10-07 17:57:58,026 :: ERROR :: root :: sync.py :: 1113 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-10-07 17:57:58,027 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,027 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 17:57:58,028 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:07:58 2026 ...[0m
+[38;5;39m2026-10-07 17:57:58,028 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 18:07:58 2026 ...[0m
+[38;5;226m2026-10-07 17:57:58,028 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-10-07 17:57:58,028 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
