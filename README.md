@@ -722,7 +722,7 @@ app:
     retention_days: 30   # optional; omit to keep everything forever
 ```
 
-Removed files land in `<root>/Recently Deleted/drive/` or `<root>/Recently Deleted/photos/`, in a folder per day, at the same path they had under the destination (`Recently Deleted/photos/2026-10-04/2024/05/IMG_1234.HEIC`). To restore one, move it back. Day folders older than `retention_days` are deleted at the start of each cleanup.
+Removed files land in `<root>/Recently Deleted/drive/` or `<root>/Recently Deleted/photos/`, in a folder per day, at the same path they had under the destination (`Recently Deleted/photos/2026-10-04/2024/05/IMG_1234.HEIC`). With `library_destinations`, each library's folder comes first (`…/2026-10-04/personal/2024/05/IMG_1234.HEIC`). If the same file is removed twice in one day, the second copy is numbered before its extension (`IMG_1234 (2).HEIC`). To restore one, move it back and drop any number. Day folders older than `retention_days` are deleted at the start of each cleanup.
 
 The bin never widens what cleanup removes: with `remove_obsolete: false` nothing is cleaned up and nothing reaches the bin, and `obsolete_delete_limit_percent` still applies.
 

@@ -54,9 +54,45 @@ class TestRecycleBin(_BinTestCase):
         _write(path, "second")
         second = bin_.discard(path, self.photos)
 
-        self.assertEqual(second, first + " (2)")
+        self.assertEqual(second, self._in_bin("photos", "a (2).jpg"))
         self.assertEqual(Path(first).read_text(), "first")
         self.assertEqual(Path(second).read_text(), "second")
+
+    def test_a_numbered_copy_keeps_its_extension(self):
+        """Restoring is renaming back to the original name, so the number
+        must sit before the extension: ``IMG_1234 (2).HEIC`` still opens as
+        a HEIC, and dropping " (2)" gives the name iCloud knows."""
+        bin_ = self._bin()
+        path = os.path.join(self.photos, "2024", "05", "IMG_1234.HEIC")
+        for _ in range(3):
+            _write(path)
+            moved = bin_.discard(path, self.photos)
+        self.assertEqual(moved, self._in_bin("photos", "2024", "05", "IMG_1234 (3).HEIC"))
+
+    def test_a_numbered_folder_is_suffixed_whole(self):
+        bin_ = self._bin()
+        folder = os.path.join(self.photos, "v1.2")
+        for _ in range(2):
+            _write(os.path.join(folder, "f"))
+            moved = bin_.discard(folder, self.photos)
+        self.assertEqual(moved, self._in_bin("photos", "v1.2 (2)"))
+
+    def test_within_files_under_a_subfolder_of_each_day(self):
+        bin_ = self._bin()
+        path = os.path.join(self.photos, "personal", "a.jpg")
+        _write(path)
+
+        moved = bin_.within("personal").discard(path, os.path.join(self.photos, "personal"))
+
+        self.assertEqual(moved, self._in_bin("photos", "personal", "a.jpg"))
+        self.assertEqual(bin_.subfolder, "", "within() must not change the shared bin")
+
+    def test_nothing_is_ever_filed_outside_the_bin(self):
+        path = os.path.join(self.photos, "a.jpg")
+        _write(path)
+        with self.assertRaises(ValueError):
+            self._bin().within(os.path.join(os.pardir, os.pardir)).discard(path, self.photos)
+        self.assertTrue(os.path.exists(path), "a refused discard must leave the file alone")
 
     def test_contains_covers_every_service_bin_but_not_the_library(self):
         bin_ = self._bin()
@@ -297,3 +333,54 @@ class TestDriveCleanupUsesTheBin(_BinTestCase):
 
         self.assertFalse(os.path.exists(os.path.dirname(old)))
         self.assertFalse(os.path.exists(os.path.join(self.root, "Recently Deleted")))
+
+
+class TestEachPhotoLibraryKeepsItsOwnPlaceInTheBin(_BinTestCase):
+    """Libraries with their own destinations share one Photos bin. The same
+    relative path in two of them must land in two places, each saying which
+    library it came from, or a restore can put a photo in the wrong one."""
+
+    def _clean(self, library_destinations):
+        from unittest.mock import MagicMock, patch
+
+        from src import sync_photos
+
+        config = {
+            "app": {"root": self.root, "recycle_bin": {"enabled": True}},
+            "photos": {
+                "destination": "photos",
+                "remove_obsolete": True,
+                "obsolete_delete_limit_percent": 0,
+                "library_destinations": library_destinations,
+                "filters": {"libraries": ["PrimarySync", "SharedLibrary"]},
+            },
+        }
+        photos = MagicMock()
+        photos.libraries = {"PrimarySync": MagicMock(), "SharedLibrary": MagicMock()}
+        with (
+            patch.object(sync_photos.config_parser, "prepare_photos_destination", return_value=self.photos),
+            patch.object(sync_photos, "_sync_albums_by_configuration", return_value=(0, 0)),
+            patch.object(recycle_bin.datetime, "date", wraps=datetime.date) as date,
+        ):
+            date.today.return_value = TODAY
+            sync_photos.sync_photos(config=config, photos=photos)
+
+    def test_the_same_path_in_two_libraries_stays_apart(self):
+        for library in ("personal", "shared"):
+            _write(os.path.join(self.photos, library, "2024", "05", "IMG_1234.HEIC"), library)
+
+        self._clean({"PrimarySync": "personal", "SharedLibrary": "shared"})
+
+        for library in ("personal", "shared"):
+            moved = self._in_bin("photos", library, "2024", "05", "IMG_1234.HEIC")
+            self.assertEqual(Path(moved).read_text(), library)
+
+    def test_a_library_mapped_outside_the_destination_is_filed_by_name(self):
+        elsewhere = os.path.join(self.root, "elsewhere")
+        _write(os.path.join(elsewhere, "a.jpg"))
+        _write(os.path.join(self.photos, "shared", "b.jpg"))
+
+        self._clean({"PrimarySync": elsewhere, "SharedLibrary": "shared"})
+
+        self.assertTrue(os.path.exists(self._in_bin("photos", "PrimarySync", "a.jpg")))
+        self.assertTrue(os.path.exists(self._in_bin("photos", "shared", "b.jpg")))
