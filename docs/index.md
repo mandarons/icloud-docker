@@ -74,7 +74,7 @@ iCloud Docker is a containerized sync client that downloads files from Apple iCl
 ## Data Flow
 
 1. **Config load:** `config_parser.py` reads YAML + env overrides on every sync iteration
-2. **Auth:** `sync.py` authenticates via iCloudPy (keyring or env password)
+2. **Auth:** `sync.py` authenticates via iCloudPy (keyring or env password, or the saved session alone when no password is stored)
 3. **Drive sync:** `sync_drive.py` walks iCloud Drive tree, downloads files in parallel
 4. **Photos sync:** `sync_photos.py` enumerates albums, downloads with hardlink dedup
 5. **Notifications:** `notify.py` sends 2FA alerts and sync summaries

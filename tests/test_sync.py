@@ -3,6 +3,7 @@
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import copy
+import datetime
 import os
 import shutil
 import unittest
@@ -11,11 +12,12 @@ from io import StringIO
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+import requests
 from icloudpy import exceptions
 
 import tests
 from src import ENV_ICLOUD_PASSWORD_KEY, config_parser, read_config, sync
-from src.sync_stats import DriveStats
+from src.sync_stats import DriveStats, PhotoStats
 from tests import data
 
 
@@ -275,8 +277,18 @@ class TestSync(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
+    # No password means the loop now builds a session-only client, so this
+    # has to be stubbed or the test would depend on whatever session file
+    # another test left in the shared cookie directory.
+    @patch(
+        "src.sync.SessionOnlyICloudPyService",
+        side_effect=exceptions.ICloudPyNoStoredPasswordAvailableException(
+            "No Apple ID password is stored and there is no saved session to resume.",
+        ),
+    )
     def test_sync_password_missing_in_keyring(
         self,
+        mock_session_only,
         mock_usage_post,
         mock_read_config,
         mock_service,
@@ -302,7 +314,7 @@ class TestSync(unittest.TestCase):
                     [
                         e
                         for e in captured[1]
-                        if "Password is not stored in keyring. Please save the password in keyring." in e
+                        if "No Apple ID password is stored" in e
                     ],
                 )
                 > 0,
@@ -910,8 +922,15 @@ class TestSync(unittest.TestCase):
     @patch("icloudpy.ICloudPyService")
     @patch("src.sync.read_config")
     @patch("requests.post", side_effect=tests.mocked_usage_post)
+    @patch(
+        "src.sync.SessionOnlyICloudPyService",
+        side_effect=exceptions.ICloudPyNoStoredPasswordAvailableException(
+            "No Apple ID password is stored and there is no saved session to resume.",
+        ),
+    )
     def test_sync_negative_retry_login_interval_without_keyring_password(
         self,
+        mock_session_only,
         mock_usage_post,
         mock_read_config,
         mock_service,
@@ -933,7 +952,7 @@ class TestSync(unittest.TestCase):
             ]
             sync.sync()
         self.assertTrue(len(captured.records) > 1)
-        self.assertTrue(len([e for e in captured[1] if "Password is not stored in keyring." in e]) > 0)
+        self.assertTrue(len([e for e in captured[1] if "No Apple ID password is stored" in e]) > 0)
         self.assertTrue(len([e for e in captured[1] if "retry_login_interval is < 0, exiting ..." in e]) > 0)
 
     @patch("src.sync.sync_drive")
@@ -1601,7 +1620,10 @@ class TestACompletedReauthEndsTheRetryWait(unittest.TestCase):
             with patch.object(sync, "notify"):
                 self.assertTrue(
                     sync._handle_password_error(  # noqa: SLF001
-                        config, "a@icloud.com", sync.SyncState(),
+                        config,
+                        "a@icloud.com",
+                        sync.SyncState(),
+                        exceptions.ICloudPyNoStoredPasswordAvailableException("no saved session"),
                     ),
                 )
 
@@ -2277,3 +2299,843 @@ class TestSigninFailuresThroughTheRealIcloudpyPath(unittest.TestCase):
         retrying, so the user has to be told -- notify.send is throttled."""
         _, notify = self._run_loop(401, {"errorMessage": "Invalid credentials"})
         notify.send.assert_called()
+
+
+class TestSyncingWithoutAStoredPassword(unittest.TestCase):
+    """An operator may prefer not to keep an Apple ID password on disk --
+    on a headless container `keyring` degrades to a plaintext file -- and
+    run unattended off the saved session alone until Apple's trust window
+    closes. The loop used to refuse before it ever looked at the session."""
+
+    def _session_only_client(self, session_data):
+        """A client with its ``__init__`` skipped.
+
+        ``ICloudPyService.__init__`` authenticates as its last act, which is
+        the very thing under test here, so the instance is built around the
+        state ``authenticate`` reads instead.
+        """
+        api = sync.SessionOnlyICloudPyService.__new__(sync.SessionOnlyICloudPyService)
+        api.session_data = session_data
+        api.session = Mock()
+        return api
+
+    def test_a_valid_session_authenticates_with_no_password_at_all(self):
+        api = self._session_only_client({"session_token": "token"})
+        with patch.object(
+            sync.SessionOnlyICloudPyService,
+            "_validate_token",
+            return_value={"webservices": {"drivews": {}}},
+        ):
+            api.authenticate()
+        self.assertEqual(api._webservices, {"drivews": {}})  # noqa: SLF001
+        # Nothing was posted to Apple's sign-in endpoint.
+        api.session.post.assert_not_called()
+
+    def test_no_session_is_reported_rather_than_signed_in_for(self):
+        api = self._session_only_client({})
+        with self.assertRaises(exceptions.ICloudPyNoStoredPasswordAvailableException) as raised:
+            api.authenticate()
+        self.assertIn("no saved session", str(raised.exception))
+        api.session.post.assert_not_called()
+
+    def test_an_invalid_session_is_reported_rather_than_signed_in_for(self):
+        """The upstream fallback would post the placeholder password to
+        Apple's sign-in endpoint on every retry, which is the fastest way
+        to get an Apple ID throttled."""
+        for code in sorted(sync._SESSION_REJECTED_CODES):  # noqa: SLF001
+            with self.subTest(code=code):
+                api = self._session_only_client({"session_token": "stale"})
+                with (
+                    patch.object(
+                        sync.SessionOnlyICloudPyService,
+                        "_validate_token",
+                        side_effect=exceptions.ICloudPyAPIResponseException(
+                            "Authentication required for Account.", code,
+                        ),
+                    ),
+                    self.assertRaises(exceptions.ICloudPyNoStoredPasswordAvailableException) as raised,
+                ):
+                    api.authenticate()
+                self.assertIn("no longer valid", str(raised.exception))
+                api.session.post.assert_not_called()
+
+    def test_an_outage_is_not_reported_as_an_expired_session(self):
+        """A 5xx leaves the session perfectly good. Reporting it as expired
+        would send the user off to re-authenticate for nothing, so it stays
+        an API error and reaches the loop's transport handler instead."""
+        api = self._session_only_client({"session_token": "token"})
+        with (
+            patch.object(
+                sync.SessionOnlyICloudPyService,
+                "_validate_token",
+                side_effect=exceptions.ICloudPyAPIResponseException("Service Unavailable", 503),
+            ),
+            self.assertRaises(exceptions.ICloudPyAPIResponseException) as raised,
+        ):
+            api.authenticate()
+        self.assertEqual(raised.exception.code, 503)
+        api.session.post.assert_not_called()
+
+    def test_a_validate_body_without_webservices_does_not_kill_the_process(self):
+        """icloudpy returns the response untouched when a failed /validate
+        carries no recognised error field, so ``data`` can be an error body.
+        Upstream indexes it and raises KeyError, which escapes the loop and
+        -- under `restart: unless-stopped` -- becomes a restart loop."""
+        api = self._session_only_client({"session_token": "token"})
+        with (
+            patch.object(
+                sync.SessionOnlyICloudPyService,
+                "_validate_token",
+                return_value={"errorMessage": "something else entirely"},
+            ),
+            self.assertRaises(exceptions.ICloudPyNoStoredPasswordAvailableException),
+        ):
+            api.authenticate()
+
+    def test_a_forced_refresh_is_refused(self):
+        """Defence in depth. Nothing in this app asks for a forced refresh
+        -- icloudpy's only caller is its Find My 450 handler, which is
+        never reached here -- but honouring one would mean the credential
+        sign-in this class exists to prevent, so it is refused wherever it
+        came from."""
+        api = self._session_only_client({"session_token": "token"})
+        with self.assertRaises(exceptions.ICloudPyNoStoredPasswordAvailableException):
+            api.authenticate(force_refresh=True)
+        api.session.post.assert_not_called()
+
+    def test_the_client_is_built_without_the_real_password_when_none_is_stored(self):
+        with patch.object(sync, "SessionOnlyICloudPyService") as mock_class:
+            sync.get_api_instance(username=data.AUTHENTICATED_USER, password=None)
+        mock_class.assert_called_once()
+        # icloudpy reads the keyring when handed ``None`` and redacts every
+        # log line when handed ``""`` -- neither is acceptable here.
+        placeholder = mock_class.call_args.kwargs["password"]
+        self.assertTrue(placeholder)
+        self.assertNotEqual(placeholder, data.VALID_PASSWORD)
+
+    def test_the_china_region_is_session_only_too(self):
+        with patch.object(sync, "SessionOnlyICloudPyService") as mock_class:
+            sync.get_api_instance(
+                username=data.AUTHENTICATED_USER,
+                password=None,
+                server_region="china",
+            )
+        self.assertIn(".com.cn", mock_class.call_args.kwargs["home_endpoint"])
+
+    def test_a_stored_password_still_takes_the_ordinary_path(self):
+        with patch.object(sync, "SessionOnlyICloudPyService") as mock_class:
+            with patch("src.sync.ICloudPyService") as mock_ordinary:
+                sync.get_api_instance(
+                    username=data.AUTHENTICATED_USER,
+                    password=data.VALID_PASSWORD,
+                )
+        mock_class.assert_not_called()
+        self.assertEqual(mock_ordinary.call_args.kwargs["password"], data.VALID_PASSWORD)
+
+    def test_a_missing_password_falls_through_to_the_session(self):
+        with (
+            patch.object(
+                sync,
+                "_retrieve_password",
+                side_effect=exceptions.ICloudPyNoStoredPasswordAvailableException(),
+            ),
+            patch.object(sync, "get_api_instance") as mock_get_api,
+            patch("src.config_parser.get_region", return_value="global"),
+        ):
+            sync._authenticate_and_get_api({}, data.AUTHENTICATED_USER)  # noqa: SLF001
+        self.assertIsNone(mock_get_api.call_args.kwargs["password"])
+
+    def test_a_blank_password_counts_as_no_password(self):
+        """Compose turns an unset ${VAR} into "", which must select
+        session-only mode -- not send an empty password to Apple's sign-in --
+        and must not overwrite a stored password with it."""
+        for keyring_value in (None, ""):
+            with self.subTest(keyring=keyring_value):
+                missing = exceptions.ICloudPyNoStoredPasswordAvailableException()
+                with (
+                    patch.dict(os.environ, {ENV_ICLOUD_PASSWORD_KEY: ""}),
+                    patch.object(sync.utils, "store_password_in_keyring") as stored,
+                    patch.object(
+                        sync.utils,
+                        "get_password_from_keyring",
+                        side_effect=missing if keyring_value is None else None,
+                        return_value=keyring_value,
+                    ),
+                    self.assertRaises(exceptions.ICloudPyNoStoredPasswordAvailableException),
+                ):
+                    sync._retrieve_password(data.AUTHENTICATED_USER)  # noqa: SLF001
+                stored.assert_not_called()
+
+    def test_a_blank_variable_does_not_hide_a_stored_password(self):
+        with (
+            patch.dict(os.environ, {ENV_ICLOUD_PASSWORD_KEY: ""}),
+            patch.object(sync.utils, "store_password_in_keyring") as stored,
+            patch.object(sync.utils, "get_password_from_keyring", return_value="stored"),
+        ):
+            self.assertEqual(sync._retrieve_password(data.AUTHENTICATED_USER), "stored")  # noqa: SLF001
+        stored.assert_not_called()
+
+    def test_the_error_says_what_to_do_and_tells_the_dashboard(self):
+        """The old wording ("save the password in keyring") is the wrong
+        instruction for a deliberately password-free setup: it is the
+        session that has to be replaced."""
+        error = exceptions.ICloudPyNoStoredPasswordAvailableException(
+            "No Apple ID password is stored and the saved session is no longer valid.",
+        )
+        config = {"app": {"credentials": {"retry_login_interval": 600}}}
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "notify"),
+            patch.object(sync, "_publish_auth_blocked") as published,
+            self.assertLogs(sync.LOGGER, level="ERROR") as captured,
+        ):
+            self.assertTrue(
+                sync._handle_password_error(  # noqa: SLF001
+                    config, data.AUTHENTICATED_USER, sync.SyncState(), error,
+                ),
+            )
+        self.assertTrue(any("no longer valid" in line for line in captured.output))
+        self.assertEqual(published.call_args.kwargs["reason"], "session_unusable")
+
+
+    def _real_transport_session_only(self, validate_status, validate_body, content_type="application/json"):
+        """Build a session-only client for real, with a session file on disk,
+        a keyring that is fatal to consult, and a fake Apple that answers
+        /validate as asked and records any request to the sign-in endpoint.
+
+        Returns ``(api_or_None, raised_or_None, touched_signin)``.
+        """
+        import json
+        import tempfile
+
+        import requests
+
+        touched_signin = []
+
+        def fake_apple(_session, _method, url, **_kwargs):
+            response = requests.Response()
+            response.url = url
+            if "/validate" in url:
+                response.status_code = validate_status
+                response.reason = "error"
+                response.headers["Content-Type"] = content_type
+                response._content = json.dumps(validate_body).encode()  # noqa: SLF001
+                return response
+            touched_signin.append(url)
+            response.status_code = 500
+            response.reason = "should never be reached"
+            response.headers["Content-Type"] = "application/json"
+            response._content = b"{}"  # noqa: SLF001
+            return response
+
+        api = raised = None
+        with tempfile.TemporaryDirectory() as cookie_directory:
+            with open(os.path.join(cookie_directory, "aicloudcom.session"), "w", encoding="utf-8") as handle:
+                json.dump({"session_token": "saved-token"}, handle)
+            with (
+                # tests/data's ICloudPyServiceMock.__init__ assigns
+                # ``base.ICloudPySession = ICloudPySessionMock`` and never puts
+                # it back, so by the time the full suite reaches this test the
+                # session class is process-wide swapped and answers from canned
+                # fixtures instead of ``fake_apple``. ``__bases__[0]`` is the
+                # genuine class, captured when the mock subclassed it.
+                patch("icloudpy.base.ICloudPySession", data.ICloudPySessionMock.__bases__[0]),
+                patch("requests.Session.request", fake_apple),
+                # icloudpy consults the keyring for any falsy password. The
+                # whole point of session-only mode is that it must not, so
+                # make the attempt fatal rather than merely unnecessary.
+                patch(
+                    "icloudpy.base.get_password_from_keyring",
+                    side_effect=AssertionError("the keyring must not be consulted"),
+                ),
+            ):
+                try:
+                    api = sync.get_api_instance(
+                        username="a@icloud.com",
+                        password=None,
+                        cookie_directory=cookie_directory,
+                    )
+                except Exception as error:  # noqa: BLE001 - the test inspects it
+                    raised = error
+        return api, raised, touched_signin
+
+    def test_end_to_end_a_saved_session_is_enough(self):
+        api, raised, touched_signin = self._real_transport_session_only(
+            200,
+            {"dsInfo": {"hsaVersion": 2}, "webservices": {"drivews": {"status": "active"}}},
+        )
+        self.assertIsNone(raised)
+        self.assertEqual(api.data["webservices"], {"drivews": {"status": "active"}})
+        self.assertEqual(touched_signin, [])
+
+    def test_end_to_end_a_real_421_reads_as_a_rejected_session(self):
+        """Apple's documented re-auth status. icloudpy keeps it on the
+        exception, so it classifies correctly and the user is told to sign
+        in again."""
+        _, raised, touched_signin = self._real_transport_session_only(
+            421,
+            {"errorMessage": "Authentication required for Account."},
+        )
+        self.assertIsInstance(raised, exceptions.ICloudPyNoStoredPasswordAvailableException)
+        self.assertIn("no longer valid", str(raised))
+        self.assertEqual(touched_signin, [])
+
+    def test_end_to_end_a_json_bodied_401_is_not_classifiable(self):
+        """Documents the gap deliberately. For a JSON body outside its own
+        re-auth statuses icloudpy discards the HTTP status and reports the
+        body's errorCode, so a 401 arrives indistinguishable from an
+        outage. It must still never reach Apple's sign-in endpoint, and
+        ``_handle_auth_transport_error`` is what stops it going unreported
+        (see the loop tests below)."""
+        _, raised, touched_signin = self._real_transport_session_only(
+            401,
+            {"errorMessage": "Unauthorized"},
+        )
+        self.assertIsInstance(raised, exceptions.ICloudPyAPIResponseException)
+        self.assertNotIsInstance(raised, exceptions.ICloudPyNoStoredPasswordAvailableException)
+        self.assertIsNone(raised.code)
+        self.assertEqual(touched_signin, [])
+
+    def test_end_to_end_a_non_json_401_does_classify(self):
+        """The same 401 with an HTML body keeps its status, so it reads as a
+        rejected session. Worth pinning: it is the reason the gap above is a
+        gap rather than the rule."""
+        _, raised, _ = self._real_transport_session_only(
+            401,
+            {"errorMessage": "Unauthorized"},
+            content_type="text/html",
+        )
+        self.assertIsInstance(raised, exceptions.ICloudPyNoStoredPasswordAvailableException)
+
+    def _transport_error_in_session_only_mode(self, error):
+        """Run the transport handler as a session-only cycle would.
+
+        Returns ``(notifier, published)``.
+        """
+        config = {"app": {"credentials": {"retry_login_interval": 600}}}
+        sync_state = sync.SyncState()
+        sync_state.session_only = True
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "notify") as notifier,
+            patch.object(sync, "_publish_auth_blocked") as published,
+        ):
+            self.assertTrue(
+                sync._handle_auth_transport_error(  # noqa: SLF001
+                    config,
+                    data.AUTHENTICATED_USER,
+                    sync_state,
+                    error,
+                ),
+            )
+        return notifier, published
+
+    def test_an_unclassifiable_failure_is_never_silent_in_session_only_mode(self):
+        """A JSON-bodied 401 arrives with no code, indistinguishable from a
+        rejected session, and only a human can revive such a container. So
+        this one does earn the "re-auth required" alert -- throttled to one
+        message a day -- rather than retrying in silence forever."""
+        notifier, published = self._transport_error_in_session_only_mode(
+            exceptions.ICloudPyAPIResponseException("Unauthorized"),
+        )
+        notifier.send.assert_called_once()
+        self.assertEqual(published.call_args.kwargs["reason"], "sign_in_failed")
+        # The webhook agrees with the alert: a monitor keyed on the reason
+        # must not read this as a fault that clears by itself.
+        self.assertEqual(
+            notifier.send_cycle_event.call_args.kwargs["data"]["reason"],
+            "sign_in_failed",
+        )
+
+    def test_an_outage_never_asks_a_session_only_container_to_re_authenticate(self):
+        """The whole point of classifying: notify.send's text is "iCloud
+        re-auth required", and an outage is not that. A 5xx that kept its
+        status and a dropped connection are both logged, retried and shown
+        on the dashboard -- without waking anyone to re-authenticate over
+        Apple having a bad hour."""
+        import requests as _requests
+
+        for error in (
+            exceptions.ICloudPyAPIResponseException("Service Unavailable", 503),
+            exceptions.ICloudPyAPIResponseException("Internal Server Error", 500),
+            _requests.exceptions.ConnectionError("name resolution failed"),
+            _requests.exceptions.Timeout("timed out"),
+        ):
+            with self.subTest(error=type(error).__name__):
+                notifier, published = self._transport_error_in_session_only_mode(error)
+                notifier.send.assert_not_called()
+                self.assertEqual(
+                    notifier.send_cycle_event.call_args.kwargs["data"]["reason"],
+                    "sign_in_error",
+                )
+                # Still reported as a stoppage: the loop is not syncing, and
+                # the dashboard's wording for this reason allows for an
+                # outage and asks for nothing.
+                self.assertEqual(published.call_args.kwargs["reason"], "sign_in_failed")
+
+    def test_a_rejected_password_still_alerts_in_either_mode(self):
+        """ICloudPyFailedLoginException never heals by retrying, so it earns
+        the alert whether or not a password is stored."""
+        notifier, _ = self._transport_error_in_session_only_mode(
+            exceptions.ICloudPyFailedLoginException("rejected"),
+        )
+        notifier.send.assert_called_once()
+
+    def test_the_password_path_keeps_its_quieter_transport_handling(self):
+        """With a password stored, an API error on sign-in is still just
+        logged and retried -- notifying on every Apple hiccup would be new
+        noise for everyone who is not affected by this change."""
+        config = {"app": {"credentials": {"retry_login_interval": 600}}}
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "notify") as notifier,
+            patch.object(sync, "_publish_auth_blocked") as published,
+        ):
+            self.assertTrue(
+                sync._handle_auth_transport_error(  # noqa: SLF001
+                    config,
+                    data.AUTHENTICATED_USER,
+                    sync.SyncState(),
+                    exceptions.ICloudPyAPIResponseException("Service Unavailable", 503),
+                ),
+            )
+        notifier.send.assert_not_called()
+        published.assert_not_called()
+
+    def test_the_mode_is_recorded_for_the_error_handlers(self):
+        for stored, expected in ((None, True), ("pw", False)):
+            with self.subTest(stored=stored):
+                sync_state = sync.SyncState()
+                retrieve = (
+                    {"side_effect": exceptions.ICloudPyNoStoredPasswordAvailableException()}
+                    if stored is None
+                    else {"return_value": stored}
+                )
+                with (
+                    patch.object(sync, "_retrieve_password", **retrieve),
+                    patch.object(sync, "get_api_instance"),
+                    patch("src.config_parser.get_region", return_value="global"),
+                ):
+                    sync._authenticate_and_get_api({}, data.AUTHENTICATED_USER, sync_state)  # noqa: SLF001
+                self.assertEqual(sync_state.session_only, expected)
+class TestSyncLifecycleWebhooks(unittest.TestCase):
+    """Where the pings sit matters more than how they are sent. A success
+    ping on a cycle that logged failed downloads would keep a monitor green
+    while the library quietly fell behind, and a ping during a dry run would
+    report a sync that never happened."""
+
+    CONFIG = {
+        "app": {
+            "credentials": {"username": "a@icloud.com", "retry_login_interval": 600},
+            "webhooks": {
+                "start": "https://hc-ping.com/uuid/start",
+                "success": "https://hc-ping.com/uuid",
+                "failure": "https://hc-ping.com/uuid/fail",
+            },
+        },
+        "drive": {"destination": "drive", "sync_interval": 300},
+    }
+
+    def _events_of_one_cycle(self, drive_stats=None, photos_stats=None, dry_run=False):
+        """Run a single sync cycle and return the webhook events it fired."""
+        api = Mock()
+        api.requires_2sa = False
+        with (
+            patch.object(sync, "_load_configuration", return_value=copy.deepcopy(self.CONFIG)),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(sync, "_authenticate_and_get_api", return_value=api),
+            patch.object(sync, "_maybe_refresh_trust"),
+            patch.object(sync, "_maybe_warn_trust_expiring"),
+            patch.object(sync, "_perform_dry_run"),
+            patch.object(sync, "_perform_drive_sync", return_value=drive_stats),
+            patch.object(sync, "_perform_photos_sync", return_value=photos_stats),
+            patch.object(sync, "_send_usage_statistics"),
+            patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
+            patch("src.notify.send_sync_summary"),
+            patch("src.notify.send_cycle_event") as cycle,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            if dry_run:
+                sync.sync(dry_run=True)
+            else:
+                with self.assertRaises(SystemExit):
+                    sync.sync()
+        self.cycle_calls = cycle.call_args_list
+        return [call.kwargs["boundary"] for call in self.cycle_calls]
+
+    def test_a_clean_cycle_opens_and_closes(self):
+        self.assertEqual(self._events_of_one_cycle(drive_stats=DriveStats()), ["start", "success"])
+
+    def test_failed_downloads_close_the_cycle_as_a_failure(self):
+        """On PhotoStats deliberately: DriveStats.errors is never populated
+        in production, so a Drive failure cannot reach this boundary today."""
+        stats = PhotoStats()
+        stats.errors.append("1 photo download(s) failed")
+        self.assertEqual(
+            self._events_of_one_cycle(drive_stats=DriveStats(), photos_stats=stats),
+            ["start", "failure"],
+        )
+        self.assertEqual(self.cycle_calls[-1].kwargs["data"]["reason"], "download_errors")
+
+    def test_a_clean_cycle_carries_no_reason(self):
+        self._events_of_one_cycle(drive_stats=DriveStats())
+        self.assertNotIn("reason", self.cycle_calls[-1].kwargs["data"])
+
+    def test_a_dry_run_pings_nothing(self):
+        self.assertEqual(self._events_of_one_cycle(dry_run=True), [])
+
+    def _handler_events(self, call_handler):
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "_interruptible_sleep"),
+            patch("src.notify.send"),
+            patch("src.notify.send_cycle_event") as cycle,
+        ):
+            self.assertTrue(call_handler())
+        self.cycle_calls = cycle.call_args_list
+        return [call.kwargs["boundary"] for call in self.cycle_calls]
+
+    def test_a_pending_second_factor_is_a_failure(self):
+        config = copy.deepcopy(self.CONFIG)
+        api = Mock()
+        api.security_key_challenge = None
+        self.assertEqual(
+            self._handler_events(
+                lambda: sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api),  # noqa: SLF001
+            ),
+            ["failure"],
+        )
+
+    def test_a_missing_keyring_password_is_a_failure(self):
+        config = copy.deepcopy(self.CONFIG)
+        self.assertEqual(
+            self._handler_events(
+                lambda: sync._handle_password_error(  # noqa: SLF001
+                    config,
+                    "a@icloud.com",
+                    sync.SyncState(),
+                    exceptions.ICloudPyNoStoredPasswordAvailableException("no session"),
+                ),
+            ),
+            ["failure"],
+        )
+
+    def test_a_sign_in_failure_is_a_failure(self):
+        config = copy.deepcopy(self.CONFIG)
+        error = exceptions.ICloudPyFailedLoginException("401")
+        self.assertEqual(
+            self._handler_events(
+                lambda: sync._handle_auth_transport_error(  # noqa: SLF001
+                    config, "a@icloud.com", sync.SyncState(), error,
+                ),
+            ),
+            ["failure"],
+        )
+
+    def test_a_failure_after_sign_in_is_a_failure(self):
+        config = copy.deepcopy(self.CONFIG)
+        self.assertEqual(
+            self._handler_events(
+                lambda: sync._handle_sync_error(config, Exception("zone unavailable"), 300, 500),  # noqa: SLF001
+            ),
+            ["failure"],
+        )
+
+
+class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
+    """A cycle where every due service was skipped carries no errors and no
+    counts, so it is indistinguishable from a clean one by its stats. Pinging
+    success there is how a monitor stays green while nothing at all is being
+    downloaded.
+
+    The trap is the opposite case: with unequal intervals the scheduler
+    enables only the service whose timer expired, so one service returning
+    nothing is the ordinary cycle, not a fault."""
+
+    CONFIG = {
+        "app": {
+            "credentials": {"username": "a@icloud.com", "retry_login_interval": 600},
+            "webhooks": {"success": "https://hc-ping.com/uuid"},
+        },
+        "drive": {"destination": "drive", "sync_interval": 300},
+        "photos": {"destination": "photos", "sync_interval": 900},
+    }
+
+    def _boundary(self, drive_stats, photos_stats, config=None, loops=True, photos_indexing=False):
+        def photos(config, api, sync_state, interval):
+            # What _wait_for_photos_indexing leaves behind for the cycle.
+            sync_state.photos_indexing = photos_indexing
+            return photos_stats
+
+        api = Mock()
+        api.requires_2sa = False
+        with (
+            patch.object(sync, "_load_configuration", return_value=copy.deepcopy(config or self.CONFIG)),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(sync, "_authenticate_and_get_api", return_value=api),
+            patch.object(sync, "_maybe_refresh_trust"),
+            patch.object(sync, "_maybe_warn_trust_expiring"),
+            patch.object(sync, "_perform_drive_sync", return_value=drive_stats),
+            patch.object(sync, "_perform_photos_sync", side_effect=photos),
+            patch.object(sync, "_send_usage_statistics"),
+            patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
+            patch("src.notify.send_sync_summary"),
+            patch("src.notify.send_cycle_event") as cycle,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            if loops:
+                with self.assertRaises(SystemExit):
+                    sync.sync()
+            else:
+                # With nothing configured every interval is negative, so the
+                # loop leaves oneshot-style instead of reaching the sleep.
+                sync.sync()
+        closing = cycle.call_args_list[-1]
+        self.cycle_message = closing.kwargs.get("message", "")
+        return closing.kwargs["boundary"], closing.kwargs["data"].get("reason")
+
+    def test_a_mount_marker_skipping_every_service_is_a_failure(self):
+        self.assertEqual(
+            self._boundary(drive_stats=None, photos_stats=None),
+            ("failure", "mount_marker_missing"),
+        )
+
+    def test_a_photos_cycle_waiting_on_apple_says_so(self):
+        """Photos skipped for Apple's indexing, Drive not due: nothing synced,
+        but the mount is fine and nobody should go looking at it."""
+        self.assertEqual(
+            self._boundary(drive_stats=None, photos_stats=None, photos_indexing=True),
+            ("failure", "photos_indexing"),
+        )
+        self.assertIn("indexing", self.cycle_message)
+
+    def test_one_service_not_being_due_is_an_ordinary_success(self):
+        """The regression this guards: Photos on a 900s interval is simply
+        not due on a Drive cycle, and that must not read as a fault."""
+        self.assertEqual(
+            self._boundary(drive_stats=DriveStats(), photos_stats=None),
+            ("success", None),
+        )
+        self.assertEqual(
+            self._boundary(drive_stats=None, photos_stats=PhotoStats()),
+            ("success", None),
+        )
+
+    def test_nothing_configured_to_sync_is_a_failure(self):
+        config = {
+            "app": {
+                "credentials": {"username": "a@icloud.com", "retry_login_interval": 600},
+                "webhooks": {"success": "https://hc-ping.com/uuid"},
+            },
+        }
+        self.assertEqual(
+            self._boundary(drive_stats=None, photos_stats=None, config=config, loops=False),
+            ("failure", "nothing_synced"),
+        )
+
+
+class TestSyncWebhookEvents(unittest.TestCase):
+    """The POST endpoint sees the whole lifecycle, so each hook point has to
+    name its own event rather than reporting a generic failure: a receiver
+    that cannot tell "waiting for a code" from "Apple refused the password"
+    cannot act on either."""
+
+    CONFIG = {
+        "app": {
+            "credentials": {"username": "a@icloud.com", "retry_login_interval": 600},
+            "webhooks": {"url": "https://receiver.test/hook"},
+        },
+        "drive": {"destination": "drive", "sync_interval": 300},
+    }
+
+    def _alert_event(self, call_handler):
+        """Run a retry handler and return the event name it told notify.send."""
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "_interruptible_sleep"),
+            patch("src.notify.send_cycle_event"),
+            patch("src.notify.send") as send_mock,
+        ):
+            self.assertTrue(call_handler())
+        return send_mock.call_args.kwargs["event"]
+
+    def test_a_pending_code_is_distinguishable_from_a_refused_sign_in(self):
+        config = copy.deepcopy(self.CONFIG)
+        api = Mock()
+        api.security_key_challenge = None
+        self.assertEqual(
+            self._alert_event(
+                lambda: sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api),  # noqa: SLF001
+            ),
+            "two_factor_required",
+        )
+        self.assertEqual(
+            self._alert_event(
+                lambda: sync._handle_auth_transport_error(  # noqa: SLF001
+                    config,
+                    "a@icloud.com",
+                    sync.SyncState(),
+                    exceptions.ICloudPyFailedLoginException("401"),
+                ),
+            ),
+            "sign_in_failed",
+        )
+        self.assertEqual(
+            self._alert_event(
+                lambda: sync._handle_password_error(  # noqa: SLF001
+                    config,
+                    "a@icloud.com",
+                    sync.SyncState(),
+                    exceptions.ICloudPyNoStoredPasswordAvailableException("no session"),
+                ),
+            ),
+            "password_missing",
+        )
+
+    def test_a_security_key_account_gets_its_own_event(self):
+        """Apple sends such an account no code at all, so a receiver that
+        prompts for one would be sending the user on a fool's errand."""
+        config = copy.deepcopy(self.CONFIG)
+        api = Mock()
+        api.security_key_challenge = {"challenge": "c", "keyHandles": ["k"]}
+        with patch("src.web_signals.record_auth_method"):
+            self.assertEqual(
+                self._alert_event(
+                    lambda: sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api),  # noqa: SLF001
+                ),
+                "security_key_required",
+            )
+
+    def test_a_security_key_cycle_failure_says_security_key(self):
+        """The reason has to be computed after detection, or every
+        security-key account reports a 2FA prompt that will never arrive."""
+        config = copy.deepcopy(self.CONFIG)
+        api = Mock()
+        api.security_key_challenge = {"challenge": "c", "keyHandles": ["k"]}
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch("src.web_signals.record_auth_method"),
+            patch("src.notify.send"),
+            patch("src.notify.send_cycle_event") as cycle,
+        ):
+            sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api)  # noqa: SLF001
+        self.assertEqual(cycle.call_args.kwargs["data"]["reason"], "security_key_required")
+
+    def test_each_cycle_failure_says_why(self):
+        config = copy.deepcopy(self.CONFIG)
+        reasons = []
+        with (
+            patch.object(sync, "_auth_retry_sleep"),
+            patch.object(sync, "_interruptible_sleep"),
+            patch("src.notify.send"),
+            patch("src.notify.send_cycle_event") as cycle,
+        ):
+            api = Mock()
+            api.security_key_challenge = None
+            sync._handle_2fa_required(config, "a@icloud.com", sync.SyncState(), api)  # noqa: SLF001
+            sync._handle_password_error(  # noqa: SLF001
+                config,
+                "a@icloud.com",
+                sync.SyncState(),
+                exceptions.ICloudPyNoStoredPasswordAvailableException("no session"),
+            )
+            sync._handle_auth_transport_error(  # noqa: SLF001
+                config,
+                "a@icloud.com",
+                sync.SyncState(),
+                exceptions.ICloudPyFailedLoginException("401"),
+            )
+            # Offline at boot: the attempt never completed; nothing was refused.
+            sync._handle_auth_transport_error(  # noqa: SLF001
+                config,
+                "a@icloud.com",
+                sync.SyncState(),
+                requests.exceptions.ConnectionError("offline"),
+            )
+            sync._handle_sync_error(config, Exception("zone"), 300, 500)  # noqa: SLF001
+            reasons = [call.kwargs["data"]["reason"] for call in cycle.call_args_list]
+        self.assertEqual(
+            reasons,
+            ["two_factor_required", "password_missing", "sign_in_failed", "sign_in_error", "sync_error"],
+        )
+
+    def test_a_successful_refresh_reports_the_new_expiry(self):
+        """Nothing else notifies on a refresh, so the webhook is the only way
+        a receiver tracking the trust window learns it moved."""
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        api = Mock()
+        api.trust_session.return_value = True
+        with (
+            patch.object(
+                sync,
+                "_read_trust_cookie_expiry",
+                side_effect=[
+                    now + datetime.timedelta(days=3, minutes=1),
+                    now + datetime.timedelta(days=90),
+                ],
+            ),
+            patch("src.notify.post_event_to_webhook") as post_mock,
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        event, message, data = post_mock.call_args.args[1:]
+        self.assertEqual(event, "trust_refreshed")
+        self.assertIn("refreshed", message)
+        self.assertEqual(data["days_remaining_before"], 3)
+        self.assertEqual(data["expires_at"], (now + datetime.timedelta(days=90)).isoformat())
+
+    def test_an_unreadable_expiry_is_omitted_rather_than_nulled(self):
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        api = Mock()
+        api.trust_session.return_value = True
+        with (
+            patch.object(
+                sync,
+                "_read_trust_cookie_expiry",
+                side_effect=[now + datetime.timedelta(days=3, minutes=1), None],
+            ),
+            patch("src.notify.post_event_to_webhook") as post_mock,
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        self.assertEqual(post_mock.call_args.args[3], {"days_remaining_before": 3})
+
+    def test_a_declined_refresh_reports_nothing(self):
+        api = Mock()
+        api.trust_session.return_value = False
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        with (
+            patch.object(sync, "_read_trust_cookie_expiry", return_value=now + datetime.timedelta(days=3)),
+            patch("src.notify.post_event_to_webhook") as post_mock,
+        ):
+            sync._maybe_refresh_trust({}, api)  # noqa: SLF001
+        post_mock.assert_not_called()
+
+    def test_the_cycle_end_event_carries_the_stats(self):
+        """A webhook-only install never enables app.notifications, so the
+        cycle event is where its statistics have to live."""
+        api = Mock()
+        api.requires_2sa = False
+        stats = DriveStats(files_downloaded=4)
+        with (
+            patch.object(sync, "_load_configuration", return_value=copy.deepcopy(self.CONFIG)),
+            patch.object(sync, "alive"),
+            patch.object(sync, "_log_sync_intervals_at_startup"),
+            patch.object(sync, "_authenticate_and_get_api", return_value=api),
+            patch.object(sync, "_maybe_refresh_trust"),
+            patch.object(sync, "_maybe_warn_trust_expiring"),
+            patch.object(sync, "_perform_drive_sync", return_value=stats),
+            patch.object(sync, "_perform_photos_sync", return_value=None),
+            patch.object(sync, "_send_usage_statistics"),
+            patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
+            patch("src.notify.requests.get"),
+            patch("src.notify.requests.post") as post_mock,
+            patch("src.config_parser.get_username", return_value="a@icloud.com"),
+        ):
+            post_mock.return_value = Mock(ok=True)
+            with self.assertRaises(SystemExit):
+                sync.sync()
+        posted = [call.kwargs["json"] for call in post_mock.call_args_list]
+        self.assertEqual([p["event"] for p in posted], ["sync_started", "sync_succeeded"])
+        self.assertEqual(posted[1]["data"]["drive"]["files_downloaded"], 4)
+        self.assertFalse(posted[1]["data"]["has_errors"])
