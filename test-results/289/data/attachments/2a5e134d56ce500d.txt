@@ -1,0 +1,1 @@
+[38;5;196m2026-10-07 14:59:03,871 :: ERROR :: root :: sync.py :: 503 :: Drive mount marker missing: /tmp/tmpepsmwiir/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpepsmwiir/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

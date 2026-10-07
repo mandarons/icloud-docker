@@ -1,0 +1,10 @@
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+INFO     root:drive_package_processing.py:300 Unpacking /tmp/tmpq4hketd_/bomb.bin.gz to /tmp/tmpq4hketd_
+WARNING  root:drive_package_processing.py:74 Package nesting exceeded 8 levels for /tmp/tmpq4hketd_/bomb.bin; stopping unpack and keeping the current bytes as a single-file bundle.

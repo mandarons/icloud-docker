@@ -1,0 +1,16 @@
+[38;21m2026-10-07 14:59:08,150 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-10-07 14:59:08,150 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-10-07 14:59:08,150 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;5;39m2026-10-07 14:59:08,150 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;21m2026-10-07 14:59:08,151 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-07 14:59:08,151 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-07 14:59:08,159 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;21m2026-10-07 14:59:08,159 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;5;196m2026-10-07 14:59:08,171 :: ERROR :: root :: sync.py :: 1113 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-10-07 14:59:08,171 :: ERROR :: root :: sync.py :: 1113 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-10-07 14:59:08,172 :: INFO :: root :: sync.py :: 1089 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-10-07 14:59:08,172 :: INFO :: root :: sync.py :: 1089 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-10-07 14:59:08,172 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 14:59:08,172 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-07 14:59:08,172 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 15:09:08 2026 ...[0m
+[38;5;39m2026-10-07 14:59:08,172 :: INFO :: root :: sync.py :: 1429 :: Retrying login at Wed Oct  7 15:09:08 2026 ...[0m
