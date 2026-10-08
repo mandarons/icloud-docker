@@ -1,0 +1,40 @@
+[38;21m2026-10-08 21:04:47,805 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-10-08 21:04:47,805 :: DEBUG :: icloudpy.base :: base.py :: 280 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-10-08 21:04:47,805 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;5;39m2026-10-08 21:04:47,805 :: INFO :: icloudpy.base :: base.py :: 287 :: Session file does not exist[0m
+[38;21m2026-10-08 21:04:47,806 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-08 21:04:47,806 :: DEBUG :: icloudpy.base :: base.py :: 352 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-08 21:04:47,814 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;21m2026-10-08 21:04:47,814 :: DEBUG :: icloudpy.base :: base.py :: 456 :: Authentication completed successfully[0m
+[38;5;39m2026-10-08 21:04:47,824 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every -1 seconds.[0m
+[38;5;39m2026-10-08 21:04:47,824 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every -1 seconds.[0m
+[38;5;39m2026-10-08 21:04:47,824 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every -1 seconds.[0m
+[38;5;39m2026-10-08 21:04:47,824 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every -1 seconds.[0m
+[38;21m2026-10-08 21:04:47,827 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-10-08 21:04:47,827 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-10-08 21:04:47,827 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-08 21:04:47,827 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-08 21:04:47,827 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-10-08 21:04:47,827 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-10-08 21:04:47,827 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-10-08 21:04:47,827 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-10-08 21:04:47,828 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-10-08 21:04:47,828 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-10-08 21:04:47,828 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-10-08 21:04:47,828 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-10-08 21:04:47,828 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-10-08 21:04:47,828 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-10-08 21:04:47,828 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-10-08 21:04:47,828 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-10-08 21:04:47,829 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: df26a090-0f9e-40a8-9e42-7ba32b09b53d[0m
+[38;21m2026-10-08 21:04:47,829 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: df26a090-0f9e-40a8-9e42-7ba32b09b53d[0m
+[38;21m2026-10-08 21:04:47,829 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: df26a090-0f9e-40a8-9e42-7ba32b09b53d[0m
+[38;21m2026-10-08 21:04:47,829 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: df26a090-0f9e-40a8-9e42-7ba32b09b53d[0m
+[38;21m2026-10-08 21:04:47,829 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-10-08 21:04:47,829 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-10-08 21:04:47,829 :: DEBUG :: root :: usage.py :: 446 :: Installation registration completed[0m
+[38;21m2026-10-08 21:04:47,829 :: DEBUG :: root :: usage.py :: 446 :: Installation registration completed[0m
+[38;5;39m2026-10-08 21:04:47,830 :: INFO :: root :: sync.py :: 1638 :: Resyncing at Thu Oct  8 21:04:47 2026 ...[0m
+[38;5;39m2026-10-08 21:04:47,830 :: INFO :: root :: sync.py :: 1638 :: Resyncing at Thu Oct  8 21:04:47 2026 ...[0m
+[38;5;39m2026-10-08 21:04:47,830 :: INFO :: root :: sync.py :: 1981 :: All configured sync intervals are negative, exiting oneshot mode...[0m
+[38;5;39m2026-10-08 21:04:47,830 :: INFO :: root :: sync.py :: 1981 :: All configured sync intervals are negative, exiting oneshot mode...[0m

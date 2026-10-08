@@ -1,0 +1,1 @@
+[38;5;196m2026-10-08 21:04:41,195 :: ERROR :: root :: sync.py :: 619 :: Photos mount marker missing: /tmp/tmpdohghdas/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpdohghdas/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

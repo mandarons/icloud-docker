@@ -1,0 +1,1 @@
+ERROR    root:sync.py:619 Drive mount marker missing: /tmp/tmpqbpz_1sl/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpqbpz_1sl/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.

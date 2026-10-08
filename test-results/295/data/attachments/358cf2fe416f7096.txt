@@ -1,0 +1,10 @@
+[38;5;39m2026-10-08 21:04:39,985 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;39m2026-10-08 21:04:39,987 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;39m2026-10-08 21:04:39,988 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;39m2026-10-08 21:04:39,988 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;39m2026-10-08 21:04:39,989 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;39m2026-10-08 21:04:39,990 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;39m2026-10-08 21:04:39,991 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;39m2026-10-08 21:04:39,992 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;39m2026-10-08 21:04:39,993 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpe80gpxt1/bomb.bin.gz to /tmp/tmpe80gpxt1[0m
+[38;5;226m2026-10-08 21:04:39,993 :: WARNING :: root :: drive_package_processing.py :: 74 :: Package nesting exceeded 8 levels for /tmp/tmpe80gpxt1/bomb.bin; stopping unpack and keeping the current bytes as a single-file bundle.[0m
