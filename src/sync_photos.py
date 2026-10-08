@@ -430,6 +430,11 @@ def sync_photos(config, photos):
     # cleaning its destination would read as "the server has none of these"
     # and delete every local copy.
     failed_libraries: set = set()
+    # Libraries Apple is still indexing. They are synced -- the listing is
+    # usually complete long before the index says so -- but, like a failed
+    # library, kept out of cleanup: an incomplete listing would read as
+    # deletions.
+    indexing_libraries = _libraries_still_indexing(photos, libraries)
 
     # Special handling for "All Photos" when hardlinks are enabled
     if use_hardlinks and download_all:
@@ -481,6 +486,12 @@ def sync_photos(config, photos):
                         f"be read this run, so its local files cannot be verified.",
                     )
                     continue
+                if library in indexing_libraries:
+                    LOGGER.warning(
+                        f"Skipping obsolete-file cleanup for {library}: Apple is still "
+                        f"indexing it, so its listing may be incomplete.",
+                    )
+                    continue
                 lib_dest = _library_destination(destination_path, library, library_destinations)
                 if lib_dest == destination_path:
                     # An unmapped library falls through to the shared root,
@@ -509,6 +520,13 @@ def sync_photos(config, photos):
             LOGGER.warning(
                 "Skipping obsolete-file cleanup: "
                 f"{len(failed_libraries)} library(ies) could not be read this run.",
+            )
+        elif indexing_libraries:
+            # Same reasoning: one shared destination cannot be cleaned while
+            # any library's listing may be incomplete.
+            LOGGER.warning(
+                "Skipping obsolete-file cleanup: Apple is still indexing "
+                f"{', '.join(sorted(indexing_libraries))}, so the listing may be incomplete.",
             )
         else:
             remove_obsolete_files(
@@ -593,6 +611,33 @@ def _signal_library(action: str, library: str, **kwargs) -> None:
         getattr(web_signals, action)(library, **kwargs)
     except Exception as e:  # noqa: BLE001 -- reporting must not break syncing
         LOGGER.debug(f"web_signals: {action} for {library} raised: {e!s}")
+
+
+def _libraries_still_indexing(photos, libraries) -> set:
+    """Names of the libraries to sync that Apple has not finished indexing.
+
+    icloudpy opens such a library when asked to and records how far Apple
+    got as ``indexing_state``. A library without one (or not found) was
+    opened by an icloudpy that refuses unfinished libraries, so it is
+    finished. If the
+    libraries cannot be listed here, the per-library sync below reports
+    that, and a library that fails is barred from cleanup anyway.
+    """
+    try:
+        available = photos.libraries
+    except _LIBRARY_FAULTS:
+        return set()
+    indexing = set()
+    for name in libraries:
+        library = available.get(name)
+        state = getattr(library, "indexing_state", "FINISHED")
+        if isinstance(state, str) and state != "FINISHED":
+            LOGGER.warning(
+                f"Apple is still indexing {name} ({state}). Downloading what it "
+                f"lists; obsolete-file cleanup waits until the index finishes.",
+            )
+            indexing.add(name)
+    return indexing
 
 
 def is_photos_indexing(error) -> bool:
