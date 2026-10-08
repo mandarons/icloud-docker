@@ -1,0 +1,8 @@
+[38;5;39m2026-10-08 00:29:08,183 :: INFO :: root :: sync.py :: 1329 :: Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).[0m
+[38;5;39m2026-10-08 00:29:08,183 :: INFO :: root :: sync.py :: 1329 :: Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).[0m
+[38;5;39m2026-10-08 00:29:08,184 :: INFO :: root :: sync.py :: 1370 :: Received 6-digit code via Telegram -- validating.[0m
+[38;5;39m2026-10-08 00:29:08,184 :: INFO :: root :: sync.py :: 1370 :: Received 6-digit code via Telegram -- validating.[0m
+[38;5;226m2026-10-08 00:29:08,185 :: WARNING :: root :: sync.py :: 1384 :: Apple rejected the Telegram-supplied code -- waiting for another.[0m
+[38;5;226m2026-10-08 00:29:08,185 :: WARNING :: root :: sync.py :: 1384 :: Apple rejected the Telegram-supplied code -- waiting for another.[0m
+[38;5;39m2026-10-08 00:29:08,185 :: INFO :: root :: sync.py :: 1399 :: Telegram listen timeout reached with no usable code; retrying auth.[0m
+[38;5;39m2026-10-08 00:29:08,185 :: INFO :: root :: sync.py :: 1399 :: Telegram listen timeout reached with no usable code; retrying auth.[0m

@@ -1,0 +1,12 @@
+DEBUG    keyring.backend:backend.py:243 Loading KWallet
+DEBUG    keyring.backend:backend.py:243 Loading SecretService
+DEBUG    keyring.backend:backend.py:243 Loading Windows
+DEBUG    keyring.backend:backend.py:243 Loading chainer
+DEBUG    keyring.backend:backend.py:243 Loading libsecret
+DEBUG    keyring.backend:backend.py:243 Loading macOS
+DEBUG    keyring.backend:backend.py:243 Loading Gnome
+DEBUG    keyring.backend:backend.py:243 Loading Google
+DEBUG    keyring.backend:backend.py:243 Loading Windows (alt)
+DEBUG    keyring.backend:backend.py:243 Loading file
+DEBUG    keyring.backend:backend.py:243 Loading keyczar
+DEBUG    keyring.backend:backend.py:243 Loading multi

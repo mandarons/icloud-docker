@@ -1,0 +1,1 @@
+[38;5;196m2026-10-08 00:28:48,070 :: ERROR :: root :: sync.py :: 619 :: Drive mount marker missing: /tmp/tmpehr7_z7r/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpehr7_z7r/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

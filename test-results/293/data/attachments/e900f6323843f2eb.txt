@@ -1,0 +1,3 @@
+ERROR    root:sync.py:1439 Sign-in failed and will be retried: Service Unavailable (503)
+INFO     root:config_logging.py:35 Retrying login every 600 seconds.
+INFO     root:sync.py:1582 Retrying login at Thu Oct  8 00:58:55 2026 ...

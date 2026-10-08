@@ -1,0 +1,23 @@
+DEBUG    icloudpy.base:base.py:280 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:287 Session file does not exist
+DEBUG    icloudpy.base:base.py:352 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:456 Authentication completed successfully
+DEBUG    icloudpy.base:base.py:280 Using session file /tmp/icloud_test_config_72lbn_ow/session_data/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:287 Session file does not exist
+DEBUG    icloudpy.base:base.py:352 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:456 Authentication completed successfully
+DEBUG    root:usage.py:436 Usage tracking alive check started
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data
+DEBUG    root:usage.py:114 Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data
+DEBUG    root:usage.py:442 New installation detected, registering...
+DEBUG    root:usage.py:289 Installing new instance
+DEBUG    root:usage.py:233 Posting new installation to: None
+DEBUG    root:usage.py:239 Successfully registered new installation: c4cb4e43-742c-4cb6-8fe8-2753c6b5f642
+DEBUG    root:usage.py:295 Installation completed with ID: c4cb4e43-742c-4cb6-8fe8-2753c6b5f642
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data
+DEBUG    root:usage.py:446 Installation registration completed
+WARNING  root:sync.py:1915 Nothing to sync. Please add drive: and/or photos: section in config.yaml file.
+INFO     root:sync.py:1638 Resyncing at Thu Oct  8 00:28:53 2026 ...
+INFO     root:sync.py:1981 All configured sync intervals are negative, exiting oneshot mode...
