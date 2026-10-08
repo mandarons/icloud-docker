@@ -1,0 +1,8 @@
+[38;5;196m2026-10-08 00:37:33,513 :: ERROR :: root :: sync.py :: 1439 :: Sign-in failed and will be retried: rejected[0m
+[38;5;196m2026-10-08 00:37:33,513 :: ERROR :: root :: sync.py :: 1439 :: Sign-in failed and will be retried: rejected[0m
+[38;5;39m2026-10-08 00:37:33,513 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-08 00:37:33,513 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-10-08 00:37:33,513 :: INFO :: root :: sync.py :: 1582 :: Retrying login at Thu Oct  8 01:07:33 2026 ...[0m
+[38;5;39m2026-10-08 00:37:33,513 :: INFO :: root :: sync.py :: 1582 :: Retrying login at Thu Oct  8 01:07:33 2026 ...[0m
+[38;5;226m2026-10-08 00:37:33,514 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-10-08 00:37:33,514 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m

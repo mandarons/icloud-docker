@@ -1,0 +1,1 @@
+ERROR    root:sync.py:619 Photos mount marker missing: /tmp/tmpsk8kenpf/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpsk8kenpf/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.
