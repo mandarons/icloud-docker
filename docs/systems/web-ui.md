@@ -52,7 +52,7 @@ The web UI runs in a daemon thread alongside the sync loop. It shares state thro
 ## Invariants
 
 - The web UI thread is a daemon — it dies when the main process exits
-- `_PENDING_AUTH` stores passwords in process memory (not persisted)
+- `_PENDING_AUTH` holds a password in process memory only while a code is pending; a completed sign-in that used a password saves it to the keyring, and the form says so
 - `_AUTH_LOCK` protects concurrent access to pending auth state
 - `web_signals.py` uses sentinel files for cross-thread communication
 - `public_url` in config is embedded in notification links for mobile re-auth
