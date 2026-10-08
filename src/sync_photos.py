@@ -489,7 +489,8 @@ def sync_photos(config, photos):
                 if library in indexing_libraries:
                     LOGGER.warning(
                         f"Skipping obsolete-file cleanup for {library}: Apple is still "
-                        f"indexing it, so its listing may be incomplete.",
+                        f"indexing it, or its index could not be checked, so its "
+                        f"listing may be incomplete.",
                     )
                     continue
                 lib_dest = _library_destination(destination_path, library, library_destinations)
@@ -525,8 +526,9 @@ def sync_photos(config, photos):
             # Same reasoning: one shared destination cannot be cleaned while
             # any library's listing may be incomplete.
             LOGGER.warning(
-                "Skipping obsolete-file cleanup: Apple is still indexing "
-                f"{', '.join(sorted(indexing_libraries))}, so the listing may be incomplete.",
+                "Skipping obsolete-file cleanup: Apple is still indexing (or could "
+                f"not be checked for) {', '.join(sorted(indexing_libraries))}, so the "
+                "listing may be incomplete.",
             )
         else:
             remove_obsolete_files(
@@ -617,20 +619,29 @@ def _libraries_still_indexing(photos, libraries) -> set:
     """Names of the libraries to sync that Apple has not finished indexing.
 
     icloudpy opens such a library when asked to and records how far Apple
-    got as ``indexing_state``. A library without one (or not found) was
-    opened by an icloudpy that refuses unfinished libraries, so it is
-    finished. If the
-    libraries cannot be listed here, the per-library sync below reports
-    that, and a library that fails is barred from cleanup anyway.
+    got as ``indexing_state``. A library without one was opened by an
+    icloudpy that refuses unfinished libraries, so it is finished.
+
+    Fails closed: if the libraries cannot be listed here, every one is
+    returned, because a later attempt in the same cycle can succeed and
+    would otherwise let cleanup run on a library whose state was never
+    seen. A configured library that is not listed is returned for the
+    same reason.
     """
     try:
         available = photos.libraries
-    except _LIBRARY_FAULTS:
-        return set()
+    except _LIBRARY_FAULTS as e:
+        LOGGER.warning(
+            f"Could not check whether Apple has finished indexing the photo "
+            f"libraries ({e!s}); obsolete-file cleanup is skipped this cycle.",
+        )
+        return set(libraries)
     indexing = set()
     for name in libraries:
-        library = available.get(name)
-        state = getattr(library, "indexing_state", "FINISHED")
+        if name not in available:
+            indexing.add(name)
+            continue
+        state = getattr(available[name], "indexing_state", "FINISHED")
         if isinstance(state, str) and state != "FINISHED":
             LOGGER.warning(
                 f"Apple is still indexing {name} ({state}). Downloading what it "
