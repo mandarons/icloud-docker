@@ -518,6 +518,7 @@ def _build_libraries(configured: list[str], library_destinations: dict[str, str]
                 "subdir": library_destinations.get(name),
                 "state": entry.get("state"),
                 "error": entry.get("error"),
+                "indexing": entry.get("indexing"),
                 "completed_relative": (
                     web_signals.format_relative_time(completed_at) if completed_at else None
                 ),

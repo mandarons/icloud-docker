@@ -136,3 +136,56 @@ class TestCleanupWaitsForTheIndex(unittest.TestCase):
         self.assertEqual(
             self._clean({"PrimarySync": "FINISHED", "SharedLibrary": "FINISHED"}), ["."],
         )
+
+
+class TestTheDashboardSaysWhyCleanupWaits(unittest.TestCase):
+    """A library synced while Apple indexes it never has its deletions
+    applied, and nothing else on the dashboard would say why."""
+
+    def setUp(self):
+        from src import web_signals
+
+        self.ws = web_signals
+        self.tmp = tempfile.mkdtemp()
+        patcher = patch.object(web_signals, "_config_dir", return_value=self.tmp)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def tearDown(self):
+        import shutil
+
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_the_state_is_recorded_and_cleared(self):
+        self.ws.record_library_indexing("PrimarySync", state="RUNNING")
+        self.assertEqual(self.ws.get_library_states()["PrimarySync"]["indexing"], "RUNNING")
+        self.ws.record_library_indexing("PrimarySync", state=None)
+        self.assertNotIn("indexing", self.ws.get_library_states()["PrimarySync"])
+
+    def test_each_cycle_records_every_library_it_checks(self):
+        photos = MagicMock()
+        photos.libraries = {"PrimarySync": _library("FINISHED"), "SharedSync-1": _library("RUNNING")}
+        sync_photos._libraries_still_indexing(photos, ["PrimarySync", "SharedSync-1"])  # noqa: SLF001
+        states = self.ws.get_library_states()
+        self.assertNotIn("indexing", states["PrimarySync"])
+        self.assertEqual(states["SharedSync-1"]["indexing"], "RUNNING")
+
+    def test_the_library_row_carries_the_note(self):
+        import time
+
+        from src import web
+
+        states = {"SharedSync-1": {"state": "ok", "completed_at": time.time(), "indexing": "RUNNING"}}
+        with patch.object(web.web_signals, "get_library_states", return_value=states):
+            body = web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
+        self.assertIn("Apple is still indexing this library", body)
+
+    def test_no_note_once_indexing_finishes(self):
+        import time
+
+        from src import web
+
+        states = {"SharedSync-1": {"state": "ok", "completed_at": time.time()}}
+        with patch.object(web.web_signals, "get_library_states", return_value=states):
+            body = web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
+        self.assertNotIn("Apple is still indexing this library", body)

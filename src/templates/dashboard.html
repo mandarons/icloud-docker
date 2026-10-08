@@ -148,6 +148,7 @@
           {% endif %}
         </div>
         {% if lib.subdir %}<div class="lib-dest mono" title="{{ lib.subdir }}/">&rarr; {{ lib.subdir }}/</div>{% endif %}
+        {% if lib.indexing %}<div class="lib-dest">Apple is still indexing this library &middot; downloading, cleanup paused</div>{% endif %}
         {% if lib.state in ('failed', 'interrupted') and lib.completed_relative %}
         <div class="lib-dest">last completed {{ lib.completed_relative }}</div>
         {% endif %}
