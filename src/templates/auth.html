@@ -14,7 +14,7 @@
   {% elif auth == 'ready' %}
     <strong>{{ status.username }}</strong> is signed in and the sync loop has not reported an authentication problem. Re-authenticate below only if you want to start a fresh flow.
   {% else %}
-    Step 1 of 2 — your Apple ID password. We never log or persist it.
+    Step 1 of 2 — your Apple ID password. It is never logged, but it is saved in the container's keyring so the sync loop can sign in again on its own. On a headless host that keyring is a plain-text file.
     A 6-digit code will then arrive on your trusted iPhone/iPad/Mac.
   {% endif %}
 </p>

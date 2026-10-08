@@ -358,6 +358,14 @@ class TestAuthForm(unittest.TestCase):
         self.assertIn('action="/auth/password"', body)
         self.assertIn('name="csrf_token" value="', body)
 
+    def test_the_form_says_the_password_is_saved(self):
+        """A successful sign-in writes the password to the keyring, so the
+        form must not promise otherwise (#558)."""
+        client = web.create_app(testing=True).test_client()
+        body = client.get("/auth").data.decode("utf-8")
+        self.assertNotIn("persist", body)
+        self.assertIn("saved in the container's keyring", body)
+
     def test_auth_renders_code_field_when_pending(self):
         with web._AUTH_LOCK:  # noqa: SLF001
             web._PENDING_AUTH["api"] = object()  # noqa: SLF001
