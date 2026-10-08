@@ -67,10 +67,12 @@ class TestLibrariesStillIndexing(unittest.TestCase):
         }
         self.assertEqual(self._indexing(libraries, wanted=["PrimarySync"]), set())
 
-    def test_a_configured_library_that_does_not_exist_is_ignored(self):
-        self.assertEqual(self._indexing({}, wanted=["Missing"]), set())
+    def test_a_configured_library_that_is_not_listed_is_not_trusted(self):
+        self.assertEqual(self._indexing({}, wanted=["Missing"]), {"Missing"})
 
-    def test_libraries_that_cannot_be_listed_are_left_to_the_sync(self):
+    def test_libraries_that_cannot_be_listed_are_all_kept_from_cleanup(self):
+        """Fail closed: a later listing in the same cycle can succeed, and
+        cleanup must not then run on a library whose state was never seen."""
         from icloudpy import exceptions
 
         photos = MagicMock()
@@ -80,7 +82,8 @@ class TestLibrariesStillIndexing(unittest.TestCase):
             ),
         )
         self.assertEqual(
-            sync_photos._libraries_still_indexing(photos, ["PrimarySync"]), set(),  # noqa: SLF001
+            sync_photos._libraries_still_indexing(photos, ["PrimarySync"]),  # noqa: SLF001
+            {"PrimarySync"},
         )
 
 
