@@ -642,7 +642,9 @@ def _libraries_still_indexing(photos, libraries) -> set:
             indexing.add(name)
             continue
         state = getattr(available[name], "indexing_state", "FINISHED")
-        if isinstance(state, str) and state != "FINISHED":
+        still_indexing = isinstance(state, str) and state != "FINISHED"
+        _signal_library("record_library_indexing", name, state=state if still_indexing else None)
+        if still_indexing:
             LOGGER.warning(
                 f"Apple is still indexing {name} ({state}). Downloading what it "
                 f"lists; obsolete-file cleanup waits until the index finishes.",

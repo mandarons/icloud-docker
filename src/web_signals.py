@@ -386,6 +386,24 @@ def record_library_finished(
     _save_state(state)
 
 
+def record_library_indexing(library: str, *, state: str | None) -> None:
+    """Record whether Apple is still indexing ``library`` (None: finished).
+
+    Such a library is synced but kept out of obsolete-file cleanup, and
+    nothing else on the dashboard would say why its deletions never land.
+    """
+    states = _load_state()
+    libraries = states.get(_LIBRARY_STATE_KEY, {})
+    entry = libraries.get(library, {})
+    if state is None:
+        entry.pop("indexing", None)
+    else:
+        entry["indexing"] = state
+    libraries[library] = entry
+    states[_LIBRARY_STATE_KEY] = libraries
+    _save_state(states)
+
+
 def get_library_states() -> dict[str, Any]:
     """Return per-library sync state. Empty dict if never recorded."""
     return _load_state().get(_LIBRARY_STATE_KEY, {})
