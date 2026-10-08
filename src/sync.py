@@ -416,6 +416,9 @@ def get_api_instance(
     if password is None:
         service_class = SessionOnlyICloudPyService
         password = _SESSION_ONLY_PLACEHOLDER_PASSWORD
+    # Apple can report a photo library as still indexing for weeks while
+    # listing it in full. Open it anyway: sync_photos downloads what it lists
+    # and keeps it out of obsolete-file cleanup until the index finishes.
     return (
         service_class(
             apple_id=username,
@@ -423,12 +426,14 @@ def get_api_instance(
             cookie_directory=cookie_directory,
             home_endpoint="https://www.icloud.com.cn",
             setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
+            photos_require_finished_index=False,
         )
         if server_region == "china"
         else service_class(
             apple_id=username,
             password=password,
             cookie_directory=cookie_directory,
+            photos_require_finished_index=False,
         )
     )
 
