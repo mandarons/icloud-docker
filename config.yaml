@@ -130,6 +130,8 @@ drive:
   destination: "drive"
   # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: false
+  # Seconds between syncs (positive), or negative for a one-shot run.
+  # 0 is invalid: it is logged, and the default 1800 is used instead.
   sync_interval: 300
   # HTTP read timeout in seconds for iCloud API requests (default: 30)
   # Prevents the sync process from hanging indefinitely on stalled connections
@@ -174,6 +176,8 @@ photos:
   # image extension, so it stays hidden but filesystem-recoverable). Unedited
   # photos are unaffected. Default false.
   # preserve_originals_as_bak: false
+  # Seconds between syncs (positive), or negative for a one-shot run.
+  # 0 is invalid: it is logged, and the default 1800 is used instead.
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.

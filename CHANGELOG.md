@@ -5,6 +5,115 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Unattended sync without a stored Apple ID password: with no `ENV_ICLOUD_PASSWORD`
+  and an empty keyring the container now resumes the saved session in
+  `/config/session_data` instead of logging "Password is not stored in keyring"
+  and retrying forever without ever trying the valid session. Session-only
+  sign-in stops after validating the session and never falls through to a
+  credential sign-in, so no placeholder password is posted to Apple on every
+  retry; the dashboard reads the saved session when the keyring is empty, says
+  which way a session stopped, and serves Refresh trust from the session alone
+  ([#557](https://github.com/mandarons/icloud-docker/pull/557),
+  [#524](https://github.com/mandarons/icloud-docker/issues/524))
+- JSON webhook for every notification and sync event — `app.webhooks.url`
+  receives the notifications the app already sends plus `sync_started`,
+  `sync_succeeded`, `sync_failed` (always carrying a `reason`) and
+  `trust_refreshed`, as a JSON POST of `{event, message, timestamp, data}`, with
+  an optional `events` allow-list and extra request `headers`. It shares the
+  other transports' 24-hour throttle, except `sync_failed`, which is never
+  throttled for receivers that track state rather than read notices
+  ([#556](https://github.com/mandarons/icloud-docker/pull/556))
+- Monitoring pings — `app.webhooks.start`, `success` and `failure` are bare GET
+  URLs shaped for Healthchecks.io and similar monitors, which notice a sync
+  that stopped happening by a ping that never arrives. `success` requires at
+  least one service to have actually synced, so an unmounted volume or an
+  empty configuration cannot keep a monitor green
+  ([#556](https://github.com/mandarons/icloud-docker/pull/556),
+  [#398](https://github.com/mandarons/icloud-docker/issues/398))
+- Optional recycle bin — `app.recycle_bin.enabled` moves what Drive and Photos
+  cleanup would delete to `<root>/Recently Deleted/<service>/<YYYY-MM-DD>/`,
+  at the path the file had under the destination, instead of unlinking it;
+  `app.recycle_bin.retention_days` bounds how long day folders are kept (omit
+  to keep everything). Off by default, and it changes how cleanup removes
+  things, never what `remove_obsolete`, the delete limit and the failed-library
+  exclusions allow
+  ([#559](https://github.com/mandarons/icloud-docker/pull/559))
+
+### Changed
+
+- A `sync_interval` of `0` is now treated as unset: it is logged as an invalid
+  value — a positive number of seconds, or negative for one-shot — and the
+  default interval is used instead. A service configured with 0 was otherwise
+  due on every pass, so the scheduler slept 0 and synced it back to back, the
+  fastest way to get throttled by Apple
+  ([#555](https://github.com/mandarons/icloud-docker/pull/555))
+- Webhook `sync_failed` reasons now separate the fault. `sign_in_failed` is
+  reserved for Apple refusing the sign-in itself — a network fault or an Apple
+  service error before sign-in completes is `sign_in_error` — a cycle waiting
+  on Apple's Photos indexing reports `photos_indexing` instead of blaming a
+  mount that is fine, and a session-only sign-in the alert flags as needing a
+  human is reported the same way by the alert and the webhook
+  ([#556](https://github.com/mandarons/icloud-docker/pull/556),
+  [#557](https://github.com/mandarons/icloud-docker/pull/557))
+- Dependency bumps (test tooling only): ruff 0.16.10, allure-pytest 2.16.2
+  ([#562](https://github.com/mandarons/icloud-docker/pull/562),
+  [#561](https://github.com/mandarons/icloud-docker/pull/561))
+
+### Fixed
+
+- Packages and their contents are no longer renamed to the NFD form of their
+  whole path. On Linux NFC and NFD are different names, so a non-ASCII parent
+  folder made the rename fail and the download report a failure, a non-ASCII
+  package name moved the package away from the NFC path the next sync checks,
+  and any real rename of a child moved the package's mtime off iCloud's — each
+  re-downloading the package on every sync. A package now keeps the path it
+  was asked for and its contents are recorded exactly as they are on disk; a
+  leftover NFD copy left by an earlier version is reported when the package is
+  downloaded and is removed by `drive.remove_obsolete` (off by default)
+  ([#554](https://github.com/mandarons/icloud-docker/pull/554),
+  [#527](https://github.com/mandarons/icloud-docker/issues/527))
+- A blank `ENV_ICLOUD_PASSWORD` — what Compose substitutes for an unset
+  `${VAR}` — now counts as no password: it no longer skips session-only mode,
+  sends an empty password to Apple's sign-in on every retry, or overwrites a
+  real keyring entry with `""`. An empty keyring entry likewise counts as no
+  password
+  ([#557](https://github.com/mandarons/icloud-docker/pull/557))
+- The sync loop sleeps until the next service is due, not for the difference
+  between the two countdowns. With Drive every hour and Photos every 12 hours
+  it used to sync Drive at 0h, 11h, 21h, 30h … and not Photos until 67h;
+  close intervals re-synced the faster service seconds after it finished
+  (300/360 slept 60 seconds). The smaller countdown is now taken off both
+  timers and whichever reaches zero is enabled
+  ([#555](https://github.com/mandarons/icloud-docker/pull/555))
+- Apple indexing a photo library is a wait rather than a failed cycle: one
+  indexing zone made the whole Photos service unreadable, which logged an
+  error, announced a login retry and backed off for hours. Photos is now
+  skipped with a warning saying what is happening and that nothing on disk was
+  changed, Drive carries on, and Photos is retried in 30 minutes — or sooner if
+  its own interval is shorter, never later. The dashboard reports the wait,
+  with when it started
+  ([#555](https://github.com/mandarons/icloud-docker/pull/555))
+- Shared Library downloads no longer fail permanently with HTTP 410 on long
+  walks: the pending-download buffer also drains once its oldest task is 10
+  minutes old, so URLs valid ~30-40 minutes cannot expire before they are
+  used, and the expired-URL refresh looks each asset up in the zone carried on
+  its own master record instead of always the primary library's zone
+  ([#560](https://github.com/mandarons/icloud-docker/pull/560))
+- Binned files stay restorable by name and by library: a path removed twice in
+  a day is now numbered before the extension (`IMG_1234 (2).HEIC`) so dropping
+  the number restores the name iCloud knows, and with `library_destinations`
+  each library's removals are filed under its own folder instead of collapsing
+  two libraries' copies of the same path into anonymous numbered siblings
+  ([#559](https://github.com/mandarons/icloud-docker/pull/559))
+- The no-password log line reports the fault itself — session missing or
+  session rejected — instead of the misleading "Password is not stored in
+  keyring" it used to print alongside it
+  ([#557](https://github.com/mandarons/icloud-docker/pull/557))
+
 ## [2.1.0] 2026-09-30
 
 ### Added
@@ -597,7 +706,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Initial release
 
-[Unreleased]: https://github.com/mandarons/icloud-docker/compare/v2.0.0...HEAD
+[Unreleased]: https://github.com/mandarons/icloud-docker/compare/v2.1.0...HEAD
+
+[2.1.0]: https://github.com/mandarons/icloud-docker/compare/v2.0.0...v2.1.0
 
 [2.0.0]: https://github.com/mandarons/icloud-docker/compare/v1.28.0...v2.0.0
 
