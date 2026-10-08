@@ -40,6 +40,15 @@ The config system is a pure data layer — it does NOT perform sync operations, 
 | `get_webhook_events(config)` | `app.webhooks.events` — event allow-list; `None` means every event, `[]` means none |
 | `get_webhook_headers(config)` | `app.webhooks.headers` — extra request headers (credentials; never logged) |
 
+### `sync_interval` values
+
+Both interval accessors take a positive number of seconds, or a negative
+number for a one-shot service. **`0` is neither and is rejected:**
+`get_drive_sync_interval()` and `get_photos_sync_interval()` log it as an
+invalid value and return `DEFAULT_SYNC_INTERVAL_SEC` (1800) instead. A service
+configured with 0 is due on every pass, so the scheduler would sleep 0 and sync
+it back to back — the fastest way to get throttled by Apple.
+
 ## Config Access Pattern
 
 ALWAYS use this pattern — NEVER direct dict access:

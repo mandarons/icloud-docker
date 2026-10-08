@@ -60,7 +60,15 @@ Drive sync is purely a download system — it does NOT upload files to iCloud. I
 - A package and its contents keep the names they were extracted with (NFC, like
   every other Drive path) and are recorded as they are on disk. Nothing is renamed
   afterwards, so no mtime re-stamp is needed: `download_file` is the last writer of
-  the package's mtime, and the `glob` that records its contents only reads
+  the package's mtime, and the `glob` that records its contents only reads names —
+  it renames nothing, so no rename can bump the package's mtime again
+- An earlier version renamed packages and their contents to the NFD form of the
+  whole path. Those copies are no longer synced: where NFC and NFD are different
+  names the package is downloaded again under the path it was asked for, and
+  `_warn_about_a_leftover_nfd_copy()` then reports the copy the old version left
+  behind — the warning names the file and says to delete it or set
+  `drive.remove_obsolete: true`, which is what removes it (off by default).
+  Where both forms name the same file (macOS) there is nothing to report
 - Bare-rooted package zips (iWork-style entries) extract into their own bundle
   subdirectory; self-prefixed zips (`.band`-style) extract into the parent.
   `_zip_entries_self_prefixed()` must recognise `../bundle/` traversal too
