@@ -15,6 +15,11 @@
       <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
         Running from the saved session — no password stored
       </span>
+    {% else %}
+      <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
+        Your Apple ID password is stored in the container's keyring{% if status.password_from_env %} (from ENV_ICLOUD_PASSWORD){% endif %} — a plain-text file on most hosts.
+        <a href="https://github.com/mandarons/icloud-docker#two-ways-to-run-unattended" target="_blank" rel="noopener">Running without it</a>
+      </span>
     {% endif %}
     {% if status.trust_days_remaining is not none %}
       <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">

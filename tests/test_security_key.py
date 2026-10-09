@@ -50,6 +50,13 @@ def _api(requires_2fa=True, challenge=None, accepts=True):
     return api
 
 
+
+def _NO_STORED_PASSWORD(username):  # noqa: N802 -- stands in for the real lookup
+    """What icloudpy really does for a missing entry: raise, not return None."""
+    from icloudpy import exceptions as icloudpy_exceptions
+
+    raise icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException(username)
+
 class TestPackChallenge(unittest.TestCase):
     """``_pack_challenge`` — raw bytes with length prefixes, not
     base64-of-JSON, because the operator copies this inside a one-line
@@ -99,7 +106,7 @@ class TestBuildSignerCommand(unittest.TestCase):
         self.assertIn("uv run", command)
         self.assertIn("BLOB", command)
         self.assertNotIn("cat >", command)
-        self.assertNotIn("/tmp/icloud_sign.py", command)
+        self.assertNotIn("/tmp/icloud_sign.py", command)  # nosec B108 -- asserts the path is absent
 
     def test_embeds_the_signer_source(self):
         """Delivered inline so the machine holding the key needs no route
@@ -227,11 +234,41 @@ class TestSecurityKeyGet(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"No app.credentials.username", response.data)
 
-    def test_400_without_keyring_password(self):
-        with patch("icloudpy.utils.get_password_from_keyring", return_value=None):
+    def test_400_without_any_password(self):
+        """Nothing typed and nothing stored: ask for it on this page."""
+        with patch("icloudpy.utils.get_password_from_keyring", side_effect=_NO_STORED_PASSWORD):
             response = _csrf_post(self._client(), "/auth/security-key/start")
         self.assertEqual(response.status_code, 400)
-        self.assertIn(b"No password in keyring", response.data)
+        self.assertIn(b"Enter your Apple ID password", response.data)
+
+    def test_a_typed_password_starts_the_sign_in_and_is_not_saved(self):
+        """A password-free container signs in with the password typed on
+        the page, which is used for this sign-in only."""
+        api = _api()
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", side_effect=_NO_STORED_PASSWORD),
+            patch("icloudpy.utils.store_password_in_keyring") as saved,
+            patch("icloudpy.ICloudPyService", return_value=api) as service,
+            patch.object(web, "_record_auth_method"),
+        ):
+            response = _csrf_post(
+                self._client(),
+                "/auth/security-key/start",
+                {"password": "typed"},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(service.call_args.kwargs["password"], "typed")
+        saved.assert_not_called()
+
+    def test_the_page_asks_for_the_password_only_when_none_is_stored(self):
+        for stored, asks in ((False, True), (True, False)):
+            with (
+                self.subTest(stored=stored),
+                patch.object(web, "_password_is_stored", return_value=stored),
+                patch.object(web.web_signals, "get_auth_method", return_value="security_key"),
+            ):
+                body = self._client().get("/auth").data.decode("utf-8")
+            self.assertEqual('name="password"' in body, asks)
 
     def test_500_when_keyring_raises(self):
         with patch(
@@ -474,7 +511,7 @@ class TestSecurityKeyPost(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn(b"refused that signature", response.data)
 
-    def test_success_trusts_persists_and_signals_resume(self):
+    def test_success_trusts_and_signals_resume_without_saving_the_password(self):
         api = _api()
         self._stash(api)
         with (
@@ -488,9 +525,8 @@ class TestSecurityKeyPost(unittest.TestCase):
                 {"assertion": self._assertion()},
             )
         self.assertEqual(response.status_code, 302)
-        # Resuming immediately is the point: the sync loop deliberately
-        # stops retrying on a timer for these accounts.
-        keyring.assert_called_once()
+        # The session is what the loop resumes; the password is never saved.
+        keyring.assert_not_called()
         api.confirm_security_key.assert_called_once()
         # Without the wake the loop sleeps out the rest of its retry interval
         # and the dashboard keeps saying "sync is stopped" after a success.
@@ -845,9 +881,22 @@ class TestSessionVerification(unittest.TestCase):
     def test_true_when_no_factor_is_wanted(self):
         with (
             patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
-            patch("icloudpy.ICloudPyService", return_value=_api(requires_2fa=False)),
+            patch("src.sync.ICloudPyService", return_value=_api(requires_2fa=False)),
         ):
             self.assertTrue(web._session_authenticates("a@icloud.com"))  # noqa: SLF001
+
+    def test_a_password_free_container_is_checked_from_its_session(self):
+        """With no password stored the check must sign in the way the
+        sync loop will: from the session alone."""
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", side_effect=_NO_STORED_PASSWORD),
+            patch(
+                "src.sync.SessionOnlyICloudPyService",
+                return_value=_api(requires_2fa=False),
+            ) as session_only,
+        ):
+            self.assertTrue(web._session_authenticates("a@icloud.com"))  # noqa: SLF001
+        session_only.assert_called_once()
 
     def test_false_when_apple_still_wants_a_factor(self):
         with (
@@ -867,7 +916,7 @@ class TestSessionVerification(unittest.TestCase):
         with (
             patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
             patch(
-                "icloudpy.ICloudPyService",
+                "src.sync.ICloudPyService",
                 return_value=_api(requires_2fa=False),
             ) as svc,
         ):
