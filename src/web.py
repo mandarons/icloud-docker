@@ -37,6 +37,7 @@ from src import (
     DEFAULT_CONFIG_FILE_PATH,
     DEFAULT_COOKIE_DIRECTORY,
     ENV_CONFIG_FILE_PATH_KEY,
+    ENV_ICLOUD_PASSWORD_KEY,
     config_parser,
     get_logger,
     read_config,
@@ -53,12 +54,12 @@ LOGGER = get_logger()
 _PENDING_AUTH: dict[str, Any] = {}
 _AUTH_LOCK = threading.Lock()
 
-# Drop stale pending auth after this many seconds. The submitted Apple ID
-# password sits in process memory (in ``_PENDING_AUTH["password"]``) while
-# waiting for the user to enter their 2FA code; without an expiry it would
-# linger indefinitely if the user closed the browser tab mid-flow. 10 min
-# is generous for typing a code -- and short enough that a forgotten
-# session evaporates before the next sync cycle picks up the keyring.
+# Drop stale pending auth after this many seconds. The half-finished
+# sign-in in ``_PENDING_AUTH["api"]`` holds the submitted Apple ID password
+# in process memory while waiting for the user's code or key; without an
+# expiry it would linger indefinitely if the user closed the browser tab
+# mid-flow. 10 min is generous for typing a code. The password is never
+# written anywhere.
 _PENDING_AUTH_TTL_SECONDS = 600
 
 
@@ -405,6 +406,9 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         # Without these the pill tells a password-free install that its
         # keyring is populated and blames every stoppage on a second factor.
         "password_stored": _password_is_stored(username) if username else False,
+        # Deleting the keyring entry does not stick while this is set: the
+        # sync loop writes it back every cycle.
+        "password_from_env": bool(os.environ.get(ENV_ICLOUD_PASSWORD_KEY)),
         "auth_blocked_reason": web_signals.get_auth_blocked().get("reason"),
         "auth_method": web_signals.get_auth_method(username) if username else None,
         "force_sync_pending": web_signals.pending_force_syncs(),
@@ -689,7 +693,6 @@ def create_app(testing: bool = False) -> Flask:
         try:
             # Late import so /api/health still works if icloudpy is mid-upgrade.
             import icloudpy
-            from icloudpy import utils as icloudpy_utils
 
             api = icloudpy.ICloudPyService(
                 apple_id=username,
@@ -720,20 +723,13 @@ def create_app(testing: bool = False) -> Flask:
                 _expire_stale_pending_auth_unlocked()
                 _PENDING_AUTH["api"] = api
                 _PENDING_AUTH["username"] = username
-                _PENDING_AUTH["password"] = password
                 _PENDING_AUTH["stashed_at"] = time.monotonic()
             return redirect(url_for("auth_form"))
 
-        # No 2FA needed — cached session still trusted. Persist the
-        # password to the keyring so the sync loop can use it on the
-        # next retry, then bounce back to the dashboard.
-        try:
-            icloudpy_utils.store_password_in_keyring(
-                username=username,
-                password=password,
-            )
-        except Exception as e:
-            LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
+        # No 2FA needed — the sign-in refreshed the saved session, which
+        # is all the sync loop needs. The password is not saved: the form
+        # promises that, and ENV_ICLOUD_PASSWORD or the `icloud` command's
+        # "Save password in keyring?" are the ways to opt in to storing one.
         _wake_sync_loop()
         return redirect(url_for("dashboard"))
 
@@ -747,7 +743,7 @@ def create_app(testing: bool = False) -> Flask:
           user can retry without re-entering the password.
         - On success: validate_2fa_code -> trust_session (failures here
           are logged but non-fatal — the code already worked) ->
-          store_password_in_keyring -> clear pending -> redirect to /.
+          clear pending -> redirect to /. The password is never saved.
         """
         rejection = _require_csrf()
         if rejection is not None:
@@ -763,8 +759,6 @@ def create_app(testing: bool = False) -> Flask:
         with _AUTH_LOCK:
             _expire_stale_pending_auth_unlocked()
             api = _PENDING_AUTH.get("api")
-            username = _PENDING_AUTH.get("username")
-            password = _PENDING_AUTH.get("password")
         if api is None:
             return (
                 _render_auth(
@@ -811,21 +805,8 @@ def create_app(testing: bool = False) -> Flask:
             except Exception as e:
                 LOGGER.warning(f"Web UI trust_session failed (non-fatal): {e!s}")
 
-            # Persist password to keyring so the sync-loop's next retry
-            # picks up the trusted session without prompting. A session-only
-            # re-auth has no password to persist, and writing one there would
-            # silently move the container out of password-free mode.
-            if password is not None:
-                try:
-                    from icloudpy import utils as icloudpy_utils
-
-                    icloudpy_utils.store_password_in_keyring(
-                        username=username,
-                        password=password,
-                    )
-                except Exception as e:
-                    LOGGER.warning(f"Web UI keyring persist failed (non-fatal): {e!s}")
-
+            # The trusted session is what the sync loop resumes; the password
+            # is not saved (see auth_password).
             _wake_sync_loop()
             return redirect(url_for("dashboard"))
         finally:
@@ -901,20 +882,23 @@ def create_app(testing: bool = False) -> Flask:
                 400,
             )
 
-        try:
-            from icloudpy import utils as icloudpy_utils
-
-            password = icloudpy_utils.get_password_from_keyring(username)
-        except Exception as e:
-            LOGGER.exception("Web UI security-key: keyring lookup raised")
-            return (
-                _render_auth(message=f"Keyring lookup failed: {e!s}", message_kind="err"),
-                500,
-            )
+        # The password typed on this page, used for this sign-in only. A
+        # stored one is the fallback for containers that opted in to
+        # storing it (ENV_ICLOUD_PASSWORD or the `icloud` command).
+        password = request.form.get("password") or None
+        if password is None:
+            try:
+                password = _stored_password(username)
+            except Exception as e:
+                LOGGER.exception("Web UI security-key: keyring lookup raised")
+                return (
+                    _render_auth(message=f"Keyring lookup failed: {e!s}", message_kind="err"),
+                    500,
+                )
         if not password:
             return (
                 _render_auth(
-                    message="No password in keyring — submit one below first.",
+                    message="Enter your Apple ID password to start the security-key sign-in.",
                     message_kind="warn",
                 ),
                 400,
@@ -974,7 +958,6 @@ def create_app(testing: bool = False) -> Flask:
             _expire_stale_pending_auth_unlocked()
             _PENDING_AUTH["api"] = api
             _PENDING_AUTH["username"] = username
-            _PENDING_AUTH["password"] = password
             _PENDING_AUTH["stashed_at"] = time.monotonic()
             # Keep Apple's challenge string verbatim. It is echoed back in
             # the assertion and Apple compares it byte-for-byte, so a
@@ -1039,7 +1022,6 @@ def create_app(testing: bool = False) -> Flask:
             _expire_stale_pending_auth_unlocked()
             api = _PENDING_AUTH.get("api")
             username = _PENDING_AUTH.get("username")
-            password = _PENDING_AUTH.get("password")
             pending_fsa = _PENDING_AUTH.get("fsa_challenge") or {}
             ceremony_dir = _PENDING_AUTH.get("cookie_dir")
             issued_challenge = pending_fsa.get("challenge")
@@ -1100,16 +1082,6 @@ def create_app(testing: bool = False) -> Flask:
                     ),
                     400,
                 )
-
-            try:
-                from icloudpy import utils as icloudpy_utils
-
-                icloudpy_utils.store_password_in_keyring(
-                    username=username,
-                    password=password,
-                )
-            except Exception as e:
-                LOGGER.warning(f"Web UI security-key keyring persist failed: {e!s}")
 
             if ceremony_dir:
                 _publish_ceremony_session(ceremony_dir)
@@ -1290,7 +1262,6 @@ def create_app(testing: bool = False) -> Flask:
             _expire_stale_pending_auth_unlocked()
             _PENDING_AUTH["api"] = api
             _PENDING_AUTH["username"] = username
-            _PENDING_AUTH["password"] = password
             _PENDING_AUTH["stashed_at"] = time.monotonic()
         return redirect(url_for("auth_form"))
 
@@ -1440,6 +1411,21 @@ def _build_short_signer_command(blob: str) -> str | None:
     return f"uv run --quiet {_SIGNER_REPO_RAW}/{ref}/src/icloud_sign.py {blob}"
 
 
+def _stored_password(username: str) -> str | None:
+    """The password stored in the keyring, or None if there isn't one.
+
+    icloudpy raises rather than returning None for a missing entry, and a
+    password-free container is a supported setup, not an error.
+    """
+    from icloudpy import exceptions as icloudpy_exceptions
+    from icloudpy import utils as icloudpy_utils
+
+    try:
+        return icloudpy_utils.get_password_from_keyring(username) or None
+    except icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException:
+        return None
+
+
 def _session_authenticates(username: str) -> bool:
     """Confirm the sync loop can now sign in.
 
@@ -1448,12 +1434,13 @@ def _session_authenticates(username: str) -> bool:
     announced a session that still wanted a second factor.
     """
     try:
-        import icloudpy
-        from icloudpy import utils as icloudpy_utils
+        from src import sync
 
-        api = icloudpy.ICloudPyService(
-            apple_id=username,
-            password=icloudpy_utils.get_password_from_keyring(username),
+        # A stored password if the operator opted in to one; otherwise the
+        # session alone, exactly as the password-free sync loop signs in.
+        api = sync.get_api_instance(
+            username=username,
+            password=_stored_password(username),
             cookie_directory=DEFAULT_COOKIE_DIRECTORY,
         )
     except Exception as e:

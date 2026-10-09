@@ -358,13 +358,11 @@ class TestAuthForm(unittest.TestCase):
         self.assertIn('action="/auth/password"', body)
         self.assertIn('name="csrf_token" value="', body)
 
-    def test_the_form_says_the_password_is_saved(self):
-        """A successful sign-in writes the password to the keyring, so the
-        form must not promise otherwise (#558)."""
+    def test_the_form_says_the_password_is_not_saved(self):
+        """And it isn't: no sign-in from this page writes the keyring."""
         client = web.create_app(testing=True).test_client()
         body = client.get("/auth").data.decode("utf-8")
-        self.assertNotIn("persist", body)
-        self.assertIn("saved in the container's keyring", body)
+        self.assertIn("never logged or saved", body)
 
     def test_auth_renders_code_field_when_pending(self):
         with web._AUTH_LOCK:  # noqa: SLF001
@@ -453,10 +451,10 @@ class TestAuthPasswordPost(unittest.TestCase):
                 "user@test.com",
             )
 
-    def test_no_2fa_required_stores_keyring_and_redirects(self):
+    def test_no_2fa_required_redirects_without_saving_the_password(self):
         """Resumed-session case: ICloudPyService picks up the existing
-        trusted-session cookie, returns requires_2fa=False, and we just
-        persist the password to the keyring and redirect to /."""
+        trusted-session cookie and returns requires_2fa=False. The refreshed
+        session is all the sync loop needs; the password is not saved."""
         from unittest.mock import MagicMock, patch
 
         fake_api = MagicMock()
@@ -471,7 +469,7 @@ class TestAuthPasswordPost(unittest.TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.location.endswith("/"))
-        keyring.assert_called_once_with(username="user@test.com", password="secret")
+        keyring.assert_not_called()
         with web._AUTH_LOCK:  # noqa: SLF001
             self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
@@ -540,7 +538,7 @@ class TestAuthCodePost(unittest.TestCase):
         with web._AUTH_LOCK:  # noqa: SLF001
             self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
 
-    def test_accepted_code_trusts_persists_clears_redirects(self):
+    def test_accepted_code_trusts_clears_redirects_without_saving(self):
         from unittest.mock import MagicMock, patch
 
         fake_api = MagicMock()
@@ -558,7 +556,7 @@ class TestAuthCodePost(unittest.TestCase):
         self.assertTrue(response.location.endswith("/"))
         fake_api.validate_2fa_code.assert_called_once_with("123456")
         fake_api.trust_session.assert_called_once()
-        keyring.assert_called_once_with(username="user@test.com", password="secret")
+        keyring.assert_not_called()
         # Pending cleared.
         with web._AUTH_LOCK:  # noqa: SLF001
             self.assertNotIn("api", web._PENDING_AUTH)  # noqa: SLF001
@@ -1795,3 +1793,33 @@ class TestTheDashboardWordsTheModeCorrectly(unittest.TestCase):
             with self.subTest(reason=reason):
                 body = self._render(auth_state="reauth_needed", auth_blocked_reason=reason)
                 self.assertIn(expected, body)
+
+
+class TestTheDashboardSaysWhenAPasswordIsStored(unittest.TestCase):
+    """People who signed in before the sign-in page stopped saving the
+    password may not know it is on disk; the dashboard says so."""
+
+    def _body(self, stored, env=None):
+        from unittest.mock import patch
+
+        environ = {"ENV_ICLOUD_PASSWORD": env} if env else {}
+        with (
+            patch.object(web, "_password_is_stored", return_value=stored),
+            patch.object(web, "_detect_auth_state", return_value="ready"),
+            patch.dict(os.environ, environ),
+        ):
+            if not env:
+                os.environ.pop("ENV_ICLOUD_PASSWORD", None)
+            return web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
+
+    def test_a_stored_password_is_called_out(self):
+        body = self._body(stored=True)
+        self.assertIn("password is stored in the container", body)
+        self.assertIn("#two-ways-to-run-unattended", body)
+        self.assertNotIn("from ENV_ICLOUD_PASSWORD", body)
+
+    def test_one_from_the_environment_says_where_it_comes_from(self):
+        self.assertIn("from ENV_ICLOUD_PASSWORD", self._body(stored=True, env="x"))
+
+    def test_no_notice_without_a_stored_password(self):
+        self.assertNotIn("password is stored in the container", self._body(stored=False))
