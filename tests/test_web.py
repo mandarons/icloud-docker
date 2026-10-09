@@ -1823,3 +1823,84 @@ class TestTheDashboardSaysWhenAPasswordIsStored(unittest.TestCase):
 
     def test_no_notice_without_a_stored_password(self):
         self.assertNotIn("password is stored in the container", self._body(stored=False))
+
+    def test_the_notice_offers_to_remove_it(self):
+        self.assertIn('action="/auth/forget-password"', self._body(stored=True))
+
+    def test_no_remove_button_when_it_comes_from_the_environment(self):
+        """Deleting it would not stick: the loop stores it again every cycle."""
+        self.assertNotIn('action="/auth/forget-password"', self._body(stored=True, env="x"))
+
+
+class TestRemovingAStoredPassword(unittest.TestCase):
+    """``POST /auth/forget-password`` deletes the stored password, but only
+    once the saved session is shown to work without it, so the button
+    can never be the thing that stops sync."""
+
+    def _post(self, session_ok=True, env=None, delete_error=None):
+        from unittest.mock import MagicMock
+
+        api = MagicMock()
+        api.requires_2fa = not session_ok
+        environ = {"ENV_ICLOUD_PASSWORD": env} if env else {}
+        with (
+            patch.dict(os.environ, environ),
+            patch("src.sync.get_api_instance", return_value=api) as session,
+            patch("icloudpy.utils.get_password_from_keyring", return_value="hunter2"),
+            patch("icloudpy.utils.delete_password_in_keyring", side_effect=delete_error) as delete,
+        ):
+            if not env:
+                os.environ.pop("ENV_ICLOUD_PASSWORD", None)
+            response = _csrf_post(web.create_app(testing=True).test_client(), "/auth/forget-password")
+        return response, session, delete
+
+    def test_it_is_removed_once_the_session_works_alone(self):
+        response, session, delete = self._post()
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Stored password removed", response.data)
+        delete.assert_called_once_with("user@test.com")
+        self.assertIsNone(session.call_args.kwargs["password"])
+
+    def test_it_is_kept_when_the_session_needs_it(self):
+        response, _, delete = self._post(session_ok=False)
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"would stop sync", response.data)
+        delete.assert_not_called()
+
+    def test_it_is_kept_when_the_session_check_fails(self):
+        from icloudpy import exceptions as icloudpy_exceptions
+
+        with (
+            patch(
+                "src.sync.get_api_instance",
+                side_effect=icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException("no session"),
+            ),
+            patch("icloudpy.utils.delete_password_in_keyring") as delete,
+        ):
+            os.environ.pop("ENV_ICLOUD_PASSWORD", None)
+            response = _csrf_post(web.create_app(testing=True).test_client(), "/auth/forget-password")
+        self.assertEqual(response.status_code, 400)
+        delete.assert_not_called()
+
+    def test_it_is_not_removed_while_the_environment_sets_it(self):
+        response, session, delete = self._post(env="x")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn(b"Remove that from the container", response.data)
+        session.assert_not_called()
+        delete.assert_not_called()
+
+    def test_a_keyring_error_is_reported(self):
+        response, _, _ = self._post(delete_error=RuntimeError("read-only"))
+        self.assertEqual(response.status_code, 500)
+        self.assertIn(b"Could not remove the stored password: read-only", response.data)
+
+    def test_no_username_configured(self):
+        with patch.object(web, "_load_current_config", return_value={"app": {}}):
+            response = _csrf_post(web.create_app(testing=True).test_client(), "/auth/forget-password")
+        self.assertEqual(response.status_code, 400)
+
+    def test_it_needs_the_csrf_token(self):
+        with patch("icloudpy.utils.delete_password_in_keyring") as delete:
+            response = web.create_app(testing=True).test_client().post("/auth/forget-password")
+        self.assertEqual(response.status_code, 403)
+        delete.assert_not_called()

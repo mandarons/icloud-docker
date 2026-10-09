@@ -1135,6 +1135,75 @@ def create_app(testing: bool = False) -> Flask:
             _clear_pending_auth_unlocked()
         return redirect(url_for("auth_form"))
 
+    @app.route("/auth/forget-password", methods=["POST"])
+    def auth_forget_password():
+        """Delete the stored password, once the session is shown to work without it.
+
+        People who signed in before the sign-in page stopped saving the
+        password may not want it on disk. Deleting it while the saved
+        session needs it would stop sync, so the session is tried alone
+        first, exactly as the password-free sync loop will use it.
+        """
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+
+        config = _load_current_config()
+        username = None
+        if config:
+            try:
+                username = config_parser.get_username(config=config)
+            except (
+                KeyError,
+                AttributeError,
+                TypeError,
+            ):  # pragma: no cover — defensive for hand-malformed configs
+                username = None
+        if not username:
+            return (
+                _render_auth(
+                    message="No app.credentials.username in config.yaml — set it first.",
+                    message_kind="err",
+                ),
+                400,
+            )
+        if os.environ.get(ENV_ICLOUD_PASSWORD_KEY):
+            # The sync loop writes it back every cycle while this is set.
+            return (
+                _render_auth(
+                    message="The password comes from ENV_ICLOUD_PASSWORD. Remove that from the container's environment first; until then it is stored again every cycle.",
+                    message_kind="err",
+                ),
+                400,
+            )
+        if not _session_authenticates(username, session_only=True):
+            return (
+                _render_auth(
+                    message="The saved session is not accepted without the password right now, so removing it would stop sync. Sign in again (or use Refresh trust), then remove it.",
+                    message_kind="err",
+                ),
+                400,
+            )
+
+        from icloudpy import utils as icloudpy_utils
+
+        try:
+            icloudpy_utils.delete_password_in_keyring(username)
+        except Exception as e:
+            LOGGER.exception("Web UI: keyring delete raised")
+            return (
+                _render_auth(
+                    message=f"Could not remove the stored password: {e!s}",
+                    message_kind="err",
+                ),
+                500,
+            )
+        LOGGER.info("Web UI: stored password removed; syncing from the saved session")
+        return _render_auth(
+            message="Stored password removed. The container keeps syncing from its saved session.",
+            message_kind="ok",
+        )
+
     @app.route("/auth/refresh-trust", methods=["POST"])
     def auth_refresh_trust():
         """One-tap re-auth that reuses whatever credential the container has.
@@ -1426,12 +1495,14 @@ def _stored_password(username: str) -> str | None:
         return None
 
 
-def _session_authenticates(username: str) -> bool:
+def _session_authenticates(username: str, *, session_only: bool = False) -> bool:
     """Confirm the sync loop can now sign in.
 
     Apple accepting the assertion is not the same as the loop being able
     to authenticate, and reporting success on the submit alone once
     announced a session that still wanted a second factor.
+    ``session_only`` ignores any stored password, to check the loop could
+    sign in without one.
     """
     try:
         from src import sync
@@ -1440,7 +1511,7 @@ def _session_authenticates(username: str) -> bool:
         # session alone, exactly as the password-free sync loop signs in.
         api = sync.get_api_instance(
             username=username,
-            password=_stored_password(username),
+            password=None if session_only else _stored_password(username),
             cookie_directory=DEFAULT_COOKIE_DIRECTORY,
         )
     except Exception as e:

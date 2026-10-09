@@ -32,8 +32,9 @@ The web UI runs in a daemon thread alongside the sync loop. It shares state thro
 | `/auth/password` | POST | Submit Apple ID password |
 | `/auth/code` | POST | Submit 2FA verification code |
 | `/auth/reset` | POST | Clear pending auth state |
+| `/auth/forget-password` | POST | Delete the stored password, after checking the saved session signs in without it; refused while `ENV_ICLOUD_PASSWORD` is set |
 | `/auth/security-key` | GET | Security-key page: the signer command for a pending challenge |
-| `/auth/security-key/start` | POST | Sign in with the stored password and fetch Apple's WebAuthn challenge |
+| `/auth/security-key/start` | POST | Sign in with the typed password (or a stored one) and fetch Apple's WebAuthn challenge |
 | `/auth/security-key` | POST | Submit the signed assertion; on success the sync loop wakes |
 | `/api/sync/trigger/<service>` | POST | Force immediate sync (Drive/Photos) |
 | `/api/logs` | GET | Recent log lines |
