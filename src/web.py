@@ -1240,7 +1240,7 @@ def create_app(testing: bool = False) -> Flask:
             # The sync loop writes it back every cycle while this is set.
             return (
                 _render_auth(
-                    message="The password comes from ENV_ICLOUD_PASSWORD. Remove that from the container's environment first; until then it is stored again every cycle.",
+                    message="This password comes from ENV_ICLOUD_PASSWORD; remove it there.",
                     message_kind="err",
                 ),
                 400,
@@ -1248,7 +1248,7 @@ def create_app(testing: bool = False) -> Flask:
         if not _session_authenticates(username, session_only=True):
             return (
                 _render_auth(
-                    message="The saved session is not accepted without the password right now, so removing it would stop sync. Sign in again (or use Refresh trust), then remove it.",
+                    message="Sync still needs the stored password. Sign in again, then remove it.",
                     message_kind="err",
                 ),
                 400,
@@ -1271,7 +1271,7 @@ def create_app(testing: bool = False) -> Flask:
         _note_sign_in(username, stale_stored=None)
         LOGGER.info("Web UI: stored password removed; syncing from the saved session")
         return _render_auth(
-            message="Stored password removed. The container keeps syncing from its saved session.",
+            message="Stored password removed.",
             message_kind="ok",
         )
 
@@ -1377,7 +1377,7 @@ def create_app(testing: bool = False) -> Flask:
             return (
                 _render_auth(
                     message=(
-                        f"Refresh trust failed: {e!s}. Your stored password may be out of date. Sign in below, then remove it from the dashboard, or store the new one with ENV_ICLOUD_PASSWORD or the icloud command."
+                        f"Refresh trust failed: {e!s}. The stored password may be out of date — sign in below."
                     ),
                     message_kind="err",
                 ),

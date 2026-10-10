@@ -14,7 +14,7 @@
   {% elif auth == 'ready' %}
     <strong>{{ status.username }}</strong> is signed in and the sync loop has not reported an authentication problem. Re-authenticate below only if you want to start a fresh flow.
   {% else %}
-    Step 1 of 2 — your Apple ID password. It is used to sign in and is never logged or saved; the container keeps syncing from the session this sign-in creates.
+    Step 1 of 2 — your Apple ID password. It is never logged or saved.
     A 6-digit code will then arrive on your trusted iPhone/iPad/Mac.
   {% endif %}
 </p>
@@ -77,7 +77,7 @@
     </form>
   {% elif auth_method == 'security_key' %}
     <p style="margin: 0 0 16px; font-size: 14px; color: var(--text-secondary);">
-      Apple answers every code request for this account with a security-key challenge, so there is no code to enter.{% if status.password_stored %} Leave the password blank to use the stored one, or type it if it has changed; a typed password is used for this sign-in only, and if it works the dashboard offers to remove the old one.{% else %} Your password starts the sign-in; it is never saved.{% endif %}
+      Apple answers every code request for this account with a security-key challenge, so there is no code to enter.
     </p>
     <form method="post" action="/auth/security-key/start">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -182,7 +182,7 @@
   {% if security_key_blob %}
     The signature only proves you touched your key; it carries no password and is useless once Apple has consumed it.
   {% elif auth_method == 'security_key' %}
-    {% if status.password_stored %}Signing in uses the password stored in the container's keyring.{% else %}Your password is used for this sign-in only and is never saved.{% endif %}
+    Your password is never saved.
   {% else %}
     This form posts your password to the container over your network — keep it
     bound to loopback or behind a trusted proxy. The 2FA code is delivered by
