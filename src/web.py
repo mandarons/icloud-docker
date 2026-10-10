@@ -649,8 +649,9 @@ def create_app(testing: bool = False) -> Flask:
 
     @app.route("/auth/password", methods=["POST"])
     def auth_password():
-        """Step 1: store password in keyring, instantiate ICloudPyService,
-        trigger 2FA push if needed.
+        """Step 1: sign in with the password, trigger 2FA push if needed.
+
+        The password is not saved.
 
         On success of either path: redirects — to /auth (now showing the
         code form) if 2FA is pending, or back to / if the cached session
@@ -736,7 +737,7 @@ def create_app(testing: bool = False) -> Flask:
     @app.route("/auth/code", methods=["POST"])
     def auth_code():
         """Step 2: validate the 6-digit code on the in-flight session,
-        trust the browser, persist the password, clear pending, redirect.
+        trust the browser, clear pending, redirect.
 
         - 400 if the code field is empty or no pending auth exists.
         - 400 + 'Code rejected' if Apple says no — pending kept so the
@@ -1188,7 +1189,8 @@ def create_app(testing: bool = False) -> Flask:
         from icloudpy import utils as icloudpy_utils
 
         try:
-            icloudpy_utils.delete_password_in_keyring(username)
+            if _stored_password(username) is not None:  # a resubmit finds it gone
+                icloudpy_utils.delete_password_in_keyring(username)
         except Exception as e:
             LOGGER.exception("Web UI: keyring delete raised")
             return (
@@ -1306,7 +1308,7 @@ def create_app(testing: bool = False) -> Flask:
             return (
                 _render_auth(
                     message=(
-                        f"Refresh trust failed: {e!s}. Your stored password may be stale — submit a new one below."
+                        f"Refresh trust failed: {e!s}. Your stored password may be out of date. Sign in below, then remove it from the dashboard, or store the new one with ENV_ICLOUD_PASSWORD or the icloud command."
                     ),
                     message_kind="err",
                 ),

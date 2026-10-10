@@ -260,15 +260,31 @@ class TestSecurityKeyGet(unittest.TestCase):
         self.assertEqual(service.call_args.kwargs["password"], "typed")
         saved.assert_not_called()
 
-    def test_the_page_asks_for_the_password_only_when_none_is_stored(self):
-        for stored, asks in ((False, True), (True, False)):
+    def test_the_password_is_required_only_when_none_is_stored(self):
+        """With one stored the field stays, optional, so a changed password
+        can still be typed."""
+        for stored in (False, True):
             with (
                 self.subTest(stored=stored),
                 patch.object(web, "_password_is_stored", return_value=stored),
                 patch.object(web.web_signals, "get_auth_method", return_value="security_key"),
             ):
                 body = self._client().get("/auth").data.decode("utf-8")
-            self.assertEqual('name="password"' in body, asks)
+            self.assertIn('name="password"', body)
+            self.assertEqual('autocomplete="current-password" required' in body, not stored)
+
+    def test_a_typed_password_wins_over_a_stored_one_and_is_not_saved(self):
+        """A stored password may be out of date; the typed one is used for
+        this sign-in, and the stored one is left as it is."""
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="old"),
+            patch("icloudpy.utils.store_password_in_keyring") as saved,
+            patch("icloudpy.ICloudPyService", return_value=_api()) as service,
+            patch.object(web, "_record_auth_method"),
+        ):
+            _csrf_post(self._client(), "/auth/security-key/start", {"password": "new"})
+        self.assertEqual(service.call_args.kwargs["password"], "new")
+        saved.assert_not_called()
 
     def test_500_when_keyring_raises(self):
         with patch(

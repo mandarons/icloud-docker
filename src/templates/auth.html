@@ -77,16 +77,14 @@
     </form>
   {% elif auth_method == 'security_key' %}
     <p style="margin: 0 0 16px; font-size: 14px; color: var(--text-secondary);">
-      Apple answers every code request for this account with a security-key challenge, so there is no code to enter.{% if status.password_stored %} The stored password is used to start the sign-in.{% else %} Your password starts the sign-in; it is never saved.{% endif %}
+      Apple answers every code request for this account with a security-key challenge, so there is no code to enter.{% if status.password_stored %} Leave the password blank to use the stored one, or type it if it has changed; a typed password is used for this sign-in only.{% else %} Your password starts the sign-in; it is never saved.{% endif %}
     </p>
     <form method="post" action="/auth/security-key/start">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      {% if not status.password_stored %}
-      <input type="password" name="password" autocomplete="current-password" required
-        placeholder="Apple ID password"
+      <input type="password" name="password" autocomplete="current-password"{% if not status.password_stored %} required{% endif %}
+        placeholder="{% if status.password_stored %}Apple ID password (blank: use the stored one){% else %}Apple ID password{% endif %}"
         style="width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--divider); border-radius: 8px;
                font-size: 15px; background: #fafafa;">
-      {% endif %}
       <button type="submit" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
         Sign in with your security key
       </button>
