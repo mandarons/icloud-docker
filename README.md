@@ -205,6 +205,10 @@ drive:
   destination: "drive"
   # Remove local files that are not present on server (i.e. files delete on server)
   remove_obsolete: false
+  # Also clears the NFD-named copy an earlier version of a non-ASCII package left
+  # behind — a warning naming that copy is logged when the package is downloaded.
+  # Seconds between syncs (positive), or negative for a one-shot run.
+  # 0 is invalid: it is logged, and the default 1800 is used instead.
   sync_interval: 300
   # HTTP read timeout in seconds for the download stream (default: 30).
   # Prevents a stalled connection from freezing a sync forever.
@@ -247,6 +251,8 @@ photos:
   # *.original.bak (hidden from photo browsers, filesystem-recoverable).
   # Default false.
   # preserve_originals_as_bak: false
+  # Seconds between syncs (positive), or negative for a one-shot run.
+  # 0 is invalid: it is logged, and the default 1800 is used instead.
   sync_interval: 500
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.
