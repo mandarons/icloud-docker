@@ -77,7 +77,7 @@
     </form>
   {% elif auth_method == 'security_key' %}
     <p style="margin: 0 0 16px; font-size: 14px; color: var(--text-secondary);">
-      Apple answers every code request for this account with a security-key challenge, so there is no code to enter.{% if status.password_stored %} Leave the password blank to use the stored one, or type it if it has changed; a typed password is used for this sign-in only.{% else %} Your password starts the sign-in; it is never saved.{% endif %}
+      Apple answers every code request for this account with a security-key challenge, so there is no code to enter.{% if status.password_stored %} Leave the password blank to use the stored one, or type it if it has changed; a typed password is used for this sign-in only, and if it works the dashboard offers to remove the old one.{% else %} Your password starts the sign-in; it is never saved.{% endif %}
     </p>
     <form method="post" action="/auth/security-key/start">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

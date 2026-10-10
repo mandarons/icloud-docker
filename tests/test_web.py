@@ -1855,24 +1855,146 @@ class TestRemovingAStoredPassword(unittest.TestCase):
 
 class TestAStoredPasswordIsNeverOverwritten(unittest.TestCase):
     """A sign-in that resumes a still-valid session never shows Apple the
-    password, so the page cannot tell a changed password from a typo.
-    It never writes the keyring, even when a different one is stored."""
+    password, so the page cannot tell a changed password from a typo. It
+    never writes the keyring; when a sign-in with a different password
+    completes, the dashboard offers to remove the stored copy instead."""
 
-    def test_a_different_typed_password_leaves_the_stored_one(self):
+    def setUp(self):
+        _reset_pending_auth()
+        web._OUTDATED_PASSWORD.clear()  # noqa: SLF001
+        self.addCleanup(web._OUTDATED_PASSWORD.clear)  # noqa: SLF001
+        self.addCleanup(_reset_pending_auth)
+
+    def _sign_in(self, typed, stored="old", requires_2fa=False, env=None):
         from unittest.mock import MagicMock
+
+        api = MagicMock()
+        api.requires_2fa = requires_2fa
+        api.validate_2fa_code.return_value = True
+        environ = {"ENV_ICLOUD_PASSWORD": env} if env else {}
+        with (
+            patch.dict(os.environ, environ),
+            patch("icloudpy.ICloudPyService", return_value=api),
+            patch("icloudpy.utils.get_password_from_keyring", return_value=stored),
+            patch("icloudpy.utils.store_password_in_keyring") as saved,
+        ):
+            if not env:
+                os.environ.pop("ENV_ICLOUD_PASSWORD", None)
+            client = web.create_app(testing=True).test_client()
+            response = _csrf_post(client, "/auth/password", data={"password": typed})
+            pending = "user@test.com" in web._OUTDATED_PASSWORD  # noqa: SLF001
+            if requires_2fa:
+                _csrf_post(client, "/auth/code", data={"code": "123456"})
+        saved.assert_not_called()
+        return response, pending
+
+    def _offered(self):
+        return "user@test.com" in web._OUTDATED_PASSWORD  # noqa: SLF001
+
+    def test_a_different_password_is_not_saved_and_removal_is_offered(self):
+        response, _ = self._sign_in("new")
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(self._offered())
+
+    def test_the_same_password_offers_nothing(self):
+        self._sign_in("old")
+        self.assertFalse(self._offered())
+
+    def test_a_password_from_the_environment_offers_nothing(self):
+        self._sign_in("new", env="old")
+        self.assertFalse(self._offered())
+
+    def test_with_2fa_it_is_offered_only_once_the_code_is_accepted(self):
+        _, before_code = self._sign_in("new", requires_2fa=True)
+        self.assertFalse(before_code)
+        self.assertTrue(self._offered())
+
+    def test_the_dashboard_says_so_and_removing_it_clears_the_offer(self):
+        from unittest.mock import MagicMock
+
+        web._OUTDATED_PASSWORD["user@test.com"] = web._fingerprint("old")  # noqa: SLF001
+        with (
+            patch.object(web, "_password_is_stored", return_value=True),
+            patch.object(web, "_detect_auth_state", return_value="ready"),
+            patch("icloudpy.utils.get_password_from_keyring", return_value="old"),
+        ):
+            os.environ.pop("ENV_ICLOUD_PASSWORD", None)
+            body = web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
+        self.assertIn("stored copy looks out of date", body)
+        self.assertIn('action="/auth/forget-password"', body)
 
         api = MagicMock()
         api.requires_2fa = False
         with (
-            patch("icloudpy.ICloudPyService", return_value=api),
+            patch("src.sync.get_api_instance", return_value=api),
             patch("icloudpy.utils.get_password_from_keyring", return_value="old"),
-            patch("icloudpy.utils.store_password_in_keyring") as saved,
+            patch("icloudpy.utils.delete_password_in_keyring"),
         ):
-            response = _csrf_post(
-                web.create_app(testing=True).test_client(), "/auth/password", data={"password": "new"},
+            _csrf_post(web.create_app(testing=True).test_client(), "/auth/forget-password")
+        self.assertFalse(self._offered())
+
+    def test_a_sign_in_with_no_username_records_nothing(self):
+        web._note_sign_in(None, stale_stored=b"x")  # noqa: SLF001
+        self.assertEqual(web._OUTDATED_PASSWORD, {})  # noqa: SLF001
+
+    def _outdated_with_stored(self, stored, env=None):
+        web._OUTDATED_PASSWORD["user@test.com"] = web._fingerprint("old")  # noqa: SLF001
+        environ = {"ENV_ICLOUD_PASSWORD": env} if env else {}
+        lookup = {"side_effect": stored} if isinstance(stored, Exception) else {"return_value": stored}
+        with patch.dict(os.environ, environ), patch("icloudpy.utils.get_password_from_keyring", **lookup):
+            if not env:
+                os.environ.pop("ENV_ICLOUD_PASSWORD", None)
+            return web._stored_password_outdated("user@test.com")  # noqa: SLF001
+
+    def test_the_notice_holds_while_the_stale_password_is_still_stored(self):
+        self.assertTrue(self._outdated_with_stored("old"))
+
+    def test_the_notice_clears_once_the_password_is_replaced_elsewhere(self):
+        """The `icloud` command runs in another process; the dashboard
+        notices the stored password changed without being told."""
+        self.assertFalse(self._outdated_with_stored("current"))
+
+    def test_the_notice_clears_once_the_password_is_removed_elsewhere(self):
+        from icloudpy import exceptions as icloudpy_exceptions
+
+        self.assertFalse(self._outdated_with_stored(icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException()))
+
+    def test_no_notice_while_the_environment_sets_it(self):
+        self.assertFalse(self._outdated_with_stored("old", env="old"))
+
+    def test_a_keyring_error_hides_the_notice(self):
+        self.assertFalse(self._outdated_with_stored(RuntimeError("keyring boom")))
+
+    def test_an_abandoned_sign_in_does_not_leak_into_refresh_trust(self):
+        """A different password started a 2FA sign-in that was then
+        abandoned for "Refresh trust", which signs in with the stored one.
+        Completing that code must not call the stored password stale."""
+        from unittest.mock import MagicMock
+
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH.update(  # noqa: SLF001
+                api=MagicMock(),
+                username="user@test.com",
+                stale_stored=web._fingerprint("old"),  # noqa: SLF001
+                stashed_at=__import__("time").monotonic(),
             )
+        api = MagicMock()
+        api.requires_2fa = True
+        api.validate_2fa_code.return_value = True
+        client = web.create_app(testing=True).test_client()
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="old"),
+            patch("icloudpy.ICloudPyService", return_value=api),
+        ):
+            _csrf_post(client, "/auth/refresh-trust")
+            _csrf_post(client, "/auth/code", data={"code": "123456"})
+        self.assertFalse(self._offered())
+
+    def test_a_keyring_error_never_fails_the_sign_in(self):
+        with patch.object(web, "_stored_password", side_effect=RuntimeError("keyring boom")):
+            response, _ = self._sign_in("new")
         self.assertEqual(response.status_code, 302)
-        saved.assert_not_called()
+        self.assertFalse(self._offered())
 
 
 class TestRemovingAPasswordAlreadyGone(unittest.TestCase):

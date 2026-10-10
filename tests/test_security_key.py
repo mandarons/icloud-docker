@@ -285,6 +285,21 @@ class TestSecurityKeyGet(unittest.TestCase):
             _csrf_post(self._client(), "/auth/security-key/start", {"password": "new"})
         self.assertEqual(service.call_args.kwargs["password"], "new")
         saved.assert_not_called()
+        with web._AUTH_LOCK:  # noqa: SLF001
+            self.assertEqual(web._PENDING_AUTH.get("stale_stored"), web._fingerprint("old"))  # noqa: SLF001
+            self.assertNotIn("password", web._PENDING_AUTH)  # noqa: SLF001
+
+    def test_a_different_password_that_needs_no_key_offers_removal_at_once(self):
+        self.addCleanup(web._OUTDATED_PASSWORD.clear)  # noqa: SLF001
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="old"),
+            patch("icloudpy.ICloudPyService", return_value=_api(requires_2fa=False)),
+            patch.object(web, "_record_auth_method"),
+            patch.object(web, "_wake_sync_loop"),
+        ):
+            os.environ.pop("ENV_ICLOUD_PASSWORD", None)
+            _csrf_post(self._client(), "/auth/security-key/start", {"password": "new"})
+        self.assertIn("user@test.com", web._OUTDATED_PASSWORD)  # noqa: SLF001
 
     def test_500_when_keyring_raises(self):
         with patch(
@@ -360,7 +375,6 @@ class TestSecurityKeyReuse(unittest.TestCase):
                 {
                     "api": _api(),
                     "username": "a@icloud.com",
-                    "password": "pw",
                     "stashed_at": __import__("time").monotonic(),
                     "fsa_challenge": _FSA,
                 },
@@ -378,7 +392,6 @@ class TestSecurityKeyReuse(unittest.TestCase):
                 {
                     "api": _api(),
                     "username": "a@icloud.com",
-                    "password": "pw",
                     "stashed_at": __import__("time").monotonic(),
                     "fsa_challenge": _FSA,
                 },
@@ -413,7 +426,6 @@ class TestChallengeMismatch(unittest.TestCase):
                 {
                     "api": api,
                     "username": "a@icloud.com",
-                    "password": "pw",
                     "stashed_at": __import__("time").monotonic(),
                     "fsa_challenge": _FSA,
                 },
@@ -468,7 +480,6 @@ class TestSecurityKeyPost(unittest.TestCase):
                 {
                     "api": api,
                     "username": "a@icloud.com",
-                    "password": "pw",
                     "stashed_at": __import__("time").monotonic(),
                     "fsa_challenge": _FSA,
                 },
@@ -548,25 +559,29 @@ class TestSecurityKeyPost(unittest.TestCase):
         # and the dashboard keeps saying "sync is stopped" after a success.
         woke.assert_called_once_with()
 
-    def test_success_survives_trust_and_keyring_failures(self):
-        """Apple already accepted the assertion; bookkeeping failures after
-        that must not turn a successful sign-in into an error."""
+    def test_success_with_a_different_typed_password_offers_removal(self):
+        """The typed password worked where the stored one would be used, so
+        the dashboard offers to remove the stored copy. Nothing is removed."""
         api = _api()
         self._stash(api)
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["stale_stored"] = web._fingerprint("old")  # noqa: SLF001
+        self.addCleanup(web._OUTDATED_PASSWORD.clear)  # noqa: SLF001
         with (
             patch.object(web, "_session_authenticates", return_value=True),
-            patch(
-                "icloudpy.utils.store_password_in_keyring",
-                side_effect=RuntimeError("keyring boom"),
-            ),
+            patch("icloudpy.utils.delete_password_in_keyring") as delete,
         ):
-            response = _csrf_post(
-                self._client(),
-                "/auth/security-key",
-                {"assertion": self._assertion()},
-            )
-        self.assertEqual(response.status_code, 302)
+            _csrf_post(self._client(), "/auth/security-key", {"assertion": self._assertion()})
+        self.assertIn("a@icloud.com", web._OUTDATED_PASSWORD)  # noqa: SLF001
+        delete.assert_not_called()
 
+    def test_a_failed_submit_offers_nothing(self):
+        api = _api(accepts=False)
+        self._stash(api)
+        with web._AUTH_LOCK:  # noqa: SLF001
+            web._PENDING_AUTH["stale_stored"] = web._fingerprint("old")  # noqa: SLF001
+        _csrf_post(self._client(), "/auth/security-key", {"assertion": self._assertion()})
+        self.assertNotIn("a@icloud.com", web._OUTDATED_PASSWORD)  # noqa: SLF001
 
     def test_400_when_the_submit_raises(self):
         """A transport fault reaches the operator rather than a traceback."""
@@ -702,7 +717,6 @@ class TestCeremonyCookieIsolation(unittest.TestCase):
                 {
                     "api": api,
                     "username": "a@icloud.com",
-                    "password": "pw",
                     "stashed_at": __import__("time").monotonic(),
                     "fsa_challenge": _FSA,
                     "cookie_dir": ceremony,
@@ -864,7 +878,6 @@ class TestCeremonyIsVerifiedNotAssumed(unittest.TestCase):
                 {
                     "api": api,
                     "username": "a@icloud.com",
-                    "password": "pw",
                     "stashed_at": __import__("time").monotonic(),
                     "fsa_challenge": _FSA,
                 },
@@ -967,7 +980,6 @@ class TestAbandonedCeremonyLeavesNoCookies(unittest.TestCase):
                 {
                     "api": _api(),
                     "username": "a@icloud.com",
-                    "password": "pw",
                     "stashed_at": time.monotonic() if stashed_at is None else stashed_at,
                     "fsa_challenge": _FSA,
                     "cookie_dir": self.jar,
