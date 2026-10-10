@@ -62,6 +62,61 @@ _AUTH_LOCK = threading.Lock()
 # written anywhere.
 _PENDING_AUTH_TTL_SECONDS = 600
 
+# Apple IDs whose last web sign-in used a password other than the stored
+# one, so the stored copy is probably out of date. The dashboard offers to
+# remove it; nothing removes it unasked. Each maps to a keyed fingerprint
+# of the stored password it was compared with, so the notice goes away by
+# itself once that password is replaced or removed some other way (the
+# `icloud` command runs in another process). Memory only: after a restart
+# the plain stored-password notice is still shown.
+_OUTDATED_PASSWORD: dict[str, bytes] = {}
+_FINGERPRINT_KEY = secrets.token_bytes(32)
+
+
+def _fingerprint(password: str) -> bytes:
+    return hmac.new(_FINGERPRINT_KEY, password.encode("utf-8"), "sha256").digest()
+
+
+def _stale_stored_fingerprint(username: str, password: str | None) -> bytes | None:
+    """Fingerprint of the stored password if one is stored (not from the
+    environment) and differs from ``password``; otherwise None."""
+    if not password or os.environ.get(ENV_ICLOUD_PASSWORD_KEY):
+        return None
+    try:
+        stored = _stored_password(username)
+    except Exception as e:  # advisory only; never fail a sign-in over it
+        LOGGER.debug(f"Web UI keyring probe raised: {e!s}")
+        return None
+    if stored is None or stored == password:
+        return None
+    return _fingerprint(stored)
+
+
+def _note_sign_in(username: str | None, *, stale_stored: bytes | None) -> None:
+    """Remember whether a completed sign-in showed the stored password is out of date."""
+    if not username:
+        return
+    with _AUTH_LOCK:
+        if stale_stored is not None:
+            _OUTDATED_PASSWORD[username] = stale_stored
+        else:
+            _OUTDATED_PASSWORD.pop(username, None)
+
+
+def _stored_password_outdated(username: str | None) -> bool:
+    """True while the stored password is still the one a sign-in showed is stale.
+
+    Reads the keyring only for an Apple ID that was flagged."""
+    flagged = _OUTDATED_PASSWORD.get(username) if username else None
+    if flagged is None or os.environ.get(ENV_ICLOUD_PASSWORD_KEY):
+        return False
+    try:
+        stored = _stored_password(username)
+    except Exception as e:  # advisory only; never break a render
+        LOGGER.debug(f"Web UI keyring probe raised: {e!s}")
+        return False
+    return stored is not None and hmac.compare_digest(_fingerprint(stored), flagged)
+
 
 def _wake_sync_loop() -> None:
     """Cut short the auth-retry wait after a re-auth succeeds.
@@ -409,6 +464,7 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         # Deleting the keyring entry does not stick while this is set: the
         # sync loop writes it back every cycle.
         "password_from_env": bool(os.environ.get(ENV_ICLOUD_PASSWORD_KEY)),
+        "stored_password_outdated": _stored_password_outdated(username),
         "auth_blocked_reason": web_signals.get_auth_blocked().get("reason"),
         "auth_method": web_signals.get_auth_method(username) if username else None,
         "force_sync_pending": web_signals.pending_force_syncs(),
@@ -710,6 +766,7 @@ def create_app(testing: bool = False) -> Flask:
                 400,
             )
 
+        stale_stored = _stale_stored_fingerprint(username, password)
         if api.requires_2fa:
             # PR 1 / fix/ios-26.4-auth dependency — best-effort. Catches all
             # exceptions so a missing-method or push-trigger failure doesn't
@@ -724,9 +781,11 @@ def create_app(testing: bool = False) -> Flask:
                 _expire_stale_pending_auth_unlocked()
                 _PENDING_AUTH["api"] = api
                 _PENDING_AUTH["username"] = username
+                _PENDING_AUTH["stale_stored"] = stale_stored
                 _PENDING_AUTH["stashed_at"] = time.monotonic()
             return redirect(url_for("auth_form"))
 
+        _note_sign_in(username, stale_stored=stale_stored)
         # No 2FA needed — the sign-in refreshed the saved session, which
         # is all the sync loop needs. The password is not saved: the form
         # promises that, and ENV_ICLOUD_PASSWORD or the `icloud` command's
@@ -760,6 +819,8 @@ def create_app(testing: bool = False) -> Flask:
         with _AUTH_LOCK:
             _expire_stale_pending_auth_unlocked()
             api = _PENDING_AUTH.get("api")
+            username = _PENDING_AUTH.get("username")
+            stale_stored = _PENDING_AUTH.get("stale_stored")
         if api is None:
             return (
                 _render_auth(
@@ -808,6 +869,7 @@ def create_app(testing: bool = False) -> Flask:
 
             # The trusted session is what the sync loop resumes; the password
             # is not saved (see auth_password).
+            _note_sign_in(username, stale_stored=stale_stored)
             _wake_sync_loop()
             return redirect(url_for("dashboard"))
         finally:
@@ -886,7 +948,8 @@ def create_app(testing: bool = False) -> Flask:
         # The password typed on this page, used for this sign-in only. A
         # stored one is the fallback for containers that opted in to
         # storing it (ENV_ICLOUD_PASSWORD or the `icloud` command).
-        password = request.form.get("password") or None
+        typed = request.form.get("password") or None
+        password = typed
         if password is None:
             try:
                 password = _stored_password(username)
@@ -938,7 +1001,9 @@ def create_app(testing: bool = False) -> Flask:
                 400,
             )
 
+        stale_stored = _stale_stored_fingerprint(username, typed)
         if not api.requires_2fa:
+            _note_sign_in(username, stale_stored=stale_stored)
             _wake_sync_loop()
             return redirect(url_for("dashboard"))
 
@@ -959,6 +1024,7 @@ def create_app(testing: bool = False) -> Flask:
             _expire_stale_pending_auth_unlocked()
             _PENDING_AUTH["api"] = api
             _PENDING_AUTH["username"] = username
+            _PENDING_AUTH["stale_stored"] = stale_stored
             _PENDING_AUTH["stashed_at"] = time.monotonic()
             # Keep Apple's challenge string verbatim. It is echoed back in
             # the assertion and Apple compares it byte-for-byte, so a
@@ -1025,6 +1091,7 @@ def create_app(testing: bool = False) -> Flask:
             username = _PENDING_AUTH.get("username")
             pending_fsa = _PENDING_AUTH.get("fsa_challenge") or {}
             ceremony_dir = _PENDING_AUTH.get("cookie_dir")
+            stale_stored = _PENDING_AUTH.get("stale_stored")
             issued_challenge = pending_fsa.get("challenge")
         if api is None:
             return (
@@ -1106,6 +1173,7 @@ def create_app(testing: bool = False) -> Flask:
                     400,
                 )
             LOGGER.info("Web UI: security-key re-auth succeeded; session trusted.")
+            _note_sign_in(username, stale_stored=stale_stored)
             _wake_sync_loop()
             # The signer clears the clipboard itself once the signature is
             # read, so there is nothing left for the dashboard to do here.
@@ -1200,6 +1268,7 @@ def create_app(testing: bool = False) -> Flask:
                 ),
                 500,
             )
+        _note_sign_in(username, stale_stored=None)
         LOGGER.info("Web UI: stored password removed; syncing from the saved session")
         return _render_auth(
             message="Stored password removed. The container keeps syncing from its saved session.",
@@ -1333,6 +1402,9 @@ def create_app(testing: bool = False) -> Flask:
             _expire_stale_pending_auth_unlocked()
             _PENDING_AUTH["api"] = api
             _PENDING_AUTH["username"] = username
+            # Signed in with the stored password (or none): nothing stale,
+            # whatever an abandoned earlier sign-in left here.
+            _PENDING_AUTH["stale_stored"] = None
             _PENDING_AUTH["stashed_at"] = time.monotonic()
         return redirect(url_for("auth_form"))
 
