@@ -1761,15 +1761,14 @@ class TestTheDashboardSaysWhenAPasswordIsStored(unittest.TestCase):
 
     def test_a_stored_password_is_called_out(self):
         body = self._body(stored=True)
-        self.assertIn("password is stored in the container", body)
-        self.assertIn("#two-ways-to-run-unattended", body)
+        self.assertIn("Password stored in plain text", body)
         self.assertNotIn("from ENV_ICLOUD_PASSWORD", body)
 
     def test_one_from_the_environment_says_where_it_comes_from(self):
         self.assertIn("from ENV_ICLOUD_PASSWORD", self._body(stored=True, env="x"))
 
     def test_no_notice_without_a_stored_password(self):
-        self.assertNotIn("password is stored in the container", self._body(stored=False))
+        self.assertNotIn("Password stored in plain text", self._body(stored=False))
 
     def test_the_notice_offers_to_remove_it(self):
         self.assertIn('action="/auth/forget-password"', self._body(stored=True))
@@ -1811,7 +1810,7 @@ class TestRemovingAStoredPassword(unittest.TestCase):
     def test_it_is_kept_when_the_session_needs_it(self):
         response, _, delete = self._post(session_ok=False)
         self.assertEqual(response.status_code, 400)
-        self.assertIn(b"would stop sync", response.data)
+        self.assertIn(b"Sync still needs the stored password", response.data)
         delete.assert_not_called()
 
     def test_it_is_kept_when_the_session_check_fails(self):
@@ -1832,7 +1831,7 @@ class TestRemovingAStoredPassword(unittest.TestCase):
     def test_it_is_not_removed_while_the_environment_sets_it(self):
         response, session, delete = self._post(env="x")
         self.assertEqual(response.status_code, 400)
-        self.assertIn(b"Remove that from the container", response.data)
+        self.assertIn(b"remove it there", response.data)
         session.assert_not_called()
         delete.assert_not_called()
 
@@ -1920,7 +1919,7 @@ class TestAStoredPasswordIsNeverOverwritten(unittest.TestCase):
         ):
             os.environ.pop("ENV_ICLOUD_PASSWORD", None)
             body = web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
-        self.assertIn("stored copy looks out of date", body)
+        self.assertIn("Stored password looks out of date", body)
         self.assertIn('action="/auth/forget-password"', body)
 
         api = MagicMock()

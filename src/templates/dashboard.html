@@ -17,14 +17,13 @@
       </span>
     {% else %}
       <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
-        {% if status.stored_password_outdated %}You last signed in with a different password from the one stored in the container's keyring, so the stored copy looks out of date; sync would sign in with it, and fail, once the session lapses.{% else %}Your Apple ID password is stored in the container's keyring{% if status.password_from_env %} (from ENV_ICLOUD_PASSWORD){% endif %} — a plain-text file on most hosts.{% endif %}
-        <a href="https://github.com/mandarons/icloud-docker#two-ways-to-run-unattended" target="_blank" rel="noopener">Running without it</a>
+        {% if status.stored_password_outdated %}Stored password looks out of date{% else %}Password stored in plain text{% if status.password_from_env %} (from ENV_ICLOUD_PASSWORD){% endif %}{% endif %}
       </span>
       {% if not status.password_from_env %}
       <form action="/auth/forget-password" method="post" style="margin-top: 6px;">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <button type="submit" class="status-cta secondary"
-                title="Checks the saved session works on its own first, then deletes the stored password. Sync keeps running.">
+                title="Sync keeps running from the saved session.">
           Remove stored password
         </button>
       </form>
