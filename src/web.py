@@ -107,7 +107,10 @@ def _stored_password_outdated(username: str | None) -> bool:
     """True while the stored password is still the one a sign-in showed is stale.
 
     Reads the keyring only for an Apple ID that was flagged."""
-    flagged = _OUTDATED_PASSWORD.get(username) if username else None
+    if not username:
+        return False
+    with _AUTH_LOCK:
+        flagged = _OUTDATED_PASSWORD.get(username)
     if flagged is None or os.environ.get(ENV_ICLOUD_PASSWORD_KEY):
         return False
     try:
@@ -1581,12 +1584,14 @@ def _session_authenticates(username: str, *, session_only: bool = False) -> bool
     try:
         from src import sync
 
+        config = _load_current_config()
         # A stored password if the operator opted in to one; otherwise the
         # session alone, exactly as the password-free sync loop signs in.
         api = sync.get_api_instance(
             username=username,
             password=None if session_only else _stored_password(username),
             cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+            server_region=config_parser.get_region(config=config) if config else "global",
         )
     except Exception as e:
         LOGGER.warning(f"Web UI: session failed to authenticate: {e!s}")
