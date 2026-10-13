@@ -955,6 +955,21 @@ class TestSessionVerification(unittest.TestCase):
             web.DEFAULT_COOKIE_DIRECTORY,
         )
 
+    def test_checks_the_region_the_loop_signs_in_to(self):
+        """A China-region session lives on Apple's China endpoints, so a
+        check against the global ones fails and the Remove button refuses."""
+        for config, region in (({"app": {"region": "china"}}, "china"), (None, "global")):
+            with (
+                self.subTest(region=region),
+                patch.object(web, "_load_current_config", return_value=config),
+                patch(
+                    "src.sync.get_api_instance",
+                    return_value=_api(requires_2fa=False),
+                ) as get_api,
+            ):
+                web._session_authenticates("a@icloud.com", session_only=True)  # noqa: SLF001
+            self.assertEqual(get_api.call_args.kwargs["server_region"], region)
+
 
 class TestAbandonedCeremonyLeavesNoCookies(unittest.TestCase):
     """A ceremony's private cookie jar holds its Apple session cookies. It
