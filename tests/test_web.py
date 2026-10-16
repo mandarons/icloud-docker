@@ -636,6 +636,11 @@ class TestDashboard(unittest.TestCase):
         body = client.get("/").data.decode("utf-8")
         self.assertIn("iCloud Docker", body)
 
+    def test_the_header_brand_links_to_the_dashboard(self):
+        client = web.create_app(testing=True).test_client()
+        body = client.get("/auth").data.decode("utf-8")
+        self.assertIn('<a href="/" class="brand">', body)
+
     def test_dashboard_contains_username(self):
         client = web.create_app(testing=True).test_client()
         body = client.get("/").data.decode("utf-8")
