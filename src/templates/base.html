@@ -44,7 +44,8 @@
       max-width: 1024px; margin: 0 auto; padding: 0 24px;
       display: flex; align-items: center; height: 48px; gap: 24px;
     }
-    .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
+    .brand:hover { text-decoration: none; }
     .brand-version {
       display: inline-block; margin-left: 8px;
       font-size: 11px; font-weight: 500; color: var(--text-tertiary);
@@ -219,7 +220,7 @@
 <body>
 <header class="header">
   <div class="header-inner">
-    <div class="brand">☁️ iCloud Docker{% if version %}<span class="brand-version">{{ version }}</span>{% endif %}</div>
+    <a href="/" class="brand">☁️ iCloud Docker{% if version %}<span class="brand-version">{{ version }}</span>{% endif %}</a>
     <nav class="nav">
       <a href="/" class="{% if active_nav == 'dashboard' %}active{% endif %}">Dashboard</a>
       <a href="/auth" class="{% if active_nav == 'auth' %}active{% endif %}">Auth</a>
