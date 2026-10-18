@@ -3446,3 +3446,83 @@ class TestDownloadIsVerifiedBeforeItCountsAsThePhoto(unittest.TestCase):
             versions = {"original": {"size": "not-a-number"}}
 
         self.assertIsNone(_declared_size(Garbage(), "original"))
+
+
+class TestUnlistedLibraryIsAFailureNotACrash(unittest.TestCase):
+    """``filters.libraries`` can name a library Apple no longer lists -- a
+    Shared Library that was left, say. Looking it up raised a KeyError
+    outside the per-library isolation, so Photos stopped for every library
+    each cycle and the dashboard never said why."""
+
+    def _config(self, base, *, destinations=None):
+        photos = {
+            "destination": base,
+            "remove_obsolete": True,
+            "filters": {"libraries": ["Gone", "PrimarySync"], "file_sizes": ["original"]},
+        }
+        if destinations:
+            photos["library_destinations"] = destinations
+        return {"photos": photos}
+
+    def _photos(self):
+        from unittest.mock import MagicMock
+
+        photos = MagicMock()
+        # A finished index, so cleanup is up to the library list alone.
+        photos.libraries = {"PrimarySync": MagicMock(indexing_state="FINISHED")}
+        return photos
+
+    def _run(self, config, photos):
+        seen = []
+
+        def fake(photos, library, *a, **k):
+            # Looks the library up the way the real sync does.
+            photos.libraries[library]  # noqa: B018
+            seen.append(library)
+            return (3, 0)
+
+        base = config["photos"]["destination"]
+        with (
+            patch.object(sync_photos.config_parser, "prepare_photos_destination", return_value=base),
+            patch.object(sync_photos, "_sync_all_photos_in_library", side_effect=fake),
+            patch.object(sync_photos, "remove_obsolete_files") as remove,
+            patch.object(sync_photos, "_signal_library") as signal,
+        ):
+            result = sync_photos.sync_photos(config=config, photos=photos)
+        return result, seen, remove, signal
+
+    def test_the_listed_libraries_still_sync(self):
+        with tempfile.TemporaryDirectory() as base:
+            result, seen, _, _ = self._run(self._config(base), self._photos())
+        self.assertEqual(seen, ["PrimarySync"])
+        self.assertEqual(result, (3, 0))
+
+    def test_the_dashboard_says_why(self):
+        with tempfile.TemporaryDirectory() as base:
+            _, _, _, signal = self._run(self._config(base), self._photos())
+        signal.assert_any_call(
+            "record_library_finished",
+            "Gone",
+            ok=False,
+            error="Apple does not list this library",
+        )
+
+    def test_a_shared_destination_is_not_cleaned(self):
+        with tempfile.TemporaryDirectory() as base:
+            _, _, remove, _ = self._run(self._config(base), self._photos())
+        remove.assert_not_called()
+
+    def test_only_the_unlisted_library_is_kept_out_of_cleanup(self):
+        with tempfile.TemporaryDirectory() as base:
+            config = self._config(base, destinations={"Gone": "gone", "PrimarySync": "mine"})
+            _, _, remove, _ = self._run(config, self._photos())
+        self.assertEqual([c.args[0] for c in remove.call_args_list], [os.path.join(base, "mine")])
+
+    def test_a_listing_that_fails_leaves_each_library_to_fail_on_its_own(self):
+        from unittest.mock import MagicMock, PropertyMock
+
+        from icloudpy import exceptions
+
+        photos = MagicMock()
+        type(photos).libraries = PropertyMock(side_effect=exceptions.ICloudPyAPIResponseException("down", 503))
+        self.assertEqual(sync_photos._listed_libraries(photos, ["Gone", "PrimarySync"], set()), ["Gone", "PrimarySync"])  # noqa: SLF001
