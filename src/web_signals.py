@@ -409,42 +409,6 @@ def get_library_states() -> dict[str, Any]:
     return _load_state().get(_LIBRARY_STATE_KEY, {})
 
 
-_PHOTOS_INDEXING_STATE_KEY = "_photos_indexing"
-
-
-def record_photos_indexing(*, waiting: bool) -> None:
-    """Record whether Photos is waiting on Apple to finish indexing.
-
-    Service-level on purpose: while any zone of the account is being
-    indexed, icloudpy cannot open Photos at all, so this belongs to the
-    service and not to any one library. ``since`` is kept from the first
-    cycle that saw it -- the wait can run for days, and how long it has
-    been going is the only part of it the operator can act on.
-
-    Clearing is a no-op when nothing was recorded, so the ordinary
-    success path does not rewrite the state file every cycle.
-    """
-    state = _load_state()
-    entry = state.get(_PHOTOS_INDEXING_STATE_KEY)
-    entry = entry if isinstance(entry, dict) else {}
-    if not waiting:
-        if not entry.get("waiting"):
-            return
-        entry = {"waiting": False}
-    elif not entry.get("waiting"):
-        entry = {"waiting": True, "since": time.time()}
-    else:
-        return
-    state[_PHOTOS_INDEXING_STATE_KEY] = entry
-    _save_state(state)
-
-
-def get_photos_indexing() -> dict[str, Any]:
-    """Return the recorded Photos indexing wait. Empty dict if never recorded."""
-    entry = _load_state().get(_PHOTOS_INDEXING_STATE_KEY)
-    return entry if isinstance(entry, dict) else {}
-
-
 def clear_stale_library_states() -> None:
     """Demote any library left mid-sync with no process still on it.
 
