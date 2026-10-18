@@ -619,8 +619,9 @@ def _libraries_still_indexing(photos, libraries) -> set:
     """Names of the libraries to sync that Apple has not finished indexing.
 
     icloudpy opens such a library when asked to and records how far Apple
-    got as ``indexing_state``. A library without one was opened by an
-    icloudpy that refuses unfinished libraries, so it is finished.
+    got as ``indexing_state``. Only an explicit ``FINISHED`` counts as
+    finished: a missing or empty state is treated as still indexing,
+    since a partial listing would read as deletions.
 
     Fails closed: if the libraries cannot be listed here, every one is
     returned, because a later attempt in the same cycle can succeed and
@@ -641,9 +642,11 @@ def _libraries_still_indexing(photos, libraries) -> set:
         if name not in available:
             indexing.add(name)
             continue
-        state = getattr(available[name], "indexing_state", "FINISHED")
-        still_indexing = isinstance(state, str) and state != "FINISHED"
-        _signal_library("record_library_indexing", name, state=state if still_indexing else None)
+        # Anything but an explicit FINISHED, a missing or empty state
+        # included, keeps the library out of cleanup.
+        state = getattr(available[name], "indexing_state", None)
+        still_indexing = state != "FINISHED"
+        _signal_library("record_library_indexing", name, state=str(state) if still_indexing else None)
         if still_indexing:
             LOGGER.warning(
                 f"Apple is still indexing {name} ({state}). Downloading what it "

@@ -356,7 +356,10 @@ class TestEachPhotoLibraryKeepsItsOwnPlaceInTheBin(_BinTestCase):
             },
         }
         photos = MagicMock()
-        photos.libraries = {"PrimarySync": MagicMock(), "SharedLibrary": MagicMock()}
+        photos.libraries = {
+            "PrimarySync": MagicMock(indexing_state="FINISHED"),
+            "SharedLibrary": MagicMock(indexing_state="FINISHED"),
+        }
         with (
             patch.object(sync_photos.config_parser, "prepare_photos_destination", return_value=self.photos),
             patch.object(sync_photos, "_sync_albums_by_configuration", return_value=(0, 0)),

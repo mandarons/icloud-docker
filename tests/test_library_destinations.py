@@ -154,8 +154,8 @@ class TestSyncPhotosRemoveObsoletePerLibrary(unittest.TestCase):
             }
             fake_photos = MagicMock()
             fake_photos.libraries = {
-                "PrimarySync": MagicMock(),
-                "SharedLibrary": MagicMock(),
+                "PrimarySync": MagicMock(indexing_state="FINISHED"),
+                "SharedLibrary": MagicMock(indexing_state="FINISHED"),
             }
 
             with patch.object(
