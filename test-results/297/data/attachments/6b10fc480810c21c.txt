@@ -1,0 +1,12 @@
+[38;21m2026-10-18 06:56:43,255 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-18 06:56:43,255 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-18 06:56:43,256 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-18 06:56:43,256 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-18 06:56:43,257 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: http://test.com[0m
+[38;21m2026-10-18 06:56:43,257 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: http://test.com[0m
+[38;21m2026-10-18 06:56:43,257 :: DEBUG :: root :: usage.py :: 243 :: Installation registration failed: no response[0m
+[38;21m2026-10-18 06:56:43,257 :: DEBUG :: root :: usage.py :: 243 :: Installation registration failed: no response[0m
+[38;21m2026-10-18 06:56:43,257 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-18 06:56:43,257 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-18 06:56:43,258 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-18 06:56:43,258 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

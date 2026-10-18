@@ -1,0 +1,4 @@
+INFO     root:sync.py:1329 Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).
+INFO     root:sync.py:1370 Received 6-digit code via Telegram -- validating.
+WARNING  root:sync.py:1374 validate_2fa_code raised: api down -- waiting for another code.
+INFO     root:sync.py:1399 Telegram listen timeout reached with no usable code; retrying auth.

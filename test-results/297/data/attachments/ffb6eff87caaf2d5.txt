@@ -1,0 +1,4 @@
+INFO     root:sync.py:1329 Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).
+INFO     root:sync.py:1370 Received 6-digit code via Telegram -- validating.
+WARNING  root:sync.py:1384 Apple rejected the Telegram-supplied code -- waiting for another.
+INFO     root:sync.py:1399 Telegram listen timeout reached with no usable code; retrying auth.
