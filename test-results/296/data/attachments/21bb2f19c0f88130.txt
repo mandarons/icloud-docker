@@ -1,0 +1,24 @@
+[38;5;39m2026-10-18 06:37:48,301 :: INFO :: root :: web.py :: 1599 :: Web UI: session check -> requires_2fa=False[0m
+[38;5;39m2026-10-18 06:37:48,301 :: INFO :: root :: web.py :: 1599 :: Web UI: session check -> requires_2fa=False[0m
+[38;5;196m2026-10-18 06:37:48,302 :: ERROR :: root :: web.py :: 1266 :: Web UI: keyring delete raised[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 1264, in auth_forget_password
+    icloudpy_utils.delete_password_in_keyring(username)
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1114, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1118, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1173, in _execute_mock_call
+    raise effect
+RuntimeError: read-only
+[38;5;196m2026-10-18 06:37:48,302 :: ERROR :: root :: web.py :: 1266 :: Web UI: keyring delete raised[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 1264, in auth_forget_password
+    icloudpy_utils.delete_password_in_keyring(username)
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1114, in __call__
+    return self._mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1118, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+  File "/opt/hostedtoolcache/Python/3.10.22/x64/lib/python3.10/unittest/mock.py", line 1173, in _execute_mock_call
+    raise effect
+RuntimeError: read-only
