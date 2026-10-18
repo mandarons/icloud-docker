@@ -14,13 +14,15 @@ from unittest.mock import MagicMock, patch
 import tests  # noqa: F401  — env setup
 from src import sync, sync_photos
 
+_NO_STATE = object()
 
-def _library(state=None):
+
+def _library(state=_NO_STATE):
     library = MagicMock()
-    if state is not None:
-        library.indexing_state = state
-    else:
+    if state is _NO_STATE:
         del library.indexing_state
+    else:
+        library.indexing_state = state
     return library
 
 
@@ -56,9 +58,14 @@ class TestLibrariesStillIndexing(unittest.TestCase):
             self.assertEqual(self._indexing(libraries), {"SharedSync-1"})
         self.assertIn("still indexing SharedSync-1 (RUNNING)", "\n".join(logs.output))
 
-    def test_a_library_without_a_state_is_finished(self):
-        """An icloudpy that records no state refuses unfinished libraries."""
-        self.assertEqual(self._indexing({"PrimarySync": _library()}), set())
+    def test_a_library_without_a_finished_state_is_not_trusted(self):
+        """Only an explicit FINISHED lets cleanup run: a missing or empty
+        state could hide a partial listing."""
+        for library in (_library(), _library(None), _library("")):
+            with self.subTest(state=getattr(library, "indexing_state", "missing")):
+                self.assertEqual(
+                    self._indexing({"PrimarySync": library}), {"PrimarySync"},
+                )
 
     def test_a_library_not_being_synced_is_ignored(self):
         libraries = {

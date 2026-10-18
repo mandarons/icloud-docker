@@ -2871,7 +2871,7 @@ class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
         from unittest.mock import MagicMock
 
         photos = MagicMock()
-        photos.libraries = {n: MagicMock() for n in names}
+        photos.libraries = {n: MagicMock(indexing_state="FINISHED") for n in names}
         return photos
 
     def test_zone_faults_are_inside_the_isolated_exception_set(self):
