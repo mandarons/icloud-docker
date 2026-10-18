@@ -31,8 +31,10 @@ exclude = [
 line-length = 120
 indent-width = 4
 
-# Assume Python 3.8
-# target-version = "py38"
+# The image and CI both run Python 3.10 (see Dockerfile and .github/workflows).
+# Pin it explicitly: without this ruff 0.17+ defaults to py311 and starts
+# suggesting 3.11-only APIs such as `datetime.UTC` (UP017).
+target-version = "py310"
 
 [lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
@@ -90,6 +92,13 @@ unfixable = ["B"]
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+# `import datetime` — never `as dt` — is this codebase's style, and ruff 0.17
+# added `datetime as dt` as a default ICN001 alias. State the convention we
+# actually use so ICN001 keeps enforcing the other aliases without flagging
+# every datetime import in src/ and tests/.
+[lint.flake8-import-conventions.aliases]
+datetime = "datetime"
+
 # 4. Ignore `E402` (import violations) in all `__init__.py` files, and in select subdirectories.
 [lint.per-file-ignores]
 "__init__.py" = ["E402"]
