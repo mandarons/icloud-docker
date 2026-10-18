@@ -430,6 +430,7 @@ def sync_photos(config, photos):
     # cleaning its destination would read as "the server has none of these"
     # and delete every local copy.
     failed_libraries: set = set()
+    libraries = _listed_libraries(photos, libraries, failed_libraries)
     # Libraries Apple is still indexing. They are synced -- the listing is
     # usually complete long before the index says so -- but, like a failed
     # library, kept out of cleanup: an incomplete listing would read as
@@ -654,6 +655,31 @@ def _libraries_still_indexing(photos, libraries) -> set:
             )
             indexing.add(name)
     return indexing
+
+
+def _listed_libraries(photos, libraries, failed_libraries) -> list:
+    """The configured libraries Apple lists; the others are failed, not fatal.
+
+    ``filters.libraries`` can name a library Apple no longer lists, such as
+    a Shared Library that was left. Looking one up raises a KeyError outside
+    the per-library isolation, which stopped Photos for every library. Each
+    one dropped here is barred from cleanup like any failed library.
+
+    If the libraries cannot be listed, all are kept, and each fails on its
+    own when it is synced.
+    """
+    try:
+        available = photos.libraries
+    except _LIBRARY_FAULTS:
+        return list(libraries)
+    listed = []
+    for library in libraries:
+        if library in available:
+            listed.append(library)
+            continue
+        _note_library_failure(library, "Apple does not list this library", failed_libraries)
+        _signal_library("record_library_finished", library, ok=False, error="Apple does not list this library")
+    return listed
 
 
 def _note_library_failure(library, error, failed_libraries) -> None:
