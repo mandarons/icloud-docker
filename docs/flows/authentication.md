@@ -53,7 +53,7 @@ Switching an existing container to session-only takes both halves: unset `ENV_IC
 
 5. **No usable credential** (`_handle_password_error()`)
    - Reached only when no password is configured *and* the saved session cannot be resumed. Logs which of the two it was, marks the web UI's auth state blocked, sends the notification, and waits `retry_login_interval` — the same backoff as the 2FA path, so Apple's sign-in is never hammered
-   - Recovery: `docker exec -it icloud /bin/sh -c "su-exec abc icloud --username=… --session-directory=/config/session_data"`, answering **no** to `Save password in keyring?` to stay password-free. The dashboard's `/auth` form works too but always persists the password to the keyring, which switches the container to the other mode
+   - Recovery: `docker exec -it icloud /bin/sh -c "su-exec abc icloud --username=… --session-directory=/config/session_data"`, answering **no** to `Save password in keyring?` to stay password-free. The dashboard's `/auth` form works too, and never saves the password, so the container stays password-free
    - `retry_login_interval < 0` exits instead of retrying, as elsewhere
    - Sign-in failures that reach `_handle_auth_transport_error` in session-only mode are split by `_needs_a_human`. icloudpy keeps the HTTP status on the exception only for a non-JSON body or its own re-auth statuses, so an `ICloudPyAPIResponseException` with `code` of `None` (a JSON-bodied 401, say) cannot be told apart from a rejected session: that one gets the "re-auth required" notification, throttled to one message a day, because only a human can revive such a container. A 5xx that kept its status, a dropped connection or a timeout is an outage and gets no such notification — waking someone daily to re-authenticate over Apple having a bad hour is exactly what the split avoids
    - Either way the loop publishes `sign_in_failed` so the dashboard stops claiming health; its wording for that reason ("this can be an outage; the loop keeps retrying") allows for both and asks for nothing
@@ -88,14 +88,14 @@ Set `app.region: china` in config to enable.
 The web UI provides an alternative auth flow:
 1. User visits `/auth` page
 2. Submits Apple ID password via `POST /auth/password`
-3. Password stored in `_PENDING_AUTH` (in-memory, 10-min TTL)
+3. The half-finished sign-in waits in `_PENDING_AUTH` (in-memory, 10-min TTL)
 4. 2FA code submitted via `POST /auth/code`
-5. On success: trust session established, keyring updated
+5. On success: trust session established; the sync loop resumes that session
 
-Note the last step: the dashboard always persists the password to the keyring, so using it to recover a session-only container switches that container to password-stored mode. `icloud --delete-from-keyring` undoes it; the `docker exec … icloud …` flow avoids it in the first place by letting you decline the "Save password in keyring?" prompt.
+The dashboard never adds a password to the keyring, so recovering a password-free container through it keeps it password-free. Storing a password is opt-in: `ENV_ICLOUD_PASSWORD`, or answering yes to the `icloud` command's "Save password in keyring?" prompt. If a stored password goes out of date (changed at Apple), sign in through the dashboard to restore the session, then either remove the stored one or store the new one with `ENV_ICLOUD_PASSWORD` or the `icloud` command; the dashboard never overwrites it. When a dashboard sign-in with a different password completes, the dashboard says the stored copy looks out of date and offers the remove button (remembered in memory only, so a restart falls back to the plain notice). The dashboard's **Remove stored password** button (`/auth/forget-password`) deletes it, after checking that the saved session signs in without it.
 
 For an Apple ID with security keys enrolled, Apple returns a WebAuthn challenge instead of a code:
-1. `POST /auth/security-key/start` signs in and packs Apple's challenge into one base64 blob
+1. `POST /auth/security-key/start` signs in (with the password typed on the page, or the stored one if there is one) and packs Apple's challenge into one base64 blob
 2. The page offers `uv run …/src/icloud_sign.py <blob>` for the machine holding the key (WebAuthn redirection: the challenge travels to the key, only the signed assertion travels back)
 3. `src/icloud_sign.py` prints what it will sign, asks for a touch, and copies the assertion
 4. `POST /auth/security-key` hands the assertion to icloudpy (`confirm_security_key`), trusts the session, and wakes the sync loop
@@ -104,7 +104,7 @@ For an Apple ID with security keys enrolled, Apple returns a WebAuthn challenge 
 
 - **Error handling:** All auth failures are caught and trigger retry with notification
 - **Logging:** Auth events logged at INFO/ERROR level
-- **Security:** Passwords never logged; stored in keyring only
+- **Security:** Passwords never logged; stored in the keyring only when the operator opts in (`ENV_ICLOUD_PASSWORD` or the `icloud` prompt), never by the web UI
 - **Thread safety:** Web UI auth uses `_AUTH_LOCK` mutex
 
 ## Related Docs

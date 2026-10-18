@@ -14,7 +14,7 @@
   {% elif auth == 'ready' %}
     <strong>{{ status.username }}</strong> is signed in and the sync loop has not reported an authentication problem. Re-authenticate below only if you want to start a fresh flow.
   {% else %}
-    Step 1 of 2 — your Apple ID password. It is never logged, but it is saved in the container's keyring so the sync loop can sign in again on its own. On a headless host that keyring is a plain-text file.
+    Step 1 of 2 — your Apple ID password. It is never logged or saved.
     A 6-digit code will then arrive on your trusted iPhone/iPad/Mac.
   {% endif %}
 </p>
@@ -77,10 +77,14 @@
     </form>
   {% elif auth_method == 'security_key' %}
     <p style="margin: 0 0 16px; font-size: 14px; color: var(--text-secondary);">
-      Apple answers every code request for this account with a security-key challenge, so there is no code to enter and no password to retype.
+      Apple answers every code request for this account with a security-key challenge, so there is no code to enter.
     </p>
     <form method="post" action="/auth/security-key/start">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="password" name="password" autocomplete="current-password"{% if not status.password_stored %} required{% endif %}
+        placeholder="{% if status.password_stored %}Apple ID password (blank: use the stored one){% else %}Apple ID password{% endif %}"
+        style="width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--divider); border-radius: 8px;
+               font-size: 15px; background: #fafafa;">
       <button type="submit" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
         Sign in with your security key
       </button>
@@ -88,7 +92,7 @@
   {% elif not pending and auth == 'ready' %}
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
       <div class="status-dot"></div>
-      <div class="status-text"><strong>{{ status.username }}</strong> — keyring populated</div>
+      <div class="status-text"><strong>{{ status.username }}</strong> — signed in</div>
     </div>
     <form method="post" action="/auth/password">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
@@ -178,7 +182,7 @@
   {% if security_key_blob %}
     The signature only proves you touched your key; it carries no password and is useless once Apple has consumed it.
   {% elif auth_method == 'security_key' %}
-    Signing uses the password already cached in the container's keyring — nothing is typed here.
+    Your password is never saved.
   {% else %}
     This form posts your password to the container over your network — keep it
     bound to loopback or behind a trusted proxy. The 2FA code is delivered by
