@@ -21,24 +21,6 @@ from src.sync_stats import DriveStats, PhotoStats
 from tests import data
 
 
-class _IndexingPhotos:
-    """A photo service Apple has not finished indexing.
-
-    Faithful to icloudpy 0.10.0: a zone is opened by constructing a
-    ``PhotoLibrary``, whose constructor raises ServiceNotActivated when
-    that zone's index is unfinished, and ``PhotosService.libraries``
-    builds one for every zone of the account in a single loop without
-    caching anything on failure. Every access therefore raises, which is
-    why one indexing zone makes the whole service unreadable.
-    """
-
-    @property
-    def libraries(self):
-        """Raise what icloudpy raises, message and all."""
-        msg = "iCloud Photo Library not finished indexing.  Please try again in a few minutes"
-        raise exceptions.ICloudPyServiceNotActivatedException(msg, None)
-
-
 class TestSync(unittest.TestCase):
     """Tests class for sync.py file."""
 
@@ -711,102 +693,9 @@ class TestSync(unittest.TestCase):
         self.assertFalse(stats.has_errors())
         self.assertEqual(len(stats.errors), 0)
 
-    def test_photos_waits_for_apple_to_finish_indexing(self):
-        """A wait, not a sync failure: Photos is skipped without an error,
-        retried sooner than a long interval, and the dashboard is told.
-
-        Driven through the real ``sync_photos`` so the exception travels
-        the path icloudpy raises it on -- out of a zone lookup, through
-        the per-library handler that must not swallow it.
-        """
-        sync_state = sync.SyncState()
-        with (
-            patch("src.web_signals.record_photos_indexing") as recorded,
-            self.assertLogs(level="WARNING") as logs,
-        ):
-            stats = sync._perform_photos_sync(  # noqa: SLF001
-                config=deepcopy(self.config),
-                api=SimpleNamespace(photos=_IndexingPhotos()),
-                sync_state=sync_state,
-                photos_sync_interval=43200,
-            )
-
-        self.assertIsNone(stats)
-        self.assertEqual(sync_state.photos_time_remaining, 1800)
-        recorded.assert_called_once_with(waiting=True)
-        self.assertTrue(any("has not finished indexing" in line for line in logs.output))
-        self.assertTrue(any("again in 30 minutes" in line for line in logs.output))
-        self.assertFalse(any(line.startswith("ERROR") for line in logs.output))
-
-        # With Drive on its usual 12 hours, the next wake is for Photos.
-        sync_state.drive_time_remaining = 43200
-        config = {"drive": {}, "photos": {}}
-        self.assertEqual(sync._calculate_next_sync_schedule(config, sync_state), 1800)  # noqa: SLF001
-        self.assertTrue(sync_state.enable_sync_photos)
-        self.assertFalse(sync_state.enable_sync_drive)
-
-    def test_the_indexing_retry_only_ever_shortens_the_wait(self):
-        """Never slower than the configured interval -- and still readable
-        when that interval is shorter than a minute."""
-        sync_state = sync.SyncState()
-        with (
-            patch("src.web_signals.record_photos_indexing", side_effect=OSError("read-only")),
-            self.assertLogs(level="WARNING") as logs,
-        ):
-            sync._perform_photos_sync(  # noqa: SLF001
-                config=deepcopy(self.config),
-                api=SimpleNamespace(photos=_IndexingPhotos()),
-                sync_state=sync_state,
-                photos_sync_interval=45,
-            )
-        self.assertEqual(sync_state.photos_time_remaining, 45)
-        self.assertTrue(any("again in 45 seconds" in line for line in logs.output))
-
-    @patch("src.sync.sync_photos.sync_photos", return_value=(0, 0))
-    def test_a_successful_photos_cycle_clears_the_indexing_note(self, _mock_sync_photos):
-        """Otherwise the dashboard goes on saying Apple is indexing for as
-        long as the container lives, having been right once."""
-        with patch("src.web_signals.record_photos_indexing") as recorded:
-            sync._perform_photos_sync(  # noqa: SLF001
-                config=deepcopy(self.config),
-                api=SimpleNamespace(photos=object()),
-                sync_state=sync.SyncState(),
-                photos_sync_interval=600,
-            )
-        recorded.assert_called_once_with(waiting=False)
-
-    def test_the_wait_does_not_leave_a_library_reading_syncing_now(self):
-        """The library being opened when indexing surfaced never started,
-        so it must not be left mid-sync on the dashboard -- reading
-        "Syncing now" beside a note saying Photos cannot be read."""
-        from src import web_signals
-
-        web_signals.record_library_started("PrimarySync")
-        with self.assertLogs(level="WARNING"):
-            sync._perform_photos_sync(  # noqa: SLF001
-                config=deepcopy(self.config),
-                api=SimpleNamespace(photos=_IndexingPhotos()),
-                sync_state=sync.SyncState(),
-                photos_sync_interval=43200,
-            )
-        states = web_signals.get_library_states()
-        self.assertEqual(states["PrimarySync"]["state"], "interrupted")
-
-    def test_a_one_shot_run_leaves_indexing_to_the_normal_error_path(self):
-        """``sync_interval: -1`` runs one cycle and exits, so there is no
-        later cycle to retry in -- and ``min`` would have scheduled the
-        retry for -1 minutes and then not taken it."""
-        with self.assertRaises(exceptions.ICloudPyServiceNotActivatedException):
-            sync._perform_photos_sync(  # noqa: SLF001
-                config=deepcopy(self.config),
-                api=SimpleNamespace(photos=_IndexingPhotos()),
-                sync_state=sync.SyncState(),
-                photos_sync_interval=-1,
-            )
-
     @patch("src.sync.sync_photos.sync_photos")
     def test_other_photos_service_errors_still_propagate(self, mock_sync_photos):
-        """Only indexing is a wait. A dead zone is still a sync failure."""
+        """A dead zone is a sync failure, not something to wait out."""
         mock_sync_photos.side_effect = exceptions.ICloudPyServiceNotActivatedException("ZONE_NOT_FOUND", None)
         with self.assertRaises(exceptions.ICloudPyServiceNotActivatedException):
             sync._perform_photos_sync(  # noqa: SLF001
@@ -2862,12 +2751,7 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
         "photos": {"destination": "photos", "sync_interval": 900},
     }
 
-    def _boundary(self, drive_stats, photos_stats, config=None, loops=True, photos_indexing=False):
-        def photos(config, api, sync_state, interval):
-            # What _wait_for_photos_indexing leaves behind for the cycle.
-            sync_state.photos_indexing = photos_indexing
-            return photos_stats
-
+    def _boundary(self, drive_stats, photos_stats, config=None, loops=True):
         api = Mock()
         api.requires_2sa = False
         with (
@@ -2878,7 +2762,7 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
             patch.object(sync, "_maybe_refresh_trust"),
             patch.object(sync, "_maybe_warn_trust_expiring"),
             patch.object(sync, "_perform_drive_sync", return_value=drive_stats),
-            patch.object(sync, "_perform_photos_sync", side_effect=photos),
+            patch.object(sync, "_perform_photos_sync", return_value=photos_stats),
             patch.object(sync, "_send_usage_statistics"),
             patch.object(sync, "_interruptible_sleep", side_effect=SystemExit),
             patch("src.notify.send_sync_summary"),
@@ -2901,15 +2785,6 @@ class TestACycleThatSyncedNothingIsAFailure(unittest.TestCase):
             self._boundary(drive_stats=None, photos_stats=None),
             ("failure", "mount_marker_missing"),
         )
-
-    def test_a_photos_cycle_waiting_on_apple_says_so(self):
-        """Photos skipped for Apple's indexing, Drive not due: nothing synced,
-        but the mount is fine and nobody should go looking at it."""
-        self.assertEqual(
-            self._boundary(drive_stats=None, photos_stats=None, photos_indexing=True),
-            ("failure", "photos_indexing"),
-        )
-        self.assertIn("indexing", self.cycle_message)
 
     def test_one_service_not_being_due_is_an_ordinary_success(self):
         """The regression this guards: Photos on a 900s interval is simply
