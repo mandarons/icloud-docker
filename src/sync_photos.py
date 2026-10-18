@@ -666,7 +666,9 @@ def is_photos_indexing(error) -> bool:
     ``PhotoLibrary`` for every zone of the account in one pass -- each of
     which raises this if that zone's index is unfinished, with nothing
     cached on failure. So while any one zone is indexing, Photos cannot
-    be opened at all.
+    be opened at all. That is icloudpy's default; ``get_api_instance``
+    opts out with ``photos_require_finished_index=False``, so with
+    icloudpy 0.11.0 this no longer fires.
     """
     return isinstance(error, exceptions.ICloudPyServiceNotActivatedException) and "indexing" in str(error)
 
