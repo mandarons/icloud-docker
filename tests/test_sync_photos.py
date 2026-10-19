@@ -2842,25 +2842,6 @@ class TestObsoleteDeleteLimit(unittest.TestCase):
             self.assertTrue(Path(base, ".mounted").is_file())
 
 
-class _IndexingPhotos:
-    """A photo service Apple has not finished indexing.
-
-    Faithful to icloudpy 0.10.0: ``PhotosService.libraries`` builds a
-    ``PhotoLibrary`` for every zone of the account in one loop, each
-    constructor raising ServiceNotActivated if that zone's index is
-    unfinished, and ``_libraries`` is not cached on failure. So every
-    access raises while any one zone is indexing.
-    """
-
-    @property
-    def libraries(self):
-        """Raise what icloudpy raises, message and all."""
-        from icloudpy import exceptions
-
-        msg = "iCloud Photo Library not finished indexing.  Please try again in a few minutes"
-        raise exceptions.ICloudPyServiceNotActivatedException(msg, None)
-
-
 class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
     """An account can be shown libraries it never created -- zones left
     behind by Apple's own backend migrations -- and some answer every query
@@ -2871,7 +2852,7 @@ class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
         from unittest.mock import MagicMock
 
         photos = MagicMock()
-        photos.libraries = {n: MagicMock() for n in names}
+        photos.libraries = {n: MagicMock(indexing_state="FINISHED") for n in names}
         return photos
 
     def test_zone_faults_are_inside_the_isolated_exception_set(self):
@@ -3089,59 +3070,6 @@ class TestBrokenLibraryDoesNotStopTheOthers(unittest.TestCase):
         failed = [c for c in signal.call_args_list if c.kwargs.get("ok") is False]
         self.assertEqual(len(failed), 1)
         self.assertIn("ZONE_NOT_FOUND", failed[0].kwargs["error"])
-
-    def test_indexing_is_not_isolated_as_one_librarys_fault(self):
-        """Isolation is for a zone that is broken while the others work.
-        Indexing breaks none of them and blocks all of them, so swallowing
-        it here would mark every library failed, log every one of them as
-        an error, and still run the pass to completion. It has to reach
-        the sync loop, which waits instead."""
-        from unittest.mock import patch
-
-        from icloudpy import exceptions
-
-        from src import sync_photos
-
-        libs = ["PrimarySync", "SharedSync-1"]
-        failed = set()
-        with (
-            patch.object(sync_photos, "_signal_library") as signal,
-            self.assertRaises(exceptions.ICloudPyServiceNotActivatedException),
-        ):
-            sync_photos._sync_albums_by_configuration(  # noqa: SLF001
-                _IndexingPhotos(), libs, False, "/dest",
-                {"albums": None, "file_sizes": ["original"], "extensions": None},
-                set(), "%Y/%m", None, {}, failed_libraries=failed,
-            )
-
-        self.assertEqual(failed, set(), "nothing may be recorded as a failed library")
-        finished = [c for c in signal.call_args_list if c.args[0] == "record_library_finished"]
-        self.assertEqual(finished, [], "no library finished: none of them could be opened")
-
-    def test_indexing_also_escapes_the_hardlink_pre_pass(self):
-        """The 'All Photos' first pass has a per-library handler of its own."""
-        from icloudpy import exceptions
-
-        from src import sync_photos
-
-        with self.assertRaises(exceptions.ICloudPyServiceNotActivatedException):
-            sync_photos._sync_all_photos_first_for_hardlinks(  # noqa: SLF001
-                _IndexingPhotos(), ["PrimarySync"], "/dest",
-                {"albums": None, "file_sizes": ["original"], "extensions": None},
-                set(), "%Y/%m", None, {},
-            )
-
-    def test_only_the_indexing_message_counts_as_indexing(self):
-        """Apple sends indexing as a plain ServiceNotActivated, so the
-        message is the only thing separating a wait from a dead zone."""
-        from icloudpy import exceptions
-
-        from src import sync_photos
-
-        not_activated = exceptions.ICloudPyServiceNotActivatedException
-        self.assertTrue(sync_photos.is_photos_indexing(not_activated("not finished indexing", None)))
-        self.assertFalse(sync_photos.is_photos_indexing(not_activated("ZONE_NOT_FOUND", None)))
-        self.assertFalse(sync_photos.is_photos_indexing(ValueError("indexing")))
 
     def test_a_dashboard_write_failure_never_breaks_the_sync(self):
         """Reporting progress is never worth failing a sync over."""
@@ -3518,3 +3446,83 @@ class TestDownloadIsVerifiedBeforeItCountsAsThePhoto(unittest.TestCase):
             versions = {"original": {"size": "not-a-number"}}
 
         self.assertIsNone(_declared_size(Garbage(), "original"))
+
+
+class TestUnlistedLibraryIsAFailureNotACrash(unittest.TestCase):
+    """``filters.libraries`` can name a library Apple no longer lists -- a
+    Shared Library that was left, say. Looking it up raised a KeyError
+    outside the per-library isolation, so Photos stopped for every library
+    each cycle and the dashboard never said why."""
+
+    def _config(self, base, *, destinations=None):
+        photos = {
+            "destination": base,
+            "remove_obsolete": True,
+            "filters": {"libraries": ["Gone", "PrimarySync"], "file_sizes": ["original"]},
+        }
+        if destinations:
+            photos["library_destinations"] = destinations
+        return {"photos": photos}
+
+    def _photos(self):
+        from unittest.mock import MagicMock
+
+        photos = MagicMock()
+        # A finished index, so cleanup is up to the library list alone.
+        photos.libraries = {"PrimarySync": MagicMock(indexing_state="FINISHED")}
+        return photos
+
+    def _run(self, config, photos):
+        seen = []
+
+        def fake(photos, library, *a, **k):
+            # Looks the library up the way the real sync does.
+            photos.libraries[library]  # noqa: B018
+            seen.append(library)
+            return (3, 0)
+
+        base = config["photos"]["destination"]
+        with (
+            patch.object(sync_photos.config_parser, "prepare_photos_destination", return_value=base),
+            patch.object(sync_photos, "_sync_all_photos_in_library", side_effect=fake),
+            patch.object(sync_photos, "remove_obsolete_files") as remove,
+            patch.object(sync_photos, "_signal_library") as signal,
+        ):
+            result = sync_photos.sync_photos(config=config, photos=photos)
+        return result, seen, remove, signal
+
+    def test_the_listed_libraries_still_sync(self):
+        with tempfile.TemporaryDirectory() as base:
+            result, seen, _, _ = self._run(self._config(base), self._photos())
+        self.assertEqual(seen, ["PrimarySync"])
+        self.assertEqual(result, (3, 0))
+
+    def test_the_dashboard_says_why(self):
+        with tempfile.TemporaryDirectory() as base:
+            _, _, _, signal = self._run(self._config(base), self._photos())
+        signal.assert_any_call(
+            "record_library_finished",
+            "Gone",
+            ok=False,
+            error="Apple does not list this library",
+        )
+
+    def test_a_shared_destination_is_not_cleaned(self):
+        with tempfile.TemporaryDirectory() as base:
+            _, _, remove, _ = self._run(self._config(base), self._photos())
+        remove.assert_not_called()
+
+    def test_only_the_unlisted_library_is_kept_out_of_cleanup(self):
+        with tempfile.TemporaryDirectory() as base:
+            config = self._config(base, destinations={"Gone": "gone", "PrimarySync": "mine"})
+            _, _, remove, _ = self._run(config, self._photos())
+        self.assertEqual([c.args[0] for c in remove.call_args_list], [os.path.join(base, "mine")])
+
+    def test_a_listing_that_fails_leaves_each_library_to_fail_on_its_own(self):
+        from unittest.mock import MagicMock, PropertyMock
+
+        from icloudpy import exceptions
+
+        photos = MagicMock()
+        type(photos).libraries = PropertyMock(side_effect=exceptions.ICloudPyAPIResponseException("down", 503))
+        self.assertEqual(sync_photos._listed_libraries(photos, ["Gone", "PrimarySync"], set()), ["Gone", "PrimarySync"])  # noqa: SLF001

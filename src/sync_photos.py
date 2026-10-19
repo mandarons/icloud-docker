@@ -430,6 +430,12 @@ def sync_photos(config, photos):
     # cleaning its destination would read as "the server has none of these"
     # and delete every local copy.
     failed_libraries: set = set()
+    libraries = _listed_libraries(photos, libraries, failed_libraries)
+    # Libraries Apple is still indexing. They are synced -- the listing is
+    # usually complete long before the index says so -- but, like a failed
+    # library, kept out of cleanup: an incomplete listing would read as
+    # deletions.
+    indexing_libraries = _libraries_still_indexing(photos, libraries)
 
     # Special handling for "All Photos" when hardlinks are enabled
     if use_hardlinks and download_all:
@@ -481,6 +487,13 @@ def sync_photos(config, photos):
                         f"be read this run, so its local files cannot be verified.",
                     )
                     continue
+                if library in indexing_libraries:
+                    LOGGER.warning(
+                        f"Skipping obsolete-file cleanup for {library}: Apple is still "
+                        f"indexing it, or its index could not be checked, so its "
+                        f"listing may be incomplete.",
+                    )
+                    continue
                 lib_dest = _library_destination(destination_path, library, library_destinations)
                 if lib_dest == destination_path:
                     # An unmapped library falls through to the shared root,
@@ -509,6 +522,14 @@ def sync_photos(config, photos):
             LOGGER.warning(
                 "Skipping obsolete-file cleanup: "
                 f"{len(failed_libraries)} library(ies) could not be read this run.",
+            )
+        elif indexing_libraries:
+            # Same reasoning: one shared destination cannot be cleaned while
+            # any library's listing may be incomplete.
+            LOGGER.warning(
+                "Skipping obsolete-file cleanup: Apple is still indexing (or could "
+                f"not be checked for) {', '.join(sorted(indexing_libraries))}, so the "
+                "listing may be incomplete.",
             )
         else:
             remove_obsolete_files(
@@ -595,32 +616,70 @@ def _signal_library(action: str, library: str, **kwargs) -> None:
         LOGGER.debug(f"web_signals: {action} for {library} raised: {e!s}")
 
 
-def is_photos_indexing(error) -> bool:
-    """True when ``error`` is Apple saying a photo library is still indexing.
+def _libraries_still_indexing(photos, libraries) -> set:
+    """Names of the libraries to sync that Apple has not finished indexing.
 
-    icloudpy raises this as a plain ServiceNotActivated, with only the
-    message to tell it apart, and it is account-wide rather than
-    per-library: ``PhotosService`` checks the primary zone's indexing
-    state in its own constructor, and its ``libraries`` property builds a
-    ``PhotoLibrary`` for every zone of the account in one pass -- each of
-    which raises this if that zone's index is unfinished, with nothing
-    cached on failure. So while any one zone is indexing, Photos cannot
-    be opened at all.
+    icloudpy opens such a library when asked to and records how far Apple
+    got as ``indexing_state``. Only an explicit ``FINISHED`` counts as
+    finished: a missing or empty state is treated as still indexing,
+    since a partial listing would read as deletions.
+
+    Fails closed: if the libraries cannot be listed here, every one is
+    returned, because a later attempt in the same cycle can succeed and
+    would otherwise let cleanup run on a library whose state was never
+    seen. A configured library that is not listed is returned for the
+    same reason.
     """
-    return isinstance(error, exceptions.ICloudPyServiceNotActivatedException) and "indexing" in str(error)
+    try:
+        available = photos.libraries
+    except _LIBRARY_FAULTS as e:
+        LOGGER.warning(
+            f"Could not check whether Apple has finished indexing the photo "
+            f"libraries ({e!s}); obsolete-file cleanup is skipped this cycle.",
+        )
+        return set(libraries)
+    indexing = set()
+    for name in libraries:
+        if name not in available:
+            indexing.add(name)
+            continue
+        # Anything but an explicit FINISHED, a missing or empty state
+        # included, keeps the library out of cleanup.
+        state = getattr(available[name], "indexing_state", None)
+        still_indexing = state != "FINISHED"
+        _signal_library("record_library_indexing", name, state=str(state) if still_indexing else None)
+        if still_indexing:
+            LOGGER.warning(
+                f"Apple is still indexing {name} ({state}). Downloading what it "
+                f"lists; obsolete-file cleanup waits until the index finishes.",
+            )
+            indexing.add(name)
+    return indexing
 
 
-def _raise_if_photos_indexing(error) -> None:
-    """Let a Photos-wide indexing wait escape the per-library handler.
+def _listed_libraries(photos, libraries, failed_libraries) -> list:
+    """The configured libraries Apple lists; the others are failed, not fatal.
 
-    ``_LIBRARY_FAULTS`` covers ServiceNotActivated so that one dead zone
-    cannot stop the others, but indexing is not one library's problem:
-    none of them can be read (see ``is_photos_indexing``). Isolating it
-    would mark every configured library failed and run the pass to
-    completion, when the whole of Photos simply has to wait.
+    ``filters.libraries`` can name a library Apple no longer lists, such as
+    a Shared Library that was left. Looking one up raises a KeyError outside
+    the per-library isolation, which stopped Photos for every library. Each
+    one dropped here is barred from cleanup like any failed library.
+
+    If the libraries cannot be listed, all are kept, and each fails on its
+    own when it is synced.
     """
-    if is_photos_indexing(error):
-        raise error
+    try:
+        available = photos.libraries
+    except _LIBRARY_FAULTS:
+        return list(libraries)
+    listed = []
+    for library in libraries:
+        if library in available:
+            listed.append(library)
+            continue
+        _note_library_failure(library, "Apple does not list this library", failed_libraries)
+        _signal_library("record_library_finished", library, ok=False, error="Apple does not list this library")
+    return listed
 
 
 def _note_library_failure(library, error, failed_libraries) -> None:
@@ -686,7 +745,6 @@ def _sync_all_photos_first_for_hardlinks(
                     return result
                 break
         except _LIBRARY_FAULTS as e:
-            _raise_if_photos_indexing(e)
             _note_library_failure(library, e, failed_libraries)
     return 0, 0
 
@@ -781,7 +839,6 @@ def _sync_albums_by_configuration(
         # Per-iteration by design: isolating one library from the next is
         # the whole point, so the handler cannot be hoisted out of the loop.
         except _LIBRARY_FAULTS as e:  # noqa: PERF203
-            _raise_if_photos_indexing(e)
             _note_library_failure(library, e, failed_libraries)
             _signal_library("record_library_finished", library, ok=False, error=str(e))
     return total_successful, total_failed

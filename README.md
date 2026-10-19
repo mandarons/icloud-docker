@@ -81,9 +81,9 @@ The container can keep syncing with or without an Apple ID password on disk. Bot
 
 **No password** — unattended until Apple's trust window closes, then a human signs in once. With no password configured the container resumes the saved session in `/config/session_data` and never attempts a credential sign-in. Nothing derived from your password is written to disk. When the session stops being accepted, sync stops with `No Apple ID password is stored and the saved session is no longer valid …`, sends the usual 2FA notification and waits `retry_login_interval` between attempts; set `app.trust_expiry_warn_days` so the warning arrives before that, not after. How often that happens is Apple's call, not a documented interval — `app.trust_refresh_days` rolls the window forward while the session is healthy, which should make it rare, though that refresh has not been verified against Apple over a full trust lifetime in this mode.
 
-**Signing in again without storing a password.** Run the `docker exec … icloud …` command above and answer **no** to `Save password in keyring?`. The web dashboard works too: its "Refresh trust" button needs no password at all while the session is still alive, and a sign-in through `/auth` that *did* need your password persists it to the keyring — which puts the container back into the first mode.
+**Signing in again without storing a password.** Run the `docker exec … icloud …` command above and answer **no** to `Save password in keyring?`. The web dashboard works too: its "Refresh trust" button needs no password at all while the session is still alive, and a sign-in through `/auth` uses your password for that sign-in only and never saves it. The dashboard says when a password *is* stored, and its **Remove stored password** button deletes it once it has checked the saved session works without it. If you sign in there with a different password than the stored one, it says the stored copy looks out of date.
 
-**Switching an existing container to password-free.** Two things, because either one alone is not enough: remove `ENV_ICLOUD_PASSWORD` from the environment (it is copied into the keyring on every cycle it is set; an empty value counts as unset), *and* delete the keyring entry:
+**Switching an existing container to password-free.** Two things, because either one alone is not enough: remove `ENV_ICLOUD_PASSWORD` from the environment (it is copied into the keyring on every cycle it is set; an empty value counts as unset), *and* delete the keyring entry, with the dashboard's **Remove stored password** button or from the command line:
 
 ```
 docker exec icloud su-exec abc python3 -c "import keyring; keyring.delete_password('icloudpy://icloud-password', '<icloud-username>')"
@@ -672,7 +672,7 @@ The payload shape is stable:
 |-------|-----------|--------|
 | `sync_started` | Sign-in succeeded and the cycle is about to sync | — |
 | `sync_succeeded` | The cycle completed, no photo download failed, and a service actually synced | full sync statistics (as above) |
-| `sync_failed` | A photo download failed; the cycle synced nothing; or it never got that far | statistics, plus a `reason` — always present: `download_errors`, `mount_marker_missing`, `photos_indexing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sign_in_error`, `sync_error` |
+| `sync_failed` | A photo download failed; the cycle synced nothing; or it never got that far | statistics, plus a `reason` — always present: `download_errors`, `mount_marker_missing`, `nothing_synced`, `two_factor_required`, `security_key_required`, `password_missing`, `sign_in_failed`, `sign_in_error`, `sync_error` |
 | `sync_summary` | The sync-summary notification is sent (needs `app.notifications.sync_summary.enabled`, and respects its `min_downloads` / `on_success` / `on_error`) | full sync statistics |
 | `two_factor_required` | iCloud wants a 6-digit code | `username`, `dashboard_url` |
 | `security_key_required` | The account signs in with a hardware security key, so Apple will send no code at all | `username`, `dashboard_url` |

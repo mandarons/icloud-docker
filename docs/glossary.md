@@ -23,7 +23,7 @@ Domain terminology, acronyms, and project-specific vocabulary.
 | **web_signals** | Cross-thread communication via sentinel files. Connects web UI "Sync now" button to sync loop. |
 | **PUID/PGID** | Process User ID / Process Group ID — Linux user mapping for file ownership in Docker. |
 | **su-exec** | Setuid execution tool — drops privileges from root to `abc` user. Alternative to S6 overlay. |
-| **keyring** | Python keyring library — stores iCloud password securely in `/config/python_keyring/`. |
+| **keyring** | Python keyring library — stores the iCloud password in `/config/python_keyring/`; on a headless host that is a plain-text file. |
 | **session_data** | Directory containing iCloudPy authentication cookies. Persisted across container restarts. |
 | **NFC/NFD** | Unicode normalization forms. NFC for storage, NFD for macOS/Windows file comparison. |
 | **Atomic download** | Downloading to temp path, then moving to final location. Prevents partial files. |

@@ -15,6 +15,19 @@
       <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
         Running from the saved session — no password stored
       </span>
+    {% else %}
+      <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
+        {% if status.stored_password_outdated %}Stored password looks out of date{% else %}Password stored in plain text{% if status.password_from_env %} (from ENV_ICLOUD_PASSWORD){% endif %}{% endif %}
+      </span>
+      {% if not status.password_from_env %}
+      <form action="/auth/forget-password" method="post" style="margin-top: 6px;">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="status-cta secondary"
+                title="Sync keeps running from the saved session.">
+          Remove stored password
+        </button>
+      </form>
+      {% endif %}
     {% endif %}
     {% if status.trust_days_remaining is not none %}
       <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
@@ -88,11 +101,6 @@
         <div class="card-subtitle">every {{ (service.sync_interval_s // 3600) }} h</div>
       </div>
     </div>
-    {% if service.indexing %}
-    <div class="pill warn" style="margin-bottom: 14px;">
-      Waiting for Apple to finish indexing{% if service.indexing.since_relative %} &middot; started {{ service.indexing.since_relative }}{% endif %}
-    </div>
-    {% endif %}
     <dl class="kv">
       <dt>Destination</dt>
       <dd class="mono">
@@ -135,6 +143,7 @@
           {% endif %}
         </div>
         {% if lib.subdir %}<div class="lib-dest mono" title="{{ lib.subdir }}/">&rarr; {{ lib.subdir }}/</div>{% endif %}
+        {% if lib.indexing %}<div class="lib-dest">Apple is still indexing this library &middot; downloading, cleanup paused</div>{% endif %}
         {% if lib.state in ('failed', 'interrupted') and lib.completed_relative %}
         <div class="lib-dest">last completed {{ lib.completed_relative }}</div>
         {% endif %}

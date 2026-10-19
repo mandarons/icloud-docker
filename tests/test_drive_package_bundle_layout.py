@@ -171,7 +171,7 @@ class TestFlattenPackagesSkipsUnpack(unittest.TestCase):
         unflatten path. With flatten=True we shouldn't even bother
         with the mime detect."""
         with tempfile.TemporaryDirectory() as base:
-            local_file = os.path.join(base, "Hi I'm Norah.jmb")
+            local_file = os.path.join(base, "Hi I'm Alice.jmb")
             with open(local_file, "wb") as f:
                 f.write(b"opaque-bundle-bytes-no-magic")
 

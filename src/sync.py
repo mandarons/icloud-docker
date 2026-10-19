@@ -15,7 +15,6 @@ from src import (
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
-    PHOTOS_INDEXING_RETRY_SEC,
     config_parser,
     configure_icloudpy_logging,
     get_logger,
@@ -416,6 +415,9 @@ def get_api_instance(
     if password is None:
         service_class = SessionOnlyICloudPyService
         password = _SESSION_ONLY_PLACEHOLDER_PASSWORD
+    # Apple can report a photo library as still indexing for weeks while
+    # listing it in full. Open it anyway: sync_photos downloads what it lists
+    # and keeps it out of obsolete-file cleanup until the index finishes.
     return (
         service_class(
             apple_id=username,
@@ -423,12 +425,14 @@ def get_api_instance(
             cookie_directory=cookie_directory,
             home_endpoint="https://www.icloud.com.cn",
             setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
+            photos_require_finished_index=False,
         )
         if server_region == "china"
         else service_class(
             apple_id=username,
             password=password,
             cookie_directory=cookie_directory,
+            photos_require_finished_index=False,
         )
     )
 
@@ -457,9 +461,6 @@ class SyncState:
         # handlers need it because nothing in that mode can be fixed by
         # retrying with a password the container does not have.
         self.session_only = False
-        # Set when this cycle skipped Photos because Apple is still indexing
-        # it, so the cycle's webhook can say so rather than blame the mount.
-        self.photos_indexing = False
 
 
 def _load_configuration():
@@ -758,18 +759,8 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
                 pass
 
         LOGGER.info("Syncing photos...")
-        try:
-            sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
-        except exceptions.ICloudPyServiceNotActivatedException as e:
-            # With no interval there is no next cycle to wait for -- a
-            # one-shot run must still report this through the normal error
-            # path rather than schedule a retry it will never take.
-            if not sync_photos.is_photos_indexing(e) or photos_sync_interval <= 0:
-                raise
-            _wait_for_photos_indexing(sync_state, photos_sync_interval)
-            return None
+        sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
         LOGGER.info("Photos synced")
-        _signal_photos_indexing(waiting=False)
 
         # Count files after sync
         files_after = set()
@@ -835,48 +826,6 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
         sync_state.photos_time_remaining = photos_sync_interval
         return stats
     return None
-
-
-def _wait_for_photos_indexing(sync_state: SyncState, photos_sync_interval: int) -> None:
-    """Skip Photos this cycle because Apple has not finished indexing it.
-
-    Nothing could be listed, so nothing may be cleaned up either -- an
-    empty listing and an unreadable one look identical to obsolete-file
-    cleanup. Drive is unaffected and carries on.
-
-    The retry only ever shortens the wait (``min`` with the configured
-    interval). It is not a login retry: the session is resumed per cycle
-    like any other, and ``retry_login_interval`` is not involved.
-    """
-    retry = min(PHOTOS_INDEXING_RETRY_SEC, photos_sync_interval)
-    again = f"{retry // 60} minutes" if retry >= 120 else f"{retry} seconds"
-    LOGGER.warning(
-        "Apple has not finished indexing this iCloud Photos library, so it cannot "
-        f"be read yet. Nothing on disk was changed. Trying Photos again in {again}.",
-    )
-    sync_state.photos_time_remaining = retry
-    sync_state.photos_indexing = True
-    _signal_photos_indexing(waiting=True)
-
-
-def _signal_photos_indexing(*, waiting: bool) -> None:
-    """Publish (or clear) the dashboard's "waiting for Apple" note.
-
-    Recorded against the Photos service, not a library: no library can be
-    read while this is true, so no library row could carry it.
-    """
-    try:
-        from src import web_signals as _ws
-
-        _ws.record_photos_indexing(waiting=waiting)
-        if waiting:
-            # The library being opened when this surfaced is still marked
-            # "syncing now" and never got started. Left alone it reads as
-            # a library syncing forever, next to a note saying Photos
-            # cannot be read at all.
-            _ws.clear_stale_library_states()
-    except Exception as e:  # noqa: BLE001 -- dashboard state must never break sync
-        LOGGER.debug(f"web_signals: record_photos_indexing raised: {e!s}")
 
 
 def _perform_dry_run(config, api, check_files: int | None = None) -> None:
@@ -1048,15 +997,14 @@ def _check_services_configured(config):
     return "drive" in config or "photos" in config
 
 
-def _cycle_nothing_synced_reason(config, drive_stats, photos_stats, photos_indexing=False) -> str | None:
+def _cycle_nothing_synced_reason(config, drive_stats, photos_stats) -> str | None:
     """Why this cycle synced no service at all, or None if one did.
 
     Such a cycle is indistinguishable from a clean one by its stats -- no
     errors, no counts -- so reporting it as a success is how a monitor stays
     green while nothing whatsoever is being downloaded. It happens two ways:
     nothing is configured to sync, or every service that was due got skipped
-    -- by the mount-marker failsafe, or (Photos) because Apple has not
-    finished indexing the library.
+    by the mount-marker failsafe.
 
     Not to be confused with a service that simply was not due. With unequal
     intervals ``_calculate_next_sync_schedule`` enables only the service
@@ -1067,16 +1015,14 @@ def _cycle_nothing_synced_reason(config, drive_stats, photos_stats, photos_index
         config: Configuration dictionary
         drive_stats: Result of ``_perform_drive_sync``
         photos_stats: Result of ``_perform_photos_sync``
-        photos_indexing: Whether this cycle skipped Photos for indexing
 
     Returns:
-        ``nothing_synced``, ``photos_indexing``, ``mount_marker_missing``,
-        or None if a service ran
+        ``nothing_synced``, ``mount_marker_missing``, or None if a service ran
     """
     if not _check_services_configured(config):
         return "nothing_synced"
     if drive_stats is None and photos_stats is None:
-        return "photos_indexing" if photos_indexing else "mount_marker_missing"
+        return "mount_marker_missing"
     return None
 
 
@@ -1088,8 +1034,6 @@ def _cycle_end_message(has_errors: bool, nothing_reason: str | None) -> str:
     """
     if nothing_reason == "nothing_synced":
         return "iCloud sync cycle synced nothing: no drive or photos section is configured"
-    if nothing_reason == "photos_indexing":
-        return "iCloud sync cycle synced nothing: Apple has not finished indexing Photos"
     if nothing_reason:
         return "iCloud sync cycle synced nothing: the mount marker is missing"
     if has_errors:
@@ -1798,7 +1742,6 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                     summary = SyncSummary()
 
                     # Perform syncs and collect statistics
-                    sync_state.photos_indexing = False
                     drive_stats = _perform_drive_sync(
                         config,
                         api,
@@ -1829,7 +1772,6 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         config,
                         drive_stats,
                         photos_stats,
-                        sync_state.photos_indexing,
                     )
                     # Every sync_failed names a reason, including this one: a
                     # receiver should never have to infer why from the

@@ -382,7 +382,7 @@ def get_web_ui_public_url(config: dict) -> str | None:
     """Public-facing URL for the web UI, used in notifications.
 
     The daemon only knows its local bind host:port; the user-facing URL
-    (e.g. ``https://icloud.zosia.io`` behind a reverse proxy) must be
+    (e.g. ``https://icloud.example.com`` behind a reverse proxy) must be
     declared explicitly. When unset, notifications fall back to
     ``http://{host}:{port}`` and log a one-shot warning at startup.
     """
