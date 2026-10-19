@@ -1,0 +1,1 @@
+ERROR    root:sync.py:620 Drive mount marker missing: /tmp/tmp2q9lz8x6/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmp2q9lz8x6/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.

@@ -1,0 +1,15 @@
+DEBUG    icloudpy.base:base.py:284 Using session file /config/session_data/aicloudcom.session
+DEBUG    icloudpy.base:base.py:310 Read cookies from /config/session_data/aicloudcom
+DEBUG    icloudpy.base:base.py:356 Authenticating as a@icloud.com
+DEBUG    icloudpy.base.http:base.py:76 POST https://idmsa.apple.com/appleauth/auth/signin/init {"a": "Cmls8gYUdnDJPgxGO1zfweR3RWB0fL6iTrFXZ+o841rxxutBgBj+HlK9xSrhW3XzDvCNJBTyuaGfTZ4weI9BYhkf5d5cFjuwyeADeCnvPwxVGjxyf7PsS9uVtEnWDYYVsj/LRd1e8lIMS1V1pH2HFRj9too1AZmIBTKMcMe9WanA9ecLStSeI2S9+nV1moghIIAs/qZncBUm2qnlTjfLJKROrt9vrNPrLYWyzpT0CQgsDB6hmWp2qurfedVVi1MBBfEa3XIAHffKtPI3tTd0YdNyu/+q0BPQHfBfXUrtJtutGZXEFGOJb1UG+pzZWLI8S0IxXpIJ+/sFeAWCznBobA==", "accountName": "a@icloud.com", "protocols": ["s2k", "s2k_fo"]}
+DEBUG    urllib3.connectionpool:connectionpool.py:1081 Starting new HTTPS connection (1): idmsa.apple.com:443
+DEBUG    urllib3.connectionpool:connectionpool.py:550 https://idmsa.apple.com:443 "POST /appleauth/auth/signin/init HTTP/1.1" 200 None
+DEBUG    icloudpy.base:base.py:95 Saved session data to file
+DEBUG    icloudpy.base:base.py:99 Cookies saved to /config/session_data/aicloudcom
+DEBUG    icloudpy.base.http:base.py:138 {'iteration': 1750, 'salt': 'ZHA6hSrPE+mM5tR/mpsrwg==', 'protocol': 's2k_fo', 'b': 'UBJxXfZuL4fLSTgTdg7zMi96TMh+riaoou+3EcW+7ElTcp7uHTr0PTzmep5QbXPVRo10Ay6SbZDaTrZae9v8DYnZNo0lg243LQzt+3+HzNpCSImTfF0ZxAPBXMdakvs6G65wKWWocl8VYIaMumJlZHkjitrlDwHt+yWzKYZBVOOTRDkqVbZsXE8qUynuCuXWwTkL/XRo3rfQAQXV0+PhURKMtcAplLYIS2ow0f1B3s17zc4Poha35UGW6SPHjSI0hnmZXeGM2HkJVnuCRDrBE0ylVbuP/Kkn/b781Yeyc2BWxkP17A22d1uXa6jfswCySF4X/ayeVBL3XYrKdkIi/Q==', 'c': 'i-5a-c54f20ea-cbc1-11f1-9370-6fb396807a66:RNO'}
+DEBUG    icloudpy.base.http:base.py:76 POST https://idmsa.apple.com/appleauth/auth/signin/complete {"accountName": "a@icloud.com", "c": "i-5a-c54f20ea-cbc1-11f1-9370-6fb396807a66:RNO", "m1": "6KBxI35BYU6D+Q/PZeTgOFxNJmU6hgnR3FN/l60wXmE=", "m2": "tYir4mwKTcWmpthPfcDvmEL/WOBCZnGaWJnvg1skeRQ=", "rememberMe": true, "trustTokens": []}
+DEBUG    urllib3.connectionpool:connectionpool.py:550 https://idmsa.apple.com:443 "POST /appleauth/auth/signin/complete?isRememberMeEnabled=true HTTP/1.1" 503 190
+DEBUG    icloudpy.base:base.py:95 Saved session data to file
+DEBUG    icloudpy.base:base.py:99 Cookies saved to /config/session_data/aicloudcom
+ERROR    icloudpy.base:base.py:176 Service Temporarily Unavailable (503)
+WARNING  root:web.py:1583 Web UI: session failed to authenticate: ('Invalid email/password combination.', ICloudPyAPIResponseException('Service Temporarily Unavailable (503)'))
