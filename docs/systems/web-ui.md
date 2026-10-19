@@ -6,7 +6,14 @@ The web UI (`src/web.py`) provides an optional Flask-based dashboard for monitor
 
 - Serve dashboard page showing sync status and config paths
 - Show per-library sync state ("Syncing now", relative last-sync, or "Failed"
-  with the last completion); list only libraries this container syncs
+  with the last completion); list only libraries this container syncs. A
+  library Apple is still indexing says "Apple is still indexing this library ·
+  downloading, cleanup paused" until its `indexing_state` reads `FINISHED`
+- Say whether an Apple ID password is stored (and that the keyring is a plain
+  text file on a headless host), flag a stored copy as out of date when a
+  sign-in used a different password, and offer **Remove stored password**
+  (`/auth/forget-password`) — never while `ENV_ICLOUD_PASSWORD` is set, since
+  the loop would write the password back
 - Surface `reauth_needed` published by the loop when sync is stopped, instead
   of deriving health from on-disk signals alone
 - End the sign-in retry wait as soon as any auth path completes a re-auth
@@ -29,13 +36,15 @@ The web UI runs in a daemon thread alongside the sync loop. It shares state thro
 |-------|--------|---------|
 | `/` | GET | Dashboard — sync status, config, last sync |
 | `/auth` | GET | Authentication page — password + 2FA form |
-| `/auth/password` | POST | Submit Apple ID password |
+| `/auth/password` | POST | Submit Apple ID password for this sign-in only |
 | `/auth/code` | POST | Submit 2FA verification code |
 | `/auth/reset` | POST | Clear pending auth state |
 | `/auth/forget-password` | POST | Delete the stored password, after checking the saved session signs in without it; refused while `ENV_ICLOUD_PASSWORD` is set |
+| `/auth/refresh-trust` | POST | Re-auth from the saved session (or the stored password) without retyping it |
 | `/auth/security-key` | GET | Security-key page: the signer command for a pending challenge |
 | `/auth/security-key/start` | POST | Sign in with the typed password (or a stored one) and fetch Apple's WebAuthn challenge |
 | `/auth/security-key` | POST | Submit the signed assertion; on success the sync loop wakes |
+| `/api/status` | GET | Dashboard state as JSON: services, libraries (including indexing), sync state, auth mode |
 | `/api/sync/trigger/<service>` | POST | Force immediate sync (Drive/Photos) |
 | `/api/logs` | GET | Recent log lines |
 
@@ -48,7 +57,9 @@ The web UI runs in a daemon thread alongside the sync loop. It shares state thro
 
 **CSRF protection:** State-changing endpoints require a CSRF cookie plus a matching `X-CSRF-Token` header. Scripted callers must load a page first to obtain the cookie.
 
-**Pending auth TTL:** In-memory password expires after 10 minutes (`_PENDING_AUTH_TTL_SECONDS`).
+**Password storage is opt-in.** No web sign-in writes the password to the keyring: `/auth/password`, `/auth/code` and both security-key routes use the typed password for that sign-in only, and never overwrite a stored copy. A password is stored only through `ENV_ICLOUD_PASSWORD` or a yes at the `icloud` command's prompt; on a headless host the keyring is a plain-text file. `/auth/forget-password` removes a stored password after checking the saved session signs in without it.
+
+**Pending auth TTL:** A half-finished sign-in — and with it the password, in memory only — expires after 10 minutes (`_PENDING_AUTH_TTL_SECONDS`).
 
 ## Invariants
 

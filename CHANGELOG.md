@@ -42,6 +42,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   things, never what `remove_obsolete`, the delete limit and the failed-library
   exclusions allow
   ([#559](https://github.com/mandarons/icloud-docker/pull/559))
+- Dashboard controls for a stored password: it says whether one is on disk
+  (and that on a headless host the keyring is a plain-text file), offers
+  **Remove stored password** (`POST /auth/forget-password`) after checking the
+  saved session signs in without it, and is not offered while
+  `ENV_ICLOUD_PASSWORD` would write the password back on the next cycle. A
+  dashboard sign-in with a different password than the stored one flags the
+  stored copy as out of date; nothing is removed or overwritten unasked
+  ([#565](https://github.com/mandarons/icloud-docker/pull/565))
 
 ### Changed
 
@@ -51,16 +59,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   due on every pass, so the scheduler slept 0 and synced it back to back, the
   fastest way to get throttled by Apple
   ([#555](https://github.com/mandarons/icloud-docker/pull/555))
+- A library Apple is still indexing no longer stops Photos. icloudpy 0.11.0
+  opens such a library with `photos_require_finished_index=False`, so what
+  Apple already lists is downloaded, a warning names the library each cycle,
+  and the rest of Photos carries on. Until its `indexing_state` reads
+  `FINISHED` the listing may be incomplete, so the library is kept out of
+  obsolete-file cleanup exactly like one that failed — with a single shared
+  destination nothing is cleaned while any library indexes. Anything but an
+  explicit `FINISHED`, a missing state included, counts as unfinished, and if
+  the state cannot be checked, every library is kept out of cleanup for that
+  cycle. The dashboard's library row says "Apple is still indexing this
+  library · downloading, cleanup paused". The old wait for indexing, its
+  30-minute retry, its dashboard note and the `photos_indexing` webhook reason
+  are removed, since icloudpy no longer raises the error that started them
+  ([#568](https://github.com/mandarons/icloud-docker/pull/568))
 - Webhook `sync_failed` reasons now separate the fault. `sign_in_failed` is
   reserved for Apple refusing the sign-in itself — a network fault or an Apple
-  service error before sign-in completes is `sign_in_error` — a cycle waiting
-  on Apple's Photos indexing reports `photos_indexing` instead of blaming a
-  mount that is fine, and a session-only sign-in the alert flags as needing a
-  human is reported the same way by the alert and the webhook
+  service error before sign-in completes is `sign_in_error` — and a
+  session-only sign-in the alert flags as needing a human is reported the same
+  way by the alert and the webhook
   ([#556](https://github.com/mandarons/icloud-docker/pull/556),
   [#557](https://github.com/mandarons/icloud-docker/pull/557))
-- Dependency bumps (test tooling only): ruff 0.16.10, allure-pytest 2.16.2
-  ([#562](https://github.com/mandarons/icloud-docker/pull/562),
+- `icloudpy` 0.11.0, which adds the `photos_require_finished_index` opt-out the
+  Photos change above needs
+  ([#568](https://github.com/mandarons/icloud-docker/pull/568))
+- Dependency bumps (test tooling only): ruff 0.17.0, allure-pytest 2.16.2.
+  `.ruff.toml` now pins `target-version = "py310"` and declares the codebase's
+  `import datetime` convention: 0.17 assumes Python 3.11 when no target is
+  set, which suggests `datetime.UTC` (absent on the 3.10 runtime) and would
+  have restyled 19 files
+  ([#567](https://github.com/mandarons/icloud-docker/pull/567),
   [#561](https://github.com/mandarons/icloud-docker/pull/561))
 
 ### Fixed
@@ -89,14 +117,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (300/360 slept 60 seconds). The smaller countdown is now taken off both
   timers and whichever reaches zero is enabled
   ([#555](https://github.com/mandarons/icloud-docker/pull/555))
-- Apple indexing a photo library is a wait rather than a failed cycle: one
-  indexing zone made the whole Photos service unreadable, which logged an
-  error, announced a login retry and backed off for hours. Photos is now
-  skipped with a warning saying what is happening and that nothing on disk was
-  changed, Drive carries on, and Photos is retried in 30 minutes — or sooner if
-  its own interval is shorter, never later. The dashboard reports the wait,
-  with when it started
-  ([#555](https://github.com/mandarons/icloud-docker/pull/555))
+- A web sign-in no longer writes the Apple ID password to the keyring — the
+  promise the `/auth` page used to break, and on a headless host that keyring
+  is a plain-text file. The password, 2FA-code and security-key paths use the
+  typed password for that sign-in only, and never overwrite a stored copy;
+  the security-key page now asks for the password when none is stored, instead
+  of requiring a stored one. Storing a password stays opt-in
+  (`ENV_ICLOUD_PASSWORD` or answering yes at the `icloud` command's prompt),
+  and passwords already stored are left alone
+  ([#565](https://github.com/mandarons/icloud-docker/pull/565),
+  [#558](https://github.com/mandarons/icloud-docker/issues/558))
+- A library named in `filters.libraries` that Apple does not list — a Shared
+  Library that was left, say — fails on its own instead of raising a
+  `KeyError` that stopped Photos for every library each cycle. The others
+  sync, it is kept out of obsolete-file cleanup, and the dashboard shows it
+  failed with "Apple does not list this library"
+  ([#568](https://github.com/mandarons/icloud-docker/pull/568))
+- The dashboard's stored-password session check uses the region from
+  `config.yaml`, so on a `region: china` install **Remove stored password** no
+  longer always refuses
+  ([#565](https://github.com/mandarons/icloud-docker/pull/565))
 - Shared Library downloads no longer fail permanently with HTTP 410 on long
   walks: the pending-download buffer also drains once its oldest task is 10
   minutes old, so URLs valid ~30-40 minutes cannot expire before they are
