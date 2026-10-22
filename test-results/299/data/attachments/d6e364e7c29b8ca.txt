@@ -1,0 +1,32 @@
+[38;21m2026-10-22 16:56:30,702 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-22 16:56:30,702 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-22 16:56:30,702 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,702 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-10-22 16:56:30,703 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: 59bab941-0240-44c1-80fa-c745ad39e1df[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: 59bab941-0240-44c1-80fa-c745ad39e1df[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: 59bab941-0240-44c1-80fa-c745ad39e1df[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: 59bab941-0240-44c1-80fa-c745ad39e1df[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 287 :: Upgrading existing installation: 59bab941-0240-44c1-80fa-c745ad39e1df[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 287 :: Upgrading existing installation: 59bab941-0240-44c1-80fa-c745ad39e1df[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: 6e43918c-7923-4dc2-b278-8f5389aa4787[0m
+[38;21m2026-10-22 16:56:30,704 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: 6e43918c-7923-4dc2-b278-8f5389aa4787[0m
+[38;21m2026-10-22 16:56:30,705 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: 6e43918c-7923-4dc2-b278-8f5389aa4787[0m
+[38;21m2026-10-22 16:56:30,705 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: 6e43918c-7923-4dc2-b278-8f5389aa4787[0m
+[38;21m2026-10-22 16:56:30,705 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-22 16:56:30,705 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-10-22 16:56:30,705 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m
+[38;21m2026-10-22 16:56:30,705 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data[0m

@@ -1,0 +1,4 @@
+DEBUG    icloudpy.base:base.py:284 Using session file /config/session_data/aicloudcom.session
+INFO     icloudpy.base:base.py:291 Session file does not exist
+WARNING  root:web.py:1583 Web UI: session failed to authenticate: No Apple ID password is stored and there is no saved session to resume. Store an Apple ID password to let the container re-authenticate on its own, or create a new session by signing in from the web dashboard or with the documented `icloud --username=... --session-directory=...` command.
+WARNING  root:web.py:1149 Web UI security-key: assertion accepted but sign-in still wants a factor.

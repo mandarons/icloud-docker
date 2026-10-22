@@ -1,0 +1,12 @@
+[38;21m2026-10-22 16:56:20,373 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-10-22 16:56:20,373 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-10-22 16:56:20,374 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-10-22 16:56:20,374 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-10-22 16:56:20,374 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-22 16:56:20,374 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-22 16:56:20,381 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-10-22 16:56:20,381 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;5;39m2026-10-22 16:56:20,382 :: INFO :: root :: drive_file_download.py :: 53 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf ...[0m
+[38;5;39m2026-10-22 16:56:20,382 :: INFO :: root :: drive_file_download.py :: 53 :: Downloading /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf ...[0m
+[38;5;196m2026-10-22 16:56:20,383 :: ERROR :: root :: drive_file_download.py :: 91 :: Failed to download /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf: [Errno 2] No such file or directory: '/home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf'[0m
+[38;5;196m2026-10-22 16:56:20,383 :: ERROR :: root :: drive_file_download.py :: 91 :: Failed to download /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf: [Errno 2] No such file or directory: '/home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/drive/non-existent-folder/Scanned document 1.pdf'[0m

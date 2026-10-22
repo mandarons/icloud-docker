@@ -1,0 +1,16 @@
+[38;21m2026-10-22 16:56:19,782 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/tmp821vq5fc/aicloudcom.session[0m
+[38;21m2026-10-22 16:56:19,782 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/tmp821vq5fc/aicloudcom.session[0m
+[38;21m2026-10-22 16:56:19,782 :: DEBUG :: icloudpy.base :: base.py :: 502 :: Checking session token validity[0m
+[38;21m2026-10-22 16:56:19,782 :: DEBUG :: icloudpy.base :: base.py :: 502 :: Checking session token validity[0m
+[38;21m2026-10-22 16:56:19,784 :: DEBUG :: icloudpy.base.http :: base.py :: 76 :: POST https://setup.icloud.com/setup/ws/1/validate null[0m
+[38;21m2026-10-22 16:56:19,784 :: DEBUG :: icloudpy.base.http :: base.py :: 76 :: POST https://setup.icloud.com/setup/ws/1/validate null[0m
+[38;21m2026-10-22 16:56:19,784 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-10-22 16:56:19,784 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-10-22 16:56:19,784 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /tmp/tmp821vq5fc/aicloudcom[0m
+[38;21m2026-10-22 16:56:19,784 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /tmp/tmp821vq5fc/aicloudcom[0m
+[38;21m2026-10-22 16:56:19,784 :: DEBUG :: icloudpy.base.http :: base.py :: 138 :: {'dsInfo': {'hsaVersion': 2}, 'webservices': {'drivews': {'status': 'active'}}}[0m
+[38;21m2026-10-22 16:56:19,784 :: DEBUG :: icloudpy.base.http :: base.py :: 138 :: {'dsInfo': {'hsaVersion': 2}, 'webservices': {'drivews': {'status': 'active'}}}[0m
+[38;21m2026-10-22 16:56:19,785 :: DEBUG :: icloudpy.base :: base.py :: 505 :: Session token is still valid[0m
+[38;21m2026-10-22 16:56:19,785 :: DEBUG :: icloudpy.base :: base.py :: 505 :: Session token is still valid[0m
+[38;21m2026-10-22 16:56:19,785 :: DEBUG :: root :: sync.py :: 376 :: Resumed the saved session without a password[0m
+[38;21m2026-10-22 16:56:19,785 :: DEBUG :: root :: sync.py :: 376 :: Resumed the saved session without a password[0m
