@@ -2,8 +2,9 @@
 
 **Status:** draft proposal. **No implementation yet.**
 **Tracks:** [#292](https://github.com/mandarons/icloud-docker/issues/292)
-**Blocked by:** [mandarons/icloudpy#206](https://github.com/mandarons/icloudpy/pull/206) — exposes
-the edited rendition; needs a released icloudpy containing it before the dependency pin can move.
+**Dependency:** [mandarons/icloudpy#206](https://github.com/mandarons/icloudpy/pull/206) — **merged
+to `main` on 2026-10-23** (`d14f283`), so the edited rendition is in git but **not in a release**
+(latest is 0.11.0). The dependency pin can move once a release containing it ships.
 
 ## Problem
 
@@ -14,10 +15,11 @@ iCloud Photos stores two different things that are easy to confuse:
 | `original` | `resOriginalRes` | `CPLMaster` | the untouched original |
 | `original_alt` | `resOriginalAltRes` | `CPLMaster` | the **alternate** rendition (RAW/JPEG pair) — *not* an edit |
 | `full` | `resJPEGFullRes` | **`CPLAsset`** | Apple's rendered **edit** (crop, filters, portraits, markups) |
-| `medium` / `thumb` | `resJPEGMed` / `resJPEGThumb` | master (edited thumb on asset) | renditions |
+| `medium` / `thumb` | `resJPEGMed` / `resJPEGThumb` | `CPLAsset` first, else `CPLMaster` | renditions; on an edited asset these describe the edit |
 
 icloud-docker 2.2.0 still pins icloudpy 0.11.0, whose `PhotoAsset.versions` reads only the
-`CPLMaster` record. Edited renditions therefore never appear: configuring
+`CPLMaster` record — the fix is on icloudpy `main` but not in a release. Edited renditions
+therefore never appear: configuring
 `photos.filters.file_sizes: [full]` makes `collect_download_task` skip **every** photo with
 `File size full not found on server`, which is the empty-folder symptom on #292.
 
@@ -38,10 +40,21 @@ untouched JPEG as `*.original.bak` without writing any edit at all.
 (`public.jpeg`), `width`, `height` and the asset's filename. Unedited photos are unchanged: they
 have no `full` key. This is the same mechanism icloudpd uses (`--size adjusted`, PRs #855/#858).
 
+The asset-first lookup applies to **every** version key, not only `full`: an edited asset's
+`medium`, `thumb` and Live Photo `live_video_*` renditions also come from the asset record when it
+carries them, so they describe the edit too. The reviewer's read-only comparison against a real
+library ([review 5623576794](https://github.com/mandarons/icloudpy/pull/206#pullrequestreview-5623576794))
+confirms it: unedited assets are byte-identical to before, edited photos and Live Photos download
+the actual edit as `full`, and edited videos expose the edited video as the video `full`
+(`resVidFullRes`). Existing icloud-docker setups that sync `medium`, `thumb` or
+`live_video_*` will therefore start writing edit renditions under unchanged filenames — a
+consumer-visible change that needs a CHANGELOG line in both repos.
+
 ## Work items
 
-1. **Dependency** — bump `requirements.txt` to the icloudpy release that contains #206. No other
-   pin changes expected (asset-first lookup is additive).
+1. **Dependency** — bump `requirements.txt` to the icloudpy release that contains #206 (merged to
+   `main`, unreleased as of 2026-10-23). No other pin changes expected (asset-first lookup is
+   additive).
 2. **Config vocabulary** — accept `adjusted` (canonical: `full`) and `alternative`
    (canonical: `original_alt`) in `photos.filters.file_sizes`, normalizing at parse time in
    `validate_file_sizes` (`src/config_parser.py:929`). Document both spellings; today `full` is
@@ -75,10 +88,13 @@ have no `full` key. This is the same mechanism icloudpd uses (`--size adjusted`,
    refresh method to icloudpy and use it (preferred; avoids private-attribute access).
 7. **Docs** — `docs/systems/photos-sync.md` (size table: add `full`/`adjusted`, keep
    `original_alt` as "RAW/alternate"), `config.yaml` + README (`file_sizes` example for edits;
-   corrected `preserve_originals_as_bak` wording), CHANGELOG entry.
+   corrected `preserve_originals_as_bak` wording), CHANGELOG entries for both the new option and
+   the `medium`/`thumb`/`live_video_*` content change. Also correct the answers on #292, where our
+   own comment recommends `original_alt`; it should point at `full`/`adjusted` once released.
 8. **Migration guidance** — recommend adding the edited size first and verifying, then removing
    `original`; warn that with `remove_obsolete: true` the old originals become cleanup
-   candidates, and that switching sizes changes on-disk names.
+   candidates, that switching sizes changes on-disk names, and that the first sync after the
+   icloudpy bump re-downloads edited `medium`/`thumb`/`live_video_*` files in place.
 
 ## Behaviour matrix (target)
 
@@ -94,9 +110,14 @@ have no `full` key. This is the same mechanism icloudpd uses (`--size adjusted`,
 
 - The edit is Apple's **JPEG render**: no HEIC container, no HDR gain map, no depth/portrait
   metadata, and no way to retrieve an edited RAW. Document this before users switch.
-- Edited **Live Photo video** is not exposed by any field icloudpd uses either; out of scope.
-- For edited photos the `thumb` version now comes from the asset record (it shows the edit);
-  harmless for downloads, but a visible change in previews.
+- Edited **movies** expose the edit as the video `full` version, and edited **Live Photos** expose
+  it through the still image's `full` plus the asset-record `live_video_*` variants. There is no
+  separate "edited Live Photo video only" size (icloudpd has none either), so a `file_sizes` list
+  containing `live_video_*` downloads the paired video alongside the still.
+- For edited assets the `medium`, `thumb` and `live_video_*` versions now come from the asset
+  record (they show the edit). `check_photo_exists` compares on-disk size with the version size
+  (`src/photo_file_utils.py:287-298`), so existing copies are re-downloaded and overwritten under
+  unchanged names — correct data, but a visible change for previews and any downstream index.
 - Size changes churn filenames and interact with obsolete-file cleanup; migration guidance is
   required, not optional.
 
@@ -118,3 +139,5 @@ have no `full` key. This is the same mechanism icloudpd uses (`--size adjusted`,
 3. Fix `preserve_originals_as_bak` in the same release (behaviour change) or separately?
 4. Refresh API: public `PhotoAsset.refresh()` in icloudpy vs a docker-side lookup of both records?
 5. Target release: 2.3.0, after the icloudpy release ships.
+6. Is the edited `medium`/`thumb`/`live_video_*` content change a breaking note in the CHANGELOG, or
+   just a line under Changed?
