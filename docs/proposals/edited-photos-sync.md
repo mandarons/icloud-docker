@@ -1,7 +1,9 @@
 # Edited photos sync — consuming icloudpy's `full` version
 
 **Status:** draft proposal. **No implementation yet.**
-**Tracks:** [#292](https://github.com/mandarons/icloud-docker/issues/292)
+**Tracks:** [#292](https://github.com/mandarons/icloud-docker/issues/292) (feature) and
+[#572](https://github.com/mandarons/icloud-docker/issues/572) (the `preserve_originals_as_bak`
+bug that work item 5 fixes)
 **Dependency:** [mandarons/icloudpy#206](https://github.com/mandarons/icloudpy/pull/206) — **merged
 to `main` on 2026-10-23** (`d14f283`), so the edited rendition is in git but **not in a release**
 (latest is 0.11.0). The dependency pin can move once a release containing it ships.
@@ -30,7 +32,8 @@ leaves everyone else with an empty tree.
 The same misunderstanding exists in our own docs and code: `photos.preserve_originals_as_bak`
 treats `original_alt` as "the edited version" (`src/photo_path_utils.py:84`,
 `src/config_parser.py:1024`, README/config.yaml comments). For RAW shooters that hides the
-untouched JPEG as `*.original.bak` without writing any edit at all.
+untouched JPEG as `*.original.bak` without writing any edit at all. That defect is filed as
+[#572](https://github.com/mandarons/icloud-docker/issues/572), and work item 5 below is its fix.
 
 ## What icloudpy#206 provides
 
@@ -77,24 +80,46 @@ consumer-visible change that needs a CHANGELOG line in both repos.
      as primary, so `${photo.variant}` / `${photo.variant_suffix}` are empty for it. Decide
      whether `full` becomes a variant when `original` is also requested, or document
      `${photo.file_size}` for template users.
-5. **`preserve_originals_as_bak`** — rebase the "is edited" check from `original_alt` to `full`
-   (`src/photo_path_utils.py:84`, `src/config_parser.py:1024`) and only apply it when both
-   `original` and the edit are requested. This is a user-visible behaviour change for RAW
-   shooters; call it out in the CHANGELOG.
+5. **`preserve_originals_as_bak` (#572)** — retarget the "is edited" predicate from `original_alt`
+   to `full`, and only hide the original when both `original` and the edit are requested. Four code
+   sites, and the third is the one that makes the toggle work at all:
+   - `src/photo_path_utils.py:84-93` — `_photo_has_alt_version()` becomes "has an edit"
+     (`"full" in photo.versions`); its docstring still calls `original_alt` "edited".
+   - `src/photo_path_utils.py:241` — the suffix site; logic unchanged, it is the only caller.
+   - `src/sync_photos.py:409-417` — **the activation gate**, today
+     `preserve_originals_as_bak and "original_alt" in file_sizes`. It must key on `full`, and the
+     "at least one visible file" invariant re-checked for `[original, full]`; otherwise the option
+     silently never activates on the new size list. The comment block at `sync_photos.py:402-417`
+     ("`original_alt` — the visible 'current view' of an edited photo") is wrong and goes with it.
+   - `src/config_parser.py:1024-1043` — the getter's docstring, not a check: its two-file example
+     (`original` + `original_alt`) has to be rewritten for `full`.
+   This **drops** RAW-pair hiding (open question 8). Existing `*.original.bak` copies are untracked
+   and only swept when the asset leaves iCloud (`sync_photos.py:410-411`), so after the change the
+   original reappears under its normal name and the old sidecar lingers — the migration note covers
+   it.
 6. **Expired download URLs (HTTP 410)** — `_refresh_photo_download_url`
    (`src/photo_file_utils.py:171`) re-fetches only the master record. Edited URLs live on the
    asset record, so after a refresh they would still be stale and the download would loop on
    410. Either refresh both records in docker (lookup by asset `recordName`) or add a public
    refresh method to icloudpy and use it (preferred; avoids private-attribute access).
-7. **Docs** — `docs/systems/photos-sync.md` (size table: add `full`/`adjusted`, keep
-   `original_alt` as "RAW/alternate"), `config.yaml` + README (`file_sizes` example for edits;
-   corrected `preserve_originals_as_bak` wording), CHANGELOG entries for both the new option and
-   the `medium`/`thumb`/`live_video_*` content change. Also correct the answers on #292, where our
-   own comment recommends `original_alt`; it should point at `full`/`adjusted` once released.
+7. **Docs** — two tranches:
+   - **Immediate, no dependency (#572 item 1):** correct the `preserve_originals_as_bak` wording in
+     `config.yaml:173-178`, `README.md:249-253`, `docs/systems/photos-sync.md:14-15` and the
+     docstrings. It hides `original` when an alternate representation exists, not when a photo was
+     edited. This needs no icloudpy release and should not wait for one — it can ship as its own
+     small PR.
+   - **With the implementation:** `docs/systems/photos-sync.md` size table (`full`/`adjusted`,
+     `original_alt` as "RAW/alternate"), `config.yaml` + README `file_sizes` example, CHANGELOG
+     entries for the new option and the `medium`/`thumb`/`live_video_*` content change, and the
+     #292 answer correction (our comment there recommends `original_alt`; it should point at
+     `full`/`adjusted` once released).
 8. **Migration guidance** — recommend adding the edited size first and verifying, then removing
    `original`; warn that with `remove_obsolete: true` the old originals become cleanup
    candidates, that switching sizes changes on-disk names, and that the first sync after the
-   icloudpy bump re-downloads edited `medium`/`thumb`/`live_video_*` files in place.
+   icloudpy bump re-downloads edited `medium`/`thumb`/`live_video_*` files in place. For
+   `preserve_originals_as_bak`, warn that RAW-pair users stop getting `.bak` files and that
+   existing `*.original.bak` copies are untracked, so they persist as hidden duplicates until the
+   asset is deleted or they are removed by hand.
 
 ## Behaviour matrix (target)
 
@@ -105,6 +130,9 @@ consumer-visible change that needs a CHANGELOG line in both repos.
 | `[adjusted]` | true | edit | original |
 | `[original, adjusted]` | — | original + edit (`-adjusted` / `__full__`) | original |
 | `[original_alt]` | — | alternate rendition (not an edit) | skipped |
+
+With `preserve_originals_as_bak: true`, an `[original, adjusted]` row hides the `original` copy as
+`*.original.bak`; unedited photos never get the suffix.
 
 ## Risks and limits
 
@@ -118,14 +146,23 @@ consumer-visible change that needs a CHANGELOG line in both repos.
   record (they show the edit). `check_photo_exists` compares on-disk size with the version size
   (`src/photo_file_utils.py:287-298`), so existing copies are re-downloaded and overwritten under
   unchanged names — correct data, but a visible change for previews and any downstream index.
+- `preserve_originals_as_bak` stops hiding RAW-pair alternates (#572). That is the intended fix,
+  not a regression, but it changes existing users' output and belongs in the CHANGELOG and the
+  option's docs.
 - Size changes churn filenames and interact with obsolete-file cleanup; migration guidance is
   required, not optional.
 
 ## Test plan
 
 - Unit: alias normalization in `validate_file_sizes`; extension mapping and collision suffix for
-  `full`; fallback on/off incl. no double download when `original` is also requested;
-  `preserve_originals_as_bak` with `full`; refresh covering the asset record.
+  `full`; fallback on/off incl. no double download when `original` is also requested; refresh
+  covering the asset record.
+- `preserve_originals_as_bak` (#572): new tests with `full`, **and** rewrite the existing
+  wrong-premise ones in `tests/test_preserve_originals_as_bak.py` — `_photo_with_alt` (line 20) is
+  a RAW pair mislabelled "edited photo", the `test_edited_photo_*` names assert the wrong
+  semantics, and the gate tests (lines 195-216) assert `original_alt` activates the toggle. Add:
+  a RAW pair with `original_alt` does **not** get the suffix; gate on for `[original, full]`; gate
+  off when `full` is absent even if `original_alt` is present.
 - Integration: a fake photo with `versions` containing `full` through
   `collect_download_task` → naming → cleanup tracking; dry-run output.
 - Docs: sample config parses; full pytest suite stays at 100% coverage; ruff/yamllint clean.
@@ -141,3 +178,8 @@ consumer-visible change that needs a CHANGELOG line in both repos.
 5. Target release: 2.3.0, after the icloudpy release ships.
 6. Is the edited `medium`/`thumb`/`live_video_*` content change a breaking note in the CHANGELOG, or
    just a line under Changed?
+7. `preserve_originals_as_bak`: rename/deprecate it now that it means "hide the original when an
+   edit exists" and no longer covers RAW pairs, or keep the name and document the narrower
+   meaning? #572 suggests considering a rename.
+8. Is dropping RAW-pair hiding acceptable, or does that case need its own option? Existing users
+   enabled this toggle for exactly that behaviour.
