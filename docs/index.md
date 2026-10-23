@@ -71,6 +71,10 @@ iCloud Docker is a containerized sync client that downloads files from Apple iCl
 - [Testing Standards](standards/testing.md) — structure, coverage, mock patterns
 - [Glossary](glossary.md) — domain terminology
 
+## Proposals
+
+- [Edited photos sync](proposals/edited-photos-sync.md) — draft: consuming icloudpy's edited (`full`) version ([#292](https://github.com/mandarons/icloud-docker/issues/292))
+
 ## Data Flow
 
 1. **Config load:** `config_parser.py` reads YAML + env overrides on every sync iteration
