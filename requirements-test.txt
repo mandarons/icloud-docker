@@ -1,8 +1,9 @@
 -r requirements.txt
 allure-pytest==2.16.2
 pytest==9.1.1
-coverage==7.17.0
+# coverage is deliberately not pinned: pytest-cov 7.1.0 requires
+# coverage[toml]>=7.10.6 and supplies the --cov flags pytest.ini uses. One
+# owner for coverage, no second pin to drift.
 pytest-cov==7.1.0
 ruff==0.17.2
-ipython==9.17.1
 pre-commit==4.7.0
