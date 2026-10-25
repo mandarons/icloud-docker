@@ -388,7 +388,7 @@ class TestBuildStatusTrustFields(unittest.TestCase):
     def test_status_includes_trust_fields_when_recorded(self):
         from src import web_signals
 
-        expires = datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(
+        expires = datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(
             days=42,
         )
         web_signals.record_trust_state(expires_at_iso=expires.isoformat())
@@ -500,7 +500,7 @@ class TestMaybeRefreshTrust(unittest.TestCase):
     """
 
     def _expiry(self, days: int):
-        return datetime.datetime.now(tz=datetime.timezone.utc) + datetime.timedelta(
+        return datetime.datetime.now(tz=datetime.UTC) + datetime.timedelta(
             days=days,
         )
 

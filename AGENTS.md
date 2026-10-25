@@ -4,7 +4,7 @@ A containerized iCloud sync client that periodically downloads files from Apple 
 
 ## Quick Reference
 
-- **Language:** Python 3.10
+- **Language:** Python 3.14
 - **Framework:** Flask (web UI), iCloudPy (iCloud API)
 - **Package manager:** pip
 

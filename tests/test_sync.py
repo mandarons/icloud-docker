@@ -1578,7 +1578,7 @@ class TestRevocationIsNamedSeparatelyFromExpiry(unittest.TestCase):
         from src.sync import _log_trust_revocation_hint
 
         future = datetime.datetime.now(
-            tz=datetime.timezone.utc,
+            tz=datetime.UTC,
         ) + datetime.timedelta(days=58)
         with patch("src.sync._read_trust_cookie_expiry", return_value=future):
             with self.assertLogs(level="ERROR") as captured:
@@ -1600,7 +1600,7 @@ class TestRevocationIsNamedSeparatelyFromExpiry(unittest.TestCase):
         from src.sync import _log_trust_revocation_hint
 
         past = datetime.datetime.now(
-            tz=datetime.timezone.utc,
+            tz=datetime.UTC,
         ) - datetime.timedelta(days=1)
         with patch("src.sync._read_trust_cookie_expiry", return_value=past):
             with patch.object(logging.getLogger(), "error") as err:
@@ -2939,7 +2939,7 @@ class TestSyncWebhookEvents(unittest.TestCase):
     def test_a_successful_refresh_reports_the_new_expiry(self):
         """Nothing else notifies on a refresh, so the webhook is the only way
         a receiver tracking the trust window learns it moved."""
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        now = datetime.datetime.now(tz=datetime.UTC)
         api = Mock()
         api.trust_session.return_value = True
         with (
@@ -2961,7 +2961,7 @@ class TestSyncWebhookEvents(unittest.TestCase):
         self.assertEqual(data["expires_at"], (now + datetime.timedelta(days=90)).isoformat())
 
     def test_an_unreadable_expiry_is_omitted_rather_than_nulled(self):
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        now = datetime.datetime.now(tz=datetime.UTC)
         api = Mock()
         api.trust_session.return_value = True
         with (
@@ -2978,7 +2978,7 @@ class TestSyncWebhookEvents(unittest.TestCase):
     def test_a_declined_refresh_reports_nothing(self):
         api = Mock()
         api.trust_session.return_value = False
-        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        now = datetime.datetime.now(tz=datetime.UTC)
         with (
             patch.object(sync, "_read_trust_cookie_expiry", return_value=now + datetime.timedelta(days=3)),
             patch("src.notify.post_event_to_webhook") as post_mock,

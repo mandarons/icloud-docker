@@ -7,7 +7,7 @@ separating download logic from sync operations per SRP.
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
-from datetime import timezone
+from datetime import UTC
 from typing import Any
 
 from src import DEFAULT_REQUEST_TIMEOUT_SEC, configure_icloudpy_logging, get_logger
@@ -78,7 +78,7 @@ def download_file(
         # Set the file modification time to match the remote file.
         # iCloudPy produces date_modified via strptime(..., "%Y-%m-%dT%H:%M:%SZ") — always
         # naive UTC with no tzinfo. replace(tzinfo=UTC) is the correct conversion.
-        item_modified_time = item.date_modified.replace(tzinfo=timezone.utc).timestamp()
+        item_modified_time = item.date_modified.replace(tzinfo=UTC).timestamp()
         os.utime(local_file, (item_modified_time, item_modified_time))
 
     except Exception as e:

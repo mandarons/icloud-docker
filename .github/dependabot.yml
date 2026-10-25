@@ -13,3 +13,10 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+  # Keeps the devcontainer base image and its features current. Searches
+  # .devcontainer.json, .devcontainer/devcontainer.json and
+  # .devcontainer/*/devcontainer.json from the repo root.
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: "weekly"

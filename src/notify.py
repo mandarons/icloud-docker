@@ -1182,7 +1182,7 @@ def post_event_to_webhook(config, event: str, message: str, data: dict | None = 
     payload = {
         "event": event,
         "message": message,
-        "timestamp": datetime.datetime.now(tz=datetime.timezone.utc).isoformat(),
+        "timestamp": datetime.datetime.now(tz=datetime.UTC).isoformat(),
         "data": data or {},
     }
     try:
