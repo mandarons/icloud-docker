@@ -4,7 +4,7 @@ The container system (`Dockerfile`, `docker-entrypoint.sh`, `init.sh`) manages t
 
 ## Responsibilities
 
-- Build minimal Alpine Linux image with Python 3.10
+- Build minimal Alpine Linux image with Python 3.14
 - Manage user creation and PUID/PGID mapping
 - Handle volume mount ownership and keyring migration
 - Start the application via `su-exec` (setuid alternative)

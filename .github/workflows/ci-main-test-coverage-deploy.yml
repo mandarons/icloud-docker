@@ -23,10 +23,10 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v7
-      - name: Set up Python 3.10
+      - name: Set up Python 3.14
         uses: actions/setup-python@v7
         with:
-          python-version: "3.10"
+          python-version: "3.14"
       - name: Cache pip dependencies
         uses: actions/cache@v6
         id: cache-dependencies
@@ -45,10 +45,10 @@ jobs:
     steps:
       - name: Checkout source code
         uses: actions/checkout@v7
-      - name: Set up Python 3.10
+      - name: Set up Python 3.14
         uses: actions/setup-python@v7
         with:
-          python-version: "3.10"
+          python-version: "3.14"
       - name: Restore pip cache dependencies
         uses: actions/cache@v6
         with:

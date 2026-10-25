@@ -7,7 +7,7 @@ import shutil
 import tempfile
 import time
 import unittest
-from datetime import timezone
+from datetime import UTC
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 from urllib.parse import unquote
@@ -1624,7 +1624,7 @@ class TestSyncDrive(unittest.TestCase):
             f.write(b"A" * 197334)  # Match the size from the mock data
 
         # Set the modification time to match the item
-        item_modified_time = self.file_item.date_modified.replace(tzinfo=timezone.utc).timestamp()
+        item_modified_time = self.file_item.date_modified.replace(tzinfo=UTC).timestamp()
         os.utime(local_file_path, (item_modified_time, item_modified_time))
 
         download_info = sync_drive.collect_file_for_download(
@@ -2265,7 +2265,7 @@ class TestNonAsciiPackagesStayWhereTheNextSyncLooks(unittest.TestCase):
         package = os.path.join(parent, "Runner.app")
         os.makedirs(package)
         Path(package, unicodedata.normalize("NFC", "Résumé.txt")).write_text("x")
-        stamp = self.item.date_modified.replace(tzinfo=timezone.utc).timestamp()
+        stamp = self.item.date_modified.replace(tzinfo=UTC).timestamp()
         os.utime(package, (stamp, stamp))
         on_disk = {str(f) for f in Path(package).glob("**/*")}
         files = set()

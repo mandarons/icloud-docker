@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Build stage
-FROM python:3.10-alpine3.22 AS builder
+FROM python:3.14-alpine3.24 AS builder
 
 # Install build dependencies
 COPY requirements.txt .
@@ -22,7 +22,7 @@ RUN \
   pip install -U --no-cache-dir -r requirements.txt
 
 # Runtime stage
-FROM python:3.10-alpine3.22
+FROM python:3.14-alpine3.24
 
 # set version label
 ARG APP_VERSION=dev
@@ -53,7 +53,7 @@ RUN \
   adduser -D -u 911 -G abc -h /home/abc -s /bin/sh abc
 
 # Copy Python packages from builder stage
-COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/lib/python3.14/site-packages /usr/local/lib/python3.14/site-packages
 COPY --from=builder /usr/local/bin /usr/local/bin
 
 # add local files

@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.10"
+# requires-python = ">=3.14"
 # dependencies = ["fido2"]
 # ///
 """Sign an Apple security-key challenge locally.

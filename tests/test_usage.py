@@ -162,7 +162,7 @@ class TestUsage(unittest.TestCase):
         self.assertTrue(actual)
 
         # Test heartbeat on next UTC day (even if less than 24 hours)
-        mock_now = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+        mock_now = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
         with patch("src.usage.current_time") as mock_datetime_now:
             mock_datetime_now.return_value = mock_now
             actual = usage.alive(config=self.config)
@@ -353,7 +353,7 @@ class TestUsage(unittest.TestCase):
         mock_send.return_value = True
 
         # Create a timestamp for earlier today
-        now = datetime.datetime.now(datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.UTC)
         earlier_today = now.replace(hour=0, minute=0, second=0, microsecond=0)
 
         cached_data = {
@@ -376,7 +376,7 @@ class TestUsage(unittest.TestCase):
         mock_send.return_value = True
 
         # Create a timestamp for yesterday
-        today = datetime.datetime.now(datetime.timezone.utc)
+        today = datetime.datetime.now(datetime.UTC)
         yesterday = today - datetime.timedelta(days=1)
 
         cached_data = {
@@ -399,7 +399,7 @@ class TestUsage(unittest.TestCase):
         mock_send.return_value = True
 
         # Create timestamp at 23:59:59 yesterday
-        today = datetime.datetime.now(datetime.timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today = datetime.datetime.now(datetime.UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         yesterday_night = today - datetime.timedelta(seconds=1)
 
         cached_data = {
@@ -422,7 +422,7 @@ class TestUsage(unittest.TestCase):
         mock_send.return_value = True
 
         # Create a timestamp using UTC
-        utc_yesterday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=1)
+        utc_yesterday = datetime.datetime.now(datetime.UTC) - datetime.timedelta(days=1)
 
         cached_data = {
             "id": str(uuid.uuid4()),
@@ -440,7 +440,7 @@ class TestUsage(unittest.TestCase):
         parsed = datetime.datetime.strptime(new_timestamp, "%Y-%m-%d %H:%M:%S.%f")
 
         # The date should be today in UTC, not local
-        utc_today = datetime.datetime.now(datetime.timezone.utc).date()
+        utc_today = datetime.datetime.now(datetime.UTC).date()
         self.assertEqual(parsed.date(), utc_today)
 
     def test_current_time_returns_utc(self):
@@ -448,7 +448,7 @@ class TestUsage(unittest.TestCase):
         result = usage.current_time()
 
         # Should be close to utcnow, not now
-        utc_now = datetime.datetime.now(datetime.timezone.utc)
+        utc_now = datetime.datetime.now(datetime.UTC)
 
         # Result should be within 1 second of UTC now
         self.assertLess(abs((result - utc_now).total_seconds()), 1)

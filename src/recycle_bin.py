@@ -47,7 +47,7 @@ class RecycleBin:
         self.today = today or datetime.date.today()
         self.subfolder = ""
 
-    def within(self, subfolder: str) -> "RecycleBin":
+    def within(self, subfolder: str) -> RecycleBin:
         """The same bin, filing what it receives under ``subfolder`` in each day.
 
         Several destinations can share one service's bin -- each Photos

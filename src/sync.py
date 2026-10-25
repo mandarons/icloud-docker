@@ -93,7 +93,7 @@ def _log_trust_revocation_hint(api) -> None:
         if expires_at is None:
             return
         remaining = (
-            expires_at - datetime.datetime.now(tz=datetime.timezone.utc)
+            expires_at - datetime.datetime.now(tz=datetime.UTC)
         ).days
         if remaining <= 0:
             return
@@ -126,7 +126,7 @@ def _read_trust_cookie_expiry(api) -> datetime.datetime | None:
         if cookie.name == _TRUST_COOKIE_NAME and cookie.expires:
             return datetime.datetime.fromtimestamp(
                 cookie.expires,
-                tz=datetime.timezone.utc,
+                tz=datetime.UTC,
             )
     return None
 
@@ -214,7 +214,7 @@ def _maybe_refresh_trust(config, api) -> None:
         if expires_at is None:
             return
         days_remaining = (
-            expires_at - datetime.datetime.now(tz=datetime.timezone.utc)
+            expires_at - datetime.datetime.now(tz=datetime.UTC)
         ).days
         if days_remaining > threshold:
             return
@@ -278,7 +278,7 @@ def _maybe_warn_trust_expiring(config, api, username: str) -> None:
         if expires_at is None:
             return
         days_remaining = (
-            expires_at - datetime.datetime.now(tz=datetime.timezone.utc)
+            expires_at - datetime.datetime.now(tz=datetime.UTC)
         ).days
         threshold = config_parser.get_trust_expiry_warn_days(config=config)
         if days_remaining >= threshold:

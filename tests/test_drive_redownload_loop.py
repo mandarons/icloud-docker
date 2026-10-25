@@ -42,7 +42,7 @@ def _write_bundle(path, item, on_disk_bytes=b"x" * 50):
     (as download_file does) and a byte count that differs from item.size."""
     with open(path, "wb") as f:
         f.write(on_disk_bytes)
-    mtime = int(item.date_modified.replace(tzinfo=datetime.timezone.utc).timestamp())
+    mtime = int(item.date_modified.replace(tzinfo=datetime.UTC).timestamp())
     os.utime(path, (mtime, mtime))
     # Sanity: this is exactly the pathological condition — size differs.
     assert os.path.getsize(path) != item.size
@@ -96,7 +96,7 @@ class TestPackageBundleUnchanged(unittest.TestCase):
         # Regression guard for the old time.mktime(timetuple()) write that
         # misread tz-aware datetimes as local time and desynced the mtime.
         item = _bundle_item(
-            modified=datetime.datetime(2021, 3, 7, 12, 0, 0, tzinfo=datetime.timezone.utc),
+            modified=datetime.datetime(2021, 3, 7, 12, 0, 0, tzinfo=datetime.UTC),
         )
         path = os.path.join(self.tmp, "tz.key")
         _write_bundle(path, item)

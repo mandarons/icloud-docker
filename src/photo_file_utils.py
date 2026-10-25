@@ -11,7 +11,7 @@ import json
 import os
 import shutil
 import threading
-from datetime import timezone
+from datetime import UTC
 from urllib.parse import urlencode
 
 from src import DEFAULT_REQUEST_TIMEOUT_SEC, get_logger
@@ -388,7 +388,7 @@ def download_photo_from_server(
             # iCloudPy returns added_date as an aware UTC datetime; replace() is a
             # safe no-op here because tzinfo is already UTC. If it ever returns a
             # naive datetime, replace(tzinfo=utc) correctly treats it as UTC.
-            local_modified_time = photo.added_date.replace(tzinfo=timezone.utc).timestamp()
+            local_modified_time = photo.added_date.replace(tzinfo=UTC).timestamp()
             os.utime(destination_path, (local_modified_time, local_modified_time))
 
             return True

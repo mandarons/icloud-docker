@@ -7,7 +7,7 @@ import os
 import shutil
 import tempfile
 import unittest
-from datetime import timezone
+from datetime import UTC
 from io import StringIO
 from pathlib import Path
 from unittest.mock import patch
@@ -763,7 +763,7 @@ class TestSyncPhotos(unittest.TestCase):
             f.write(b"A" * 1000)  # Write same content size as mock
 
         # Set modification time to match photo
-        local_modified_time = photo.added_date.replace(tzinfo=timezone.utc).timestamp()
+        local_modified_time = photo.added_date.replace(tzinfo=UTC).timestamp()
         os.utime(photo_path, (local_modified_time, local_modified_time))
 
         download_info = sync_photos.collect_photo_for_download(
@@ -1940,7 +1940,7 @@ class TestSyncPhotos(unittest.TestCase):
             self.assertEqual(mock_photo.download.call_count, 2)
             # Verify file was created and mtime is set correctly
             self.assertTrue(os.path.exists(destination_path))
-            expected_mtime = datetime.datetime(2021, 1, 1, 12, 0, 0, tzinfo=timezone.utc).timestamp()
+            expected_mtime = datetime.datetime(2021, 1, 1, 12, 0, 0, tzinfo=datetime.UTC).timestamp()
             self.assertAlmostEqual(os.path.getmtime(destination_path), expected_mtime, delta=1)
 
     def test_download_photo_from_server_http_410_error_max_retries_exceeded(self):
@@ -1999,7 +1999,7 @@ class TestSyncPhotos(unittest.TestCase):
             self.assertEqual(mock_photo.download.call_count, 2)
             # Verify file was created and mtime is set correctly
             self.assertTrue(os.path.exists(destination_path))
-            expected_mtime = datetime.datetime(2021, 1, 1, 12, 0, 0, tzinfo=timezone.utc).timestamp()
+            expected_mtime = datetime.datetime(2021, 1, 1, 12, 0, 0, tzinfo=datetime.UTC).timestamp()
             self.assertAlmostEqual(os.path.getmtime(destination_path), expected_mtime, delta=1)
 
     def test_download_photo_from_server_http_410_error_zero_retries(self):
@@ -3377,7 +3377,7 @@ class TestDownloadIsVerifiedBeforeItCountsAsThePhoto(unittest.TestCase):
             self.versions = {"original": {"type": "jpeg", "size": size}}
             import datetime
 
-            self.added_date = datetime.datetime(2020, 1, 1, tzinfo=timezone.utc)
+            self.added_date = datetime.datetime(2020, 1, 1, tzinfo=datetime.UTC)
 
         def download(self, file_size, **kwargs):
             import io

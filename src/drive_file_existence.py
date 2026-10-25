@@ -7,7 +7,7 @@ separating existence validation logic from sync operations per SRP.
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import os
-from datetime import timezone
+from datetime import UTC
 from shutil import rmtree
 from typing import Any
 
@@ -36,7 +36,7 @@ def file_exists(item: Any, local_file: str) -> bool:
     local_file_modified_time = int(os.path.getmtime(local_file))
     # iCloudPy produces date_modified via strptime(..., "%Y-%m-%dT%H:%M:%SZ") — always
     # naive UTC with no tzinfo. replace(tzinfo=UTC) is the correct conversion.
-    remote_file_modified_time = int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
+    remote_file_modified_time = int(item.date_modified.replace(tzinfo=UTC).timestamp())
     local_file_size = os.path.getsize(local_file)
     remote_file_size = item.size
 
@@ -73,7 +73,7 @@ def package_exists(item: Any, local_package_path: str) -> bool:
     local_package_modified_time = int(os.path.getmtime(local_package_path))
     # iCloudPy produces date_modified via strptime(..., "%Y-%m-%dT%H:%M:%SZ") — always
     # naive UTC with no tzinfo. replace(tzinfo=UTC) is the correct conversion.
-    remote_package_modified_time = int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
+    remote_package_modified_time = int(item.date_modified.replace(tzinfo=UTC).timestamp())
 
     # Only date_modified is comparable here. A package is stored remotely as a zip and
     # unpacked locally, so item.size (the zip) and the summed size of the unpacked
@@ -121,7 +121,7 @@ def package_bundle_unchanged(item: Any, local_file: str) -> bool:
         return False
     # iCloudPy produces date_modified as naive UTC (strptime ...Z); replace(tzinfo=UTC)
     # matches the convention file_exists/package_exists use so mtimes are TZ-invariant.
-    return int(os.path.getmtime(local_file)) == int(item.date_modified.replace(tzinfo=timezone.utc).timestamp())
+    return int(os.path.getmtime(local_file)) == int(item.date_modified.replace(tzinfo=UTC).timestamp())
 
 
 def is_package(item: Any, timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC) -> bool:

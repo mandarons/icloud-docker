@@ -31,10 +31,11 @@ exclude = [
 line-length = 120
 indent-width = 4
 
-# The image and CI both run Python 3.10 (see Dockerfile and .github/workflows).
-# Pin it explicitly: without this ruff 0.17+ defaults to py311 and starts
-# suggesting 3.11-only APIs such as `datetime.UTC` (UP017).
-target-version = "py310"
+# The image and CI both run Python 3.14 (see Dockerfile and .github/workflows).
+# Pin it explicitly so ruff targets the interpreter that actually executes the
+# code: without it ruff assumes an older default and suggests rewrites the
+# runtime cannot support.
+target-version = "py314"
 
 [lint]
 # Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
@@ -106,6 +107,13 @@ datetime = "datetime"
 # Handed to the operator to run, not imported: it carries its own
 # dependency block and probes clipboard backends in a loop.
 "src/icloud_sign.py" = ["INP001", "PERF203"]
+# `HardlinkRegistry` appears only in annotations in these two modules, but
+# Python 3.14 evaluates annotations lazily at access time (PEP 649): with a
+# TYPE_CHECKING-only import, `inspect.signature()` / `typing.get_type_hints()`
+# raise `NameError: name 'HardlinkRegistry' is not defined`, and allure-pytest
+# introspects test callables. Keep the runtime import, which is genuine.
+"src/album_sync_orchestrator.py" = ["TC001"]
+"src/photo_download_manager.py" = ["TC001"]
 
 
 [format]

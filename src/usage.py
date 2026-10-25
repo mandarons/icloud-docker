@@ -4,7 +4,7 @@ import json
 import os
 import tempfile
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import requests
@@ -355,7 +355,7 @@ def _parse_timestamp(ts: str) -> datetime:
     datetime (``tzinfo=timezone.utc``) so it can be compared against
     ``current_time()``'s output without naive/aware mismatches.
     """
-    return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=timezone.utc)
+    return datetime.strptime(ts, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=UTC)
 
 
 def current_time() -> datetime:
@@ -364,7 +364,7 @@ def current_time() -> datetime:
     Returns:
         Current UTC datetime object (timezone-aware)
     """
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def heartbeat(cached_data: dict, data: Any) -> dict | None:
