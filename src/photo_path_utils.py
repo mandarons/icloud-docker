@@ -305,7 +305,10 @@ def rename_legacy_file_if_exists(old_path: str, new_path: str) -> None:
     """
     import os
 
-    if not os.path.isfile(old_path):
+    # Without folder_format, a "legacy" flat path can be the file's current
+    # path. There is nothing to move, and warning about it would fire for
+    # every existing file on every run.
+    if old_path == new_path or not os.path.isfile(old_path):
         return
     if os.path.isfile(new_path):
         LOGGER.warning(f"Renaming {old_path} over existing {new_path}")
