@@ -130,6 +130,38 @@ class TestRenameIsReported:
             rename_legacy_file_if_exists(str(old), str(new))
         assert "over existing" in caplog.text
 
+    def test_a_file_already_at_its_path_says_nothing(self, tmp_path, caplog):
+        import logging
+
+        from src.photo_path_utils import rename_legacy_file_if_exists
+
+        path = tmp_path / "c.HEIC"
+        path.write_text("x")
+        with caplog.at_level(logging.INFO):
+            rename_legacy_file_if_exists(str(path), str(path))
+        assert caplog.text == ""
+        assert path.read_text() == "x"
+
+    def test_simple_names_without_folder_format_do_not_warn(self, tmp_path, caplog):
+        """With filename_format: simple and no folder_format, the flat legacy
+        path is the file's current path, so a re-run must stay quiet."""
+        import logging
+
+        from src import photo_path_utils
+
+        photo = _photo("IMG_1394.HEIC", {"original": {"type": "public.heic"}})
+        photo_path_utils.set_default_filename_format("simple")
+        try:
+            existing = tmp_path / "IMG_1394.HEIC"
+            existing.write_text("x")
+            with caplog.at_level(logging.INFO):
+                result = generate_photo_path(photo, "original", str(tmp_path), None)
+        finally:
+            photo_path_utils.set_default_filename_format("metadata")
+        assert result == str(existing)
+        assert "Renaming" not in caplog.text
+        assert existing.read_text() == "x"
+
     def test_a_missing_source_says_nothing(self, tmp_path, caplog):
         import logging
 
