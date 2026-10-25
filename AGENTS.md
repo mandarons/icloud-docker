@@ -17,7 +17,7 @@ A containerized iCloud sync client that periodically downloads files from Apple 
 | Run linter | `ruff check` |
 | Run formatter | `ruff format` |
 | Run full CI pipeline | `./run-ci.sh` |
-| Security scan | `bandit --quiet --format=custom --configfile=tests/bandit.yaml src/ tests/` |
+| Security scan | `bandit --quiet --format=custom --configfile=src/bandit.yaml src/ && bandit --quiet --format=custom --configfile=tests/bandit.yaml tests/` |
 | Docker build | `docker build -t mandarons/icloud-drive .` |
 
 Always run the full CI pipeline (`./run-ci.sh`) before declaring work complete.

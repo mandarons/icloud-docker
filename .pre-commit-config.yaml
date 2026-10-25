@@ -22,9 +22,22 @@ repos:
   - repo: https://github.com/PyCQA/bandit
     rev: 1.9.4
     hooks:
+      # Shipped code keeps B108 (hardcoded temp paths): src/bandit.yaml's
+      # allow-list includes it.
       - id: bandit
+        alias: bandit-src
+        name: bandit (src)
+        args:
+          - --quiet
+          - --format=custom
+          - --configfile=src/bandit.yaml
+        files: ^src/.+\.py$
+      # Tests drop B108, which fires on their "/tmp/dest" placeholder paths.
+      - id: bandit
+        alias: bandit-tests
+        name: bandit (tests)
         args:
           - --quiet
           - --format=custom
           - --configfile=tests/bandit.yaml
-        files: ^(src|tests)/.+\.py$
+        files: ^tests/.+\.py$

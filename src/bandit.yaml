@@ -1,0 +1,27 @@
+# https://bandit.readthedocs.io/en/latest/config.html
+#
+# `tests:` is an allow-list: bandit runs only the checks named here.
+#
+# This file covers shipped code (src/) and keeps B108, which tests/bandit.yaml
+# drops: bandit 1.9.0 reports B108 on explicitly-named files (how pre-commit
+# invokes it) and every hit is a tests/ placeholder path, so the check is only
+# silenced where the noise is. src/ has no hardcoded temp paths today, but a
+# future one should fail the hook rather than pass unseen.
+tests:
+  - B103
+  - B108
+  - B306
+  - B307
+  - B313
+  - B314
+  - B315
+  - B316
+  - B317
+  - B318
+  - B319
+  - B320
+  - B601
+  - B602
+  - B604
+  - B608
+  - B609
