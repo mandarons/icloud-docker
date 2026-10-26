@@ -1,0 +1,34 @@
+[38;5;196m2026-10-26 06:16:12,085 :: ERROR :: root :: web.py :: 1365 :: Web UI refresh-trust: ICloudPyService raised[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 1345, in auth_refresh_trust
+    api = icloudpy.ICloudPyService(
+        apple_id=username,
+        password=password,
+        cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+    )
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: ctor boom
+[38;5;196m2026-10-26 06:16:12,085 :: ERROR :: root :: web.py :: 1365 :: Web UI refresh-trust: ICloudPyService raised[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 1345, in auth_refresh_trust
+    api = icloudpy.ICloudPyService(
+        apple_id=username,
+        password=password,
+        cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+    )
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: ctor boom
