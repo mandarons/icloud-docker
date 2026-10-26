@@ -32,6 +32,7 @@ The config system is a pure data layer — it does NOT perform sync operations, 
 | `get_photos_filename_format(config)` | `metadata` (legacy) or `simple` plain names (default `metadata`) |
 | `get_photos_file_format(config)` / `get_photos_variant_separator(config)` | Single `${photo.*}` template for all versions + variant separator |
 | `get_photos_preserve_originals_as_bak(config)` | Write originals of edited photos as `*.original.bak` (default false) |
+| `get_photos_fallback_to_original(config)` | Download `original` when a requested version is absent (default false); `live_video_*` never falls back |
 | `get_web_ui_enabled(config)` | Check if web UI is enabled |
 | `get_telegram_listen_enabled(config)` | `app.telegram.listen` — complete 2FA by replying in Telegram (default off) |
 | `get_telegram_auth_keyword(config)` | `app.telegram.auth_keyword` — the reply that requests a 2FA push (default `auth`, lower-cased) |
