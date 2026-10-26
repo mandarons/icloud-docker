@@ -1,0 +1,22 @@
+[38;21m2026-10-26 15:01:51,471 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/tmpgye0u0uu/aicloudcom.session[0m
+[38;21m2026-10-26 15:01:51,471 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/tmpgye0u0uu/aicloudcom.session[0m
+[38;21m2026-10-26 15:01:51,471 :: DEBUG :: icloudpy.base :: base.py :: 502 :: Checking session token validity[0m
+[38;21m2026-10-26 15:01:51,471 :: DEBUG :: icloudpy.base :: base.py :: 502 :: Checking session token validity[0m
+[38;21m2026-10-26 15:01:51,472 :: DEBUG :: icloudpy.base.http :: base.py :: 76 :: POST https://setup.icloud.com/setup/ws/1/validate null[0m
+[38;21m2026-10-26 15:01:51,472 :: DEBUG :: icloudpy.base.http :: base.py :: 76 :: POST https://setup.icloud.com/setup/ws/1/validate null[0m
+[38;21m2026-10-26 15:01:51,473 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-10-26 15:01:51,473 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-10-26 15:01:51,473 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /tmp/tmpgye0u0uu/aicloudcom[0m
+[38;21m2026-10-26 15:01:51,473 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /tmp/tmpgye0u0uu/aicloudcom[0m
+[38;21m2026-10-26 15:01:51,473 :: DEBUG :: icloudpy.base.http :: base.py :: 123 :: error (421). Retrying ...[0m
+[38;21m2026-10-26 15:01:51,473 :: DEBUG :: icloudpy.base.http :: base.py :: 123 :: error (421). Retrying ...[0m
+[38;21m2026-10-26 15:01:51,474 :: DEBUG :: requests.sessions.http :: base.py :: 76 :: POST https://setup.icloud.com/setup/ws/1/validate null[0m
+[38;21m2026-10-26 15:01:51,474 :: DEBUG :: requests.sessions.http :: base.py :: 76 :: POST https://setup.icloud.com/setup/ws/1/validate null[0m
+[38;21m2026-10-26 15:01:51,475 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-10-26 15:01:51,475 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-10-26 15:01:51,475 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /tmp/tmpgye0u0uu/aicloudcom[0m
+[38;21m2026-10-26 15:01:51,475 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /tmp/tmpgye0u0uu/aicloudcom[0m
+[38;5;196m2026-10-26 15:01:51,475 :: ERROR :: icloudpy.base :: base.py :: 176 :: Authentication required for Account. (421)[0m
+[38;5;196m2026-10-26 15:01:51,475 :: ERROR :: icloudpy.base :: base.py :: 176 :: Authentication required for Account. (421)[0m
+[38;21m2026-10-26 15:01:51,475 :: DEBUG :: icloudpy.base :: base.py :: 508 :: Invalid authentication token[0m
+[38;21m2026-10-26 15:01:51,475 :: DEBUG :: icloudpy.base :: base.py :: 508 :: Invalid authentication token[0m

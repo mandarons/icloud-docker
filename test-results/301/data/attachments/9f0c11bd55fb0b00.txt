@@ -1,0 +1,4 @@
+[38;5;39m2026-10-26 15:01:57,475 :: INFO :: root :: photo_file_utils.py :: 351 :: Downloading /tmp/tmpobj5n2gr/x.jpg ...[0m
+[38;5;39m2026-10-26 15:01:57,475 :: INFO :: root :: photo_file_utils.py :: 351 :: Downloading /tmp/tmpobj5n2gr/x.jpg ...[0m
+[38;5;196m2026-10-26 15:01:57,479 :: ERROR :: root :: photo_file_utils.py :: 380 :: Incomplete download of /tmp/tmpobj5n2gr/x.jpg: got 0 of 1 bytes. Will retry on the next sync.[0m
+[38;5;196m2026-10-26 15:01:57,479 :: ERROR :: root :: photo_file_utils.py :: 380 :: Incomplete download of /tmp/tmpobj5n2gr/x.jpg: got 0 of 1 bytes. Will retry on the next sync.[0m

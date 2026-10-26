@@ -1,0 +1,10 @@
+[38;5;226m2026-10-26 15:01:57,568 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > albums not found. Downloading all albums ...[0m
+[38;5;226m2026-10-26 15:01:57,568 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > albums not found. Downloading all albums ...[0m
+[38;5;226m2026-10-26 15:01:57,569 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > extensions not found. Downloading all extensions ...[0m
+[38;5;226m2026-10-26 15:01:57,569 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > extensions not found. Downloading all extensions ...[0m
+[38;5;226m2026-10-26 15:01:57,570 :: WARNING :: root :: sync_photos.py :: 652 :: Apple is still indexing SharedLibrary (RUNNING). Downloading what it lists; obsolete-file cleanup waits until the index finishes.[0m
+[38;5;226m2026-10-26 15:01:57,570 :: WARNING :: root :: sync_photos.py :: 652 :: Apple is still indexing SharedLibrary (RUNNING). Downloading what it lists; obsolete-file cleanup waits until the index finishes.[0m
+[38;21m2026-10-26 15:01:57,570 :: DEBUG :: root :: config_logging.py :: 44 :: Removing obsolete files and folders ...[0m
+[38;21m2026-10-26 15:01:57,570 :: DEBUG :: root :: config_logging.py :: 44 :: Removing obsolete files and folders ...[0m
+[38;5;226m2026-10-26 15:01:57,570 :: WARNING :: root :: sync_photos.py :: 491 :: Skipping obsolete-file cleanup for SharedLibrary: Apple is still indexing it, or its index could not be checked, so its listing may be incomplete.[0m
+[38;5;226m2026-10-26 15:01:57,570 :: WARNING :: root :: sync_photos.py :: 491 :: Skipping obsolete-file cleanup for SharedLibrary: Apple is still indexing it, or its index could not be checked, so its listing may be incomplete.[0m

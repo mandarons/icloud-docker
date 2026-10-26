@@ -1,0 +1,5 @@
+DEBUG    icloudpy.base:base.py:284 Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session
+INFO     icloudpy.base:base.py:291 Session file does not exist
+DEBUG    icloudpy.base:base.py:356 Authenticating as quentintarantino@hotmail.fr
+DEBUG    icloudpy.base:base.py:460 Authentication completed successfully
+INFO     root:drive_package_processing.py:100 Package format not recognised for unpacking (image/jpeg); keeping as single-file bundle: /home/runner/work/icloud-docker/icloud-docker/tests/data/medium.jpeg
