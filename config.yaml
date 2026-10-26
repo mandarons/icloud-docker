@@ -221,7 +221,8 @@ photos:
       # Canonical values: original, original_alt, full, medium, thumb and the
       # live_video_* variants below.
       #   original_alt - the RAW/JPEG pair alternate (not an edit)
-      #   full         - Apple's rendered edit (crop, filters, portrait);
+      #   full         - Apple's rendered edit (crop, filters, portrait;
+      #                  usually a HEIC file, or QuickTime/MPEG-4 for a video);
       #                  "adjusted" is accepted as an alias. Only edited photos
       #                  have it, so unedited ones are skipped unless
       #                  fallback_to_original is enabled.

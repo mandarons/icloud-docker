@@ -47,7 +47,7 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 | Variant | Description |
 |---------|-------------|
 | `original` | Full-resolution image, as uploaded |
-| `full` (alias `adjusted`) | Apple's rendered **edit** (crop, filters, portrait, markup), `resJPEGFull*` on the `CPLAsset` record. Edited assets only; it is a JPEG even when the original is HEIC |
+| `full` (alias `adjusted`) | Apple's rendered **edit** (crop, filters, portrait, markup), `resJPEGFull*` on the `CPLAsset` record (`resVidFull*` for an edited video). Edited assets only; usually HEIC and JPEG for older edits, whatever the original was, and QuickTime/MPEG-4 for a video — the extension comes from the version's MIME type. A `full` that only the `CPLMaster` record carries is Apple's display render for a format it does not show natively (PNG, RAW, GIF, some MP4), not an edit, and is ignored |
 | `original_alt` (alias `alternative`) | RAW/JPEG pair alternate (`resOriginalAltRes`) — **not** an edit |
 | `medium` | Medium-quality; on an edited asset it describes the edit |
 | `thumb` | Thumbnail; on an edited asset it describes the edit |

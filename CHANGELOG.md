@@ -11,10 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Edited photos can be downloaded: `photos.filters.file_sizes` accepts `full`
   — Apple's rendered edit (crop, filters, portrait, markup) — with `adjusted`
-  as an accepted alias. The edit is a JPEG even when the original is HEIC, so
-  its extension comes from the version's MIME type. `original_alt` (alias
-  `alternative`) remains the RAW/JPEG pair alternate and is no longer described
-  as an edit
+  as an accepted alias. The edit is usually HEIC (JPEG for older edits)
+  whatever the original was, so its extension comes from the version's MIME
+  type. `original_alt` (alias `alternative`) remains the RAW/JPEG pair
+  alternate and is no longer described as an edit
   ([#292](https://github.com/mandarons/icloud-docker/issues/292),
   [#577](https://github.com/mandarons/icloud-docker/pull/577))
 - `photos.filters.fallback_to_original` (default false): a photo that has no
@@ -42,8 +42,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   mismatch and the first sync after the upgrade re-downloads them in place
   ([#577](https://github.com/mandarons/icloud-docker/pull/577))
 - Naming: in `simple` mode the edit gets a `-adjusted` marker when it would
-  otherwise resolve to the same name as the original (`IMG_1234-adjusted.jpeg`);
-  when a HEIC original and a JPEG edit already differ, no marker is added. With
+  otherwise resolve to the same name as the original
+  (`IMG_1234-adjusted.heic` when both are HEIC, `IMG_1234-adjusted.jpeg` when
+  both are JPEG, and `.JPG` counts as the same container as `.jpeg`); when a
+  HEIC original and a JPEG edit already differ, no marker is added. With
   `photos.file_format`, `full` counts as a variant while `original` is
   requested in the same run, so a template cannot put both on one path
   ([#577](https://github.com/mandarons/icloud-docker/pull/577))
@@ -61,6 +63,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   (`resJPEGFull*`) lives on the asset record, whose `recordName` differs from
   the master's, so refreshing only the master retried with the same stale URL
   and reported the photo as a failed download
+  ([#577](https://github.com/mandarons/icloud-docker/pull/577))
+- `full` is no longer mistaken for an edit when only the `CPLMaster` record
+  carries `resJPEGFullRes`: that is Apple's display rendition for a format it
+  does not render natively (PNG screenshots, RAW, GIF, some MP4), and those
+  photos were never edited. Previously such a photo's real original could be
+  hidden as `*.original.bak` while a lossy JPEG render took its place, and
+  `[adjusted]` without fallback downloaded that render. A `full` counts only
+  when `resJPEGFullRes` / `resVidFullRes` is on the `CPLAsset` record
+  ([#577](https://github.com/mandarons/icloud-docker/pull/577))
+- `fallback_to_original` no longer downloads `original` more than once per
+  photo: with two requested sizes a photo lacks (e.g.
+  `[adjusted, alternative]`), both used to resolve to the same path, racing two
+  downloads onto one file in `metadata` mode and keeping a duplicate copy per
+  photo in `simple` mode
+  ([#577](https://github.com/mandarons/icloud-docker/pull/577))
+- An edited video's extension now comes from the video MIME type
+  (`com.apple.quicktime-movie`, `public.mpeg-4`). Previously `full` looked only
+  in the image mapping, logged "Unknown filetype" and kept the original's
+  extension, writing an edited AVI or 3GP as QuickTime under the old name
   ([#577](https://github.com/mandarons/icloud-docker/pull/577))
 
 ## [2.2.0] 2026-10-19

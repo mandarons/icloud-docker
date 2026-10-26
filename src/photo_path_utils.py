@@ -48,16 +48,22 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
 
     # Renditions whose container differs from the asset filename: the
     # RAW/JPEG pair alternate (``original_alt``) and Apple's rendered edit
-    # (``full``), which is a JPEG even when the original was HEIC or PNG.
-    # Derive the extension from the version's own MIME type, not the name.
+    # (``full``), which can be HEIC or JPEG regardless of what the original
+    # was -- and, for an edited video, QuickTime or MPEG-4. Derive the
+    # extension from the version's own MIME type, not the name.
     if file_size in ("original_alt", "full") and file_size in photo.versions:
         filetype = photo.versions[file_size].get("type")
-        if filetype in _get_image_filetype_mapping():
-            extension = _get_image_filetype_mapping()[filetype]
-        else:
+        mapped = _get_image_filetype_mapping().get(filetype)
+        # A ``full`` rendition can be a movie (a trimmed or otherwise edited
+        # video), whose container belongs to the video mapping.
+        if mapped is None and file_size == "full":
+            mapped = _get_video_filetype_mapping().get(filetype)
+        if mapped is None:
             LOGGER.warning(
                 f"Unknown filetype {filetype} for {file_size} version of {filename}",
             )
+        else:
+            extension = mapped
 
     # Handle Live Photo paired-video versions. photo.filename is the STILL
     # (e.g. IMG_1234.HEIC), but the live_video_* versions are the QuickTime
@@ -84,17 +90,39 @@ def set_preserve_originals_as_bak(value: bool) -> None:
     _PRESERVE_ORIGINALS_AS_BAK = bool(value)
 
 
-def _photo_has_edit(photo) -> bool:
+# The rendition fields Apple writes to the ``CPLAsset`` record for an edit:
+# the still (``resJPEGFullRes``) and the movie (``resVidFullRes``). A ``full``
+# that icloudpy read from the ``CPLMaster`` record is a different thing -- the
+# display render iCloud generates for formats it does not show natively (PNG,
+# RAW, GIF, some MP4) -- and those assets were never edited.
+_EDIT_RENDITION_PREFIXES = ("resJPEGFull", "resVidFull")
+
+# Extensions that name the same JPEG container; ``IMG_1.JPG`` and a JPEG edit
+# of it must be recognised as colliding even though the strings differ.
+_JPEG_EXTENSIONS = frozenset({"jpg", "jpeg"})
+
+
+def photo_has_edit(photo) -> bool:
     """Check whether the asset has an edited (``full``) version on iCloud.
 
-    ``full`` is Apple's rendered edit (``resJPEGFull*`` on the ``CPLAsset``
-    record). ``original_alt`` is the RAW/JPEG pair alternate, not an edit, so
-    it must not be treated as one here.
+    The signal is ``resJPEGFullRes`` / ``resVidFullRes`` on the ``CPLAsset``
+    record. icloudpy reads versions asset-first and falls back to the
+    ``CPLMaster`` record per version, so ``"full" in photo.versions`` is not
+    enough: a master-carried ``full`` is Apple's display rendition for a
+    format it does not render natively (PNG screenshots, RAW, GIF, some MP4),
+    not an edit. ``original_alt`` is the RAW/JPEG pair alternate, not an edit,
+    so it must not be treated as one here.
 
-    Soft check — exceptions reading ``photo.versions`` are treated as "no
-    edit" so a partial CloudKit record cannot break the filename pipeline.
+    Soft check -- exceptions are treated as "no edit" so a partial CloudKit
+    record cannot break the filename pipeline. An object that does not expose
+    ``_asset_record`` as a dict (test doubles, older icloudpy objects) keeps
+    the previous ``"full" in versions`` answer.
     """
     try:
+        asset_record = getattr(photo, "_asset_record", None)
+        if isinstance(asset_record, dict):
+            fields = asset_record.get("fields") or {}
+            return any(f"{prefix}Res" in fields for prefix in _EDIT_RENDITION_PREFIXES)
         return "full" in photo.versions
     except Exception:
         return False
@@ -114,18 +142,27 @@ def set_adjusted_suffix(value: bool) -> None:
     _ADJUSTED_SUFFIX = bool(value)
 
 
+def _same_image_container(left: str, right: str) -> bool:
+    """Whether two extensions name the same container (``jpg`` == ``jpeg``)."""
+    left, right = left.lower(), right.lower()
+    if left in _JPEG_EXTENSIONS and right in _JPEG_EXTENSIONS:
+        return True
+    return left == right
+
+
 def _adjusted_name_suffix(photo, file_size: str) -> str:
     """Return the ``-adjusted`` marker for an edit that would collide.
 
     Applies only to ``full`` when both ``original`` and ``full`` were
-    requested *and* the two resolve to the same extension: a HEIC original
-    plus a JPEG edit already have distinct filenames and need no marker.
+    requested *and* the two resolve to the same container: a HEIC original
+    plus a JPEG edit already have distinct filenames and need no marker, but
+    ``.JPG`` and ``.jpeg`` are one container and do.
     """
     if not (_ADJUSTED_SUFFIX and file_size == "full"):
         return ""
     original_extension = get_photo_name_and_extension(photo, "original")[1]
     edit_extension = get_photo_name_and_extension(photo, file_size)[1]
-    return "-adjusted" if original_extension.lower() == edit_extension.lower() else ""
+    return "-adjusted" if _same_image_container(original_extension, edit_extension) else ""
 
 
 _TEMPLATE_TOKEN_RE = re.compile(r"\$\{([^}]+)\}")
@@ -285,7 +322,7 @@ def generate_photo_filename_with_metadata(
     # Apply .original.bak hide-suffix when applicable. Uniformly handled for
     # both filename_format modes — simple+bak yields IMG_1234.HEIC.original.bak,
     # metadata+bak yields IMG_1234__original__<id>.HEIC.original.bak.
-    if _PRESERVE_ORIGINALS_AS_BAK and file_size == "original" and _photo_has_edit(photo):
+    if _PRESERVE_ORIGINALS_AS_BAK and file_size == "original" and photo_has_edit(photo):
         result = f"{result}.original.bak"
 
     return result
@@ -384,7 +421,8 @@ def _get_image_filetype_mapping() -> dict:
     """Get mapping of Apple image UTI types to file extensions.
 
     Used for renditions whose container may differ from the asset filename:
-    the RAW/JPEG pair alternate and Apple's rendered edit (always a JPEG).
+    the RAW/JPEG pair alternate and Apple's rendered edit (usually HEIC,
+    JPEG for older edits, and a movie container for an edited video).
 
     Returns:
         Dictionary mapping file types to extensions
