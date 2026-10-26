@@ -84,7 +84,7 @@ iCloud Docker is a containerized sync client that downloads files from Apple iCl
 
 | Dependency | Purpose | Version |
 |-----------|---------|---------|
-| iCloudPy | iCloud API client | 0.9.0 |
+| iCloudPy | iCloud API client | 0.12.0 |
 | ruamel.yaml | YAML parsing with comment preservation | 0.19.1 |
 | python-magic | File type detection (ZIP/gzip) | 0.4.27 |
 | Flask | Web UI framework | 3.1.3 |
