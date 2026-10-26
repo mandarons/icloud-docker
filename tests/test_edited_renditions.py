@@ -10,14 +10,21 @@ import unittest
 from unittest.mock import MagicMock, Mock
 
 from src import config_parser
-from src.photo_download_manager import collect_download_task, set_fallback_to_original
+from src.album_sync_orchestrator import _collect_photo_download_tasks
+from src.photo_download_manager import (
+    collect_download_task,
+    set_fallback_to_original,
+    would_fall_back_to_original,
+)
 from src.photo_file_utils import _refresh_photo_download_url
 from src.photo_path_utils import (
     generate_photo_filename_with_metadata,
     get_photo_name_and_extension,
+    photo_has_edit,
     set_adjusted_suffix,
     set_default_filename_format,
     set_file_format,
+    set_preserve_originals_as_bak,
 )
 
 
@@ -254,6 +261,197 @@ class TestSyncWiring(unittest.TestCase):
         suffix_both.assert_called_once_with(True)
         _, suffix_edit_only = self._run(["full"], fallback=False)
         suffix_edit_only.assert_called_once_with(False)
+
+
+def _photo_with_asset(fields=None, versions=None, filename="IMG_1234.HEIC"):
+    """Photo whose ``CPLAsset`` record is an explicit dict, as icloudpy builds it."""
+    photo = _photo(filename=filename, versions=versions)
+    photo._asset_record = {  # noqa: SLF001 - the record icloudpy attaches to the asset
+        "recordName": "asset-1",
+        "recordType": "CPLAsset",
+        "fields": fields if fields is not None else {},
+    }
+    return photo
+
+
+class TestEditDetection(unittest.TestCase):
+    """``full`` is an edit only when the ``CPLAsset`` record carries it."""
+
+    def test_asset_record_still_edit_is_an_edit(self):
+        photo = _photo_with_asset({"resJPEGFullRes": {"value": {}}})
+        assert photo_has_edit(photo) is True
+
+    def test_asset_record_video_edit_is_an_edit(self):
+        photo = _photo_with_asset({"resVidFullRes": {"value": {}}})
+        assert photo_has_edit(photo) is True
+
+    def test_master_carried_full_is_not_an_edit(self):
+        """A master ``full`` is Apple's display render for PNG/RAW/GIF."""
+        photo = _photo_with_asset(
+            {"resOriginalRes": {"value": {}}},
+            versions={"original": _version(mime="public.png"), "full": _version()},
+        )
+        assert photo_has_edit(photo) is False
+
+    def test_empty_asset_record_is_not_an_edit(self):
+        photo = _photo_with_asset(
+            {}, versions={"original": _version(), "full": _version()},
+        )
+        assert photo_has_edit(photo) is False
+
+    def test_object_without_a_dict_asset_record_keeps_the_versions_answer(self):
+        photo = _photo(versions={"original": _version(), "full": _version()})
+        assert photo_has_edit(photo) is True
+
+    def test_unreadable_versions_is_no_edit(self):
+        class Broken:
+            @property
+            def versions(self):
+                msg = "partial record"
+                raise RuntimeError(msg)
+
+        assert photo_has_edit(Broken()) is False
+
+
+class TestMasterCarriedFullIsNotAnEdit(unittest.TestCase):
+    """A display render must not be downloaded or hide the real original."""
+
+    def setUp(self):
+        self.photo = _photo_with_asset(
+            {"resOriginalRes": {"value": {}}},
+            versions={"original": _version(mime="public.png"), "full": _version()},
+            filename="IMG_5678.PNG",
+        )
+
+    def tearDown(self):
+        set_fallback_to_original(False)
+        set_preserve_originals_as_bak(False)
+
+    def test_skipped_when_fallback_is_off(self):
+        set_fallback_to_original(False)
+        assert self._collect("full") is None
+
+    def test_falls_back_to_the_true_original(self):
+        set_fallback_to_original(True)
+        task = self._collect("full")
+        assert task is not None
+        assert task.file_size == "original"
+        assert task.photo_path.endswith(".PNG")
+
+    def test_original_is_not_hidden_as_bak(self):
+        set_preserve_originals_as_bak(True)
+        assert generate_photo_filename_with_metadata(
+            self.photo, "original", "simple",
+        ) == "IMG_5678.PNG"
+
+    def test_a_genuine_edit_is_still_hidden(self):
+        set_preserve_originals_as_bak(True)
+        edited = _photo_with_asset(
+            {"resJPEGFullRes": {"value": {}}},
+            versions={"original": _version(mime="public.png"), "full": _version()},
+            filename="IMG_5678.PNG",
+        )
+        assert generate_photo_filename_with_metadata(
+            edited, "original", "simple",
+        ) == "IMG_5678.PNG.original.bak"
+
+    def _collect(self, file_size):
+        return collect_download_task(self.photo, file_size, "/tmp/dest", None, None, None)
+
+
+class TestFallbackClaimsOneOriginalPerPhoto(unittest.TestCase):
+    """Two absent sizes must not resolve to the same ``original`` path."""
+
+    def tearDown(self):
+        set_fallback_to_original(False)
+        set_default_filename_format("metadata")
+
+    def _tasks(self, photo, file_sizes):
+        return _collect_photo_download_tasks(
+            photo, "/tmp/dest", file_sizes, None, None, None, None,
+        )
+
+    def test_two_absent_sizes_queue_the_original_once(self):
+        set_fallback_to_original(True)
+        photo = _photo(versions={"original": _version(mime="public.heic")})
+        tasks = self._tasks(photo, ["full", "original_alt"])
+        assert len(tasks) == 1
+        assert tasks[0].file_size == "original"
+
+    def test_simple_mode_keeps_one_copy_per_photo(self):
+        set_fallback_to_original(True)
+        set_default_filename_format("simple")
+        photo = _photo(
+            filename="IMG_1234.HEIC",
+            versions={"original": _version(mime="public.heic")},
+        )
+        tasks = self._tasks(photo, ["full", "original_alt"])
+        assert [task.photo_path for task in tasks] == ["/tmp/dest/IMG_1234.HEIC"]
+
+    def test_an_edited_photo_still_gets_the_edit_and_the_original(self):
+        set_fallback_to_original(True)
+        photo = _photo(
+            versions={
+                "original": _version(mime="public.heic"),
+                "full": _version(mime="public.heic"),
+            },
+        )
+        tasks = self._tasks(photo, ["full", "original_alt"])
+        assert len(tasks) == 2
+        assert sorted(task.file_size for task in tasks) == ["full", "original"]
+
+    def test_predicate_matches_the_collector(self):
+        set_fallback_to_original(True)
+        photo = _photo(versions={"original": _version()})
+        assert would_fall_back_to_original(photo, "full") is True
+        assert would_fall_back_to_original(photo, "original") is False
+
+
+class TestEditedVideoAndJpegNaming(unittest.TestCase):
+    def tearDown(self):
+        set_adjusted_suffix(False)
+        set_default_filename_format("metadata")
+
+    def test_edited_video_uses_the_video_container(self):
+        photo = _photo(
+            filename="CLIP.AVI",
+            versions={
+                "original": _version(mime="public.avi"),
+                "full": _version(mime="public.mpeg-4"),
+            },
+        )
+        assert get_photo_name_and_extension(photo, "full") == ("CLIP", "MP4")
+
+    def test_edited_quicktime_video_uses_mov(self):
+        photo = _photo(
+            filename="CLIP.AVI",
+            versions={
+                "original": _version(mime="public.avi"),
+                "full": _version(mime="com.apple.quicktime-movie"),
+            },
+        )
+        assert get_photo_name_and_extension(photo, "full") == ("CLIP", "MOV")
+
+    def test_original_alt_never_uses_the_video_mapping(self):
+        photo = _photo(
+            filename="CLIP.AVI",
+            versions={
+                "original": _version(mime="public.avi"),
+                "original_alt": _version(mime="com.apple.quicktime-movie"),
+            },
+        )
+        assert get_photo_name_and_extension(photo, "original_alt") == ("CLIP", "AVI")
+
+    def test_jpg_and_jpeg_count_as_one_container_for_the_marker(self):
+        set_default_filename_format("simple")
+        set_adjusted_suffix(True)
+        photo = _photo(
+            filename="IMG_1234.JPG",
+            versions={"original": _version(), "full": _version()},
+        )
+        assert generate_photo_filename_with_metadata(
+            photo, "full", "simple",
+        ) == "IMG_1234-adjusted.jpeg"
 
 
 def _refresh_photo(record_names, asset_fields=None, versions=None):

@@ -16,6 +16,7 @@ from src.photo_download_manager import (
     DownloadTaskInfo,
     collect_download_task,
     execute_parallel_downloads,
+    would_fall_back_to_original,
 )
 from src.photo_filter_utils import is_photo_wanted
 from src.photo_path_utils import normalize_file_path
@@ -143,7 +144,20 @@ def _collect_photo_download_tasks(
             LOGGER.debug(f"Skipping the unwanted photo {photo.filename}.")
             return []
         tasks: list[DownloadTaskInfo] = []
+        # With ``fallback_to_original`` on, two requested sizes a photo lacks
+        # (e.g. ``[adjusted, alternative]`` for an unedited photo) both
+        # resolve to ``original``. Claim that substitution once per photo so
+        # the parallel executor never queues two downloads onto one path.
+        fallback_claimed = False
         for file_size in file_sizes:
+            if would_fall_back_to_original(photo, file_size):
+                if fallback_claimed:
+                    LOGGER.debug(
+                        f"Already downloading the original for {photo.filename}; "
+                        f"skipping the {file_size} fallback.",
+                    )
+                    continue
+                fallback_claimed = True
             download_info = collect_download_task(
                 photo,
                 file_size,

@@ -20,6 +20,7 @@ from src.photo_path_utils import (
     get_default_filename_format,
     get_file_format,
     normalize_file_path,
+    photo_has_edit,
     rename_legacy_file_if_exists,
 )
 
@@ -38,6 +39,33 @@ def set_fallback_to_original(value: bool) -> None:
     """Set whether an absent requested size falls back to ``original``."""
     global _FALLBACK_TO_ORIGINAL
     _FALLBACK_TO_ORIGINAL = bool(value)
+
+
+def _size_present(photo, file_size: str, versions: dict) -> bool:
+    """Whether ``file_size`` can be downloaded as itself.
+
+    A ``full`` that only the master record carries is Apple's display
+    rendition for a format iCloud does not render natively, not an edit (see
+    ``photo_path_utils.photo_has_edit``), so it counts as absent here too.
+    """
+    if file_size not in versions:
+        return False
+    return file_size != "full" or photo_has_edit(photo)
+
+
+def would_fall_back_to_original(photo, file_size: str) -> bool:
+    """Whether ``collect_download_task`` would download ``original`` instead.
+
+    The album orchestrator uses this to claim the substitution once per photo:
+    with two requested sizes a photo lacks (e.g. ``[adjusted, alternative]``),
+    both would otherwise resolve to the same ``original`` path and race.
+    """
+    if not _FALLBACK_TO_ORIGINAL:
+        return False
+    if file_size == "original" or file_size.startswith("live_video_"):
+        return False
+    versions = photo.versions
+    return not _size_present(photo, file_size, versions) and "original" in versions
 
 
 class DownloadTaskInfo:
@@ -210,17 +238,17 @@ def collect_download_task(
     # makes ``[adjusted]`` mean "the edit, or the untouched original if the
     # photo was never edited".
     #
+    # ``full`` only counts as present when the asset record carries the edit
+    # (see ``photo_has_edit``): a master-carried ``full`` is Apple's display
+    # rendition for a format it does not render natively, and treating it as
+    # an edit would hide a PNG/RAW original behind ``.original.bak``.
+    #
     # ``live_video_*`` never falls back: those versions are QuickTime movies,
     # and writing the still image's bytes under a ``.mov`` name would be
     # corrupt data rather than a substitute.
     versions = photo.versions
-    if file_size not in versions:
-        if (
-            _FALLBACK_TO_ORIGINAL
-            and file_size != "original"
-            and not file_size.startswith("live_video_")
-            and "original" in versions
-        ):
+    if not _size_present(photo, file_size, versions):
+        if would_fall_back_to_original(photo, file_size):
             LOGGER.debug(
                 f"File size {file_size} not found on server for {photo.filename}. "
                 "Downloading original instead.",
