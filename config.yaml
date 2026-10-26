@@ -170,11 +170,12 @@ photos:
   # a stalled connection to Apple's CDN blocks its worker thread forever.
   # Between-bytes, not a total budget, so large videos are unaffected.
   # request_timeout: 30
-  # With file_sizes including both "original" and "original_alt", write edited
-  # photos as TWO files: the visible edited "current view", plus the untouched
-  # original as IMG_1234.HEIC.original.bak (no photo app recognises .bak as an
-  # image extension, so it stays hidden but filesystem-recoverable). Unedited
-  # photos are unaffected. Default false.
+  # With file_sizes including both "original" and "full" (the edit), write
+  # edited photos as TWO files: the visible edited "current view", plus the
+  # untouched original as IMG_1234.HEIC.original.bak (no photo app recognises
+  # .bak as an image extension, so it stays hidden but filesystem-recoverable).
+  # Unedited photos, and photos whose only extra rendition is original_alt
+  # (the RAW/JPEG pair alternate, not an edit), are unaffected. Default false.
   # preserve_originals_as_bak: false
   # Seconds between syncs (positive), or negative for a one-shot run.
   # 0 is invalid: it is logged, and the default 1800 is used instead.
@@ -210,11 +211,24 @@ photos:
     albums:
       - "album 1"
       - "album2"
+    # Download "original" for a photo that has no copy of a requested version,
+    # instead of skipping it. Makes file_sizes: ["full"] mean "the edit, or the
+    # untouched original if the photo was never edited". live_video_* requests
+    # never fall back. Default false.
+    # fallback_to_original: false
+
     file_sizes:
-      # valid values are original, medium and/or thumb
+      # Canonical values: original, original_alt, full, medium, thumb and the
+      # live_video_* variants below.
+      #   original_alt - the RAW/JPEG pair alternate (not an edit)
+      #   full         - Apple's rendered edit (crop, filters, portrait);
+      #                  "adjusted" is accepted as an alias. Only edited photos
+      #                  have it, so unedited ones are skipped unless
+      #                  fallback_to_original is enabled.
       - "original"
       # - "medium"
       # - "thumb"
+      # - "full"
       # For Live Photos, add live_video_original to also download the paired .mov
       # (live_video_medium / live_video_thumb for smaller variants). Non-Live
       # Photos don't have these versions and are skipped.

@@ -1,24 +1,42 @@
 """Tests for ``photos.preserve_originals_as_bak`` — hide untouched originals
 of edited photos via the ``.original.bak`` filename suffix.
 
-Added 2026-05-27. When ``preserve_originals_as_bak: true`` and the user has
-both ``original`` and ``original_alt`` in ``file_sizes``, edited photos
-land as two files: the alt visible to photo browsers, the original hidden
-via a ``.bak`` extension. Unedited photos are unaffected.
+An edit is the ``full`` version (``resJPEGFull*`` on the ``CPLAsset`` record).
+``original_alt`` is the RAW/JPEG pair alternate, not an edit, so it must not
+activate the toggle (#572): before this, a RAW shooter's untouched JPEG was
+hidden as ``*.original.bak`` without any edit being written.
+
+When ``preserve_originals_as_bak: true`` and the user has both ``original``
+and ``full`` in ``file_sizes``, edited photos land as two files: the edit
+visible to photo browsers, the original hidden via a ``.bak`` extension.
+Unedited photos and RAW/JPEG pairs are unaffected.
 """
 
 import unittest
 from unittest.mock import MagicMock
 
-from src import config_parser
+from src import config_parser, photo_download_manager
 from src.photo_path_utils import (
     generate_photo_filename_with_metadata,
+    set_adjusted_suffix,
     set_preserve_originals_as_bak,
 )
 
 
-def _photo_with_alt(filename="IMG_1234.HEIC", photo_id="abc"):
-    """Edited photo — has both original and original_alt versions."""
+def _photo_edited(filename="IMG_1234.HEIC", photo_id="abc"):
+    """Edited photo — has both original and full (the edit) versions."""
+    photo = MagicMock()
+    photo.filename = filename
+    photo.id = photo_id
+    photo.versions = {
+        "original": {"type": "public.heic", "size": 12345},
+        "full": {"type": "public.jpeg", "size": 8000},
+    }
+    return photo
+
+
+def _photo_raw_pair(filename="IMG_1234.HEIC", photo_id="abc"):
+    """RAW/JPEG pair — an alternate rendition, but no edit."""
     photo = MagicMock()
     photo.filename = filename
     photo.id = photo_id
@@ -30,7 +48,7 @@ def _photo_with_alt(filename="IMG_1234.HEIC", photo_id="abc"):
 
 
 def _photo_unedited(filename="IMG_5678.HEIC", photo_id="def"):
-    """Unedited photo — has only original (no original_alt)."""
+    """Unedited photo — has only original."""
     photo = MagicMock()
     photo.filename = filename
     photo.id = photo_id
@@ -65,29 +83,35 @@ class TestFilenameSuffixApplied(unittest.TestCase):
         set_preserve_originals_as_bak(False)
 
     def test_edited_photo_original_gets_bak_suffix(self):
-        photo = _photo_with_alt("IMG_1234.HEIC", "abc")
+        photo = _photo_edited("IMG_1234.HEIC", "abc")
         name = generate_photo_filename_with_metadata(photo, "original")
         assert name.endswith(".HEIC.original.bak"), f"got {name!r}"
         # Still has the metadata-suffix portion ahead of .HEIC.original.bak
         assert "IMG_1234__original__" in name
 
-    def test_edited_photo_alt_does_NOT_get_bak_suffix(self):
-        """The alt is the visible 'current view' file — must not be hidden."""
-        photo = _photo_with_alt("IMG_1234.HEIC", "abc")
-        name = generate_photo_filename_with_metadata(photo, "original_alt")
+    def test_edited_photo_edit_does_NOT_get_bak_suffix(self):
+        """The edit is the visible 'current view' file — must not be hidden."""
+        photo = _photo_edited("IMG_1234.HEIC", "abc")
+        name = generate_photo_filename_with_metadata(photo, "full")
         assert not name.endswith(".bak"), f"got {name!r}"
 
     def test_unedited_photo_original_does_NOT_get_bak_suffix(self):
-        """Photos without an alt version should keep their normal name."""
+        """Photos without an edit should keep their normal name."""
         photo = _photo_unedited("IMG_5678.HEIC", "def")
+        name = generate_photo_filename_with_metadata(photo, "original")
+        assert not name.endswith(".bak"), f"got {name!r}"
+        assert name.endswith(".HEIC")
+
+    def test_raw_pair_does_NOT_get_bak_suffix(self):
+        """``original_alt`` is an alternate rendition, not an edit (#572)."""
+        photo = _photo_raw_pair("IMG_1234.HEIC", "abc")
         name = generate_photo_filename_with_metadata(photo, "original")
         assert not name.endswith(".bak"), f"got {name!r}"
         assert name.endswith(".HEIC")
 
     def test_medium_size_does_NOT_get_bak_suffix(self):
         """Only the `original` size is hidden — `medium` and others are normal."""
-        photo = _photo_with_alt("IMG_1234.HEIC", "abc")
-        # Add a medium version so generate_photo_filename_with_metadata works
+        photo = _photo_edited("IMG_1234.HEIC", "abc")
         photo.versions["medium"] = {"type": "public.jpeg", "size": 4000}
         name = generate_photo_filename_with_metadata(photo, "medium")
         assert not name.endswith(".bak"), f"got {name!r}"
@@ -100,14 +124,14 @@ class TestFilenameSuffixNotAppliedWhenToggleOff(unittest.TestCase):
         set_preserve_originals_as_bak(False)
 
     def test_edited_photo_original_no_bak_when_toggle_off(self):
-        photo = _photo_with_alt("IMG_1234.HEIC", "abc")
+        photo = _photo_edited("IMG_1234.HEIC", "abc")
         name = generate_photo_filename_with_metadata(photo, "original")
         assert not name.endswith(".bak"), f"got {name!r}"
         assert name.endswith(".HEIC")
 
 
 class TestPartialCloudkitRecordSafe(unittest.TestCase):
-    """If reading photo.versions raises, treat as 'no alt' (don't suffix)."""
+    """If reading photo.versions raises, treat as 'no edit' (don't suffix)."""
 
     def setUp(self):
         set_preserve_originals_as_bak(True)
@@ -117,8 +141,9 @@ class TestPartialCloudkitRecordSafe(unittest.TestCase):
 
     def test_versions_raises_falls_through_to_normal_name(self):
         """A partial CloudKit record where ``photo.versions`` raises
-        must not crash filename generation. Treat-as-no-alt soft path
-        is exercised — result is the normal name with no ``.bak``."""
+        must not crash filename generation. Treat-as-no-edit soft path
+        is exercised — result is the normal name with no ``.bak``.
+        """
 
         # Use a dedicated stub class instead of mutating ``MagicMock``'s
         # class via ``type(photo).versions = property(...)`` — that
@@ -137,13 +162,12 @@ class TestPartialCloudkitRecordSafe(unittest.TestCase):
         assert not name.endswith(".bak"), f"got {name!r}"
 
 
-
-class TestSyncGateRequiresOriginalAlt(unittest.TestCase):
+class TestSyncGateRequiresTheEdit(unittest.TestCase):
     """The ``sync_photos.sync_photos`` orchestrator must only flip the
-    ``set_preserve_originals_as_bak`` toggle when ``original_alt`` is
-    actually in the configured ``file_sizes``. Otherwise the suffix
-    hides the original AND the visible edited view is never downloaded
-    -- the photo "disappears" from photo browsers.
+    ``set_preserve_originals_as_bak`` toggle when ``full`` is actually in
+    the configured ``file_sizes``. Otherwise the suffix hides the original
+    AND no visible edit is downloaded -- the photo "disappears" from photo
+    browsers.
 
     The toggle defaults to OFF, so we observe the boolean the
     orchestrator passes to ``set_preserve_originals_as_bak`` via patch.
@@ -154,6 +178,9 @@ class TestSyncGateRequiresOriginalAlt(unittest.TestCase):
 
     def tearDown(self):
         set_preserve_originals_as_bak(False)
+        # sync_photos also flips these module-level switches for real.
+        set_adjusted_suffix(False)
+        photo_download_manager.set_fallback_to_original(False)
 
     def _config(self, file_sizes):
         return {
@@ -192,8 +219,8 @@ class TestSyncGateRequiresOriginalAlt(unittest.TestCase):
             sync_photos.sync_photos(config=config, photos=api_photos)
         return fake_set
 
-    def test_gate_FALSE_when_original_alt_not_in_file_sizes(self):
-        """preserve_originals_as_bak=true BUT original_alt not requested
+    def test_gate_FALSE_when_full_not_in_file_sizes(self):
+        """preserve_originals_as_bak=true BUT full not requested
         -> the orchestrator must call ``set_preserve_originals_as_bak(False)``
         so the original lands at its normal (visible) name. Otherwise
         the photo has no visible representation on disk."""
@@ -203,24 +230,30 @@ class TestSyncGateRequiresOriginalAlt(unittest.TestCase):
         # guarding on call_args_list let this pass without asserting anything.
         fake_set.assert_called_once_with(False)
 
-    def test_gate_TRUE_when_original_alt_IS_in_file_sizes(self):
-        """preserve_originals_as_bak=true AND original_alt requested
+    def test_gate_TRUE_when_full_IS_in_file_sizes(self):
+        """preserve_originals_as_bak=true AND full requested
         -> the toggle activates; the edited "current view" lands
         visibly while the untouched original goes to .bak."""
-        fake_set = self._run_with_config(self._config(["original", "original_alt"]))
+        fake_set = self._run_with_config(self._config(["original", "full"]))
         # Last call was True.
         assert fake_set.call_args_list, "set_preserve_originals_as_bak never called"
         last_arg = fake_set.call_args_list[-1].args[0]
         assert last_arg is True, f"expected True, got {last_arg!r}"
 
-    def test_gate_FALSE_when_config_false_even_if_original_alt_present(self):
+    def test_gate_FALSE_when_config_false_even_if_full_present(self):
         """preserve_originals_as_bak=false short-circuits regardless of
         file_sizes."""
-        cfg = self._config(["original", "original_alt"])
+        cfg = self._config(["original", "full"])
         cfg["photos"]["preserve_originals_as_bak"] = False
         fake_set = self._run_with_config(cfg)
         # The setter runs unconditionally, so it must have been called --
         # guarding on call_args_list let this pass without asserting anything.
+        fake_set.assert_called_once_with(False)
+
+    def test_gate_FALSE_for_a_raw_pair_without_an_edit(self):
+        """A RAW/JPEG pair must not activate the toggle: nothing on disk
+        would be the edit, and the untouched JPEG would be hidden (#572)."""
+        fake_set = self._run_with_config(self._config(["original", "original_alt"]))
         fake_set.assert_called_once_with(False)
 
 
@@ -237,11 +270,11 @@ class TestCleanupCascadesToTheSidecar(unittest.TestCase):
         photo = MagicMock()
         photo.filename = "IMG_1234.HEIC"
         photo.id = "abc"
-        photo.versions = {"original": {}, "original_alt": {"type": "public.jpeg"}}
+        photo.versions = {"original": {}, "full": {"type": "public.jpeg"}}
         photo_path_utils.set_preserve_originals_as_bak(True)
         try:
             hidden = photo_path_utils.generate_photo_filename_with_metadata(photo, "original")
-            visible = photo_path_utils.generate_photo_filename_with_metadata(photo, "original_alt")
+            visible = photo_path_utils.generate_photo_filename_with_metadata(photo, "full")
         finally:
             photo_path_utils.set_preserve_originals_as_bak(False)
         from pathlib import Path

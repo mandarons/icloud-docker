@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Edited photos can be downloaded: `photos.filters.file_sizes` accepts `full`
+  — Apple's rendered edit (crop, filters, portrait, markup) — with `adjusted`
+  as an accepted alias. The edit is a JPEG even when the original is HEIC, so
+  its extension comes from the version's MIME type. `original_alt` (alias
+  `alternative`) remains the RAW/JPEG pair alternate and is no longer described
+  as an edit
+  ([#292](https://github.com/mandarons/icloud-docker/issues/292))
+- `photos.filters.fallback_to_original` (default false): a photo that has no
+  copy of a requested version is downloaded as its `original` instead of being
+  skipped, so `file_sizes: [full]` means "the edit, or the original if the
+  photo was never edited" — icloudpd's behaviour. `live_video_*` requests never
+  fall back: a still image under a `.mov` name is not a video
+
+### Changed
+
+- `photos.preserve_originals_as_bak` now hides the untouched original when the
+  photo has an **edit** (`full`) and both `original` and `full` are requested.
+  It previously keyed off `original_alt`, which is the RAW/JPEG pair alternate,
+  not an edit: for RAW shooters it hid the untouched JPEG as
+  `*.original.bak` without writing any edit at all
+  ([#572](https://github.com/mandarons/icloud-docker/issues/572)). RAW/JPEG
+  pairs no longer produce a `.bak`; existing `*.original.bak` copies are
+  untracked and are only swept when the asset leaves iCloud, so remove them by
+  hand if they are no longer wanted
+- On an edited photo, `medium`, `thumb` and the Live Photo `live_video_*`
+  renditions now come from the `CPLAsset` record and therefore describe the
+  edit. Their filenames do not change, so `check_photo_exists` sees a size
+  mismatch and the first sync after the upgrade re-downloads them in place
+- Naming: in `simple` mode the edit gets a `-adjusted` marker when it would
+  otherwise resolve to the same name as the original (`IMG_1234-adjusted.jpeg`);
+  when a HEIC original and a JPEG edit already differ, no marker is added. With
+  `photos.file_format`, `full` counts as a variant while `original` is
+  requested in the same run, so a template cannot put both on one path
+- `icloudpy` 0.12.0: `PhotoAsset.versions` reads each version from the
+  `CPLAsset` record first and falls back to `CPLMaster`, which is what makes
+  the edit visible. The release raises its Python floor to 3.14, which the
+  container and CI already run. `file_sizes` entries are de-duplicated after
+  alias normalization, so `[original, adjusted, full]` downloads the edit once
+
+### Fixed
+
+- Expired download URLs (HTTP 410) on edited photos: the refresh now re-fetches
+  the `CPLAsset` record as well as `CPLMaster`. The edit's URL
+  (`resJPEGFull*`) lives on the asset record, whose `recordName` differs from
+  the master's, so refreshing only the master retried with the same stale URL
+  and reported the photo as a failed download
+
 ## [2.2.0] 2026-10-19
 
 ### Added
