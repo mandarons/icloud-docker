@@ -262,6 +262,10 @@ photos:
   # Optional: refuse to sync if a marker file is missing in the destination.
   # require_mount_marker: false
   filename_format: metadata # optional, default "metadata". "metadata" = name__filesize__base64id.ext (legacy). "simple" = plain name.ext (boredazfcuk/Apple-style; lets you migrate without re-downloading)
+  # In "simple" mode an edited photo whose edit would otherwise take the
+  # original's name gets a "-adjusted" marker: IMG_1234-adjusted.heic when both
+  # are HEIC, IMG_1234-adjusted.jpeg when both are JPEG. A HEIC original with a
+  # JPEG edit already differs, so no marker is added there.
   # file_format: optional single template applied to ALL versions (overrides filename_format). Tokens:
   #   ${photo.filename} ${photo.ext} ${photo.id} ${photo.file_size} ${photo.year} ${photo.month} ${photo.day}
   #   ${photo.variant} (empty for original/full, else version) and ${photo.variant_suffix} (separator+variant, only when present).

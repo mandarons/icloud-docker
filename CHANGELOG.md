@@ -55,6 +55,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   container and CI already run. `file_sizes` entries are de-duplicated after
   alias normalization, so `[original, adjusted, full]` downloads the edit once
   ([#577](https://github.com/mandarons/icloud-docker/pull/577))
+- The image is built on Python 3.14 (`python:3.14-alpine3.24`, both stages),
+  matching CI and the devcontainer. Python 3.10 reached end of life on
+  2026-10-01, and its floor was also holding back dependency updates behind
+  their newer `Requires-Python`. The Ruff target moves to `py314`, pre-commit
+  hooks and the Allure CLI were refreshed (the hook's ruff now matches the
+  pinned one instead of running a second version), and two redundant test pins
+  were dropped: `coverage`, already supplied by `pytest-cov`, and `ipython`,
+  which nothing imported
+  ([#573](https://github.com/mandarons/icloud-docker/pull/573))
 
 ### Fixed
 
@@ -78,6 +87,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   downloads onto one file in `metadata` mode and keeping a duplicate copy per
   photo in `simple` mode
   ([#577](https://github.com/mandarons/icloud-docker/pull/577))
+- A file already sitting at its final path is no longer reported as renamed.
+  With `filename_format: simple` and no `folder_format`, the flat legacy path
+  *is* the file's current path, so every existing file logged `Renaming X over
+  existing X` on every run although nothing moved; the rename is now skipped
+  when both paths are the same
+  ([#574](https://github.com/mandarons/icloud-docker/issues/574),
+  [#575](https://github.com/mandarons/icloud-docker/pull/575))
 - An edited video's extension now comes from the video MIME type
   (`com.apple.quicktime-movie`, `public.mpeg-4`). Previously `full` looked only
   in the image mapping, logged "Unknown filetype" and kept the original's
