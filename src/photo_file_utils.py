@@ -169,26 +169,32 @@ def _note_refresh_failure(record_name: str, reason: str) -> None:
 
 
 def _refresh_photo_download_url(photo) -> bool:
-    """Re-fetch the photo's master record from iCloud to obtain fresh download URLs.
+    """Re-fetch the photo's CloudKit records from iCloud for fresh download URLs.
 
     iCloud download URLs are signed CDN tokens that expire after ~30–40 minutes.
     When a URL expires (HTTP 410 Gone), clearing ``photo._versions`` alone is
-    insufficient because icloudpy re-parses the same stale ``_master_record``
-    which still contains the expired URL.  This function makes a new
-    ``records/lookup`` API call to get an updated master record with fresh URLs,
-    then updates ``photo._master_record`` in place and clears ``_versions`` so
-    the next ``download()`` call uses the fresh URL.
+    insufficient because icloudpy re-parses the same stale records which still
+    contain the expired URL. This function makes a ``records/lookup`` API call
+    for the records that carry renditions -- the ``CPLMaster`` record and, for
+    an edited asset, the ``CPLAsset`` record whose ``resJPEGFull*`` fields hold
+    the edit's URL -- then updates them in place and clears ``_versions`` so
+    the next ``download()`` call uses the fresh URLs.
+
+    The two records have different ``recordName``s (the asset record links to
+    the master through ``masterRef``), so looking up only the master leaves the
+    ``full`` URL stale and an edited photo never recovers from a 410.
 
     ``records/lookup`` is used rather than ``records/query`` because ``CPLMaster``
     is not a query-indexable CloudKit type: querying it fails every time with
-    ``Type is not marked indexable: CPLMaster (BAD_REQUEST)``.  Lookup fetches
+    ``Type is not marked indexable: CPLMaster (BAD_REQUEST)``. Lookup fetches
     records by name and returns the same ``{"records": [...]}`` shape.
 
     Args:
         photo: PhotoAsset object from icloudpy
 
     Returns:
-        True if the master record was successfully refreshed, False otherwise.
+        True if every record that carries a rendition was refreshed, False
+        otherwise.
     """
     try:
         record_name = photo._master_record["recordName"]  # noqa: SLF001
@@ -199,6 +205,25 @@ def _refresh_photo_download_url(photo) -> bool:
     except (AttributeError, KeyError, TypeError):
         _note_refresh_failure("<unknown>", "photo missing _master_record or recordName")
         return False
+
+    # The edited rendition lives on the asset (``CPLAsset``) record, which has
+    # its own ``recordName`` -- CloudKit links it to the master through
+    # ``masterRef``, and the two names differ. Refreshing only the master
+    # leaves a stale ``full`` URL, so the retry hits 410 again and the photo is
+    # reported as a failed download.
+    asset_record = getattr(photo, "_asset_record", None)
+    asset_name = asset_record.get("recordName") if isinstance(asset_record, dict) else None
+    asset_fields = (asset_record.get("fields") or {}) if isinstance(asset_record, dict) else {}
+    # Only ask for the asset record when it carries a rendition: an unedited
+    # asset's record holds dates and metadata, not download URLs.
+    needs_asset = bool(
+        asset_name
+        and asset_name != record_name
+        and any(key.endswith("Res") for key in asset_fields),
+    )
+    record_names = [record_name]
+    if needs_asset:
+        record_names.append(asset_name)
 
     service = getattr(photo, "_service", None)
     if service is None:
@@ -217,7 +242,7 @@ def _refresh_photo_download_url(photo) -> bool:
     try:
         url = f"{endpoint}/records/lookup?{urlencode(params)}"
         query = {
-            "records": [{"recordName": record_name}],
+            "records": [{"recordName": name} for name in record_names],
             "desiredKeys": _DESIRED_KEYS,
             "zoneID": zone_id,
         }
@@ -229,44 +254,63 @@ def _refresh_photo_download_url(photo) -> bool:
         response = request.json()
         records = response.get("records", [])
 
+        # A failed lookup is not an HTTP error: CloudKit returns it as a
+        # record inside ``records`` carrying the requested recordName and a
+        # ``serverErrorCode``/``reason`` in place of ``fields``. Matching on
+        # the name alone therefore accepts an error payload as a fresh
+        # record -- the refresh reports success, and the retrying download
+        # raises KeyError('fields') deep inside icloudpy, which surfaces as an
+        # unexplained "Failed to download <path>: 'fields'" and is charged to
+        # the download rather than to the refresh.
+        #
+        # An empty ``fields`` is no better than a missing one: icloudpy builds
+        # ``versions`` by testing ``f"{prefix}Res" in fields``, so an empty
+        # dict yields no versions at all, ``download()`` returns None, and the
+        # caller dereferences ``.raw`` on it. Accepting either shape also
+        # discards the still-valid record we already hold, poisoning the asset
+        # for the rest of the sync.
+        #
+        # Failures are collected per record so a master that refreshed is not
+        # thrown away because the asset lookup failed for an unedited photo --
+        # and, conversely, a stale ``full`` URL never reports success.
+        refreshed = {}
+        failures = {}
         for rec in records:
-            if rec.get("recordName") != record_name:
+            name = rec.get("recordName")
+            if name not in record_names:
                 continue
-            # A failed lookup is not an HTTP error: CloudKit returns it as a
-            # record inside ``records`` carrying the requested recordName and a
-            # ``serverErrorCode``/``reason`` in place of ``fields``. Matching on
-            # the name alone therefore accepts an error payload as a fresh
-            # master record -- the refresh reports success, and the retrying
-            # download raises KeyError('fields') deep inside icloudpy, which
-            # surfaces as an unexplained "Failed to download <path>: 'fields'"
-            # and is charged to the download rather than to the refresh.
-            #
-            # An empty ``fields`` is no better than a missing one: icloudpy
-            # builds ``versions`` by testing ``f"{prefix}Res" in fields``, so
-            # an empty dict yields no versions at all, ``download()`` returns
-            # None, and the caller dereferences ``.raw`` on it. Accepting
-            # either shape also discards the still-valid master record we
-            # already hold, poisoning the asset for the rest of the sync.
-            # Two distinct failures, reported separately so a refresh that
-            # keeps failing in the field says which one it is.
             if rec.get("serverErrorCode"):
-                _note_refresh_failure(
-                    record_name,
-                    f"CloudKit error {rec['serverErrorCode']}: {rec.get('reason') or 'no reason given'}",
+                failures[name] = (
+                    f"CloudKit error {rec['serverErrorCode']}: "
+                    f"{rec.get('reason') or 'no reason given'}"
                 )
-                return False
+                continue
             if not rec.get("fields"):
-                _note_refresh_failure(record_name, "record came back with no usable fields")
-                return False
-            photo._master_record = rec  # noqa: SLF001
-            with _versions_refresh_lock:
-                photo._versions = None  # noqa: SLF001
-            LOGGER.debug(f"Refreshed download URL for {record_name}")
-            _note_refresh_success()
-            return True
+                failures[name] = "record came back with no usable fields"
+                continue
+            refreshed[name] = rec
 
-        _note_refresh_failure(record_name, "record not found in iCloud response")
-        return False
+        if record_name not in refreshed:
+            _note_refresh_failure(
+                record_name,
+                failures.get(record_name, "record not found in iCloud response"),
+            )
+            return False
+        if needs_asset and asset_name is not None and asset_name not in refreshed:
+            _note_refresh_failure(
+                asset_name,
+                failures.get(asset_name, "record not found in iCloud response"),
+            )
+            return False
+
+        photo._master_record = refreshed[record_name]  # noqa: SLF001
+        if asset_name in refreshed:
+            photo._asset_record = refreshed[asset_name]  # noqa: SLF001
+        with _versions_refresh_lock:
+            photo._versions = None  # noqa: SLF001
+        LOGGER.debug(f"Refreshed download URL for {record_name}")
+        _note_refresh_success()
+        return True
 
     except Exception as e:  # noqa: BLE001
         _note_refresh_failure(record_name, str(e))

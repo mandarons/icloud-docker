@@ -28,6 +28,17 @@ LOGGER = get_logger()
 # Thread-safe lock for file set operations
 files_lock = Lock()
 
+# ``photos.filters.fallback_to_original``: download ``original`` when an
+# asset has no copy of a requested size. ``sync_photos`` sets this once per
+# run from the parsed filters.
+_FALLBACK_TO_ORIGINAL = False
+
+
+def set_fallback_to_original(value: bool) -> None:
+    """Set whether an absent requested size falls back to ``original``."""
+    global _FALLBACK_TO_ORIGINAL
+    _FALLBACK_TO_ORIGINAL = bool(value)
+
 
 class DownloadTaskInfo:
     """Information about a photo download task."""
@@ -194,18 +205,38 @@ def collect_download_task(
     Returns:
         DownloadTaskInfo if photo needs to be processed, None if skipped
     """
-    # Check if file size exists on server
-    if file_size not in photo.versions:
-        photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)
-        # A missing live_video_* version just means this isn't a Live Photo --
-        # expected for most assets, so log at DEBUG to avoid warning-spam when
-        # live_video_original is in file_sizes. Other sizes warn as before.
-        msg = f"File size {file_size} not found on server. Skipping the photo {photo_path} ..."
-        if file_size.startswith("live_video_"):
-            LOGGER.debug(msg)
+    # Check if file size exists on server. With ``fallback_to_original`` on, an
+    # absent size downloads the original instead of skipping -- that is what
+    # makes ``[adjusted]`` mean "the edit, or the untouched original if the
+    # photo was never edited".
+    #
+    # ``live_video_*`` never falls back: those versions are QuickTime movies,
+    # and writing the still image's bytes under a ``.mov`` name would be
+    # corrupt data rather than a substitute.
+    versions = photo.versions
+    if file_size not in versions:
+        if (
+            _FALLBACK_TO_ORIGINAL
+            and file_size != "original"
+            and not file_size.startswith("live_video_")
+            and "original" in versions
+        ):
+            LOGGER.debug(
+                f"File size {file_size} not found on server for {photo.filename}. "
+                "Downloading original instead.",
+            )
+            file_size = "original"
         else:
-            LOGGER.warning(msg)
-        return None
+            photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)
+            # A missing live_video_* version just means this isn't a Live Photo --
+            # expected for most assets, so log at DEBUG to avoid warning-spam when
+            # live_video_original is in file_sizes. Other sizes warn as before.
+            msg = f"File size {file_size} not found on server. Skipping the photo {photo_path} ..."
+            if file_size.startswith("live_video_"):
+                LOGGER.debug(msg)
+            else:
+                LOGGER.warning(msg)
+            return None
 
     # Generate photo path
     photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)

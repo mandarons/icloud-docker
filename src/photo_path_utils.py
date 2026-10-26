@@ -46,14 +46,17 @@ def get_photo_name_and_extension(photo, file_size: str) -> tuple[str, str]:
     filename = unquote(photo.filename)
     name, extension = filename.rsplit(".", 1) if "." in filename else [filename, ""]
 
-    # Handle original_alt file type mapping
-    if file_size == "original_alt" and file_size in photo.versions:
-        filetype = photo.versions[file_size]["type"]
-        if filetype in _get_original_alt_filetype_mapping():
-            extension = _get_original_alt_filetype_mapping()[filetype]
+    # Renditions whose container differs from the asset filename: the
+    # RAW/JPEG pair alternate (``original_alt``) and Apple's rendered edit
+    # (``full``), which is a JPEG even when the original was HEIC or PNG.
+    # Derive the extension from the version's own MIME type, not the name.
+    if file_size in ("original_alt", "full") and file_size in photo.versions:
+        filetype = photo.versions[file_size].get("type")
+        if filetype in _get_image_filetype_mapping():
+            extension = _get_image_filetype_mapping()[filetype]
         else:
             LOGGER.warning(
-                f"Unknown filetype {filetype} for original_alt version of {filename}",
+                f"Unknown filetype {filetype} for {file_size} version of {filename}",
             )
 
     # Handle Live Photo paired-video versions. photo.filename is the STILL
@@ -81,16 +84,48 @@ def set_preserve_originals_as_bak(value: bool) -> None:
     _PRESERVE_ORIGINALS_AS_BAK = bool(value)
 
 
-def _photo_has_alt_version(photo) -> bool:
-    """Check whether the asset has an edited (``original_alt``) version on iCloud.
+def _photo_has_edit(photo) -> bool:
+    """Check whether the asset has an edited (``full``) version on iCloud.
 
-    Soft check — exceptions reading ``photo.versions`` are treated as "no alt"
-    so a partial CloudKit record cannot break the filename pipeline.
+    ``full`` is Apple's rendered edit (``resJPEGFull*`` on the ``CPLAsset``
+    record). ``original_alt`` is the RAW/JPEG pair alternate, not an edit, so
+    it must not be treated as one here.
+
+    Soft check — exceptions reading ``photo.versions`` are treated as "no
+    edit" so a partial CloudKit record cannot break the filename pipeline.
     """
     try:
-        return "original_alt" in photo.versions
+        return "full" in photo.versions
     except Exception:
         return False
+
+
+# When both the untouched original and the edit are requested, a plain
+# filename format (``simple``, or a user template that omits
+# ``${photo.file_size}``) can resolve both versions to the same name.
+# ``sync_photos`` sets this once per run so the edit gets a marker instead of
+# silently overwriting the original.
+_ADJUSTED_SUFFIX = False
+
+
+def set_adjusted_suffix(value: bool) -> None:
+    """Set whether the edit needs a ``-adjusted`` marker to stay distinct."""
+    global _ADJUSTED_SUFFIX
+    _ADJUSTED_SUFFIX = bool(value)
+
+
+def _adjusted_name_suffix(photo, file_size: str) -> str:
+    """Return the ``-adjusted`` marker for an edit that would collide.
+
+    Applies only to ``full`` when both ``original`` and ``full`` were
+    requested *and* the two resolve to the same extension: a HEIC original
+    plus a JPEG edit already have distinct filenames and need no marker.
+    """
+    if not (_ADJUSTED_SUFFIX and file_size == "full"):
+        return ""
+    original_extension = get_photo_name_and_extension(photo, "original")[1]
+    edit_extension = get_photo_name_and_extension(photo, file_size)[1]
+    return "-adjusted" if original_extension.lower() == edit_extension.lower() else ""
 
 
 _TEMPLATE_TOKEN_RE = re.compile(r"\$\{([^}]+)\}")
@@ -147,11 +182,18 @@ def render_filename_template(template: str, photo, file_size: str) -> str:
     Variant tokens are empty for the primary versions (original/full) and the
     version name otherwise: ``${photo.variant}`` (bare, e.g. ``medium``) and
     ``${photo.variant_suffix}`` (separator + variant, e.g. ``_medium``) so the
-    separator only appears when there actually is a variant.
+    separator only appears when there actually is a variant. ``full`` counts
+    as a variant when ``original`` is requested in the same run, so a template
+    cannot resolve the edit and the original to one name.
     """
     name, extension = get_photo_name_and_extension(photo, file_size)
     created = getattr(photo, "created", None)
-    is_primary = file_size in _PRIMARY_VERSIONS
+    # ``full`` is a primary only while it is the sole copy requested; with
+    # ``original`` also in the list the template needs a distinct variant so
+    # the two files cannot land on the same name.
+    is_primary = file_size in _PRIMARY_VERSIONS and not (
+        _ADJUSTED_SUFFIX and file_size == "full"
+    )
     variant = "" if is_primary else file_size
     variant_suffix = "" if is_primary else f"{_VARIANT_SEPARATOR}{file_size}"
     values = {
@@ -185,10 +227,14 @@ def generate_photo_filename_with_metadata(
     - ``"metadata"`` (default): ``name__filesize__base64id.extension``
     - ``"simple"``: ``name.extension``
 
+    In ``simple`` mode, when both ``original`` and ``full`` are requested and
+    both resolve to the same extension, the edit gains a ``-adjusted`` marker
+    (``IMG_1234-adjusted.jpeg``) so it cannot overwrite the original.
+
     When ``_PRESERVE_ORIGINALS_AS_BAK`` is on AND this is the ``original``
-    size AND the asset has an ``original_alt`` version on iCloud (edited),
-    the filename ends with ``.original.bak`` so photo browsers skip it but
-    the file remains filesystem-recoverable.
+    size AND the asset has an edited (``full``) version on iCloud, the
+    filename ends with ``.original.bak`` so photo browsers skip it but the
+    file remains filesystem-recoverable.
 
     Works uniformly across both ``filename_format`` modes — the
     ``.original.bak`` qualifier is appended to whatever the base filename
@@ -227,6 +273,7 @@ def generate_photo_filename_with_metadata(
         )
 
     if filename_format == "simple":
+        name = f"{name}{_adjusted_name_suffix(photo, file_size)}"
         result = name if extension == "" else f"{name}.{extension}"
     else:
         photo_id_encoded = base64.urlsafe_b64encode(photo.id.encode()).decode()
@@ -238,7 +285,7 @@ def generate_photo_filename_with_metadata(
     # Apply .original.bak hide-suffix when applicable. Uniformly handled for
     # both filename_format modes — simple+bak yields IMG_1234.HEIC.original.bak,
     # metadata+bak yields IMG_1234__original__<id>.HEIC.original.bak.
-    if _PRESERVE_ORIGINALS_AS_BAK and file_size == "original" and _photo_has_alt_version(photo):
+    if _PRESERVE_ORIGINALS_AS_BAK and file_size == "original" and _photo_has_edit(photo):
         result = f"{result}.original.bak"
 
     return result
@@ -333,8 +380,11 @@ def _get_video_filetype_mapping() -> dict:
     }
 
 
-def _get_original_alt_filetype_mapping() -> dict:
-    """Get mapping of original_alt file types to extensions.
+def _get_image_filetype_mapping() -> dict:
+    """Get mapping of Apple image UTI types to file extensions.
+
+    Used for renditions whose container may differ from the asset filename:
+    the RAW/JPEG pair alternate and Apple's rendered edit (always a JPEG).
 
     Returns:
         Dictionary mapping file types to extensions

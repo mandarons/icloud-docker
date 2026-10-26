@@ -246,10 +246,11 @@ photos:
   # HTTP read timeout in seconds for photo downloads (default: 30). Between-bytes,
   # not a total budget, so large videos are unaffected.
   # request_timeout: 30
-  # With file_sizes including both "original" and "original_alt", write edited
-  # photos as the visible edited version plus the untouched original as
+  # With file_sizes including both "original" and "full" (the edit), write
+  # edited photos as the visible edited version plus the untouched original as
   # *.original.bak (hidden from photo browsers, filesystem-recoverable).
-  # Default false.
+  # original_alt (the RAW/JPEG pair alternate) is not an edit and does not
+  # activate this. Default false.
   # preserve_originals_as_bak: false
   # Seconds between syncs (positive), or negative for a one-shot run.
   # 0 is invalid: it is logged, and the default 1800 is used instead.
@@ -285,10 +286,19 @@ photos:
     albums:
       - "album 1"
       - "album2"
-    file_sizes: # valid values are original, medium and/or thumb
+    file_sizes: # canonical values: original, original_alt, full, medium, thumb, live_video_*
+      # original_alt is the RAW/JPEG pair alternate, not an edit.
+      # full is Apple's rendered edit ("adjusted" is accepted as an alias); only
+      # edited photos have it, and unedited ones are skipped unless
+      # fallback_to_original is enabled.
       - "original"
       # - "medium"
       # - "thumb"
+      # - "full"
+    # Download "original" when a photo has no copy of a requested version,
+    # instead of skipping it: file_sizes: ["full"] then means "the edit, or the
+    # original if never edited". live_video_* never falls back. Default false.
+    # fallback_to_original: false
     # Live Photos: by default only the still image is downloaded.
     # To also download the paired .mov video file, add one of:
     #   live_video_original - full-resolution video (large)

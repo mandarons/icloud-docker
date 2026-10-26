@@ -399,21 +399,34 @@ def sync_photos(config, photos):
         config_parser.get_photos_variant_separator(config=config),
     )
     filters = config_parser.get_photos_filters(config=config)
+    file_sizes = filters.get("file_sizes") or []
     # preserve_originals_as_bak invariant: at least ONE visible file per
     # photo must always land on disk. The suffix only hides ``original``
-    # behind ``.bak`` -- so if the user isn't ALSO downloading
-    # ``original_alt`` (the visible "current view" of an edited photo),
-    # enabling the suffix would leave nothing visible. Gate the toggle
-    # on both ``preserve_originals_as_bak: true`` AND ``original_alt`` in
-    # ``file_sizes``. If a photo is later removed from iCloud, the normal
-    # remove_obsolete sweep cascades to both the visible file AND the
-    # ``.bak`` sidecar (neither is in tracked_files, both get deleted) --
-    # so there's no risk of orphan ``.bak`` files outliving their parent.
-    from src.photo_path_utils import set_preserve_originals_as_bak
+    # behind ``.bak`` -- so if the edit (``full``) is not ALSO being
+    # downloaded, enabling the suffix would leave nothing visible. Gate the
+    # toggle on both ``preserve_originals_as_bak: true`` AND ``full`` in
+    # ``file_sizes``. ``original_alt`` is the RAW/JPEG pair alternate, not an
+    # edit, and no longer activates the toggle. If a photo is later removed
+    # from iCloud, the normal remove_obsolete sweep cascades to both the
+    # visible file AND the ``.bak`` sidecar (neither is in tracked_files, both
+    # get deleted) -- so there's no risk of orphan ``.bak`` files outliving
+    # their parent.
+    from src.photo_download_manager import set_fallback_to_original
+    from src.photo_path_utils import set_adjusted_suffix, set_preserve_originals_as_bak
 
     set_preserve_originals_as_bak(
         config_parser.get_photos_preserve_originals_as_bak(config=config)
-        and "original_alt" in (filters.get("file_sizes") or []),
+        and "full" in file_sizes,
+    )
+    # With both the original and the edit requested, a plain filename can
+    # resolve the two versions to one path; mark the edit so one cannot
+    # overwrite the other.
+    set_adjusted_suffix("original" in file_sizes and "full" in file_sizes)
+    # When ``original`` is itself requested it is downloaded on its own, so a
+    # fallback task for a missing size would target the same path and race that
+    # download. Only substitute when the original is not already in the list.
+    set_fallback_to_original(
+        bool(filters.get("fallback_to_original")) and "original" not in file_sizes,
     )
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)

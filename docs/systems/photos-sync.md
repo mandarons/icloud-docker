@@ -8,7 +8,7 @@ The photos sync system (`src/sync_photos.py` + 6 helper modules) handles downloa
 - Support album-based organization with `all_albums` mode
 - Deduplicate across albums using hardlinks
 - Filter by file extensions and album preferences
-- Support multiple file sizes (original, medium, thumb, live_video, original_alt)
+- Support multiple file sizes (original, full/adjusted, medium, thumb, live_video, original_alt)
 - Handle date-based folder organization via `folder_format`
 - Name files via `photos.filename_format` (metadata/simple) or a single
   `photos.file_format` template; optionally preserve originals of edited
@@ -46,10 +46,11 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 
 | Variant | Description |
 |---------|-------------|
-| `original` | Full-resolution image |
-| `original_alt` | RAW fallback |
-| `medium` | Medium-quality |
-| `thumb` | Thumbnail |
+| `original` | Full-resolution image, as uploaded |
+| `full` (alias `adjusted`) | Apple's rendered **edit** (crop, filters, portrait, markup), `resJPEGFull*` on the `CPLAsset` record. Edited assets only; it is a JPEG even when the original is HEIC |
+| `original_alt` (alias `alternative`) | RAW/JPEG pair alternate (`resOriginalAltRes`) — **not** an edit |
+| `medium` | Medium-quality; on an edited asset it describes the edit |
+| `thumb` | Thumbnail; on an edited asset it describes the edit |
 | `live_video_original` | Live Photo video (full-res) |
 | `live_video_medium` | Live Photo video (medium) |
 | `live_video_thumb` | Live Photo video (thumb) |
@@ -61,7 +62,8 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 - `HardlinkRegistry` tracks hardlinks across albums to prevent duplicates
 - `folder_format` uses strftime patterns (e.g., `"%Y/%m"`)
 - `enumeration_chunk_size` bounds peak memory (default 1000 photos/chunk). The download buffer also drains once its oldest task is `BUFFERED_DOWNLOAD_MAX_AGE_SEC` old (10 minutes, checked between photos, so best effort; the URL refresh covers what still expires), because download URLs expire ~30-40 minutes after the listing that returned them and, on a mostly backed-up library, pending downloads trickle in across the whole walk
-- HTTP 410 Gone triggers download URL refresh via `_refresh_photo_download_url()`, which looks the record up in its own `zoneID` (from the master record), falling back to the service's zone. icloudpy gives every asset the photos service, whose zone is the primary library, so a Shared Library asset looked up there is never found
+- HTTP 410 Gone triggers download URL refresh via `_refresh_photo_download_url()`, which looks the records up in their own `zoneID` (from the master record), falling back to the service's zone. It looks up **both** the `CPLMaster` record and — when the asset record carries a rendition — the `CPLAsset` record: the edit's URL (`resJPEGFull*`) lives on the asset record, whose `recordName` differs from the master's. Refreshing only the master leaves an edited photo looping on 410. icloudpy gives every asset the photos service, whose zone is the primary library, so a Shared Library asset looked up there is never found
+- `photos.filters.fallback_to_original` substitutes `original` when an asset has no copy of a requested size; `live_video_*` requests never fall back, because the still image's bytes under a `.mov` name are not a video
 - Downloads stream to a `.part` file and are size-verified against the CloudKit
   version size before being moved into place — a partial or wrong-body transfer
   never occupies the photo's path and never destroys the previous good copy

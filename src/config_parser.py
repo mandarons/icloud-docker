@@ -926,6 +926,16 @@ def get_photos_obsolete_delete_limit_percent(config: dict) -> int:
 # =============================================================================
 
 
+# Friendly spellings for the canonical version keys, borrowed from icloudpd's
+# ``--size`` vocabulary: ``adjusted`` is Apple's rendered edit (``full``) and
+# ``alternative`` is the RAW/JPEG pair alternate (``original_alt``), which is
+# not an edit.
+FILE_SIZE_ALIASES = {
+    "adjusted": "full",
+    "alternative": "original_alt",
+}
+
+
 def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     """Validate and filter file sizes against valid options.
 
@@ -934,6 +944,12 @@ def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     download the paired ``.mov`` of a Live Photo (and ``live_video_medium`` /
     ``live_video_thumb`` for smaller variants). Photos that aren't Live Photos
     simply don't have those versions and are skipped.
+
+    Two friendly aliases are normalized to their canonical keys, mirroring
+    icloudpd's vocabulary: ``adjusted`` -> ``full`` (Apple's rendered edit)
+    and ``alternative`` -> ``original_alt`` (the RAW/alternate rendition,
+    *not* an edit). Duplicates that appear after normalization are collapsed,
+    so ``[original, adjusted, full]`` downloads the edit once.
 
     Args:
         file_sizes: List of file size strings to validate
@@ -945,14 +961,15 @@ def validate_file_sizes(file_sizes: list[str]) -> list[str]:
     validated_sizes = []
 
     for file_size in file_sizes:
-        if file_size not in valid_file_sizes:
+        canonical = FILE_SIZE_ALIASES.get(file_size, file_size)
+        if canonical not in valid_file_sizes:
             log_invalid_config_value(
                 ["photos", "filters", "file_sizes"],
                 file_size,
                 ",".join(valid_file_sizes),
             )
-        else:
-            validated_sizes.append(file_size)
+        elif canonical not in validated_sizes:
+            validated_sizes.append(canonical)
 
     return validated_sizes if validated_sizes else ["original"]
 
@@ -1025,15 +1042,16 @@ def get_photos_preserve_originals_as_bak(config: dict) -> bool:
     """Whether to hide untouched-original copies of edited photos via ``.original.bak``.
 
     When True AND ``photos.filters.file_sizes`` contains BOTH ``original``
-    AND ``original_alt``, an edited photo lands as TWO files on disk:
+    AND ``full`` (the edit), an edited photo lands as TWO files on disk:
 
-      - ``IMG_1234.JPG``               — the edited "current view" (visible)
+      - ``IMG_1234.jpeg``              — the edited "current view" (visible)
       - ``IMG_1234.HEIC.original.bak`` — the untouched original (invisible
         to Plex / Photos.app / Synology Photos / any photo browser, since
         no app recognises ``.bak`` as an image extension), but filesystem-
         recoverable
 
-    Unedited photos (no ``original_alt`` for them) are unaffected.
+    Unedited photos (no ``full`` version) are unaffected. ``original_alt`` is
+    the RAW/JPEG pair alternate, not an edit, and no longer activates this.
 
     Default False (backward-compatible — no behaviour change for existing
     mandarons users).
@@ -1171,6 +1189,30 @@ def get_photos_file_sizes_filter(
     return validate_file_sizes(file_sizes)
 
 
+def get_photos_fallback_to_original(config: dict) -> bool:
+    """Whether an absent requested size falls back to ``original``.
+
+    ``photos.filters.fallback_to_original`` (default false, backward
+    compatible). When true, a photo that has no copy of a requested version
+    is downloaded as its ``original`` instead of being skipped, which is how
+    icloudpd behaves. That makes ``file_sizes: [adjusted]`` mean "the edit,
+    or the untouched original if the photo was never edited".
+
+    ``live_video_*`` requests never fall back: those versions are QuickTime
+    movies, and substituting the still image would write JPEG bytes under a
+    ``.mov`` name.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True when the fallback is enabled, False otherwise.
+    """
+    config_path = ["photos", "filters", "fallback_to_original"]
+    value = get_config_value_or_none(config=config, config_path=config_path)
+    return bool(value) if value is not None else False
+
+
 def get_photos_extensions_filter(
     config: dict, base_config_path: list[str],
 ) -> list[str] | None:
@@ -1209,6 +1251,7 @@ def get_photos_filters(config: dict) -> dict[str, Any]:
         "albums": None,
         "file_sizes": ["original"],
         "extensions": None,
+        "fallback_to_original": False,
     }
 
     base_config_path = ["photos", "filters"]
@@ -1229,6 +1272,9 @@ def get_photos_filters(config: dict) -> dict[str, Any]:
     )
     photos_filters["extensions"] = get_photos_extensions_filter(
         config, base_config_path,
+    )
+    photos_filters["fallback_to_original"] = get_photos_fallback_to_original(
+        config=config,
     )
 
     return photos_filters
