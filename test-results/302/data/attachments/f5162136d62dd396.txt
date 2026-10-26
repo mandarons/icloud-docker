@@ -1,0 +1,10 @@
+[38;21m2026-10-26 21:28:43,412 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-10-26 21:28:43,412 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-10-26 21:28:43,412 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-10-26 21:28:43,412 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-10-26 21:28:43,412 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-26 21:28:43,412 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-10-26 21:28:43,418 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-10-26 21:28:43,418 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-10-26 21:28:43,419 :: DEBUG :: root :: photo_file_utils.py :: 338 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/test_photo__original__dGVzdF9waG90b19pZA==.jpg ...[0m
+[38;21m2026-10-26 21:28:43,419 :: DEBUG :: root :: photo_file_utils.py :: 338 :: No changes detected. Skipping the file /home/runner/work/icloud-docker/icloud-docker/tests/temp/icloud/photos/test_photo__original__dGVzdF9waG90b19pZA==.jpg ...[0m

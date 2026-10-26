@@ -1,0 +1,2 @@
+DEBUG    root:photo_download_manager.py:252 File size full not found on server for IMG_1234.HEIC. Downloading original instead.
+DEBUG    root:album_sync_orchestrator.py:155 Already downloading the original for IMG_1234.HEIC; skipping the original_alt fallback.

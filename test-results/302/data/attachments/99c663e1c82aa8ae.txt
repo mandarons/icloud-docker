@@ -1,0 +1,6 @@
+[38;5;226m2026-10-26 21:28:36,674 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > albums not found. Downloading all albums ...[0m
+[38;5;226m2026-10-26 21:28:36,675 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > extensions not found. Downloading all extensions ...[0m
+[38;5;226m2026-10-26 21:28:36,675 :: WARNING :: root :: sync_photos.py :: 665 :: Apple is still indexing PrimarySync (<MagicMock name='mock.indexing_state' id='140580894977936'>). Downloading what it lists; obsolete-file cleanup waits until the index finishes.[0m
+[38;5;226m2026-10-26 21:28:36,676 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > albums not found. Downloading all albums ...[0m
+[38;5;226m2026-10-26 21:28:36,676 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > extensions not found. Downloading all extensions ...[0m
+[38;5;226m2026-10-26 21:28:36,677 :: WARNING :: root :: sync_photos.py :: 665 :: Apple is still indexing PrimarySync (<MagicMock name='mock.indexing_state' id='140580894968864'>). Downloading what it lists; obsolete-file cleanup waits until the index finishes.[0m

@@ -1,0 +1,34 @@
+[38;5;196m2026-10-26 21:28:46,887 :: ERROR :: root :: web.py :: 749 :: Web UI auth failed during ICloudPyService instantiation[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 743, in auth_password
+    api = icloudpy.ICloudPyService(
+        apple_id=username,
+        password=password,
+        cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+    )
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: Apple said no
+[38;5;196m2026-10-26 21:28:46,887 :: ERROR :: root :: web.py :: 749 :: Web UI auth failed during ICloudPyService instantiation[0m
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 743, in auth_password
+    api = icloudpy.ICloudPyService(
+        apple_id=username,
+        password=password,
+        cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+    )
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.8/x64/lib/python3.14/unittest/mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: Apple said no
