@@ -5,7 +5,7 @@
     <title>Coverage for src/drive_parallel_download.py: 100%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_c827f16f.png">
     <link rel="stylesheet" href="style_cb_4667309f.css" type="text/css">
-    <script src="coverage_html_cb_15cffcd0.js" defer></script>
+    <script src="coverage_html_cb_54cfdca1.js" defer></script>
 </head>
 <body class="pyfile">
 <header>
@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_145eef247bfb46b6_drive_sync_directory_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-22 16:56 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.0">coverage.py v7.17.0</a>,
+            created at 2026-10-26 06:16 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -226,7 +226,7 @@
     <p class="run"><span class="n"><a id="t144" href="#t144">144</a></span><span class="t">    <span class="nam">is_package</span> <span class="op">=</span> <span class="nam">download_info</span><span class="op">[</span><span class="str">&quot;is_package&quot;</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t145" href="#t145">145</a></span><span class="t">    <span class="nam">files</span> <span class="op">=</span> <span class="nam">download_info</span><span class="op">[</span><span class="str">&quot;files&quot;</span><span class="op">]</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t146" href="#t146">146</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">    <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">f&quot;[Thread] Starting download of {local_file}&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t147" href="#t147">147</a></span><span class="t">    <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f&quot;</span><span class="fst">[Thread] Starting download of </span><span class="op">{</span><span class="nam">local_file</span><span class="op">}</span><span class="fst">&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t148" href="#t148">148</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t149" href="#t149">149</a></span><span class="t">    <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t150" href="#t150">150</a></span><span class="t">        <span class="nam">downloaded_file</span> <span class="op">=</span> <span class="nam">download_file</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
@@ -247,10 +247,10 @@
     <p class="run"><span class="n"><a id="t165" href="#t165">165</a></span><span class="t">            <span class="key">with</span> <span class="nam">files_lock</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t166" href="#t166">166</a></span><span class="t">                <span class="nam">files</span><span class="op">.</span><span class="nam">update</span><span class="op">(</span><span class="nam">str</span><span class="op">(</span><span class="nam">f</span><span class="op">)</span> <span class="key">for</span> <span class="nam">f</span> <span class="key">in</span> <span class="nam">Path</span><span class="op">(</span><span class="nam">downloaded_file</span><span class="op">)</span><span class="op">.</span><span class="nam">glob</span><span class="op">(</span><span class="str">&quot;**/*&quot;</span><span class="op">)</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t167" href="#t167">167</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="str">f&quot;[Thread] Completed download of {local_file}&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t168" href="#t168">168</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">debug</span><span class="op">(</span><span class="fst">f&quot;</span><span class="fst">[Thread] Completed download of </span><span class="op">{</span><span class="nam">local_file</span><span class="op">}</span><span class="fst">&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t169" href="#t169">169</a></span><span class="t">        <span class="key">return</span> <span class="key">True</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t170" href="#t170">170</a></span><span class="t">    <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">f&quot;[Thread] Failed to download {local_file}: {e!s}&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t171" href="#t171">171</a></span><span class="t">        <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="fst">f&quot;</span><span class="fst">[Thread] Failed to download </span><span class="op">{</span><span class="nam">local_file</span><span class="op">}</span><span class="fst">: </span><span class="op">{</span><span class="nam">e</span><span class="op">!</span><span class="nam">s</span><span class="op">}</span><span class="fst">&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t172" href="#t172">172</a></span><span class="t">        <span class="key">return</span> <span class="key">False</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t173" href="#t173">173</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t174" href="#t174">174</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
@@ -271,7 +271,7 @@
     <p class="run"><span class="n"><a id="t189" href="#t189">189</a></span><span class="t">        <span class="key">return</span> <span class="num">0</span><span class="op">,</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t190" href="#t190">190</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t191" href="#t191">191</a></span><span class="t">    <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t192" href="#t192">192</a></span><span class="t">        <span class="str">f&quot;Starting parallel downloads with {max_threads} threads for {len(download_tasks)} files...&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t192" href="#t192">192</a></span><span class="t">        <span class="fst">f&quot;</span><span class="fst">Starting parallel downloads with </span><span class="op">{</span><span class="nam">max_threads</span><span class="op">}</span><span class="fst"> threads for </span><span class="op">{</span><span class="nam">len</span><span class="op">(</span><span class="nam">download_tasks</span><span class="op">)</span><span class="op">}</span><span class="fst"> files...</span><span class="fst">&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t193" href="#t193">193</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t194" href="#t194">194</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t195" href="#t195">195</a></span><span class="t">    <span class="nam">successful_downloads</span> <span class="op">=</span> <span class="num">0</span>&nbsp;</span><span class="r"></span></p>
@@ -292,11 +292,11 @@
     <p class="pln"><span class="n"><a id="t210" href="#t210">210</a></span><span class="t">                <span class="key">else</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t211" href="#t211">211</a></span><span class="t">                    <span class="nam">failed_downloads</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t212" href="#t212">212</a></span><span class="t">            <span class="key">except</span> <span class="nam">Exception</span> <span class="key">as</span> <span class="nam">e</span><span class="op">:</span>  <span class="com"># noqa: PERF203</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t213" href="#t213">213</a></span><span class="t">                <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="str">f&quot;Download task failed with exception: {e!s}&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t213" href="#t213">213</a></span><span class="t">                <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">error</span><span class="op">(</span><span class="fst">f&quot;</span><span class="fst">Download task failed with exception: </span><span class="op">{</span><span class="nam">e</span><span class="op">!</span><span class="nam">s</span><span class="op">}</span><span class="fst">&quot;</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t214" href="#t214">214</a></span><span class="t">                <span class="nam">failed_downloads</span> <span class="op">+=</span> <span class="num">1</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t215" href="#t215">215</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t216" href="#t216">216</a></span><span class="t">    <span class="nam">LOGGER</span><span class="op">.</span><span class="nam">info</span><span class="op">(</span>&nbsp;</span><span class="r"></span></p>
-    <p class="run run2"><span class="n"><a id="t217" href="#t217">217</a></span><span class="t">        <span class="str">f&quot;Parallel downloads completed: {successful_downloads} successful, {failed_downloads} failed&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run run2"><span class="n"><a id="t217" href="#t217">217</a></span><span class="t">        <span class="fst">f&quot;</span><span class="fst">Parallel downloads completed: </span><span class="op">{</span><span class="nam">successful_downloads</span><span class="op">}</span><span class="fst"> successful, </span><span class="op">{</span><span class="nam">failed_downloads</span><span class="op">}</span><span class="fst"> failed</span><span class="fst">&quot;</span><span class="op">,</span>&nbsp;</span><span class="r"></span></p>
     <p class="run run2"><span class="n"><a id="t218" href="#t218">218</a></span><span class="t">    <span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t219" href="#t219">219</a></span><span class="t">    <span class="key">return</span> <span class="nam">successful_downloads</span><span class="op">,</span> <span class="nam">failed_downloads</span>&nbsp;</span><span class="r"></span></p>
 </main>
@@ -307,8 +307,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_145eef247bfb46b6_drive_sync_directory_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.16.2">coverage.py v7.16.2</a>,
-            created at 2026-10-22 16:56 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.17.0">coverage.py v7.17.0</a>,
+            created at 2026-10-26 06:16 +0000
         </p>
     </div>
 </footer>
