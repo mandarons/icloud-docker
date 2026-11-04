@@ -316,6 +316,20 @@ class TestPerLibrarySyncState(unittest.TestCase):
     def test_no_state_recorded_yet(self):
         self.assertEqual(self.ws.get_library_states(), {})
 
+    def test_a_service_pass_is_marked_running_then_cleared(self):
+        self.ws.record_sync_completion("drive", files_downloaded=3)
+        self.ws.record_service_running("drive", running=True)
+        self.assertIn("running_since", self.ws.get_sync_state("drive"))
+        self.ws.record_service_running("drive", running=False)
+        entry = self.ws.get_sync_state("drive")
+        self.assertNotIn("running_since", entry)
+        self.assertEqual(entry["files_downloaded"], 3)
+
+    def test_a_restart_does_not_leave_a_service_syncing_forever(self):
+        self.ws.record_service_running("photos", running=True)
+        self.ws.clear_stale_library_states()
+        self.assertNotIn("running_since", self.ws.get_sync_state("photos"))
+
 
 if __name__ == "__main__":
     unittest.main()

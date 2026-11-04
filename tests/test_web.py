@@ -657,6 +657,27 @@ class TestDashboard(unittest.TestCase):
         body = client.get("/").data.decode("utf-8")
         self.assertIn("Recent log", body)
 
+    def test_a_running_pass_shows_as_syncing_now(self):
+        """A pass can take an hour; until it completes the card used to show
+        only when the previous one finished."""
+        import time
+
+        def state(service):
+            return {"running_since": time.time() - 300} if service == "drive" else {}
+
+        client = web.create_app(testing=True).test_client()
+        with patch.object(web.web_signals, "get_sync_state", side_effect=state):
+            body = client.get("/").data.decode("utf-8")
+        self.assertEqual(body.count("Syncing now · started 5 min ago"), 1)
+        self.assertIn("location.reload()", body)
+
+    def test_an_idle_dashboard_does_not_reload_itself(self):
+        client = web.create_app(testing=True).test_client()
+        with patch.object(web.web_signals, "get_sync_state", return_value={}):
+            body = client.get("/").data.decode("utf-8")
+        self.assertNotIn("Syncing now · started", body)
+        self.assertNotIn("location.reload()", body)
+
 
 class TestLogs(unittest.TestCase):
     """``/api/logs`` returns the last N lines of the log file the running

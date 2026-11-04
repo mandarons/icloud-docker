@@ -100,6 +100,9 @@
         <div class="card-title">{{ service.name }}</div>
         <div class="card-subtitle">every {{ (service.sync_interval_s // 3600) }} h</div>
       </div>
+      {% if service.syncing_since_relative %}
+      <span class="pill success" style="margin-left: auto;">Syncing now · started {{ service.syncing_since_relative }}</span>
+      {% endif %}
     </div>
     <dl class="kv">
       <dt>Destination</dt>
@@ -206,5 +209,15 @@
     <div class="logs-empty">No log file found at <span class="mono">{{ log_path or "(unset)" }}</span>.</div>
   {% endif %}
 </div>
+
+{% if status.services | selectattr('syncing_since_relative') | list %}
+<script>
+  // Keep "Syncing now" and the log current while a pass runs; a page that
+  // nobody is looking at does not need to be.
+  setTimeout(function () {
+    if (!document.hidden) { location.reload(); }
+  }, 30000);
+</script>
+{% endif %}
 
 {% endblock %}
