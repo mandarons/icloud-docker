@@ -273,6 +273,33 @@ class TestSecurityKeyGet(unittest.TestCase):
             self.assertIn('name="password"', body)
             self.assertEqual('autocomplete="current-password" required' in body, not stored)
 
+    def test_every_password_form_carries_the_apple_id_for_password_managers(self):
+        """Without a username field beside the password, password managers
+        ask the user to type one before they will save the password."""
+        for method in ("security_key", None):
+            with (
+                self.subTest(method=method),
+                patch.object(web.web_signals, "get_auth_method", return_value=method),
+            ):
+                body = self._client().get("/auth").data.decode("utf-8")
+            self.assertIn('autocomplete="username"', body)
+            self.assertIn("readonly", body)
+
+    def test_pasting_the_signature_submits_it(self):
+        api = _api()
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", side_effect=_NO_STORED_PASSWORD),
+            patch("icloudpy.ICloudPyService", return_value=api),
+            patch.object(web, "_record_auth_method"),
+        ):
+            body = _csrf_post(
+                self._client(),
+                "/auth/security-key/start",
+                {"password": "typed"},
+            ).data.decode("utf-8")
+        self.assertIn('id="paste-submit"', body)
+        self.assertIn("addEventListener('paste'", body)
+
     def test_a_typed_password_wins_over_a_stored_one_and_is_not_saved(self):
         """A stored password may be out of date; the typed one is used for
         this sign-in, and the stored one is left as it is."""
