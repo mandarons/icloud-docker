@@ -191,6 +191,16 @@ def _publish_auth_blocked(blocked: bool, reason: str | None = None) -> None:
         LOGGER.warning(f"Could not publish auth state: {e!s}")
 
 
+def _publish_running(service: str, running: bool) -> None:
+    """Tell the web UI a service pass started or ended. Best-effort."""
+    try:
+        from src import web_signals
+
+        web_signals.record_service_running(service, running=running)
+    except Exception as e:  # pragma: no cover - signalling is advisory
+        LOGGER.warning(f"Could not publish {service} sync state: {e!s}")
+
+
 def _maybe_refresh_trust(config, api) -> None:
     """Re-trust the session before its token ages out.
 
@@ -677,7 +687,11 @@ def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval:
                 pass
 
         LOGGER.info("Syncing drive...")
-        files_after = sync_drive.sync_drive(config=config, drive=api.drive)
+        _publish_running("drive", True)
+        try:
+            files_after = sync_drive.sync_drive(config=config, drive=api.drive)
+        finally:
+            _publish_running("drive", False)
         LOGGER.info("Drive synced")
 
         # Calculate statistics
@@ -759,7 +773,11 @@ def _perform_photos_sync(config, api, sync_state: SyncState, photos_sync_interva
                 pass
 
         LOGGER.info("Syncing photos...")
-        sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
+        _publish_running("photos", True)
+        try:
+            sync_result = sync_photos.sync_photos(config=config, photos=api.photos)
+        finally:
+            _publish_running("photos", False)
         LOGGER.info("Photos synced")
 
         # Count files after sync

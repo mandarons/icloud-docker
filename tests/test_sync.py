@@ -441,6 +441,24 @@ class TestSync(unittest.TestCase):
         self.assertGreater(stats.bytes_downloaded, 0)
         self.assertEqual(sync_state.drive_time_remaining, 42)
 
+    @patch("src.sync.sync_drive")
+    def test_a_failed_drive_pass_stops_showing_as_running(self, mock_sync_drive):
+        """The dashboard must not keep saying "Syncing now" after a pass
+        that raised."""
+        mock_sync_drive.sync_drive.side_effect = RuntimeError("boom")
+        with patch.object(sync, "_publish_running") as published:
+            with self.assertRaises(RuntimeError):
+                sync._perform_drive_sync(  # noqa: SLF001
+                    config=self.config,
+                    api=SimpleNamespace(drive=object()),
+                    sync_state=sync.SyncState(),
+                    drive_sync_interval=60,
+                )
+        self.assertEqual(
+            [c.args for c in published.call_args_list],
+            [("drive", True), ("drive", False)],
+        )
+
     @patch("src.sync.os.walk", side_effect=RuntimeError("walk failed"))
     @patch("src.sync.sync_drive")
     def test_perform_drive_sync_handles_walk_failure(self, mock_sync_drive, _mock_walk):

@@ -181,6 +181,25 @@ def record_sync_completion(
     _save_state(state)
 
 
+def record_service_running(service: str, *, running: bool) -> None:
+    """Mark ``service`` as syncing right now, or as no longer syncing.
+
+    A pass can take an hour, and the per-service record is only written
+    when it completes, so until then the dashboard showed nothing but
+    when the previous one finished.
+    """
+    if service not in _VALID_SERVICES:
+        return
+    state = _load_state()
+    entry = state.get(service, {})
+    if running:
+        entry["running_since"] = time.time()
+    elif entry.pop("running_since", None) is None:
+        return
+    state[service] = entry
+    _save_state(state)
+
+
 def get_sync_state(service: str) -> dict[str, Any]:
     """Return the persisted last-sync state for ``service``.
 
@@ -410,7 +429,7 @@ def get_library_states() -> dict[str, Any]:
 
 
 def clear_stale_library_states() -> None:
-    """Demote any library left mid-sync with no process still on it.
+    """Demote any library, or service, left mid-sync with no process still on it.
 
     The state file outlives the container, so a restart during a library
     would otherwise leave it reading "syncing" forever. Called at
@@ -420,6 +439,9 @@ def clear_stale_library_states() -> None:
     state = _load_state()
     libraries = state.get(_LIBRARY_STATE_KEY, {})
     changed = False
+    for service in _VALID_SERVICES:
+        if state.get(service, {}).pop("running_since", None) is not None:
+            changed = True
     for entry in libraries.values():
         if entry.get("state") == "syncing":
             entry["state"] = "interrupted"

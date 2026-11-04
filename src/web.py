@@ -366,6 +366,9 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
             else []
         ),
         "stats": stats,
+        "syncing_since_relative": (
+            web_signals.format_relative_time(state["running_since"]) if state.get("running_since") else None
+        ),
         "force_sync_pending": service in web_signals.pending_force_syncs(),
     }
 
