@@ -17,13 +17,19 @@ configure_icloudpy_logging()
 LOGGER = get_logger()
 
 
-def remove_obsolete(destination_path: str, files: set[str], recycle_bin=None) -> set[str]:
+def remove_obsolete(
+    destination_path: str,
+    files: set[str],
+    recycle_bin=None,
+    exclude_filenames: set[str] | None = None,
+) -> set[str]:
     """Remove local files and directories that no longer exist remotely.
 
     Args:
         destination_path: Root directory to clean up
         files: Set of file paths that should be kept (exist remotely)
         recycle_bin: ``RecycleBin`` to move them to instead of deleting
+        exclude_filenames: Root-level sentinel names to preserve during cleanup
 
     Returns:
         Set of paths that were removed
@@ -36,6 +42,8 @@ def remove_obsolete(destination_path: str, files: set[str], recycle_bin=None) ->
 
     for path in Path(destination_path).rglob("*"):
         local_file = str(path.absolute())
+        if exclude_filenames and path.parent == Path(destination_path) and path.name in exclude_filenames:
+            continue
         if recycle_bin and recycle_bin.contains(local_file):
             continue
         if local_file not in files:
