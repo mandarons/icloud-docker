@@ -129,10 +129,16 @@ def _wake_sync_loop() -> None:
     the dashboard keeps reporting the sync as stopped for up to
     ``retry_login_interval``.
 
+    It also clears the loop's "blocked" flag: the caller redirects to the
+    dashboard at once, seconds before the loop wakes and clears it itself,
+    so the page the user lands on would still say the sync is stopped. If
+    the loop then fails again it records the block afresh.
+
     Best-effort: a missed nudge costs a delay, never correctness.
     """
     try:
         web_signals.record_reauth_completed()
+        web_signals.record_auth_blocked(blocked=False)
     except Exception as e:  # noqa: BLE001 - never fail a successful sign-in
         LOGGER.debug(f"could not signal the completed re-auth: {e!s}")
 
