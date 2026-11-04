@@ -167,6 +167,45 @@ def configure_icloudpy_logging():
             icloudpy_logger.handlers.clear()
 
 
+def apply_default_request_timeout(session, timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC):
+    """Bound every request ``session`` makes that does not carry its own timeout.
+
+    ``requests`` has no default timeout, and icloudpy's CloudKit listing
+    calls -- ``_zone_post``, the ``zones/list`` call and the album page
+    queries behind them -- pass none, so a half-open connection (an ISP
+    reconnect, a VPN flap) blocks the sync loop on a socket read that
+    never returns and no log line ever explains. icloudpy shares one
+    session across all of its services, so wrapping that session's
+    ``request`` -- the funnel every verb helper goes through -- bounds
+    the listing calls from here, without a library change. A timeout a
+    caller passes itself (the download paths pass theirs) always wins;
+    only a missing or ``None`` timeout is filled in.
+
+    Args:
+        session: The ``requests`` session to bound, or ``None``.
+        timeout: Timeout in seconds applied to unbounded requests.
+
+    Returns:
+        The session, wrapped in place, so callers can use it inline.
+        Wrapping is idempotent: an already-wrapped session is returned
+        unchanged, and ``None`` passes straight through.
+    """
+    if session is None:
+        return None
+    original_request = session.request
+    if getattr(original_request, "_has_default_request_timeout", False):
+        return session
+
+    def request_with_default_timeout(*args, **kwargs):
+        if kwargs.get("timeout") is None:
+            kwargs["timeout"] = timeout
+        return original_request(*args, **kwargs)
+
+    request_with_default_timeout._has_default_request_timeout = True  # noqa: SLF001
+    session.request = request_with_default_timeout
+    return session
+
+
 def get_logger():
     """Return logger."""
     logger = logging.getLogger()

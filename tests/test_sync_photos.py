@@ -15,7 +15,7 @@ from unittest.mock import patch
 import icloudpy
 
 import tests
-from src import LOGGER, read_config, sync_photos
+from src import DEFAULT_REQUEST_TIMEOUT_SEC, LOGGER, read_config, sync_photos
 from tests import DATA_DIR, data
 
 
@@ -2082,6 +2082,8 @@ class TestSyncPhotos(unittest.TestCase):
         result = _refresh_photo_download_url(mock_photo)
 
         self.assertTrue(result)
+        # The lookup POST is bounded: a stalled connection must not hang the worker
+        self.assertEqual(mock_service.session.post.call_args[1]["timeout"], DEFAULT_REQUEST_TIMEOUT_SEC)
         # Verify master record was updated
         self.assertEqual(mock_photo._master_record, fresh_record)  # noqa: SLF001
         # Verify _versions was cleared
@@ -2494,7 +2496,7 @@ class TestSyncPhotos(unittest.TestCase):
             result = download_photo_from_server(mock_photo, "original", destination_path)
             self.assertTrue(result)
             # Verify refresh was called on 410
-            mock_refresh.assert_called_once_with(mock_photo)
+            mock_refresh.assert_called_once_with(mock_photo, timeout=DEFAULT_REQUEST_TIMEOUT_SEC)
 
     @patch("src.photo_file_utils._refresh_photo_download_url")
     def test_download_photo_from_server_410_refresh_failure_still_retries(self, mock_refresh):
@@ -2532,7 +2534,7 @@ class TestSyncPhotos(unittest.TestCase):
             result = download_photo_from_server(mock_photo, "original", destination_path)
             # Should still succeed because download_photo_from_server retries regardless
             self.assertTrue(result)
-            mock_refresh.assert_called_once_with(mock_photo)
+            mock_refresh.assert_called_once_with(mock_photo, timeout=DEFAULT_REQUEST_TIMEOUT_SEC)
 
     def test_generate_photo_path_different_normalization(self):
         """Test generate_photo_path with different normalization (line 107)."""

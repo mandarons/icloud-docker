@@ -753,6 +753,7 @@ class TestSync(unittest.TestCase):
         actual = sync.get_api_instance(username=data.AUTHENTICATED_USER, password=data.VALID_PASSWORD)
         self.assertNotIn(".com.cn", actual.home_endpoint)
         self.assertNotIn(".com.cn", actual.setup_endpoint)
+        self.assertTrue(getattr(actual.session.request, "_has_default_request_timeout", False))  # noqa: SLF001
 
     @patch("src.sync.read_config")
     def test_get_api_instance_china_region(
