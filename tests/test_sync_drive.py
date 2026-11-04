@@ -1134,6 +1134,48 @@ class TestSyncDrive(unittest.TestCase):
             ),
         )
 
+    def test_sync_directory_keeps_custom_drive_mount_marker(self):
+        """Cleanup must preserve the configured root marker across sync cycles."""
+        marker = Path(self.destination_path, ".icloud-ok")
+        marker.touch()
+        obsolete = Path(self.destination_path, "obsolete.txt")
+        obsolete.write_text("old")
+        config = {"app": {"mount_marker_filename": marker.name}}
+
+        sync_drive.sync_directory(
+            drive=self.drive,
+            destination_path=self.destination_path,
+            root=self.root,
+            items=self.drive.dir(),
+            top=True,
+            filters=self.filters,
+            ignore=self.ignore,
+            remove=True,
+            config=config,
+        )
+
+        self.assertTrue(marker.is_file())
+        self.assertFalse(obsolete.exists())
+
+    def test_drive_cleanup_excludes_only_the_root_marker(self):
+        """An obsolete nested file with the marker name is not protected."""
+        marker = Path(self.destination_path, ".mounted")
+        marker.touch()
+        nested = Path(self.destination_path, "remote")
+        nested.mkdir()
+        nested_marker = nested / marker.name
+        nested_marker.touch()
+
+        removed = sync_drive.remove_obsolete(
+            destination_path=self.destination_path,
+            files={str(nested)},
+            exclude_filenames={marker.name},
+        )
+
+        self.assertTrue(marker.is_file())
+        self.assertFalse(nested_marker.exists())
+        self.assertIn(str(nested_marker), removed)
+
     def test_sync_directory_without_folder_filter(self):
         """Test for no folder filter."""
         original_filters = dict(self.filters)

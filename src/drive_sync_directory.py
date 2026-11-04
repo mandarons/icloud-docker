@@ -9,7 +9,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import unicodedata
 from typing import Any
 
-from src import configure_icloudpy_logging, get_logger, recycle_bin, sync_drive
+from src import config_parser, configure_icloudpy_logging, get_logger, recycle_bin, sync_drive
 from src.drive_cleanup import remove_obsolete
 from src.drive_filtering import wanted_parent_folder
 from src.drive_folder_processing import process_folder
@@ -96,6 +96,7 @@ def sync_directory(
             destination_path=destination_path,
             files=files,
             recycle_bin=recycle_bin.from_config(config, "drive"),
+            exclude_filenames={config_parser.get_mount_marker_filename(config or {})},
         )
 
     return files

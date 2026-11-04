@@ -11,6 +11,9 @@ The drive sync system (`src/sync_drive.py` + 7 helper modules) handles downloadi
   single files when `drive.flatten_packages` is enabled)
 - Remove obsolete local files when `remove_obsolete` is enabled — or, with
   `app.recycle_bin.enabled`, move them to `<root>/Recently Deleted/drive/<date>/`
+- Keep the root-level `app.mount_marker_filename` during Drive cleanup (including
+  recycle-bin cleanup); only the root sentinel is excluded, not namesakes in
+  nested folders. This lets `drive.require_mount_marker` pass on later cycles.
 - Handle file existence checks to avoid re-downloading
 - Bound download streams with `drive.request_timeout` (default 30s) so a
   stalled connection cannot freeze a worker forever
