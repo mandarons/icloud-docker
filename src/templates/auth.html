@@ -3,6 +3,17 @@
 {% block content %}
 
 {% set auth = status.auth_state | default('not_configured') %}
+{#- A password form needs a username field beside it, or password managers
+    ask the user for one before they will save the password. Read-only:
+    the Apple ID comes from the config. -#}
+{% macro apple_id_field() %}
+      {%- if status.username %}
+      <input type="text" name="username" value="{{ status.username }}" autocomplete="username"
+        readonly tabindex="-1" aria-label="Apple ID" class="mono"
+        style="width: 100%; padding: 10px 14px; margin-bottom: 12px; border: 1px solid var(--divider); border-radius: 8px;
+               font-size: 14px; background: #fafafa; color: var(--text-secondary);">
+      {%- endif %}
+{% endmacro %}
 <h1 class="page-title">Authenticate</h1>
 <p class="page-sub">
   {% if security_key_blob %}
@@ -58,14 +69,17 @@
     <p style="margin: 0 0 8px; font-size: 12px; color: var(--text-tertiary);">
       One touch, no PIN. The signature proves only that you were present; it carries no password.
     </p>
-    <form method="post" action="/auth/security-key">
+    <form method="post" action="/auth/security-key" id="assertion-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <input type="password" name="assertion" required autofocus
+      <button type="button" id="paste-submit" class="status-cta" style="display: none; width: 100%; margin-bottom: 10px; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+        Paste &amp; complete sign-in
+      </button>
+      <input type="password" name="assertion" id="assertion" required autofocus
         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
-        placeholder="Paste the signature"
+        placeholder="…or paste the signature here (⌘V), it submits by itself"
         style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
                font-size: 15px; letter-spacing: 0.12em; background: #fafafa;">
-      <button type="submit" class="status-cta" style="display: block; width: 100%; margin-top: 12px; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
+      <button type="submit" class="status-cta secondary" style="display: block; width: 100%; margin-top: 12px; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
         Complete sign-in
       </button>
     </form>
@@ -81,6 +95,7 @@
     </p>
     <form method="post" action="/auth/security-key/start">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      {{ apple_id_field() }}
       <input type="password" name="password" autocomplete="current-password"{% if not status.password_stored %} required{% endif %}
         placeholder="{% if status.password_stored %}Apple ID password (blank: use the stored one){% else %}Apple ID password{% endif %}"
         style="width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--divider); border-radius: 8px;
@@ -97,6 +112,7 @@
     <form method="post" action="/auth/password">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       <label for="password" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">Re-authenticate with password</label>
+      {{ apple_id_field() }}
       <input
         type="password"
         name="password"
@@ -142,11 +158,9 @@
     <form method="post" action="/auth/password">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
       {% if status.username %}
-      <div style="margin-bottom: 16px;">
+      <div style="margin-bottom: 4px;">
         <label style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; font-weight: 500;">Apple ID</label>
-        <div class="mono" style="padding: 10px 14px; background: #fafafa; border: 1px solid var(--divider); border-radius: 8px; color: var(--text);">
-          {{ status.username }}
-        </div>
+        {{ apple_id_field() }}
       </div>
       {% endif %}
       <div style="margin-bottom: 16px;">
@@ -214,6 +228,29 @@
     }
     wire(document.getElementById('copy-cmd'), document.getElementById('signer-cmd'), 'Copy command');
     wire(document.getElementById('copy-cmd-offline'), document.getElementById('signer-cmd-offline'), 'Copy the self-contained version');
+
+    // The signature is useless until submitted, so pasting it is the
+    // submit. The button does both in one click where the browser lets a
+    // page read the clipboard (a secure context: https or localhost).
+    var form = document.getElementById('assertion-form');
+    var field = document.getElementById('assertion');
+    var submitted = false;
+    function submitOnce() {
+      if (submitted || !field.value.trim()) return;
+      submitted = true;
+      form.submit();
+    }
+    field.addEventListener('paste', function () { setTimeout(submitOnce, 0); });
+    var paste = document.getElementById('paste-submit');
+    if (navigator.clipboard && navigator.clipboard.readText && window.isSecureContext) {
+      paste.style.display = 'block';
+      paste.addEventListener('click', function () {
+        navigator.clipboard.readText().then(function (text) {
+          field.value = text.trim();
+          if (field.value) { submitOnce(); } else { field.focus(); }
+        }, function () { field.focus(); });
+      });
+    }
   })();
 </script>
 {% endif %}
