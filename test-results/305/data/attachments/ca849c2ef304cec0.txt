@@ -1,0 +1,10 @@
+[38;5;39m2026-11-04 20:01:51,904 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;39m2026-11-04 20:01:51,905 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;39m2026-11-04 20:01:51,906 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;39m2026-11-04 20:01:51,906 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;39m2026-11-04 20:01:51,907 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;39m2026-11-04 20:01:51,908 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;39m2026-11-04 20:01:51,909 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;39m2026-11-04 20:01:51,909 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;39m2026-11-04 20:01:51,910 :: INFO :: root :: drive_package_processing.py :: 300 :: Unpacking /tmp/tmpwpf7jisr/bomb.bin.gz to /tmp/tmpwpf7jisr[0m
+[38;5;226m2026-11-04 20:01:51,910 :: WARNING :: root :: drive_package_processing.py :: 74 :: Package nesting exceeded 8 levels for /tmp/tmpwpf7jisr/bomb.bin; stopping unpack and keeping the current bytes as a single-file bundle.[0m

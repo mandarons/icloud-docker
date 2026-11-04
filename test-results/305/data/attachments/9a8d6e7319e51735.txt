@@ -1,0 +1,12 @@
+[38;21m2026-11-04 20:02:00,502 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-04 20:02:00,502 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-04 20:02:00,503 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-04 20:02:00,503 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-04 20:02:00,503 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-04 20:02:00,503 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-04 20:02:00,509 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-04 20:02:00,509 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;5;39m2026-11-04 20:02:00,509 :: INFO :: root :: photo_file_utils.py :: 395 :: Downloading /tmp/tmpf2kehjbp/test_photo.jpg ...[0m
+[38;5;39m2026-11-04 20:02:00,509 :: INFO :: root :: photo_file_utils.py :: 395 :: Downloading /tmp/tmpf2kehjbp/test_photo.jpg ...[0m
+[38;5;196m2026-11-04 20:02:00,509 :: ERROR :: root :: photo_file_utils.py :: 462 :: Failed to download /tmp/tmpf2kehjbp/test_photo.jpg after 0 retries: Gone (410)[0m
+[38;5;196m2026-11-04 20:02:00,509 :: ERROR :: root :: photo_file_utils.py :: 462 :: Failed to download /tmp/tmpf2kehjbp/test_photo.jpg after 0 retries: Gone (410)[0m

@@ -1,0 +1,36 @@
+[38;5;196m2026-11-04 20:01:58,012 :: ERROR :: root :: sync.py :: 1173 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-11-04 20:01:58,012 :: ERROR :: root :: sync.py :: 1173 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-11-04 20:01:58,013 :: INFO :: root :: sync.py :: 1149 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-11-04 20:01:58,013 :: INFO :: root :: sync.py :: 1149 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-11-04 20:01:58,013 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 20:01:58,013 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 20:01:58,013 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 20:11:58 2026 ...[0m
+[38;5;39m2026-11-04 20:01:58,013 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 20:11:58 2026 ...[0m
+[38;5;226m2026-11-04 20:01:58,013 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-11-04 20:01:58,013 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-11-04 20:01:58,013 :: ERROR :: root :: sync.py :: 1484 :: no session[0m
+[38;5;196m2026-11-04 20:01:58,013 :: ERROR :: root :: sync.py :: 1484 :: no session[0m
+[38;5;39m2026-11-04 20:01:58,014 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 20:01:58,014 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 20:01:58,014 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 20:11:58 2026 ...[0m
+[38;5;39m2026-11-04 20:01:58,014 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 20:11:58 2026 ...[0m
+[38;5;226m2026-11-04 20:01:58,014 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-11-04 20:01:58,014 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-11-04 20:01:58,014 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: 401[0m
+[38;5;196m2026-11-04 20:01:58,014 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: 401[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 20:31:58 2026 ...[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 20:31:58 2026 ...[0m
+[38;5;226m2026-11-04 20:01:58,015 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-11-04 20:01:58,015 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-11-04 20:01:58,015 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: offline[0m
+[38;5;196m2026-11-04 20:01:58,015 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: offline[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 20:31:58 2026 ...[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 20:31:58 2026 ...[0m
+[38;5;196m2026-11-04 20:01:58,015 :: ERROR :: root :: sync.py :: 1446 :: Sync failed and will be retried: zone[0m
+[38;5;196m2026-11-04 20:01:58,015 :: ERROR :: root :: sync.py :: 1446 :: Sync failed and will be retried: zone[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: sync.py :: 1526 :: Retrying sync at Wed Nov  4 20:11:58 2026 ...[0m
+[38;5;39m2026-11-04 20:01:58,015 :: INFO :: root :: sync.py :: 1526 :: Retrying sync at Wed Nov  4 20:11:58 2026 ...[0m
