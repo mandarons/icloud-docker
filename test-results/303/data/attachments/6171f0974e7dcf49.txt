@@ -1,0 +1,25 @@
+[38;5;196m2026-11-04 18:45:13,849 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: Service Unavailable (503)[0m
+[38;5;196m2026-11-04 18:45:13,849 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: Service Unavailable (503)[0m
+[38;5;39m2026-11-04 18:45:13,849 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 18:45:13,849 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 18:45:13,849 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 19:15:13 2026 ...[0m
+[38;5;39m2026-11-04 18:45:13,849 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 19:15:13 2026 ...[0m
+u[38;5;196m2026-11-04 18:45:13,849 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: Internal Server Error (500)[0m
+[38;5;196m2026-11-04 18:45:13,849 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: Internal Server Error (500)[0m
+[38;5;39m2026-11-04 18:45:13,850 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 18:45:13,850 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 18:45:13,850 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 19:15:13 2026 ...[0m
+[38;5;39m2026-11-04 18:45:13,850 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 19:15:13 2026 ...[0m
+u[38;5;196m2026-11-04 18:45:13,850 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: name resolution failed[0m
+[38;5;196m2026-11-04 18:45:13,850 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: name resolution failed[0m
+[38;5;39m2026-11-04 18:45:13,850 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 18:45:13,850 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 18:45:13,850 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 19:15:13 2026 ...[0m
+[38;5;39m2026-11-04 18:45:13,850 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 19:15:13 2026 ...[0m
+u[38;5;196m2026-11-04 18:45:13,851 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: timed out[0m
+[38;5;196m2026-11-04 18:45:13,851 :: ERROR :: root :: sync.py :: 1383 :: Sign-in failed and will be retried: timed out[0m
+[38;5;39m2026-11-04 18:45:13,851 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 18:45:13,851 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-04 18:45:13,851 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 19:15:13 2026 ...[0m
+[38;5;39m2026-11-04 18:45:13,851 :: INFO :: root :: sync.py :: 1526 :: Retrying login at Wed Nov  4 19:15:13 2026 ...[0m
+u
