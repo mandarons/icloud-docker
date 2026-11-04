@@ -1471,6 +1471,23 @@ class TestACompletedReauthEndsTheRetryWait(unittest.TestCase):
         rec.assert_called_once_with()
         force.assert_not_called()
 
+    def test_a_successful_reauth_clears_the_stopped_banner(self):
+        """The handler redirects to the dashboard at once, before the loop
+        wakes and clears the flag itself, so the page the user lands on
+        must not still say the sync is stopped."""
+        import shutil
+        import tempfile
+        from unittest.mock import patch
+
+        from src import web, web_signals
+
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        with patch.object(web_signals, "_config_dir", return_value=tmp):
+            web_signals.record_auth_blocked(blocked=True, reason="session_unusable")
+            web._wake_sync_loop()  # noqa: SLF001
+            self.assertFalse(web_signals.get_auth_blocked()["blocked"])
+
     def test_a_failed_signal_never_fails_the_sign_in(self):
         from unittest.mock import patch
 
