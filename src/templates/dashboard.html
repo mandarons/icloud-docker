@@ -210,13 +210,24 @@
   {% endif %}
 </div>
 
+<script>
+  // Coming Back to the dashboard can show the page as it was when you left
+  // it; reload instead of showing stale status.
+  window.addEventListener('pageshow', function (e) {
+    if (e.persisted) { location.reload(); }
+  });
+</script>
 {% if status.services | selectattr('syncing_since_relative') | list %}
 <script>
-  // Keep "Syncing now" and the log current while a pass runs; a page that
-  // nobody is looking at does not need to be.
-  setTimeout(function () {
+  // Keep "Syncing now" and the log current while a pass runs. A hidden tab
+  // is skipped, not dropped: the interval keeps checking, and coming back to
+  // the tab reloads at once.
+  setInterval(function () {
     if (!document.hidden) { location.reload(); }
   }, 30000);
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) { location.reload(); }
+  });
 </script>
 {% endif %}
 
