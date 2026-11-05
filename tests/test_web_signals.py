@@ -10,6 +10,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import json
 import os
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -324,6 +325,33 @@ class TestPerLibrarySyncState(unittest.TestCase):
         entry = self.ws.get_sync_state("drive")
         self.assertNotIn("running_since", entry)
         self.assertEqual(entry["files_downloaded"], 3)
+
+    def test_concurrent_writers_do_not_lose_updates(self):
+        """The sync loop and the web UI write from two threads."""
+        import threading
+
+        def mark(name):
+            for _ in range(25):
+                self.ws.record_library_started(name)
+
+        threads = [threading.Thread(target=mark, args=(f"lib{i}",)) for i in range(8)]
+        real_load = self.ws._load_state  # noqa: SLF001
+
+        def slow_load():
+            state = real_load()
+            time.sleep(0.001)  # widen the read-modify-write window
+            return state
+
+        with patch.object(self.ws, "_load_state", side_effect=slow_load):
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+        self.assertEqual(set(self.ws.get_library_states()), {f"lib{i}" for i in range(8)})
+
+    def test_a_save_leaves_no_temp_file(self):
+        self.ws.record_service_running("drive", running=True)
+        self.assertEqual([n for n in os.listdir(self.tmp) if n.endswith(".tmp")], [])
 
     def test_running_ignores_an_unknown_service(self):
         self.ws.record_service_running("calendar", running=True)
