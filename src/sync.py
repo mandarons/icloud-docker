@@ -627,6 +627,20 @@ def _check_mount_marker(
     return all_present
 
 
+def _list_local_files(destination_path: str) -> set[str] | None:
+    """Every file under ``destination_path``; ``None`` if it can't be listed."""
+    files = set()
+    if not os.path.exists(destination_path):
+        return files
+    try:
+        for root, _dirs, file_list in os.walk(destination_path):
+            for file in file_list:
+                files.add(os.path.join(root, file))
+    except Exception:  # noqa: BLE001 - stats are advisory
+        return None
+    return files
+
+
 def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval: int):
     """
     Execute drive synchronization if enabled.
@@ -666,15 +680,7 @@ def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval:
             sync_state.drive_time_remaining = drive_sync_interval
             return None
 
-        # Count files before sync
-        files_before = set()
-        if os.path.exists(destination_path):
-            try:
-                for root, _dirs, file_list in os.walk(destination_path):
-                    for file in file_list:
-                        files_before.add(os.path.join(root, file))
-            except Exception:
-                pass
+        files_before = _list_local_files(destination_path) or set()
 
         LOGGER.info("Syncing drive...")
         files_after = sync_drive.sync_drive(config=config, drive=api.drive)
@@ -685,16 +691,24 @@ def _perform_drive_sync(config, api, sync_state: SyncState, drive_sync_interval:
 
         # Handle case where sync_drive returns None (e.g., in tests)
         if files_after is not None:
+            # Compare the disk with the disk. sync_drive's set also holds every
+            # folder, and NFC-normalised names, so set against a listing of
+            # files it counted every folder and every non-ASCII name as new
+            # on every pass.
+            local_after = _list_local_files(destination_path)
+            if local_after is None:
+                local_after = {f for f in files_after if not os.path.isdir(f)}
+
             # Count newly downloaded files
-            new_files = files_after - files_before
+            new_files = local_after - files_before
             stats.files_downloaded = len(new_files)
 
             # Count skipped files
-            stats.files_skipped = len(files_before & files_after)
+            stats.files_skipped = len(files_before & local_after)
 
             # Count removed files
             if config_parser.get_drive_remove_obsolete(config=config):
-                stats.files_removed = len(files_before - files_after)
+                stats.files_removed = len(files_before - local_after)
 
             # Calculate bytes downloaded
             try:

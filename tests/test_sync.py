@@ -441,6 +441,33 @@ class TestSync(unittest.TestCase):
         self.assertGreater(stats.bytes_downloaded, 0)
         self.assertEqual(sync_state.drive_time_remaining, 42)
 
+    @patch("src.sync.sync_drive")
+    def test_drive_stats_count_files_not_folders_or_renormalised_names(self, mock_sync_drive):
+        """sync_drive's set holds every folder and NFC names; an unchanged
+        tree must not read as new on every pass."""
+        import unicodedata
+
+        destination_path = config_parser.prepare_drive_destination(config=self.config)
+        folder = os.path.join(destination_path, "Folder")
+        os.makedirs(folder, exist_ok=True)
+        decomposed = os.path.join(folder, unicodedata.normalize("NFD", "Café.txt"))
+        with open(decomposed, "w", encoding="utf-8") as handle:
+            handle.write("old content")
+
+        mock_sync_drive.sync_drive.return_value = {
+            folder,
+            unicodedata.normalize("NFC", decomposed),
+        }
+        stats = sync._perform_drive_sync(  # noqa: SLF001
+            config=self.config,
+            api=SimpleNamespace(drive=object()),
+            sync_state=sync.SyncState(),
+            drive_sync_interval=60,
+        )
+        assert stats is not None
+        self.assertEqual(stats.files_downloaded, 0)
+        self.assertEqual(stats.files_skipped, 1)
+
     @patch("src.sync.os.walk", side_effect=RuntimeError("walk failed"))
     @patch("src.sync.sync_drive")
     def test_perform_drive_sync_handles_walk_failure(self, mock_sync_drive, _mock_walk):
