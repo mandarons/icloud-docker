@@ -99,6 +99,15 @@ class TestEachCopysEditGetsItsOwnName(unittest.TestCase):
         self.assertIsNone(task.hardlink_source)
 
 
+class TestAPartialRecordFallsBackToTheMaster(unittest.TestCase):
+    def test_an_unreadable_record_keeps_the_master_id(self):
+        photo = MagicMock()
+        photo.id = MASTER
+        photo._asset_record = {"recordName": "ASSET-A", "fields": {}}  # noqa: SLF001
+        type(photo).item_type = property(lambda _self: (_ for _ in ()).throw(KeyError("itemType")))
+        self.assertEqual(version_record_id(photo, "full"), MASTER)
+
+
 class TestAnEditUnderTheOldNameIsMovedNotDownloaded(unittest.TestCase):
     """Before this, an edit was named after the master record."""
 

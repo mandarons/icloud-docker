@@ -468,6 +468,9 @@ class TestSync(unittest.TestCase):
         self.assertEqual(stats.files_downloaded, 0)
         self.assertEqual(stats.files_skipped, 1)
 
+    def test_listing_a_missing_destination_is_empty(self):
+        self.assertEqual(sync._list_local_files(os.path.join(self.root_dir, "absent")), set())  # noqa: SLF001
+
     @patch("src.sync.os.walk", side_effect=RuntimeError("walk failed"))
     @patch("src.sync.sync_drive")
     def test_perform_drive_sync_handles_walk_failure(self, mock_sync_drive, _mock_walk):
