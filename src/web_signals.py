@@ -21,8 +21,10 @@ they're persisted across container recreations.
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import functools
 import json
 import os
+import threading
 import time
 from typing import Any
 
@@ -51,6 +53,23 @@ def _config_dir() -> str:
 
 
 _VALID_SERVICES = ("drive", "photos")
+
+# The sync loop and the web UI are threads of one process, and every writer
+# below reads the whole file, changes one key and writes it back. Unlocked,
+# two of them interleave and one update is lost. Re-entrant so a locked
+# writer may call another.
+_STATE_LOCK = threading.RLock()
+
+
+def _locked(func):
+    """Hold the state lock across a writer's read-modify-write."""
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        with _STATE_LOCK:
+            return func(*args, **kwargs)
+
+    return wrapper
 
 
 def _sentinel_path(service: str) -> str:
@@ -147,6 +166,7 @@ def consume_force_sync(service: str) -> bool:
         return False
 
 
+@_locked
 def record_sync_completion(
     service: str,
     *,
@@ -181,6 +201,26 @@ def record_sync_completion(
     _save_state(state)
 
 
+@_locked
+def record_service_running(service: str, *, running: bool) -> None:
+    """Mark ``service`` as syncing right now, or as no longer syncing.
+
+    A pass can take an hour, and the per-service record is only written
+    when it completes, so until then the dashboard showed nothing but
+    when the previous one finished.
+    """
+    if service not in _VALID_SERVICES:
+        return
+    state = _load_state()
+    entry = state.get(service, {})
+    if running:
+        entry["running_since"] = time.time()
+    elif entry.pop("running_since", None) is None:
+        return
+    state[service] = entry
+    _save_state(state)
+
+
 def get_sync_state(service: str) -> dict[str, Any]:
     """Return the persisted last-sync state for ``service``.
 
@@ -208,7 +248,10 @@ def _load_state() -> dict[str, dict[str, Any]]:
 
 def _save_state(state: dict[str, dict[str, Any]]) -> None:
     path = _state_path()
-    tmp = path + ".tmp"
+    # Named per process and thread: a shared name let one writer truncate the
+    # file while another renamed it into place, publishing torn JSON that the
+    # next load reads as empty.
+    tmp = f"{path}.{os.getpid()}.{threading.get_ident()}.tmp"
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(tmp, "w") as f:
@@ -227,6 +270,7 @@ _AUTH_BLOCKED_STATE_KEY = "_auth_blocked"
 _AUTH_METHOD_STATE_KEY = "_auth_method"
 
 
+@_locked
 def record_trust_state(
     *,
     expires_at_iso: str | None,
@@ -256,6 +300,7 @@ def get_trust_state() -> dict[str, Any]:
     return _load_state().get(_TRUST_STATE_KEY, {})
 
 
+@_locked
 def record_auth_blocked(*, blocked: bool, reason: str | None = None) -> None:
     """Record whether the sync loop is currently unable to authenticate.
 
@@ -280,6 +325,7 @@ def get_auth_blocked() -> dict[str, Any]:
     return entry if isinstance(entry, dict) else {}
 
 
+@_locked
 def record_auth_method(*, username: str, method: str) -> None:
     """Remember which second factor Apple demands for this Apple ID.
 
@@ -333,6 +379,7 @@ def format_relative_time(epoch_seconds: float, *, now: float | None = None) -> s
 _LIBRARY_STATE_KEY = "_libraries"
 
 
+@_locked
 def record_library_started(library: str) -> None:
     """Mark ``library`` as syncing right now.
 
@@ -353,6 +400,7 @@ def record_library_started(library: str) -> None:
     _save_state(state)
 
 
+@_locked
 def record_library_finished(
     library: str,
     *,
@@ -386,6 +434,7 @@ def record_library_finished(
     _save_state(state)
 
 
+@_locked
 def record_library_indexing(library: str, *, state: str | None) -> None:
     """Record whether Apple is still indexing ``library`` (None: finished).
 
@@ -409,8 +458,9 @@ def get_library_states() -> dict[str, Any]:
     return _load_state().get(_LIBRARY_STATE_KEY, {})
 
 
+@_locked
 def clear_stale_library_states() -> None:
-    """Demote any library left mid-sync with no process still on it.
+    """Demote any library, or service, left mid-sync with no process still on it.
 
     The state file outlives the container, so a restart during a library
     would otherwise leave it reading "syncing" forever. Called at
@@ -420,6 +470,9 @@ def clear_stale_library_states() -> None:
     state = _load_state()
     libraries = state.get(_LIBRARY_STATE_KEY, {})
     changed = False
+    for service in _VALID_SERVICES:
+        if state.get(service, {}).pop("running_since", None) is not None:
+            changed = True
     for entry in libraries.values():
         if entry.get("state") == "syncing":
             entry["state"] = "interrupted"

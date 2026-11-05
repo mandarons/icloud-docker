@@ -471,6 +471,24 @@ class TestSync(unittest.TestCase):
     def test_listing_a_missing_destination_is_empty(self):
         self.assertEqual(sync._list_local_files(os.path.join(self.root_dir, "absent")), set())  # noqa: SLF001
 
+    @patch("src.sync.sync_drive")
+    def test_a_failed_drive_pass_stops_showing_as_running(self, mock_sync_drive):
+        """The dashboard must not keep saying "Syncing now" after a pass
+        that raised."""
+        mock_sync_drive.sync_drive.side_effect = RuntimeError("boom")
+        with patch.object(sync, "_publish_running") as published:
+            with self.assertRaises(RuntimeError):
+                sync._perform_drive_sync(  # noqa: SLF001
+                    config=self.config,
+                    api=SimpleNamespace(drive=object()),
+                    sync_state=sync.SyncState(),
+                    drive_sync_interval=60,
+                )
+        self.assertEqual(
+            [c.args for c in published.call_args_list],
+            [("drive", True), ("drive", False)],
+        )
+
     @patch("src.sync.os.walk", side_effect=RuntimeError("walk failed"))
     @patch("src.sync.sync_drive")
     def test_perform_drive_sync_handles_walk_failure(self, mock_sync_drive, _mock_walk):
@@ -1500,6 +1518,23 @@ class TestACompletedReauthEndsTheRetryWait(unittest.TestCase):
                 web._wake_sync_loop()  # noqa: SLF001
         rec.assert_called_once_with()
         force.assert_not_called()
+
+    def test_a_successful_reauth_clears_the_stopped_banner(self):
+        """The handler redirects to the dashboard at once, before the loop
+        wakes and clears the flag itself, so the page the user lands on
+        must not still say the sync is stopped."""
+        import shutil
+        import tempfile
+        from unittest.mock import patch
+
+        from src import web, web_signals
+
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        with patch.object(web_signals, "_config_dir", return_value=tmp):
+            web_signals.record_auth_blocked(blocked=True, reason="session_unusable")
+            web._wake_sync_loop()  # noqa: SLF001
+            self.assertFalse(web_signals.get_auth_blocked()["blocked"])
 
     def test_a_failed_signal_never_fails_the_sign_in(self):
         from unittest.mock import patch
