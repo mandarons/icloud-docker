@@ -22,6 +22,7 @@ from src.photo_path_utils import (
     normalize_file_path,
     photo_has_edit,
     rename_legacy_file_if_exists,
+    version_record_id,
 )
 
 LOGGER = get_logger()
@@ -108,6 +109,29 @@ def get_max_threads_for_download(config) -> int:
         Maximum number of threads to use for downloads
     """
     return config_parser.get_app_max_threads(config)
+
+
+def _move_master_named_edit(photo, file_size: str, folder: str, path: str) -> None:
+    """Move an edit left under its old, master-record name onto ``path``.
+
+    An edit was named after the master record until each copy's edit got
+    its own record's ID (see ``version_record_id``); moving the file saves
+    downloading it again. Only when its size says it is this version:
+    copies of one photo shared that name, so the file there is whichever
+    copy's edit was written last.
+    """
+    if version_record_id(photo, file_size) == photo.id or os.path.isfile(path):
+        return
+    master_named = normalize_file_path(
+        os.path.join(folder, generate_photo_filename_with_metadata(photo, file_size, record_id=photo.id)),
+    )
+    expected_size = (photo.versions.get(file_size) or {}).get("size")
+    try:
+        master_named_size = os.path.getsize(master_named) if os.path.isfile(master_named) else None
+    except OSError:  # pragma: no cover - raced away between the two calls
+        master_named_size = None
+    if master_named != path and expected_size is not None and master_named_size == expected_size:
+        rename_legacy_file_if_exists(master_named, path)
 
 
 def generate_photo_path(photo, file_size: str, destination_path: str, folder_format: str | None) -> str:
@@ -204,6 +228,8 @@ def generate_photo_path(photo, file_size: str, destination_path: str, folder_for
             and candidate_size == expected_size
         ):
             rename_legacy_file_if_exists(legacy_mislabeled, normalized_path)
+
+    _move_master_named_edit(photo, file_size, final_destination, normalized_path)
 
     # Handle existing file with different normalization
     if os.path.isfile(final_file_path) and final_file_path != normalized_path:
@@ -341,7 +367,7 @@ def collect_download_task(
     # Check for existing hardlink source
     hardlink_source = None
     if hardlink_registry is not None:
-        hardlink_source = hardlink_registry.get_existing_path(photo.id, file_size)
+        hardlink_source = hardlink_registry.get_existing_path(version_record_id(photo, file_size), file_size)
 
     return DownloadTaskInfo(
         photo=photo,
@@ -385,7 +411,7 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
         if result and task_info.hardlink_registry is not None:
             # Register for future hard links if enabled
             task_info.hardlink_registry.register_photo_path(
-                task_info.photo.id,
+                version_record_id(task_info.photo, task_info.file_size),
                 task_info.file_size,
                 task_info.photo_path,
             )

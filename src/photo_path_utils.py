@@ -97,6 +97,33 @@ def set_preserve_originals_as_bak(value: bool) -> None:
 # RAW, GIF, some MP4) -- and those assets were never edited.
 _EDIT_RENDITION_PREFIXES = ("resJPEGFull", "resVidFull")
 
+def version_record_id(photo, file_size: str) -> str:
+    """ID of the CloudKit record a version's bytes come from.
+
+    ``photo.id`` is the ``CPLMaster`` record, which every copy of a photo
+    shares: Photos' Duplicate, and editors such as Snapseed that save an
+    edit as a new photo, add a ``CPLAsset`` pointing at the same master.
+    Each copy's edit lives on its own asset record, so naming (or
+    hardlinking) an asset-carried version after the master gives every
+    copy's edit the same identity, and they overwrite one another on disk
+    and download again every sync. Master-carried versions -- every
+    original -- keep ``photo.id``, so their names never change.
+
+    Soft check: anything unexpected falls back to ``photo.id``.
+    """
+    try:
+        asset_record = getattr(photo, "_asset_record", None)
+        if not isinstance(asset_record, dict) or not asset_record.get("recordName"):
+            return photo.id
+        lookup = photo.VIDEO_VERSION_LOOKUP if photo.item_type == "movie" else photo.PHOTO_VERSION_LOOKUP
+        prefix = lookup.get(file_size)
+        if prefix and f"{prefix}Res" in (asset_record.get("fields") or {}):
+            return asset_record["recordName"]
+    except Exception:  # noqa: BLE001 - naming must not break on a partial record
+        pass
+    return photo.id
+
+
 # Extensions that name the same JPEG container; ``IMG_1.JPG`` and a JPEG edit
 # of it must be recognised as colliding even though the strings differ.
 _JPEG_EXTENSIONS = frozenset({"jpg", "jpeg"})
@@ -209,7 +236,7 @@ def get_file_format() -> str | None:
     return _FILE_FORMAT
 
 
-def render_filename_template(template: str, photo, file_size: str) -> str:
+def render_filename_template(template: str, photo, file_size: str, record_id: str | None = None) -> str:
     """Render photos.file_format for one photo version.
 
     Tokens (unknown ones left literal): ``${photo.filename}`` ``${photo.ext}``
@@ -224,6 +251,8 @@ def render_filename_template(template: str, photo, file_size: str) -> str:
     cannot resolve the edit and the original to one name.
     """
     name, extension = get_photo_name_and_extension(photo, file_size)
+    if record_id is None:
+        record_id = version_record_id(photo, file_size)
     created = getattr(photo, "created", None)
     # ``full`` is a primary only while it is the sole copy requested; with
     # ``original`` also in the list the template needs a distinct variant so
@@ -236,7 +265,7 @@ def render_filename_template(template: str, photo, file_size: str) -> str:
     values = {
         "photo.filename": name,
         "photo.ext": extension,
-        "photo.id": base64.urlsafe_b64encode(photo.id.encode()).decode(),
+        "photo.id": base64.urlsafe_b64encode(record_id.encode()).decode(),
         "photo.file_size": file_size,
         "photo.variant": variant,
         "photo.variant_suffix": variant_suffix,
@@ -257,6 +286,7 @@ def generate_photo_filename_with_metadata(
     photo,
     file_size: str,
     filename_format: str | None = None,
+    record_id: str | None = None,
 ) -> str:
     """Generate filename for a photo asset.
 
@@ -283,6 +313,10 @@ def generate_photo_filename_with_metadata(
         file_size: File size variant (original, medium, thumb, etc.)
         filename_format: ``"metadata"`` or ``"simple"``, or ``None`` to
             use the module-level default.
+        record_id: ID to encode in the name; ``None`` (the default) uses
+            ``version_record_id``. Passing ``photo.id`` gives the name an
+            asset-carried version had before it was named after its own
+            record, so existing files can be moved rather than re-downloaded.
 
     Returns:
         Filename string in the chosen format, plus ``.original.bak`` suffix
@@ -295,11 +329,13 @@ def generate_photo_filename_with_metadata(
     if filename_format is None:
         filename_format = _DEFAULT_FILENAME_FORMAT
     name, extension = get_photo_name_and_extension(photo, file_size)
+    if record_id is None:
+        record_id = version_record_id(photo, file_size)
 
     # photos.file_format wins for normal calls; the collision fallback passes
     # filename_format="metadata" explicitly to force the always-unique name.
     if forced != "metadata" and _FILE_FORMAT is not None:
-        rendered = render_filename_template(_FILE_FORMAT, photo, file_size)
+        rendered = render_filename_template(_FILE_FORMAT, photo, file_size, record_id)
         if rendered.strip():
             return rendered
         # Defensive: a template that renders empty for this version (e.g. a bare
@@ -313,7 +349,7 @@ def generate_photo_filename_with_metadata(
         name = f"{name}{_adjusted_name_suffix(photo, file_size)}"
         result = name if extension == "" else f"{name}.{extension}"
     else:
-        photo_id_encoded = base64.urlsafe_b64encode(photo.id.encode()).decode()
+        photo_id_encoded = base64.urlsafe_b64encode(record_id.encode()).decode()
         if extension == "":
             result = f"{'__'.join([name, file_size, photo_id_encoded])}"
         else:

@@ -15,6 +15,7 @@ from src import config_parser, configure_icloudpy_logging, get_logger, recycle_b
 from src.album_sync_orchestrator import sync_album_photos
 from src.hardlink_registry import create_hardlink_registry
 from src.photo_cleanup_utils import remove_obsolete_files
+from src.photo_path_utils import version_record_id
 
 # Configure icloudpy logging immediately after import
 configure_icloudpy_logging()
@@ -194,7 +195,7 @@ def process_photo(photo, file_size, destination_path, files, folder_format, hard
 
     # Update legacy registry if provided
     if result and hardlink_registry is not None:
-        photo_key = f"{photo.id}_{file_size}"
+        photo_key = f"{version_record_id(photo, file_size)}_{file_size}"
         hardlink_registry[photo_key] = task_info.photo_path
 
     return result
@@ -287,7 +288,7 @@ def download_photo_task(download_info):
         if result:
             # Register for future hard links if enabled
             if hardlink_registry is not None:
-                photo_key = f"{photo.id}_{file_size}"
+                photo_key = f"{version_record_id(photo, file_size)}_{file_size}"
                 hardlink_registry[photo_key] = photo_path
             LOGGER.debug(f"[Thread] Completed download of {photo_path}")
         return result
