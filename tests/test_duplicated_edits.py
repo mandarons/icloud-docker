@@ -87,6 +87,15 @@ class TestEachCopysEditGetsItsOwnName(unittest.TestCase):
             f"IMG_7039__original__{_b64(MASTER)}.HEIC",
         )
 
+    def test_an_original_keeps_the_master_id_even_on_the_asset_record(self):
+        """Not just because Apple keeps originals on the master: the rule
+        holds whatever record carries the bytes."""
+        photo = _copy("ASSET-A", 100)
+        photo._asset_record["fields"]["resOriginalRes"] = {  # noqa: SLF001
+            "value": {"size": 5000, "downloadURL": "https://cdn.invalid/o2"},
+        }
+        self.assertEqual(version_record_id(photo, "original"), MASTER)
+
     def test_one_copys_edit_is_not_hardlinked_as_anothers(self):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)

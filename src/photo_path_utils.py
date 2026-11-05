@@ -97,6 +97,7 @@ def set_preserve_originals_as_bak(value: bool) -> None:
 # RAW, GIF, some MP4) -- and those assets were never edited.
 _EDIT_RENDITION_PREFIXES = ("resJPEGFull", "resVidFull")
 
+
 def version_record_id(photo, file_size: str) -> str:
     """ID of the CloudKit record a version's bytes come from.
 
@@ -106,8 +107,9 @@ def version_record_id(photo, file_size: str) -> str:
     Each copy's edit lives on its own asset record, so naming (or
     hardlinking) an asset-carried version after the master gives every
     copy's edit the same identity, and they overwrite one another on disk
-    and download again every sync. Master-carried versions -- every
-    original -- keep ``photo.id``, so their names never change.
+    and download again every sync. Master-carried versions keep
+    ``photo.id``, and so does every original (``resOriginal*``) whatever
+    record carries it, so no original's name ever changes.
 
     Soft check: anything unexpected falls back to ``photo.id``.
     """
@@ -117,6 +119,8 @@ def version_record_id(photo, file_size: str) -> str:
             return photo.id
         lookup = photo.VIDEO_VERSION_LOOKUP if photo.item_type == "movie" else photo.PHOTO_VERSION_LOOKUP
         prefix = lookup.get(file_size)
+        if prefix and prefix.startswith("resOriginal"):
+            return photo.id
         if prefix and f"{prefix}Res" in (asset_record.get("fields") or {}):
             return asset_record["recordName"]
     except Exception:  # noqa: BLE001 - naming must not break on a partial record
