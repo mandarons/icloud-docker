@@ -132,19 +132,19 @@ app:
   # trust_expiry_warn_days. Set to 0 to disable. Default 14.
   # trust_refresh_days: 14
   discord:
-  # webhook_url: <your server webhook URL here>
-  # username: icloud-docker #or any other name you prefer
+    # webhook_url: <your server webhook URL here>
+    # username: <your unique bot name>  # required
   telegram:
-  # bot_token: <your Telegram bot token>
-  # chat_id: <your Telegram user or chat ID>
-  # listen: true         # also poll Telegram for replies so you can re-auth 2FA from your phone:
-  #                      # reply the auth keyword to have a code pushed to your Apple devices,
-  #                      # then reply the 6-digit code. Off by default. Requires bot_token + chat_id.
-  #                      # Use a 1:1 chat with the bot (group privacy mode hides plain messages).
-  # auth_keyword: auth   # reply word that triggers the 2FA push (default "auth", case-insensitive).
+    # bot_token: <your Telegram bot token>
+    # chat_id: <your Telegram user or chat ID>
+    # listen: true         # also poll Telegram for replies so you can re-auth 2FA from your phone:
+    #                      # reply the auth keyword to have a code pushed to your Apple devices,
+    #                      # then reply the 6-digit code. Off by default. Requires bot_token + chat_id.
+    #                      # Use a 1:1 chat with the bot (group privacy mode hides plain messages).
+    # auth_keyword: auth   # reply word that triggers the 2FA push (default "auth", case-insensitive).
   pushover:
-  # user_key: <your Pushover user key>
-  # api_token: <your Pushover api token>
+    # user_key: <your Pushover user key>
+    # api_token: <your Pushover api token>
   smtp:
     ## If you want to receive email notifications about expired/missing 2FA credentials then uncomment
     # email: "user@test.com"
@@ -561,7 +561,7 @@ app:
 app:
   discord:
     webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
-    username: "icloud-sync"  # Optional: Custom bot name (default: icloud-docker)
+    username: "icloud-sync"  # Required: unique bot name shown in Discord
 ```
 
 **Setup Steps:**

@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- Discord notifications: the sample config now shows `webhook_url` and
+  `username` nested under `discord:` (they were commented at the key's own
+  indentation, so uncommenting produced siblings and the log said
+  `webhook_url is not found`). The payload is sent as JSON, as Discord
+  expects, and `username` is documented as required (a unique bot name). A
+  mis-nested `app.webhook_url` is called out explicitly in the warning
+  ([#592](https://github.com/mandarons/icloud-docker/issues/592))
+
 ## [2.3.0] 2026-10-26
 
 ### Added

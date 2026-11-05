@@ -769,7 +769,7 @@ class TestNotify(unittest.TestCase):
             # Verify that post is called with the correct arguments
             post_mock.assert_called_once_with(
                 "webhook_url",
-                data={"content": message, "username": "username"},
+                json={"content": message, "username": "username"},
                 timeout=10,
             )
 
@@ -783,7 +783,7 @@ class TestNotify(unittest.TestCase):
             # Verify that post is called with the correct arguments
             post_mock.assert_called_once_with(
                 "webhook_url",
-                data={"content": message, "username": "username"},
+                json={"content": message, "username": "username"},
                 timeout=10,
             )
 

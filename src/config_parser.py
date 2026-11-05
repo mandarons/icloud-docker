@@ -1417,7 +1417,7 @@ def get_notification_config_value(config: dict, service: str, key: str) -> str |
     value = get_config_value_or_none(config=config, config_path=config_path)
 
     if value is None:
-        log_config_not_found_warning(config_path, f"{key} is not found.")
+        log_config_not_found_warning(config_path, "is not found.")
 
     return value
 
@@ -1491,7 +1491,17 @@ def get_discord_webhook_url(config: dict) -> str | None:
     Returns:
         Discord webhook URL if configured, None otherwise
     """
-    return get_notification_config_value(config, "discord", "webhook_url")
+    value = get_notification_config_value(config, "discord", "webhook_url")
+    if value is None and config and get_config_value_or_none(
+        config=config,
+        config_path=["app", "webhook_url"],
+    ):
+        log_config_not_found_warning(
+            ["app", "discord", "webhook_url"],
+            "is not found; 'app > webhook_url' exists but must be nested under "
+            "'app > discord' (indent it two spaces).",
+        )
+    return value
 
 
 def get_discord_username(config: dict) -> str | None:
