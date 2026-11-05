@@ -361,6 +361,17 @@ class TestNotify(unittest.TestCase):
             )
             self.assertEqual(post_message_mock.call_count, 1)
 
+    def test_notify_discord_default_username(self):
+        """A webhook without a username uses the documented default."""
+        config = {"app": {"discord": {"webhook_url": "webhook-url"}}}
+
+        with patch("src.notify.post_message_to_discord") as post_message_mock:
+            notify_discord(config, self.message_body, None, False)
+
+            post_message_mock.assert_called_once_with(
+                "webhook-url", "icloud-docker", self.message_body,
+            )
+
     def test_notify_discord_fail(self):
         """Test for failed notification."""
         config = {"app": {"discord": {"webhook_url": "webhook-url", "username": "username"}}}
@@ -769,7 +780,7 @@ class TestNotify(unittest.TestCase):
             # Verify that post is called with the correct arguments
             post_mock.assert_called_once_with(
                 "webhook_url",
-                data={"content": message, "username": "username"},
+                json={"content": message, "username": "username"},
                 timeout=10,
             )
 
@@ -783,7 +794,7 @@ class TestNotify(unittest.TestCase):
             # Verify that post is called with the correct arguments
             post_mock.assert_called_once_with(
                 "webhook_url",
-                data={"content": message, "username": "username"},
+                json={"content": message, "username": "username"},
                 timeout=10,
             )
 

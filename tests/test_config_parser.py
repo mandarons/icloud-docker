@@ -592,6 +592,20 @@ class TestConfigParser(unittest.TestCase):
         """None config."""
         self.assertIsNone(config_parser.get_discord_webhook_url(config=None))
 
+    def test_get_discord_webhook_url_flags_misplaced_key(self):
+        """A webhook_url at app level is reported as mis-nested, not just missing."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"].pop("discord", None)
+        config["app"]["webhook_url"] = "webhook_url"
+
+        with self.assertLogs(level="WARNING") as logs:
+            self.assertIsNone(config_parser.get_discord_webhook_url(config=config))
+
+        self.assertTrue(
+            any("must be nested under" in line for line in logs.output),
+            logs.output,
+        )
+
     # write a test for discord username
     def test_get_discord_username(self):
         """Test for discord username."""
@@ -599,6 +613,15 @@ class TestConfigParser(unittest.TestCase):
         config["app"]["discord"] = {"username": "username"}
         self.assertEqual(
             config["app"]["discord"]["username"],
+            config_parser.get_discord_username(config=config),
+        )
+
+    def test_get_discord_username_defaults_when_unset(self):
+        """Username defaults to icloud-docker when only the webhook is set."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["app"]["discord"] = {"webhook_url": "webhook_url"}
+        self.assertEqual(
+            "icloud-docker",
             config_parser.get_discord_username(config=config),
         )
 

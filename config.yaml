@@ -62,34 +62,34 @@ app:
       # Set to 0 to always send notifications regardless of download count
       min_downloads: 1
   discord:
-  # webhook_url: <your server webhook URL here>
-  # username: icloud-docker #or any other name you prefer
+  #   webhook_url: <your server webhook URL here>
+  #   username: icloud-docker #or any other name you prefer
   telegram:
-  # bot_token: <your Telegram bot token>
-  # chat_id: <your Telegram user or chat ID>
-  # listen: true        # also poll Telegram for replies so you can re-auth 2FA from your phone:
-  #                      # reply the auth keyword to have a code pushed to your Apple devices,
-  #                      # then reply the 6-digit code. Off by default. Requires bot_token + chat_id.
-  #                      # Use a 1:1 chat with the bot (group privacy mode hides plain messages).
-  # auth_keyword: auth   # reply word that triggers the 2FA push (default "auth", case-insensitive).
-  #                      # Running multiple containers? Give each its own bot token (a getUpdates
-  #                      # poll consumes the whole bot's updates), plus a distinct auth_keyword.
+  #   bot_token: <your Telegram bot token>
+  #   chat_id: <your Telegram user or chat ID>
+  #   listen: true        # also poll Telegram for replies so you can re-auth 2FA from your phone:
+  #                        # reply the auth keyword to have a code pushed to your Apple devices,
+  #                        # then reply the 6-digit code. Off by default. Requires bot_token + chat_id.
+  #                        # Use a 1:1 chat with the bot (group privacy mode hides plain messages).
+  #   auth_keyword: auth   # reply word that triggers the 2FA push (default "auth", case-insensitive).
+  #                        # Running multiple containers? Give each its own bot token (a getUpdates
+  #                        # poll consumes the whole bot's updates), plus a distinct auth_keyword.
   pushover:
-  # user_key: <your Pushover user key>
-  # api_token: <your Pushover api token>
-  # priority: <your notification priority (optional)>
+  #   user_key: <your Pushover user key>
+  #   api_token: <your Pushover api token>
+  #   priority: <your notification priority (optional)>
   smtp:
-  # If you want to receive email notifications about expired/missing 2FA credentials then uncomment
-  # email: "sender@test.com"
-  # Uncomment this if your SMTP username is different than your sender address (for services like AWS SES)
-  # username: ""
-  # default to is same as email above
-  # to: "receiver@test.com"
-  # password:
-  # host: "smtp.test.com"
-  # port: 587
-  # If your email provider doesn't handle TLS
-  # no_tls: true
+  #   If you want to receive email notifications about expired/missing 2FA credentials then uncomment
+  #   email: "sender@test.com"
+  #   Uncomment this if your SMTP username is different than your sender address (for services like AWS SES)
+  #   username: ""
+  #   default to is same as email above
+  #   to: "receiver@test.com"
+  #   password:
+  #   host: "smtp.test.com"
+  #   port: 587
+  #   If your email provider doesn't handle TLS
+  #   no_tls: true
   # Webhooks (optional). Two independent things, either or both:
   #
   # start/success/failure are bare GET pings for a monitor such as

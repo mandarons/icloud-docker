@@ -308,7 +308,7 @@ def post_message_to_discord(webhook_url: str, username: str, message: str) -> bo
         True if message was sent successfully, False otherwise
     """
     data = {"username": username, "content": message}
-    response = requests.post(webhook_url, data=data, timeout=10)
+    response = requests.post(webhook_url, json=data, timeout=10)
     if response.status_code == 204:
         return True
     # Log error message
