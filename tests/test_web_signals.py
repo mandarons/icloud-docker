@@ -325,6 +325,17 @@ class TestPerLibrarySyncState(unittest.TestCase):
         self.assertNotIn("running_since", entry)
         self.assertEqual(entry["files_downloaded"], 3)
 
+    def test_running_ignores_an_unknown_service(self):
+        self.ws.record_service_running("calendar", running=True)
+        self.assertEqual(self.ws.get_sync_state("calendar"), {})
+
+    def test_clearing_a_service_that_is_not_running_writes_nothing(self):
+        from unittest.mock import patch
+
+        with patch.object(self.ws, "_save_state") as saved:
+            self.ws.record_service_running("drive", running=False)
+        saved.assert_not_called()
+
     def test_a_restart_does_not_leave_a_service_syncing_forever(self):
         self.ws.record_service_running("photos", running=True)
         self.ws.clear_stale_library_states()
