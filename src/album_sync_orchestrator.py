@@ -77,11 +77,11 @@ def sync_album_photos(
     LOGGER.info(f"Syncing {album.title}")
 
     # Stream the album in fixed-size chunks: collect → download →
-    # release → next chunk. Memory is bounded by chunk_size × per-task
-    # size (~10 MB at chunk=1000) instead of len(album) × per-task size
-    # (which OOM-kills containers on ~100K+ libraries: empirically a
-    # 111K-photo library peaks at ~4 GB RSS without chunking, kernel-
-    # confirmed via cgroup OOM at the 4 GB cap).
+    # release → next chunk. The task buffer is bounded by chunk_size
+    # instead of len(album), avoiding the ~4 GB RSS seen when storing all
+    # download tasks for a 111K-photo library (cgroup OOM at 4 GB).
+    # Claimed asset IDs are retained per album pass to suppress repeated
+    # entries from paginated enumeration.
     chunk_size = config_parser.get_photos_enumeration_chunk_size(config=config)
     total_successful, total_failed = _collect_and_execute_album_in_chunks(
         album,
@@ -204,11 +204,10 @@ def _collect_and_execute_album_in_chunks(
     expire ~30-40 minutes after listing) do not wait out a long walk of
     photos already on disk. That is checked between photos, so it is a
     bound on the usual wait, not a guarantee; a URL that still expires is
-    recovered by the expired-URL refresh. Memory is bounded by chunk_size, not by
-    len(album). Semantically equivalent to building the full task list
-    and downloading once — same total counts, same per-photo
-    side-effects — but resident-set stays flat instead of growing
-    monotonically through enumeration.
+    recovered by the expired-URL refresh. Task memory is bounded by chunk_size;
+    the set of claimed asset IDs grows with the number of queued assets in
+    this album pass. Apart from repeated album entries, task counts and
+    per-photo side effects match the unchunked path.
 
     Args:
         album: Album object from iCloudPy
@@ -236,6 +235,9 @@ def _collect_and_execute_album_in_chunks(
         chunk_size = DEFAULT_ENUMERATION_CHUNK_SIZE
 
     buffer: list[DownloadTaskInfo] = []
+    # A paged album can yield the same asset again after a chunk has drained.
+    # The master id alone is not enough: separate edits may share a master.
+    claimed_assets: set[tuple[str, str]] = set()
     # When the buffer must drain regardless of size; None while it is empty.
     drain_by: float | None = None
     total_successful = 0
@@ -257,6 +259,17 @@ def _collect_and_execute_album_in_chunks(
         drain_by = None
 
     for photo in album:
+        asset_record = getattr(photo, "_asset_record", None)
+        asset_id = asset_record.get("recordName") if isinstance(asset_record, dict) else None
+        try:
+            master_id = photo.id
+        except AttributeError, KeyError:
+            # Leave malformed photos to the collector's per-photo error handler.
+            asset_key = None
+        else:
+            asset_key = (master_id, asset_id or master_id)
+        if asset_key is not None and asset_key in claimed_assets:
+            continue
         tasks = _collect_photo_download_tasks(
             photo,
             destination_path,
@@ -266,6 +279,8 @@ def _collect_and_execute_album_in_chunks(
             folder_format,
             hardlink_registry,
         )
+        if tasks and asset_key is not None:
+            claimed_assets.add(asset_key)
         if tasks and drain_by is None:
             drain_by = _now() + BUFFERED_DOWNLOAD_MAX_AGE_SEC
         buffer.extend(tasks)
