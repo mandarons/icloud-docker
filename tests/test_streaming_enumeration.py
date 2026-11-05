@@ -15,8 +15,11 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import unittest
 from unittest.mock import MagicMock, patch
 
+from icloudpy.services.photos import PhotoAsset
+
 import tests  # noqa: F401  — env setup
 from src import album_sync_orchestrator
+from src.photo_download_manager import DownloadTaskInfo
 
 
 def _fake_photo(filename: str, item_id: str):
@@ -42,6 +45,106 @@ def _fake_album(photos: list):
 
 class TestChunkedEnumeration(unittest.TestCase):
     """``_collect_and_execute_album_in_chunks`` end-to-end behaviour."""
+
+    def test_repeated_asset_is_downloaded_once_across_chunk_boundaries(self):
+        """A paged album may yield the same asset again after the buffer drains."""
+        photo = PhotoAsset(None, {"recordName": "master-1"}, {"recordName": "asset-1"})
+        other = PhotoAsset(None, {"recordName": "master-2"}, {"recordName": "asset-2"})
+        album = _fake_album([photo, other, photo])
+
+        def task_for(photo, *_args):
+            return [DownloadTaskInfo(photo, "original", f"/photos/{photo.id}.heic")]
+
+        with (
+            patch.object(album_sync_orchestrator, "_collect_photo_download_tasks", side_effect=task_for),
+            patch.object(
+                album_sync_orchestrator,
+                "execute_parallel_downloads",
+                side_effect=lambda tasks, _: (len(tasks), 0),
+            ) as execute,
+        ):
+            result = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
+                album,
+                "/photos",
+                ["original"],
+                None,
+                None,
+                None,
+                None,
+                None,
+                chunk_size=1,
+            )
+
+        self.assertEqual(result, (2, 0))
+        self.assertEqual(
+            [task.photo.id for call in execute.call_args_list for task in call.args[0]],
+            ["master-1", "master-2"],
+        )
+
+    def test_invalid_photo_still_uses_per_photo_error_handling(self):
+        """A malformed asset must not abort the rest of the album."""
+        invalid = PhotoAsset(None, {}, {})
+        good = PhotoAsset(None, {"recordName": "master-2"}, {"recordName": "asset-2"})
+
+        def task_for(photo, *_args):
+            if photo is invalid:
+                return []  # the normal per-photo collector catches and skips it
+            return [DownloadTaskInfo(photo, "original", "/photos/master-2.heic")]
+
+        with (
+            patch.object(album_sync_orchestrator, "_collect_photo_download_tasks", side_effect=task_for),
+            patch.object(
+                album_sync_orchestrator,
+                "execute_parallel_downloads",
+                side_effect=lambda tasks, _: (len(tasks), 0),
+            ),
+        ):
+            result = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
+                _fake_album([invalid, good]),
+                "/photos",
+                ["original"],
+                None,
+                None,
+                None,
+                None,
+                None,
+                chunk_size=1,
+            )
+        self.assertEqual(result, (1, 0))
+
+    def test_distinct_edits_sharing_a_master_are_not_deduplicated(self):
+        """Different CPLAsset copies of one master have separate edited bytes."""
+        first = PhotoAsset(None, {"recordName": "master-1"}, {"recordName": "edit-1"})
+        second = PhotoAsset(None, {"recordName": "master-1"}, {"recordName": "edit-2"})
+
+        def task_for(photo, *_args):
+            name = "edit-1" if photo is first else "edit-2"
+            return [DownloadTaskInfo(photo, "full", f"/photos/{name}")]
+
+        with (
+            patch.object(album_sync_orchestrator, "_collect_photo_download_tasks", side_effect=task_for),
+            patch.object(
+                album_sync_orchestrator,
+                "execute_parallel_downloads",
+                side_effect=lambda tasks, _: (len(tasks), 0),
+            ) as execute,
+        ):
+            result = album_sync_orchestrator._collect_and_execute_album_in_chunks(  # noqa: SLF001
+                _fake_album([first, second, first]),
+                "/photos",
+                ["full"],
+                None,
+                None,
+                None,
+                None,
+                None,
+                chunk_size=10,
+            )
+        self.assertEqual(result, (2, 0))
+        self.assertEqual(
+            [task.photo for task in execute.call_args.args[0]],
+            [first, second],
+        )
 
     def test_chunking_matches_unchunked_total_counts(self):
         """Counts and number-of-download-calls add up identically
