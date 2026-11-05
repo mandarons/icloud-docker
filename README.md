@@ -133,7 +133,7 @@ app:
   # trust_refresh_days: 14
   discord:
     # webhook_url: <your server webhook URL here>
-    # username: icloud-docker #or any other name you prefer
+    # username: <your unique bot name>  # required
   telegram:
     # bot_token: <your Telegram bot token>
     # chat_id: <your Telegram user or chat ID>
@@ -561,7 +561,7 @@ app:
 app:
   discord:
     webhook_url: "https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN"
-    username: "icloud-sync"  # Optional: Custom bot name (default: icloud-docker)
+    username: "icloud-sync"  # Required: unique bot name shown in Discord
 ```
 
 **Setup Steps:**

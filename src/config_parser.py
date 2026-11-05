@@ -1511,16 +1511,9 @@ def get_discord_username(config: dict) -> str | None:
         config: Configuration dictionary
 
     Returns:
-        Discord username, defaulting to ``icloud-docker`` when unset.
-        None when there is no config at all.
+        Discord username if configured, None otherwise
     """
-    if not config:
-        return None
-    return get_config_value_or_default(
-        config=config,
-        config_path=["app", "discord", "username"],
-        default="icloud-docker",
-    )
+    return get_notification_config_value(config, "discord", "username")
 
 
 def get_pushover_user_key(config: dict) -> str | None:

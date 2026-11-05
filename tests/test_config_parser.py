@@ -616,15 +616,6 @@ class TestConfigParser(unittest.TestCase):
             config_parser.get_discord_username(config=config),
         )
 
-    def test_get_discord_username_defaults_when_unset(self):
-        """Username defaults to icloud-docker when only the webhook is set."""
-        config = read_config(config_path=tests.CONFIG_PATH)
-        config["app"]["discord"] = {"webhook_url": "webhook_url"}
-        self.assertEqual(
-            "icloud-docker",
-            config_parser.get_discord_username(config=config),
-        )
-
     def test_get_discord_username_none_config(self):
         """None config."""
         self.assertIsNone(config_parser.get_discord_username(config=None))
