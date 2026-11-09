@@ -49,14 +49,21 @@ def remove_obsolete(
         if local_file not in files:
             if not (path.is_file() or path.is_dir()):
                 continue  # already went with a folder removed above
-            if recycle_bin:
-                LOGGER.info(f"Moving {local_file} to the recycle bin ...")
-                recycle_bin.discard(local_file, destination_path)
-            else:
-                LOGGER.info(f"Removing {local_file} ...")
-                if path.is_file():
-                    path.unlink(missing_ok=True)
+            try:
+                if recycle_bin:
+                    LOGGER.info(f"Moving {local_file} to the recycle bin ...")
+                    recycle_bin.discard(local_file, destination_path)
                 else:
-                    rmtree(local_file)
+                    LOGGER.info(f"Removing {local_file} ...")
+                    if path.is_file():
+                        path.unlink(missing_ok=True)
+                    else:
+                        rmtree(local_file)
+            except OSError as e:
+                # Locked by another program, or not this container's to
+                # delete. One such item must not end the pass; it is tried
+                # again next sync.
+                LOGGER.warning(f"Could not remove {local_file}, leaving it: {e!s}")
+                continue
             removed_paths.add(local_file)
     return removed_paths

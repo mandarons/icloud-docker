@@ -6,6 +6,8 @@ import os
 import shutil
 import tempfile
 import unittest
+from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 from src import photo_cleanup_utils
 
@@ -108,3 +110,66 @@ class TestRemoveObsoleteFiles(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestUnremovableFiles(unittest.TestCase):
+    """A file cleanup cannot remove is left and logged; the rest still go."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.root, True)
+        self.paths = []
+        for name in ("locked.jpg", "old.jpg"):
+            path = os.path.join(self.root, name)
+            with open(path, "w") as f:
+                f.write("x")
+            self.paths.append(os.path.abspath(path))
+        self.locked, self.old = self.paths
+
+    def _unlink(self, real=Path.unlink):
+        locked = self.locked
+
+        def unlink(path, *args, **kwargs):
+            if str(path.absolute()) == locked:
+                raise PermissionError(13, "Permission denied", locked)
+            return real(path, *args, **kwargs)
+
+        return unlink
+
+    def test_photo_cleanup_carries_on(self):
+        with (
+            patch.object(Path, "unlink", self._unlink()),
+            self.assertLogs(level="WARNING") as logs,
+        ):
+            removed = photo_cleanup_utils.remove_obsolete_files(self.root, set(), limit_percent=0)
+        self.assertEqual(removed, {self.old})
+        self.assertTrue(os.path.exists(self.locked))
+        self.assertIn("Could not remove", "\n".join(logs.output))
+        self.assertIn("locked.jpg", "\n".join(logs.output))
+
+    def test_photo_cleanup_with_a_bin(self):
+        bin_ = MagicMock()
+        bin_.contains.return_value = False
+
+        def discard(path, _destination):
+            if path == self.locked:
+                raise PermissionError(13, "Permission denied", path)
+
+        bin_.discard.side_effect = discard
+        removed = photo_cleanup_utils.remove_obsolete_files(self.root, set(), limit_percent=0, recycle_bin=bin_)
+        self.assertEqual(removed, {self.old})
+
+    def test_drive_cleanup_carries_on(self):
+        from src import drive_cleanup
+
+        folder = os.path.join(self.root, "stuck")
+        os.makedirs(os.path.join(folder, "inner"))
+        with (
+            patch.object(Path, "unlink", self._unlink()),
+            patch.object(drive_cleanup, "rmtree", side_effect=PermissionError(13, "denied", folder)),
+            self.assertLogs(level="WARNING"),
+        ):
+            removed = drive_cleanup.remove_obsolete(self.root, set())
+        self.assertEqual(removed, {self.old})
+        self.assertTrue(os.path.exists(self.locked))
+        self.assertTrue(os.path.isdir(folder))

@@ -80,12 +80,19 @@ def remove_obsolete_files(
             return removed_paths
 
     for path, local_file in candidates:
-        if recycle_bin:
-            LOGGER.info(f"Moving {local_file} to the recycle bin ...")
-            recycle_bin.discard(local_file, destination_path)
-        else:
-            LOGGER.info(f"Removing {local_file} ...")
-            path.unlink(missing_ok=True)
+        try:
+            if recycle_bin:
+                LOGGER.info(f"Moving {local_file} to the recycle bin ...")
+                recycle_bin.discard(local_file, destination_path)
+            else:
+                LOGGER.info(f"Removing {local_file} ...")
+                path.unlink(missing_ok=True)
+        except OSError as e:
+            # Locked by another program, or not this container's to delete.
+            # One such file must not end the pass; it is tried again next
+            # sync.
+            LOGGER.warning(f"Could not remove {local_file}, leaving it: {e!s}")
+            continue
         removed_paths.add(local_file)
 
     return removed_paths
