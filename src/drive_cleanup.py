@@ -6,6 +6,7 @@ and directories during iCloud Drive sync operations per SRP.
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import os
 from pathlib import Path
 from shutil import rmtree
 
@@ -40,8 +41,11 @@ def remove_obsolete(
     if recycle_bin:
         recycle_bin.purge()
 
+    stuck: list[str] = []
     for path in Path(destination_path).rglob("*"):
         local_file = str(path.absolute())
+        if any(local_file.startswith(folder + os.sep) for folder in stuck):
+            continue  # inside a folder that could not be removed: already reported
         if exclude_filenames and path.parent == Path(destination_path) and path.name in exclude_filenames:
             continue
         if recycle_bin and recycle_bin.contains(local_file):
@@ -64,6 +68,8 @@ def remove_obsolete(
                 # delete. One such item must not end the pass; it is tried
                 # again next sync.
                 LOGGER.warning(f"Could not remove {local_file}, leaving it: {e!s}")
+                if path.is_dir():
+                    stuck.append(local_file)
                 continue
             removed_paths.add(local_file)
     return removed_paths
