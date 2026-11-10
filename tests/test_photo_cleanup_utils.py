@@ -156,8 +156,10 @@ class TestUnremovableFiles(unittest.TestCase):
                 raise PermissionError(13, "Permission denied", path)
 
         bin_.discard.side_effect = discard
-        removed = photo_cleanup_utils.remove_obsolete_files(self.root, set(), limit_percent=0, recycle_bin=bin_)
+        with self.assertLogs(level="WARNING") as logs:
+            removed = photo_cleanup_utils.remove_obsolete_files(self.root, set(), limit_percent=0, recycle_bin=bin_)
         self.assertEqual(removed, {self.old})
+        self.assertIn("locked.jpg", "\n".join(logs.output))
 
     def test_drive_cleanup_carries_on(self):
         from src import drive_cleanup
@@ -167,9 +169,87 @@ class TestUnremovableFiles(unittest.TestCase):
         with (
             patch.object(Path, "unlink", self._unlink()),
             patch.object(drive_cleanup, "rmtree", side_effect=PermissionError(13, "denied", folder)),
-            self.assertLogs(level="WARNING"),
+            self.assertLogs(level="WARNING") as logs,
         ):
             removed = drive_cleanup.remove_obsolete(self.root, set())
         self.assertEqual(removed, {self.old})
         self.assertTrue(os.path.exists(self.locked))
         self.assertTrue(os.path.isdir(folder))
+        # One warning per item left: the stuck folder's contents are not
+        # tried, and reported, one by one.
+        warnings = [line for line in logs.output if "Could not remove" in line]
+        self.assertEqual(len(warnings), 2)
+        self.assertFalse(any("inner" in line for line in warnings))
+
+    def test_drive_cleanup_with_a_bin(self):
+        from src import drive_cleanup
+
+        bin_ = MagicMock()
+        bin_.contains.return_value = False
+
+        def discard(path, _destination):
+            if path == self.locked:
+                raise PermissionError(13, "Permission denied", path)
+            os.remove(path)
+
+        bin_.discard.side_effect = discard
+        with self.assertLogs(level="WARNING") as logs:
+            removed = drive_cleanup.remove_obsolete(self.root, set(), recycle_bin=bin_)
+        self.assertEqual(removed, {self.old})
+        self.assertIn("locked.jpg", "\n".join(logs.output))
+
+
+class TestBinMoveAcrossDevices(unittest.TestCase):
+    """A move between disks is a copy and a delete; a failed delete leaves no copy."""
+
+    def setUp(self):
+        from src import recycle_bin
+
+        self.root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.root, True)
+        self.destination = os.path.join(self.root, "photos")
+        self.bin = recycle_bin.RecycleBin(root=self.root, service="photos")
+
+    def _move_then_fail(self, src, dst):
+        if os.path.isdir(src):
+            shutil.copytree(src, dst)
+        else:
+            shutil.copy2(src, dst)
+        raise PermissionError(13, "Permission denied", src)
+
+    def _discard_twice(self, path):
+        for _ in range(2):
+            with (
+                patch("shutil.move", side_effect=self._move_then_fail),
+                self.assertRaises(PermissionError),
+            ):
+                self.bin.discard(path, self.destination)
+        self.assertTrue(os.path.exists(path))
+        copies = [name for _folder, _dirs, names in os.walk(self.bin.path) for name in names]
+        self.assertEqual(copies, [])
+
+    def test_file(self):
+        path = os.path.join(self.destination, "a.jpg")
+        os.makedirs(self.destination)
+        with open(path, "w") as f:
+            f.write("x")
+        self._discard_twice(path)
+
+    def test_folder(self):
+        path = os.path.join(self.destination, "album")
+        os.makedirs(path)
+        with open(os.path.join(path, "a.jpg"), "w") as f:
+            f.write("x")
+        self._discard_twice(path)
+
+    def test_a_move_that_copied_nothing(self):
+        path = os.path.join(self.destination, "a.jpg")
+        os.makedirs(self.destination)
+        with open(path, "w") as f:
+            f.write("x")
+        with (
+            patch("shutil.move", side_effect=PermissionError(13, "Permission denied", path)),
+            self.assertRaises(PermissionError),
+        ):
+            self.bin.discard(path, self.destination)
+        self.assertTrue(os.path.exists(path))
