@@ -82,17 +82,25 @@ class TestChunkedEnumeration(unittest.TestCase):
         )
 
     def test_invalid_photo_still_uses_per_photo_error_handling(self):
-        """A malformed asset must not abort the rest of the album."""
+        """A malformed asset must not abort the rest of the album.
+
+        The malformed photo goes through the REAL collector (only
+        ``execute_parallel_downloads`` is stubbed), so this covers the
+        error handler's own ``photo.id`` lookup: a master record without
+        ``recordName`` raises ``KeyError`` there, not ``AttributeError``.
+        """
         invalid = PhotoAsset(None, {}, {})
         good = PhotoAsset(None, {"recordName": "master-2"}, {"recordName": "asset-2"})
+        real_collect = album_sync_orchestrator._collect_photo_download_tasks  # noqa: SLF001
 
-        def task_for(photo, *_args):
+        def collect(photo, *args):
             if photo is invalid:
-                return []  # the normal per-photo collector catches and skips it
+                # Exercise the production error handler, not a stand-in.
+                return real_collect(photo, *args)
             return [DownloadTaskInfo(photo, "original", "/photos/master-2.heic")]
 
         with (
-            patch.object(album_sync_orchestrator, "_collect_photo_download_tasks", side_effect=task_for),
+            patch.object(album_sync_orchestrator, "_collect_photo_download_tasks", side_effect=collect),
             patch.object(
                 album_sync_orchestrator,
                 "execute_parallel_downloads",

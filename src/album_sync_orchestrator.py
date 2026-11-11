@@ -176,7 +176,12 @@ def _collect_photo_download_tasks(
     except Exception as e:
         try:
             photo_id = photo.id
-        except AttributeError:
+        except Exception:
+            # Not just AttributeError: ``photo.id`` reads
+            # ``_master_record["recordName"]``, so a malformed master
+            # raises KeyError here. Anything unresolvable means this
+            # id is unusable for the log line -- not that the album
+            # should abort.
             photo_id = "<unknown>"
         LOGGER.warning(
             f"Error processing photo (id: {photo_id}), skipping: {type(e).__name__}: {e!s}",
