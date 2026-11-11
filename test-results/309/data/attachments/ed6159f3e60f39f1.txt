@@ -1,0 +1,46 @@
+[38;21m2026-11-11 16:24:29,674 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-11 16:24:29,674 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-11 16:24:29,674 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-11 16:24:29,674 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-11 16:24:29,675 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-11 16:24:29,675 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-11 16:24:29,679 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-11 16:24:29,679 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-11 16:24:29,680 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_kxtvotz0/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-11 16:24:29,680 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_kxtvotz0/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-11 16:24:29,680 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-11 16:24:29,680 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-11 16:24:29,680 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-11 16:24:29,680 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-11 16:24:29,684 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-11 16:24:29,684 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-11-11 16:24:29,699 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-11-11 16:24:29,700 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: b06c336d-c7b5-421d-8759-8facb564aa13[0m
+[38;21m2026-11-11 16:24:29,700 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: b06c336d-c7b5-421d-8759-8facb564aa13[0m
+[38;21m2026-11-11 16:24:29,700 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: b06c336d-c7b5-421d-8759-8facb564aa13[0m
+[38;21m2026-11-11 16:24:29,700 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: b06c336d-c7b5-421d-8759-8facb564aa13[0m
+[38;21m2026-11-11 16:24:29,700 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-11 16:24:29,700 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-11 16:24:29,700 :: DEBUG :: root :: usage.py :: 446 :: Installation registration completed[0m
+[38;21m2026-11-11 16:24:29,700 :: DEBUG :: root :: usage.py :: 446 :: Installation registration completed[0m
+[38;5;226m2026-11-11 16:24:29,700 :: WARNING :: root :: sync.py :: 1889 :: Nothing to sync. Please add drive: and/or photos: section in config.yaml file.[0m
+[38;5;226m2026-11-11 16:24:29,700 :: WARNING :: root :: sync.py :: 1889 :: Nothing to sync. Please add drive: and/or photos: section in config.yaml file.[0m
+[38;5;39m2026-11-11 16:24:29,700 :: INFO :: root :: sync.py :: 1614 :: Resyncing at Wed Nov 11 16:24:29 2026 ...[0m
+[38;5;39m2026-11-11 16:24:29,700 :: INFO :: root :: sync.py :: 1614 :: Resyncing at Wed Nov 11 16:24:29 2026 ...[0m
+[38;5;39m2026-11-11 16:24:29,700 :: INFO :: root :: sync.py :: 1955 :: All configured sync intervals are negative, exiting oneshot mode...[0m
+[38;5;39m2026-11-11 16:24:29,700 :: INFO :: root :: sync.py :: 1955 :: All configured sync intervals are negative, exiting oneshot mode...[0m

@@ -1,0 +1,18 @@
+[38;21m2026-11-11 16:24:30,056 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-11 16:24:30,056 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-11 16:24:30,057 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-11 16:24:30,057 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-11 16:24:30,057 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-11 16:24:30,057 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-11 16:24:30,061 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-11 16:24:30,061 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;5;39m2026-11-11 16:24:30,064 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every -1 seconds.[0m
+[38;5;39m2026-11-11 16:24:30,064 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every -1 seconds.[0m
+[38;5;39m2026-11-11 16:24:30,064 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every -1 seconds.[0m
+[38;5;39m2026-11-11 16:24:30,064 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every -1 seconds.[0m
+[38;21m2026-11-11 16:24:30,065 :: DEBUG :: root :: sync.py :: 1859 :: Failed to send usage statistics: Network timeout[0m
+[38;21m2026-11-11 16:24:30,065 :: DEBUG :: root :: sync.py :: 1859 :: Failed to send usage statistics: Network timeout[0m
+[38;5;39m2026-11-11 16:24:30,065 :: INFO :: root :: sync.py :: 1614 :: Resyncing at Wed Nov 11 16:24:30 2026 ...[0m
+[38;5;39m2026-11-11 16:24:30,065 :: INFO :: root :: sync.py :: 1614 :: Resyncing at Wed Nov 11 16:24:30 2026 ...[0m
+[38;5;39m2026-11-11 16:24:30,066 :: INFO :: root :: sync.py :: 1955 :: All configured sync intervals are negative, exiting oneshot mode...[0m
+[38;5;39m2026-11-11 16:24:30,066 :: INFO :: root :: sync.py :: 1955 :: All configured sync intervals are negative, exiting oneshot mode...[0m
