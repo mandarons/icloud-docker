@@ -1,0 +1,8 @@
+[38;5;39m2026-11-11 07:50:01,946 :: INFO :: root :: sync.py :: 1305 :: Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).[0m
+[38;5;39m2026-11-11 07:50:01,946 :: INFO :: root :: sync.py :: 1305 :: Listening on Telegram for 'auth' trigger or 6-digit code (timeout 5s).[0m
+[38;5;39m2026-11-11 07:50:01,946 :: INFO :: root :: sync.py :: 1346 :: Received 6-digit code via Telegram -- validating.[0m
+[38;5;39m2026-11-11 07:50:01,946 :: INFO :: root :: sync.py :: 1346 :: Received 6-digit code via Telegram -- validating.[0m
+[38;5;226m2026-11-11 07:50:01,946 :: WARNING :: root :: sync.py :: 1367 :: trust_session raised (non-fatal): trust glitch[0m
+[38;5;226m2026-11-11 07:50:01,946 :: WARNING :: root :: sync.py :: 1367 :: trust_session raised (non-fatal): trust glitch[0m
+[38;5;39m2026-11-11 07:50:01,947 :: INFO :: root :: sync.py :: 1373 :: Telegram-driven 2FA succeeded; resuming sync.[0m
+[38;5;39m2026-11-11 07:50:01,947 :: INFO :: root :: sync.py :: 1373 :: Telegram-driven 2FA succeeded; resuming sync.[0m

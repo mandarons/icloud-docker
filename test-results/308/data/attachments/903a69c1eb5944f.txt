@@ -1,0 +1,10 @@
+[38;5;196m2026-11-11 07:49:57,144 :: ERROR :: root :: sync.py :: 1205 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-11-11 07:49:57,144 :: ERROR :: root :: sync.py :: 1205 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-11-11 07:49:57,145 :: ERROR :: root :: sync.py :: 1218 :: This account signs in with a security key, so Apple will not send a 6-digit code. Complete the ceremony on the dashboard (/auth); the push request and the code listener are skipped.[0m
+[38;5;196m2026-11-11 07:49:57,145 :: ERROR :: root :: sync.py :: 1218 :: This account signs in with a security key, so Apple will not send a 6-digit code. Complete the ceremony on the dashboard (/auth); the push request and the code listener are skipped.[0m
+[38;5;39m2026-11-11 07:49:57,145 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-11 07:49:57,145 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-11 07:49:57,145 :: INFO :: root :: sync.py :: 1558 :: Retrying login at Wed Nov 11 07:59:57 2026 ...[0m
+[38;5;39m2026-11-11 07:49:57,145 :: INFO :: root :: sync.py :: 1558 :: Retrying login at Wed Nov 11 07:59:57 2026 ...[0m
+[38;5;226m2026-11-11 07:49:57,145 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-11-11 07:49:57,145 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
