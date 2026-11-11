@@ -15,6 +15,7 @@ from src import (
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
+    apply_default_request_timeout,
     config_parser,
     configure_icloudpy_logging,
     get_logger,
@@ -428,7 +429,7 @@ def get_api_instance(
     # Apple can report a photo library as still indexing for weeks while
     # listing it in full. Open it anyway: sync_photos downloads what it lists
     # and keeps it out of obsolete-file cleanup until the index finishes.
-    return (
+    api = (
         service_class(
             apple_id=username,
             password=password,
@@ -445,6 +446,13 @@ def get_api_instance(
             photos_require_finished_index=False,
         )
     )
+    # icloudpy's CloudKit listing calls pass no timeout and ``requests``
+    # has no default, so a dropped connection hangs the sync forever.
+    # Bound the shared session for enumeration and transfers. Sign-in has
+    # already happened inside the constructor, and the web UI's direct
+    # ICloudPyService calls never reach here, so auth stays unbounded.
+    apply_default_request_timeout(api.session)
+    return api
 
 
 class SyncState:

@@ -168,7 +168,7 @@ def _note_refresh_failure(record_name: str, reason: str) -> None:
         LOGGER.debug(f"Failed to refresh download URL for {record_name}: {reason}")
 
 
-def _refresh_photo_download_url(photo) -> bool:
+def _refresh_photo_download_url(photo, timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC) -> bool:
     """Re-fetch the photo's CloudKit records from iCloud for fresh download URLs.
 
     iCloud download URLs are signed CDN tokens that expire after ~30–40 minutes.
@@ -191,6 +191,9 @@ def _refresh_photo_download_url(photo) -> bool:
 
     Args:
         photo: PhotoAsset object from icloudpy
+        timeout: HTTP read timeout in seconds for the lookup POST. Without
+            one a stalled connection blocks the calling worker forever,
+            the same hang the download timeout fixed for transfers.
 
     Returns:
         True if every record that carries a rendition was refreshed, False
@@ -250,6 +253,7 @@ def _refresh_photo_download_url(photo) -> bool:
             url,
             data=json.dumps(query),
             headers={"Content-type": "text/plain"},
+            timeout=timeout,
         )
         response = request.json()
         records = response.get("records", [])
@@ -456,7 +460,7 @@ def download_photo_from_server(
                     # Re-fetch the master record from iCloud to obtain fresh download URLs.
                     # Simply clearing _versions is insufficient because icloudpy re-parses
                     # the same stale _master_record which still contains the expired URL.
-                    _refresh_photo_download_url(photo)
+                    _refresh_photo_download_url(photo, timeout=timeout)
                     continue
                 else:
                     LOGGER.error(

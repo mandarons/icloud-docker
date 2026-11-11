@@ -158,3 +158,78 @@ class TestUnreadableConfigDoesNotBreakImport(unittest.TestCase):
     def test_unparseable_config_does_not_raise(self, _mock_read_config):
         """A half-written file must not take the process down at import."""
         self.assertIsNotNone(get_logger())
+
+
+class _RecordingSession:
+    """Session double that records the kwargs ``send`` receives.
+
+    ``request`` forwards to ``send`` the way ``requests.Session`` does, so
+    the wrapper is exercised at the seam production traffic goes through.
+    """
+
+    def __init__(self):
+        """Start with no recorded calls."""
+        self.calls = []
+
+    def request(self, method, url, **kwargs):
+        """Forward like ``requests.Session.request`` does."""
+        return self.send(object(), **kwargs)
+
+    def send(self, request, **kwargs):
+        """Record the call and answer like a finished response."""
+        self.calls.append((request, kwargs))
+        return "response"
+
+
+class TestApplyDefaultRequestTimeout(unittest.TestCase):
+    """Tests for apply_default_request_timeout in src/__init__.py."""
+
+    def test_none_session_passes_through(self):
+        """No session (a client that failed to build) stays no session."""
+        self.assertIsNone(src.apply_default_request_timeout(None))
+
+    def test_missing_timeout_gets_the_default(self):
+        """A listing-style call with no timeout is bounded by the default."""
+        session = _RecordingSession()
+        self.assertIs(src.apply_default_request_timeout(session), session)
+        self.assertEqual(session.request("POST", "https://example.invalid/zones/list", data="{}"), "response")
+        self.assertEqual(session.calls[0][1]["timeout"], src.DEFAULT_REQUEST_TIMEOUT_SEC)
+
+    def test_explicit_timeout_is_preserved(self):
+        """A caller-supplied timeout (the download paths pass theirs) wins."""
+        session = _RecordingSession()
+        src.apply_default_request_timeout(session, timeout=7)
+        session.request("GET", "https://example.invalid", timeout=3)
+        self.assertEqual(session.calls[0][1]["timeout"], 3)
+
+    def test_none_timeout_is_filled_with_the_custom_timeout(self):
+        """timeout=None means unbounded to requests, so it is filled in too."""
+        session = _RecordingSession()
+        src.apply_default_request_timeout(session, timeout=7)
+        session.request("GET", "https://example.invalid", timeout=None)
+        self.assertEqual(session.calls[0][1]["timeout"], 7)
+
+    def test_wrapping_twice_keeps_the_first_wrapper(self):
+        """Re-wrapping (a second client built on one session) must not stack."""
+        session = _RecordingSession()
+        src.apply_default_request_timeout(session, timeout=7)
+        wrapped = session.send
+        src.apply_default_request_timeout(session, timeout=99)
+        self.assertIs(session.send, wrapped)
+        session.request("GET", "https://example.invalid")
+        self.assertEqual(session.calls[0][1]["timeout"], 7)
+
+    def test_real_requests_session_is_bounded(self):
+        """A real requests.Session is marked bounded at send, not request.
+
+        ``ICloudPySession.request`` derives its log logger from
+        ``inspect.stack()[2]``; leaving ``request`` alone keeps icloudpy's
+        log attribution on the calling service instead of moving it to
+        ``requests.sessions``.
+        """
+        import requests
+
+        session = requests.Session()
+        src.apply_default_request_timeout(session, timeout=5)
+        self.assertTrue(getattr(session, "_has_default_request_timeout", False))  # noqa: SLF001
+        self.assertFalse(getattr(session.request, "_has_default_request_timeout", False))  # noqa: SLF001
