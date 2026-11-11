@@ -33,7 +33,7 @@ Switching an existing container to session-only takes both halves: unset `ENV_IC
    - Creates `ICloudPyService` with username + password
    - For China region: uses different endpoints (`icloud.com.cn`)
    - Cookie directory defaults to `/config/session_data`
-   - The shared session is wrapped with `apply_default_request_timeout()` before the instance is returned: icloudpy's CloudKit listing calls pass no timeout and `requests` has no default, so without the bound a dropped connection would hang a sync pass forever on a socket read
+   - The shared session is wrapped with `apply_default_request_timeout()` just after the constructor returns: icloudpy's CloudKit listing calls pass no timeout and `requests` has no default, so without the bound a dropped connection would hang a sync pass forever on a socket read. This bounds enumeration and transfers, not sign-in — `ICloudPyService.__init__` has already authenticated by then, and the web UI builds `ICloudPyService` directly (`src/web.py`), bypassing `get_api_instance`
    - With `password=None`, creates `SessionOnlyICloudPyService` instead. Its `authenticate()` validates the saved session token and stops there: icloudpy's own fallback would attempt a full SRP sign-in, which cannot succeed without a password and would post a placeholder credential to Apple's sign-in endpoint on every retry. A missing session, a session Apple rejects (401/421/450) or a forced refresh raises `ICloudPyNoStoredPasswordAvailableException` instead, so it lands in the handler below. Any other API error propagates untouched — a 503 leaves the session perfectly good, and reporting an outage as an expired session would send the user off to re-authenticate for nothing
 
 3. **2FA check** (`api.requires_2sa`)

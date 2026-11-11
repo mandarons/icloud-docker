@@ -448,7 +448,9 @@ def get_api_instance(
     )
     # icloudpy's CloudKit listing calls pass no timeout and ``requests``
     # has no default, so a dropped connection hangs the sync forever.
-    # Bound the shared session before the client is used anywhere.
+    # Bound the shared session for enumeration and transfers. Sign-in has
+    # already happened inside the constructor, and the web UI's direct
+    # ICloudPyService calls never reach here, so auth stays unbounded.
     apply_default_request_timeout(api.session)
     return api
 

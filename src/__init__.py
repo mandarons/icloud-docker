@@ -176,10 +176,19 @@ def apply_default_request_timeout(session, timeout: int = DEFAULT_REQUEST_TIMEOU
     reconnect, a VPN flap) blocks the sync loop on a socket read that
     never returns and no log line ever explains. icloudpy shares one
     session across all of its services, so wrapping that session's
-    ``request`` -- the funnel every verb helper goes through -- bounds
-    the listing calls from here, without a library change. A timeout a
-    caller passes itself (the download paths pass theirs) always wins;
-    only a missing or ``None`` timeout is filled in.
+    ``send`` -- the funnel every request ends at -- bounds the listing
+    calls from here, without a library change. A timeout a caller passes
+    itself (the download paths pass theirs) always wins; only a missing
+    or ``None`` timeout is filled in.
+
+    Wrapping ``send`` rather than ``request`` is deliberate:
+    ``ICloudPySession.request`` attributes each request's log line to
+    ``inspect.stack()[2]``, and a wrapper around ``request`` becomes that
+    frame, moving the line to ``requests.sessions.http``. Bounding ``send``
+    leaves ``session.request`` untouched, so icloudpy keeps logging under
+    the calling service's logger. ``Session.request`` always forwards to
+    ``self.send`` with the caller's timeout (``None`` when unset), so the
+    same fill-in applies.
 
     Args:
         session: The ``requests`` session to bound, or ``None``.
@@ -192,17 +201,17 @@ def apply_default_request_timeout(session, timeout: int = DEFAULT_REQUEST_TIMEOU
     """
     if session is None:
         return None
-    original_request = session.request
-    if getattr(original_request, "_has_default_request_timeout", False):
+    if getattr(session, "_has_default_request_timeout", False):
         return session
+    original_send = session.send
 
-    def request_with_default_timeout(*args, **kwargs):
+    def send_with_default_timeout(*args, **kwargs):
         if kwargs.get("timeout") is None:
             kwargs["timeout"] = timeout
-        return original_request(*args, **kwargs)
+        return original_send(*args, **kwargs)
 
-    request_with_default_timeout._has_default_request_timeout = True  # noqa: SLF001
-    session.request = request_with_default_timeout
+    session.send = send_with_default_timeout
+    session._has_default_request_timeout = True  # noqa: SLF001
     return session
 
 
