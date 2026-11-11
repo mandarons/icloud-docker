@@ -17,11 +17,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   mismatch is discarded and recorded once per asset with its id, reason and
   declared/received sizes, and the run ends with one summary line instead of
   retrying silently forever
-  ([#583](https://github.com/mandarons/icloud-docker/issues/583))
+  ([#583](https://github.com/mandarons/icloud-docker/issues/583),
+  [#596](https://github.com/mandarons/icloud-docker/pull/596))
 - A photo path is recorded as owned by the run only after its transfer (or
   hardlink) succeeds. A failed download no longer leaves a never-written path
   in the tracked set, where obsolete-file cleanup would have preserved it
-  ([#583](https://github.com/mandarons/icloud-docker/issues/583))
+  ([#583](https://github.com/mandarons/icloud-docker/issues/583),
+  [#596](https://github.com/mandarons/icloud-docker/pull/596))
 
 ## [2.3.0] 2026-10-26
 
