@@ -132,7 +132,13 @@ class RecycleBin:
                 LOGGER.info(
                     f"Recycle bin: deleting {day}, older than {self.retention_days} days ...",
                 )
-                shutil.rmtree(day)
+                try:
+                    shutil.rmtree(day)
+                except OSError as e:
+                    # Like a stuck file in the cleanup that follows: leave it,
+                    # say so, and try again next sync rather than end the pass.
+                    LOGGER.warning(f"Recycle bin: could not delete {day}: {e!s}. Trying again next sync.")
+                    continue
                 purged += 1
         return purged
 
