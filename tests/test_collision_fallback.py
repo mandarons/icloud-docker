@@ -178,9 +178,10 @@ class TestCollisionFallback(unittest.TestCase):
             photo_b,
             "original",
             self.tmp,
-            in_flight,
+            set(),
             folder_format=None,
             hardlink_registry=None,
+            claimed_paths=in_flight,
         )
         assert task is not None
         assert task.photo_path != plain_path  # NOT overwriting the first

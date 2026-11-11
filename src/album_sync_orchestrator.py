@@ -120,6 +120,7 @@ def _collect_photo_download_tasks(
     files: set[str] | None,
     folder_format: str | None,
     hardlink_registry: HardlinkRegistry | None,
+    claimed_paths: set[str] | None = None,
 ) -> list[DownloadTaskInfo]:
     """Collect download tasks for a single photo, handling errors gracefully.
 
@@ -132,9 +133,10 @@ def _collect_photo_download_tasks(
         destination_path: Path where photos should be saved
         file_sizes: List of file size variants to download
         extensions: List of allowed file extensions
-        files: Set to track downloaded files
+        files: Set of paths the run owns (granted after a verified write)
         folder_format: strftime format string for folder organization
         hardlink_registry: Registry for tracking downloaded files
+        claimed_paths: Paths already queued earlier in this album pass
 
     Returns:
         List of download tasks for this photo (empty on error or if unwanted)
@@ -165,6 +167,7 @@ def _collect_photo_download_tasks(
                 files,
                 folder_format,
                 hardlink_registry,
+                claimed_paths,
             )
             if download_info:
                 tasks.append(download_info)
@@ -243,6 +246,11 @@ def _collect_and_execute_album_in_chunks(
     # A paged album can yield the same asset again after a chunk has drained.
     # The master id alone is not enough: separate edits may share a master.
     claimed_assets: set[tuple[str, str]] = set()
+    # Paths queued by this album pass, used to route in-flight filename
+    # collisions to the suffix name. Ownership (``files``) is granted only
+    # once a transfer verifies, so a failed download cannot shelter a
+    # never-written path from obsolete cleanup.
+    claimed_paths: set[str] = set()
     # When the buffer must drain regardless of size; None while it is empty.
     drain_by: float | None = None
     total_successful = 0
@@ -283,6 +291,7 @@ def _collect_and_execute_album_in_chunks(
             files,
             folder_format,
             hardlink_registry,
+            claimed_paths,
         )
         if tasks and asset_key is not None:
             claimed_assets.add(asset_key)
