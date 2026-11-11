@@ -6,6 +6,7 @@ and directories during iCloud Drive sync operations per SRP.
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import os
 from pathlib import Path
 from shutil import rmtree
 
@@ -40,8 +41,11 @@ def remove_obsolete(
     if recycle_bin:
         recycle_bin.purge()
 
+    stuck: list[str] = []
     for path in Path(destination_path).rglob("*"):
         local_file = str(path.absolute())
+        if any(local_file.startswith(folder + os.sep) for folder in stuck):
+            continue  # inside a folder that could not be removed: already reported
         if exclude_filenames and path.parent == Path(destination_path) and path.name in exclude_filenames:
             continue
         if recycle_bin and recycle_bin.contains(local_file):
@@ -49,14 +53,23 @@ def remove_obsolete(
         if local_file not in files:
             if not (path.is_file() or path.is_dir()):
                 continue  # already went with a folder removed above
-            if recycle_bin:
-                LOGGER.info(f"Moving {local_file} to the recycle bin ...")
-                recycle_bin.discard(local_file, destination_path)
-            else:
-                LOGGER.info(f"Removing {local_file} ...")
-                if path.is_file():
-                    path.unlink(missing_ok=True)
+            try:
+                if recycle_bin:
+                    LOGGER.info(f"Moving {local_file} to the recycle bin ...")
+                    recycle_bin.discard(local_file, destination_path)
                 else:
-                    rmtree(local_file)
+                    LOGGER.info(f"Removing {local_file} ...")
+                    if path.is_file():
+                        path.unlink(missing_ok=True)
+                    else:
+                        rmtree(local_file)
+            except OSError as e:
+                # Locked by another program, or not this container's to
+                # delete. One such item must not end the pass; it is tried
+                # again next sync.
+                LOGGER.warning(f"Could not remove {local_file}, leaving it: {e!s}")
+                if path.is_dir():
+                    stuck.append(local_file)
+                continue
             removed_paths.add(local_file)
     return removed_paths
