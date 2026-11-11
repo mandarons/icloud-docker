@@ -10,6 +10,7 @@ __author__ = "Mandar Patil (mandarons@pm.me)"
 import json
 import os
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -315,6 +316,58 @@ class TestPerLibrarySyncState(unittest.TestCase):
 
     def test_no_state_recorded_yet(self):
         self.assertEqual(self.ws.get_library_states(), {})
+
+    def test_a_service_pass_is_marked_running_then_cleared(self):
+        self.ws.record_sync_completion("drive", files_downloaded=3)
+        self.ws.record_service_running("drive", running=True)
+        self.assertIn("running_since", self.ws.get_sync_state("drive"))
+        self.ws.record_service_running("drive", running=False)
+        entry = self.ws.get_sync_state("drive")
+        self.assertNotIn("running_since", entry)
+        self.assertEqual(entry["files_downloaded"], 3)
+
+    def test_concurrent_writers_do_not_lose_updates(self):
+        """The sync loop and the web UI write from two threads."""
+        import threading
+
+        def mark(name):
+            for _ in range(25):
+                self.ws.record_library_started(name)
+
+        threads = [threading.Thread(target=mark, args=(f"lib{i}",)) for i in range(8)]
+        real_load = self.ws._load_state  # noqa: SLF001
+
+        def slow_load():
+            state = real_load()
+            time.sleep(0.001)  # widen the read-modify-write window
+            return state
+
+        with patch.object(self.ws, "_load_state", side_effect=slow_load):
+            for t in threads:
+                t.start()
+            for t in threads:
+                t.join()
+        self.assertEqual(set(self.ws.get_library_states()), {f"lib{i}" for i in range(8)})
+
+    def test_a_save_leaves_no_temp_file(self):
+        self.ws.record_service_running("drive", running=True)
+        self.assertEqual([n for n in os.listdir(self.tmp) if n.endswith(".tmp")], [])
+
+    def test_running_ignores_an_unknown_service(self):
+        self.ws.record_service_running("calendar", running=True)
+        self.assertEqual(self.ws.get_sync_state("calendar"), {})
+
+    def test_clearing_a_service_that_is_not_running_writes_nothing(self):
+        from unittest.mock import patch
+
+        with patch.object(self.ws, "_save_state") as saved:
+            self.ws.record_service_running("drive", running=False)
+        saved.assert_not_called()
+
+    def test_a_restart_does_not_leave_a_service_syncing_forever(self):
+        self.ws.record_service_running("photos", running=True)
+        self.ws.clear_stale_library_states()
+        self.assertNotIn("running_since", self.ws.get_sync_state("photos"))
 
 
 if __name__ == "__main__":

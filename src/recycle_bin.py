@@ -11,6 +11,7 @@ removes: with ``remove_obsolete`` off, nothing is cleaned up and nothing
 reaches the bin.
 """
 
+import contextlib
 import copy
 import datetime
 import os
@@ -97,7 +98,19 @@ class RecycleBin:
         while os.path.lexists(candidate):
             candidate = f"{stem} ({n}){extension}"
             n += 1
-        shutil.move(path, candidate)
+        try:
+            shutil.move(path, candidate)
+        except OSError:
+            # Across devices a move is a copy, then a delete. When the delete
+            # fails (the original is locked, or not ours to delete), the copy
+            # would stay behind and the next sync would add another.
+            if os.path.lexists(path) and os.path.lexists(candidate):
+                if os.path.isdir(candidate) and not os.path.islink(candidate):
+                    shutil.rmtree(candidate, ignore_errors=True)
+                else:
+                    with contextlib.suppress(OSError):
+                        os.remove(candidate)
+            raise
         return candidate
 
     def purge(self) -> int:
@@ -119,7 +132,13 @@ class RecycleBin:
                 LOGGER.info(
                     f"Recycle bin: deleting {day}, older than {self.retention_days} days ...",
                 )
-                shutil.rmtree(day)
+                try:
+                    shutil.rmtree(day)
+                except OSError as e:
+                    # Like a stuck file in the cleanup that follows: leave it,
+                    # say so, and try again next sync rather than end the pass.
+                    LOGGER.warning(f"Recycle bin: could not delete {day}: {e!s}. Trying again next sync.")
+                    continue
                 purged += 1
         return purged
 
