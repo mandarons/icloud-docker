@@ -115,6 +115,27 @@ class TestRecycleBin(_BinTestCase):
         self.assertEqual(bin_.purge(), 1)
         self.assertEqual(sorted(os.listdir(base)), ["2026-09-04", "2026-09-05", "notes"])
 
+    def test_purge_carries_on_past_a_day_it_cannot_delete(self):
+        from unittest.mock import patch
+
+        bin_ = self._bin(retention_days=30)
+        base = os.path.join(self.root, "Recently Deleted", "photos")
+        for day in ("2026-08-01", "2026-09-01"):
+            _write(os.path.join(base, day, "f"))
+        stuck = os.path.join(base, "2026-08-01")
+        real = shutil.rmtree
+
+        def rmtree(path, *args, **kwargs):
+            if str(path) == stuck:
+                raise PermissionError(13, "Permission denied", stuck)
+            return real(path, *args, **kwargs)
+
+        with patch.object(shutil, "rmtree", rmtree), self.assertLogs(level="WARNING") as logs:
+            self.assertEqual(bin_.purge(), 1)
+        self.assertEqual(os.listdir(base), ["2026-08-01"])
+        self.assertIn("could not delete", "\n".join(logs.output))
+        self.assertIn("2026-08-01", "\n".join(logs.output))
+
     def test_purge_keeps_everything_without_retention(self):
         _write(os.path.join(self.root, "Recently Deleted", "photos", "2000-01-01", "f"))
         self.assertEqual(self._bin().purge(), 0)
