@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- `file_sizes: full` no longer re-downloads a fixed set of edited photos on
+  every sync. A transfer whose byte count differs from the size iCloud
+  declares is kept when the response is complete (success status, not
+  content-encoded, and its own `Content-Length` equals the bytes written),
+  because the declared size can be stale for an edited rendition. Any other
+  mismatch is discarded and recorded once per asset with its id, reason and
+  declared/received sizes, and the run ends with one summary line instead of
+  retrying silently forever
+  ([#583](https://github.com/mandarons/icloud-docker/issues/583))
+- A photo path is recorded as owned by the run only after its transfer (or
+  hardlink) succeeds. A failed download no longer leaves a never-written path
+  in the tracked set, where obsolete-file cleanup would have preserved it
+  ([#583](https://github.com/mandarons/icloud-docker/issues/583))
+
 ## [2.3.0] 2026-10-26
 
 ### Added
@@ -841,7 +859,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Initial release
 
-[Unreleased]: https://github.com/mandarons/icloud-docker/compare/v2.1.0...HEAD
+[Unreleased]: https://github.com/mandarons/icloud-docker/compare/v2.3.0...HEAD
 
 [2.1.0]: https://github.com/mandarons/icloud-docker/compare/v2.0.0...v2.1.0
 

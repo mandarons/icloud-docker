@@ -26,6 +26,7 @@ The photos sync system (`src/sync_photos.py` + 6 helper modules) handles downloa
 | `photo_filter_utils.py` | Photo filtering by extensions and album preferences |
 | `photo_path_utils.py` | Path normalization, folder format handling |
 | `photo_file_utils.py` | File operations, metadata, 410 Gone retry |
+| `download_report.py` | Per-run record of photo transfers that could not be verified |
 | `photo_cleanup_utils.py` | Obsolete file removal |
 | `hardlink_registry.py` | `HardlinkRegistry` class for deduplication |
 
@@ -41,6 +42,7 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 | `sync_album_photos(...)` | Sync a single album's photos |
 | `create_hardlink_registry(...)` | Create registry for cross-album dedup |
 | `remove_obsolete_files(destination, tracked, ...)` | Delete local files absent from the run's tracked set; refuses above `obsolete_delete_limit_percent` |
+| `log_download_summary()` | Log the run's count of transfers that could not be verified |
 
 ## File Size Variants
 
@@ -64,9 +66,19 @@ Photos sync is purely a download system. It writes to the local filesystem at th
 - `enumeration_chunk_size` bounds peak download-task memory (default 1000 photos/chunk); an album-pass set of `(master, asset)` IDs prevents a duplicate paged entry from queuing the same asset again, including after a chunk drains. Distinct edits that share a master remain separate. The ID set grows with queued assets, not with downloaded task objects. The download buffer also drains once its oldest task is `BUFFERED_DOWNLOAD_MAX_AGE_SEC` old (10 minutes, checked between photos, so best effort; the URL refresh covers what still expires), because download URLs expire ~30-40 minutes after the listing that returned them and, on a mostly backed-up library, pending downloads trickle in across the whole walk
 - HTTP 410 Gone triggers download URL refresh via `_refresh_photo_download_url()`, which looks the records up (with the download's request timeout on the lookup POST) in their own `zoneID` (from the master record), falling back to the service's zone. It looks up **both** the `CPLMaster` record and — when the asset record carries a rendition — the `CPLAsset` record: the edit's URL (`resJPEGFull*`) lives on the asset record, whose `recordName` differs from the master's. Refreshing only the master leaves an edited photo looping on 410. icloudpy gives every asset the photos service, whose zone is the primary library, so a Shared Library asset looked up there is never found
 - `photos.filters.fallback_to_original` substitutes `original` when an asset has no copy of a requested size; `live_video_*` requests never fall back, because the still image's bytes under a `.mov` name are not a video
-- Downloads stream to a `.part` file and are size-verified against the CloudKit
-  version size before being moved into place — a partial or wrong-body transfer
-  never occupies the photo's path and never destroys the previous good copy
+- Downloads stream to a `.part` file and are verified before being moved into
+  place — a partial or wrong-body transfer never occupies the photo's path and
+  never destroys the previous good copy. A mismatch against the CloudKit-declared
+  version size is kept only when the response is a success, is not
+  content-encoded, and its own `Content-Length` equals the bytes written: iCloud's
+  declared size can be stale for an edited `full` rendition, and a complete served
+  body is what the URL actually offers. Every other failure — a short or
+  Content-Length-mismatched body, an error status, or an encoded body — discards
+  the partial and is recorded once per asset with its id, reason, and
+  declared/received byte counts. One run summary reports how many photos could
+  not be verified. A path enters the tracked-file set only after its write (or
+  hardlink) succeeds, so obsolete cleanup cannot preserve a file that was never
+  written
 - Photo renames (Live Photo self-heal, legacy migration) log what moved; a
   rename that replaces an existing file logs a warning, and no rename may
   start from the path the still legitimately occupies

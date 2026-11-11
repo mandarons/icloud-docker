@@ -11,6 +11,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
 from src import DEFAULT_REQUEST_TIMEOUT_SEC, config_parser, get_logger
+from src.download_report import get_download_report
 from src.hardlink_registry import HardlinkRegistry
 from src.photo_file_utils import create_hardlink, download_photo_from_server
 from src.photo_path_utils import (
@@ -97,6 +98,11 @@ class DownloadTaskInfo:
         self.hardlink_source = hardlink_source
         self.hardlink_registry = hardlink_registry
         self.timeout = timeout
+        # Filled by download_photo_from_server when the transfer is unusable,
+        # and reported once the task finishes.
+        self.failure: dict = {}
+        # Paths the run owns, granted only after a verified write (or hardlink).
+        self.files: set[str] | None = None
 
 
 def get_max_threads_for_download(config) -> int:
@@ -245,6 +251,7 @@ def collect_download_task(
     files: set[str] | None,
     folder_format: str | None,
     hardlink_registry: HardlinkRegistry | None,
+    claimed_paths: set[str] | None = None,
 ) -> DownloadTaskInfo | None:
     """Collect photo info for parallel download without immediately downloading.
 
@@ -252,9 +259,13 @@ def collect_download_task(
         photo: Photo object from iCloudPy
         file_size: File size variant (original, medium, thumb, etc.)
         destination_path: Base destination path
-        files: Set to track downloaded files (thread-safe updates)
+        files: Set of paths the run owns; a task's path is added there only
+            after its write succeeds (or when an existing file is verified)
         folder_format: strftime format string for folder creation
         hardlink_registry: Registry for tracking downloaded files
+        claimed_paths: Set of paths already queued earlier in this album pass.
+            Used only to route an in-flight collision to the suffix name; the
+            path is not treated as owned until the transfer verifies.
 
     Returns:
         DownloadTaskInfo if photo needs to be processed, None if skipped
@@ -310,13 +321,13 @@ def collect_download_task(
     #
     #   1. On-disk collision: ``check_photo_exists`` returned False but the
     #      path is occupied -- size mismatch with a photo from a prior sync.
-    #   2. In-flight collision: an earlier call in this same
-    #      ``_collect_album_download_tasks`` pass already claimed this plain
-    #      path. Without this check the later parallel download silently
-    #      overwrites the earlier one and we lose data. ``collect_download_task``
-    #      runs sequentially during collection so a plain ``in files`` membership
-    #      test under ``files_lock`` is sufficient; we hold the lock only long
-    #      enough to read.
+    #   2. In-flight collision: an earlier call in this same album pass
+    #      already queued this plain path. Without this check the later
+    #      parallel download silently overwrites the earlier one and we lose
+    #      data. ``claimed_paths`` is separate from ``files``: a queued path is
+    #      not owned until its transfer verifies, so a failed download cannot
+    #      shelter a file that was never written from obsolete cleanup.
+    #      Collection runs sequentially, so a plain membership test is enough.
     #
     # In either case we route this photo to the metadata-suffix filename so
     # both files coexist and both round-trip stably on future syncs. We use
@@ -327,9 +338,8 @@ def collect_download_task(
     # omit a unique component) can collide; the metadata format cannot.
     is_non_unique = get_default_filename_format() == "simple" or get_file_format() is not None
     in_flight_collision = False
-    if is_non_unique and files is not None:
-        with files_lock:
-            in_flight_collision = photo_path in files
+    if is_non_unique and claimed_paths is not None:
+        in_flight_collision = photo_path in claimed_paths
     if is_non_unique and (os.path.isfile(photo_path) or in_flight_collision):
         # Protect the file we are stepping around. This branch exists to
         # "preserve both photos", but obsolete-file cleanup deletes anything
@@ -360,22 +370,31 @@ def collect_download_task(
                     files.add(photo_path)
             return None
 
-    if files is not None:
-        with files_lock:
-            files.add(photo_path)
+    if claimed_paths is not None:
+        claimed_paths.add(photo_path)
 
     # Check for existing hardlink source
     hardlink_source = None
     if hardlink_registry is not None:
         hardlink_source = hardlink_registry.get_existing_path(version_record_id(photo, file_size), file_size)
 
-    return DownloadTaskInfo(
+    task = DownloadTaskInfo(
         photo=photo,
         file_size=file_size,
         photo_path=photo_path,
         hardlink_source=hardlink_source,
         hardlink_registry=hardlink_registry,
     )
+    # Bound here, granted only when execute_download_task's write verifies.
+    task.files = files
+    return task
+
+
+def _claim_owned(task_info: DownloadTaskInfo) -> None:
+    """Record the task's path as owned once its write (or hardlink) succeeded."""
+    if task_info.files is not None:
+        with files_lock:
+            task_info.files.add(task_info.photo_path)
 
 
 def execute_download_task(task_info: DownloadTaskInfo) -> bool:
@@ -393,6 +412,7 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
         # Try hardlink first if source exists
         if task_info.hardlink_source:
             if create_hardlink(task_info.hardlink_source, task_info.photo_path):
+                _claim_owned(task_info)
                 LOGGER.debug(f"[Thread] Created hardlink for {task_info.photo_path}")
                 return True
             else:
@@ -407,7 +427,13 @@ def execute_download_task(task_info: DownloadTaskInfo) -> bool:
             task_info.file_size,
             task_info.photo_path,
             timeout=task_info.timeout,
+            failure=task_info.failure,
         )
+        if result:
+            _claim_owned(task_info)
+        elif task_info.failure:
+            get_download_report().record(task_info.failure)
+
         if result and task_info.hardlink_registry is not None:
             # Register for future hard links if enabled
             task_info.hardlink_registry.register_photo_path(
