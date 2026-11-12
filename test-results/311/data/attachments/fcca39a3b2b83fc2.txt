@@ -1,3 +1,0 @@
-[38;5;226m2026-11-12 02:29:35,633 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > albums not found. Downloading all albums ...[0m
-[38;5;226m2026-11-12 02:29:35,633 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > extensions not found. Downloading all extensions ...[0m
-[38;5;226m2026-11-12 02:29:35,636 :: WARNING :: root :: sync_photos.py :: 666 :: Apple is still indexing PrimarySync (<MagicMock name='mock.indexing_state' id='137856865768448'>). Downloading what it lists; obsolete-file cleanup waits until the index finishes.[0m

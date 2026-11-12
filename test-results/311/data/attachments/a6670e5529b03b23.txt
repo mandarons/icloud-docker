@@ -1,8 +1,0 @@
-[38;5;196m2026-11-12 02:29:43,851 :: ERROR :: root :: sync.py :: 1524 :: no saved session[0m
-[38;5;196m2026-11-12 02:29:43,851 :: ERROR :: root :: sync.py :: 1524 :: no saved session[0m
-[38;5;226m2026-11-12 02:29:43,852 :: WARNING :: root :: config_logging.py :: 26 :: app > credentials > retry_login_interval not found. Using default 600 seconds ...[0m
-[38;5;226m2026-11-12 02:29:43,852 :: WARNING :: root :: config_logging.py :: 26 :: app > credentials > retry_login_interval not found. Using default 600 seconds ...[0m
-[38;5;39m2026-11-12 02:29:43,852 :: INFO :: root :: sync.py :: 1566 :: Retrying login at Thu Nov 12 02:39:43 2026 ...[0m
-[38;5;39m2026-11-12 02:29:43,852 :: INFO :: root :: sync.py :: 1566 :: Retrying login at Thu Nov 12 02:39:43 2026 ...[0m
-[38;5;226m2026-11-12 02:29:43,852 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
-[38;5;226m2026-11-12 02:29:43,852 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
