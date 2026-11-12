@@ -13,6 +13,7 @@ from icloudpy import exceptions
 
 from src import config_parser, configure_icloudpy_logging, get_logger, recycle_bin
 from src.album_sync_orchestrator import sync_album_photos
+from src.download_report import log_download_summary, reset_download_report
 from src.hardlink_registry import create_hardlink_registry
 from src.photo_cleanup_utils import remove_obsolete_files
 from src.photo_path_utils import version_record_id
@@ -387,6 +388,8 @@ def sync_photos(config, photos):
     Returns:
         Tuple of (total_successful, total_failed) download counts
     """
+    # A new report per run: failures are reported once per asset per pass.
+    reset_download_report()
     # Parse configuration using centralized config parser
     destination_path = config_parser.prepare_photos_destination(config=config)
     library_destinations = config_parser.get_photos_library_destinations(config=config)
@@ -554,6 +557,7 @@ def sync_photos(config, photos):
                 recycle_bin=bin_,
             )
 
+    log_download_summary()
     return total_successful, total_failed
 
 

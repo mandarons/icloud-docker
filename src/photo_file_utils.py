@@ -12,6 +12,7 @@ import os
 import shutil
 import threading
 from datetime import UTC
+from typing import Any
 from urllib.parse import urlencode
 
 from src import DEFAULT_REQUEST_TIMEOUT_SEC, get_logger
@@ -368,12 +369,96 @@ def create_hardlink(source_path: str, destination_path: str) -> bool:
         return False
 
 
+def _asset_record_id(photo: Any) -> str | None:
+    """The asset record's id when icloudpy carries one, else the master id."""
+    record = getattr(photo, "_asset_record", None)
+    if isinstance(record, dict) and record.get("recordName"):
+        return record["recordName"]
+    try:
+        return photo.id
+    except (AttributeError, KeyError):
+        return None
+
+
+def _note_failure(
+    failure: dict | None,
+    photo: Any,
+    file_size: str,
+    path: str,
+    reason: str,
+    declared: int | None,
+    received: int | None,
+) -> None:
+    """Fill the caller's failure record, if it asked for one."""
+    if failure is None:
+        return
+    failure.update(
+        path=path,
+        file_size=file_size,
+        asset_id=_asset_record_id(photo),
+        reason=reason,
+        declared_bytes=declared,
+        received_bytes=received,
+    )
+
+
+def _header_value(response: Any, name: str) -> str | None:
+    """Return a response header as text, or None when absent/unreadable."""
+    try:
+        value = response.headers.get(name)
+    except AttributeError:  # pragma: no cover - a response without headers
+        return None
+    return value if isinstance(value, str) else None
+
+
+def _content_length(response: Any) -> int | None:
+    """Return the response's own Content-Length, or None when it does not say."""
+    value = _header_value(response, "Content-Length")
+    try:
+        return int(value) if value is not None else None
+    except ValueError:
+        return None
+
+
+def _transfer_is_complete(response: Any, written: int) -> bool:
+    """Whether a size-mismatching body is nonetheless a complete transfer.
+
+    iCloud's declared size can be stale for a ``full`` rendition whose signed
+    URL serves a different encoding. Accept that body only when the response
+    is a success, is not content-encoded (so the bytes on disk are the bytes
+    Content-Length describes), and its own Content-Length equals what was
+    written. Anything else stays a failure rather than risking a partial file
+    or an error page being recorded as the photo.
+    """
+    status = getattr(response, "status_code", None)
+    if isinstance(status, int) and status >= 400:
+        return False
+    encoding = (_header_value(response, "Content-Encoding") or "").lower()
+    if encoding not in ("", "identity"):
+        return False
+    served = _content_length(response)
+    return served is not None and served == written
+
+
+def _finalize_download(photo: Any, partial: str, destination_path: str) -> None:
+    """Move a verified transfer into place and stamp the photo's added date."""
+    os.replace(partial, destination_path)
+
+    # Set file modification time to photo's added date.
+    # iCloudPy returns added_date as an aware UTC datetime; replace() is a
+    # safe no-op here because tzinfo is already UTC. If it ever returns a
+    # naive datetime, replace(tzinfo=utc) correctly treats it as UTC.
+    local_modified_time = photo.added_date.replace(tzinfo=UTC).timestamp()
+    os.utime(destination_path, (local_modified_time, local_modified_time))
+
+
 def download_photo_from_server(
     photo,
     file_size: str,
     destination_path: str,
     max_retries: int = 1,
     timeout: int = DEFAULT_REQUEST_TIMEOUT_SEC,
+    failure: dict | None = None,
 ) -> bool:
     """Download photo from iCloud server to local path.
 
@@ -389,6 +474,8 @@ def download_photo_from_server(
         max_retries: Maximum number of retries on 410 errors (default: 1)
         timeout: HTTP read timeout in seconds. Without one a stalled CDN
             connection blocks the worker thread forever.
+        failure: Optional dict filled with the failure's asset id, reason and
+            declared/received byte counts when the transfer cannot be used.
 
     Returns:
         True if download was successful, False otherwise
@@ -424,20 +511,29 @@ def download_photo_from_server(
             expected = _declared_size(photo, file_size)
             written = os.path.getsize(partial)
             if expected is not None and written != expected:
+                # The declared size can be stale for a ``full`` rendition
+                # whose signed URL serves a different encoding. A success
+                # response that carried exactly its own Content-Length is a
+                # complete transfer, so keep it rather than downloading it
+                # again on every sync; anything less complete stays a failure.
+                if _transfer_is_complete(download, written):
+                    _finalize_download(photo, partial, destination_path)
+                    LOGGER.warning(
+                        f"Accepted {destination_path}: iCloud declares {expected} bytes, "
+                        f"but the served response is a complete {written}-byte transfer.",
+                    )
+                    return True
                 _discard(partial)
-                LOGGER.error(
-                    f"Incomplete download of {destination_path}: got {written} of {expected} bytes. "
-                    "Will retry on the next sync.",
+                _note_failure(
+                    failure, photo, file_size, destination_path, "size_mismatch", expected, written,
                 )
+                if failure is None:
+                    LOGGER.error(
+                        f"Incomplete download of {destination_path}: got {written} of {expected} bytes. "
+                        "Will retry on the next sync.",
+                    )
                 return False
-            os.replace(partial, destination_path)
-
-            # Set file modification time to photo's added date.
-            # iCloudPy returns added_date as an aware UTC datetime; replace() is a
-            # safe no-op here because tzinfo is already UTC. If it ever returns a
-            # naive datetime, replace(tzinfo=utc) correctly treats it as UTC.
-            local_modified_time = photo.added_date.replace(tzinfo=UTC).timestamp()
-            os.utime(destination_path, (local_modified_time, local_modified_time))
+            _finalize_download(photo, partial, destination_path)
 
             return True
 
@@ -463,13 +559,32 @@ def download_photo_from_server(
                     _refresh_photo_download_url(photo, timeout=timeout)
                     continue
                 else:
+                    _note_failure(
+                        failure,
+                        photo,
+                        file_size,
+                        destination_path,
+                        "gone_410",
+                        _declared_size(photo, file_size),
+                        None,
+                    )
                     LOGGER.error(
                         f"Failed to download {destination_path} after {max_retries} retries: {error_msg}",
                     )
                     return False
 
             # Handle other errors
-            if "ObjectNotFoundException" in error_msg or "NOT_FOUND" in error_msg:
+            reason = "not_found" if "ObjectNotFoundException" in error_msg or "NOT_FOUND" in error_msg else "download_error"
+            _note_failure(
+                failure,
+                photo,
+                file_size,
+                destination_path,
+                reason,
+                _declared_size(photo, file_size),
+                None,
+            )
+            if reason == "not_found":
                 LOGGER.error(f"Photo not found in iCloud Photos - {destination_path}: {error_msg}")
             else:
                 LOGGER.error(f"Failed to download {destination_path}: {error_msg}")

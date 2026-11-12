@@ -707,7 +707,10 @@ class TestSyncPhotos(unittest.TestCase):
         self.assertEqual(download_info["photo"], photo)
         self.assertEqual(download_info["file_size"], "original")
         self.assertTrue(download_info["photo_path"].endswith(".jpg"))
-        self.assertGreater(len(files), 0)
+        # Collection no longer claims ownership: the path is added to ``files``
+        # only after the write verifies, so cleanup cannot protect a file that
+        # was never written.
+        self.assertEqual(len(files), 0)
 
     def test_collect_photo_for_download_missing_version(self):
         """Test collecting photo for download - missing file size version."""
@@ -3114,6 +3117,7 @@ class TestCollisionDoesNotOrphanTheFileItPreserves(unittest.TestCase):
         with tempfile.TemporaryDirectory() as base:
             plain = os.path.join(base, "IMG_0001.HEIC")
             Path(plain).write_text("someone else's photo")
+            suffix = os.path.join(base, "IMG_0001__original__X.HEIC")
             files = set()
             with (
                 patch.object(m, "generate_photo_path", return_value=plain),
@@ -3123,22 +3127,34 @@ class TestCollisionDoesNotOrphanTheFileItPreserves(unittest.TestCase):
                 patch.object(m, "generate_photo_filename_with_metadata", return_value="IMG_0001__original__X.HEIC"),
                 patch("src.photo_file_utils.check_photo_exists", return_value=False),
             ):
-                m.collect_download_task(
+                task = m.collect_download_task(
                     self._photo(), "original", base, files, None, None,
                 )
+            # The on-disk file is verified to exist, so it is owned immediately.
             self.assertIn(plain, files, "the preserved file must not be left untracked")
-            self.assertIn(os.path.join(base, "IMG_0001__original__X.HEIC"), files)
+            # The suffix path is not owned until its own transfer verifies.
+            self.assertNotIn(suffix, files)
+
+            # A verified write grants ownership, so cleanup keeps it.
+            self.assertIsNotNone(task)
+            task.files = files
+            with patch.object(m, "download_photo_from_server", return_value=True):
+                self.assertTrue(m.execute_download_task(task))
+            self.assertIn(suffix, files)
 
     def test_an_in_flight_collision_does_not_re_add_the_path(self):
-        """This run already claimed the plain path, so it is already tracked;
-        nothing on disk is being stepped around."""
+        """A queued path is a claim, not ownership: nothing is on disk and no
+        write has verified, so ``files`` stays empty and cleanup can still
+        remove a file that never materialised."""
         from unittest.mock import patch
 
         from src import photo_download_manager as m
 
         with tempfile.TemporaryDirectory() as base:
             plain = os.path.join(base, "IMG_0001.HEIC")  # deliberately absent
-            files = {plain}
+            suffix = os.path.join(base, "IMG_0001__original__X.HEIC")
+            files: set[str] = set()
+            claims = {plain}
             with (
                 patch.object(m, "generate_photo_path", return_value=plain),
                 patch.object(m, "get_default_filename_format", return_value="simple"),
@@ -3147,10 +3163,12 @@ class TestCollisionDoesNotOrphanTheFileItPreserves(unittest.TestCase):
                 patch.object(m, "generate_photo_filename_with_metadata", return_value="IMG_0001__original__X.HEIC"),
                 patch("src.photo_file_utils.check_photo_exists", return_value=False),
             ):
-                m.collect_download_task(
-                    self._photo(), "original", base, files, None, None,
+                task = m.collect_download_task(
+                    self._photo(), "original", base, files, None, None, claims,
                 )
-            self.assertEqual(len(files), 2)
+            self.assertIsNotNone(task)
+            self.assertEqual(len(files), 0)
+            self.assertIn(suffix, claims)
 
 
 class TestWrongContentAtThePlainPathDoesNotChurn(unittest.TestCase):
@@ -3191,10 +3209,14 @@ class TestWrongContentAtThePlainPathDoesNotChurn(unittest.TestCase):
                     ),
                     patch("src.photo_file_utils.check_photo_exists", return_value=False),
                 ):
-                    m.collect_download_task(
+                    task = m.collect_download_task(
                         photo, "live_video_original", base, files, None, None,
                     )
                 Path(suffix).write_text("the real video")
+                self.assertIsNotNone(task)
+                task.files = files
+                with patch.object(m, "download_photo_from_server", return_value=True):
+                    m.execute_download_task(task)
                 removed = remove_obsolete_files(base, files)
                 self.assertEqual(
                     removed, set(), f"pass {_pass}: cleanup deleted a preserved file",
