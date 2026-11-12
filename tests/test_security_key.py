@@ -722,6 +722,61 @@ class TestCeremonyCookieIsolation(unittest.TestCase):
         self.assertNotEqual(used, web.DEFAULT_COOKIE_DIRECTORY)
         self.assertEqual(os.listdir(used), [])
 
+    def _saved_session(self, directory, name="aicloudcom"):
+        import http.cookiejar
+
+        with open(os.path.join(directory, f"{name}.session"), "w") as fh:
+            json.dump({"trust_token": "TT", "client_id": "auth-1", "session_token": "dead", "scnt": "x"}, fh)
+        jar = http.cookiejar.LWPCookieJar(os.path.join(directory, name))
+        for cookie_name in ("X-APPLE-WEBAUTH-HSA-TRUST", "DES123", "X-APPLE-WEBAUTH-TOKEN", "X-APPLE-WEBAUTH-USER"):
+            jar.set_cookie(
+                http.cookiejar.Cookie(
+                    0, cookie_name, "v", None, False, ".apple.com", True, True, "/", True, True,
+                    2000000000, False, None, None, {},
+                ),
+            )
+        jar.save(ignore_discard=True, ignore_expires=True)
+
+    def test_ceremony_carries_only_the_device_trust(self):
+        """The trust token lets Apple skip the key; the dead session's
+        cookies would earn a 409, so they stay behind."""
+        import http.cookiejar
+
+        saved, ceremony = tempfile.mkdtemp(), tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, saved, True)
+        self.addCleanup(shutil.rmtree, ceremony, True)
+        self._saved_session(saved)
+        with patch.object(web, "DEFAULT_COOKIE_DIRECTORY", saved):
+            web._seed_device_trust(ceremony, "a@icloud.com")  # noqa: SLF001
+        with open(os.path.join(ceremony, "aicloudcom.session")) as fh:
+            self.assertEqual(json.load(fh), {"trust_token": "TT", "client_id": "auth-1"})
+        jar = http.cookiejar.LWPCookieJar(os.path.join(ceremony, "aicloudcom"))
+        jar.load(ignore_discard=True, ignore_expires=True)
+        self.assertEqual(sorted(c.name for c in jar), ["DES123", "X-APPLE-WEBAUTH-HSA-TRUST"])
+
+    def test_no_saved_session_seeds_nothing(self):
+        saved, ceremony = tempfile.mkdtemp(), tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, saved, True)
+        self.addCleanup(shutil.rmtree, ceremony, True)
+        with patch.object(web, "DEFAULT_COOKIE_DIRECTORY", saved):
+            web._seed_device_trust(ceremony, "a@icloud.com")  # noqa: SLF001
+        self.assertEqual(os.listdir(ceremony), [])
+
+    def test_still_trusted_signs_in_without_the_key(self):
+        saved = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, saved, True)
+        with (
+            patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),
+            patch("icloudpy.ICloudPyService", return_value=_api(requires_2fa=False)),
+            patch.object(web, "_publish_ceremony_session") as publish,
+            patch.object(web, "_wake_sync_loop"),
+            patch.object(web, "DEFAULT_COOKIE_DIRECTORY", saved),
+        ):
+            response = _csrf_post(self._client(), "/auth/security-key/start")
+        self.assertEqual(response.status_code, 302)
+        publish.assert_called_once()
+        self.assertFalse(os.path.exists(publish.call_args.args[0]))
+
     def test_failed_signin_leaves_no_directory_behind(self):
         with (
             patch("icloudpy.utils.get_password_from_keyring", return_value="pw"),

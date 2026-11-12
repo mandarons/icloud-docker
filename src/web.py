@@ -978,6 +978,7 @@ def create_app(testing: bool = False) -> Flask:
             import icloudpy
 
             ceremony_dir = _ceremony_cookie_dir()
+            _seed_device_trust(ceremony_dir, username)
             api = icloudpy.ICloudPyService(
                 apple_id=username,
                 password=password,
@@ -1009,6 +1010,12 @@ def create_app(testing: bool = False) -> Flask:
 
         stale_stored = _stale_stored_fingerprint(username, typed)
         if not api.requires_2fa:
+            # Apple still trusted this device, so the password alone was
+            # enough: no key needed. The new session lives in the ceremony
+            # jar, so it has to be published like a finished ceremony.
+            _publish_ceremony_session(ceremony_dir)
+            _discard_ceremony_dir(ceremony_dir)
+            LOGGER.info("Web UI security-key: Apple still trusts this device; signed in without the key.")
             _note_sign_in(username, stale_stored=stale_stored)
             _wake_sync_loop()
             return redirect(url_for("dashboard"))
@@ -1700,6 +1707,45 @@ def _ceremony_cookie_dir() -> str:
     result only once Apple has accepted it.
     """
     return tempfile.mkdtemp(prefix="icloud-securitykey-")
+
+
+# Cookies that say "this browser is trusted", which a browser keeps across
+# sign-ins. Everything else in the old jar belongs to the dead session.
+_TRUST_COOKIE_PREFIXES = ("X-APPLE-WEBAUTH-HSA-TRUST", "DES")
+
+
+def _seed_device_trust(cookie_dir: str, username: str) -> None:
+    """Carry the device's trust from the saved session into a ceremony jar.
+
+    A sign-in that presents Apple's trust token (good for about two months
+    after the last key or code) is not asked for a second factor, the way
+    a browser that ticked "trust this browser" is not. The ceremony jar
+    starts empty so the dead session's cookies can't cause a 409, which
+    also threw the trust away and made every re-auth need the key. Only the
+    trust token, the client id it was issued to, and the trust cookies are
+    copied. Best-effort: without them the ceremony runs as before.
+    """
+    import http.cookiejar
+    import re
+
+    name = "".join(c for c in username if re.match(r"\w", c))
+    try:
+        with open(os.path.join(DEFAULT_COOKIE_DIRECTORY, f"{name}.session"), encoding="utf-8") as f:
+            saved = json.load(f)
+        trust = {k: saved[k] for k in ("trust_token", "client_id") if saved.get(k)}
+        if not trust.get("trust_token"):
+            return
+        with open(os.path.join(cookie_dir, f"{name}.session"), "w", encoding="utf-8") as f:
+            json.dump(trust, f)
+        old = http.cookiejar.LWPCookieJar(os.path.join(DEFAULT_COOKIE_DIRECTORY, name))
+        old.load(ignore_discard=True, ignore_expires=True)
+        new = http.cookiejar.LWPCookieJar(os.path.join(cookie_dir, name))
+        for cookie in old:
+            if cookie.name.startswith(_TRUST_COOKIE_PREFIXES):
+                new.set_cookie(cookie)
+        new.save(ignore_discard=True, ignore_expires=True)
+    except (OSError, ValueError, http.cookiejar.LoadError) as e:
+        LOGGER.info(f"Web UI security-key: no device trust to carry over ({type(e).__name__}).")
 
 
 def _publish_ceremony_session(cookie_dir: str) -> None:
