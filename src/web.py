@@ -41,6 +41,7 @@ from src import (
     config_parser,
     get_logger,
     read_config,
+    settings_view,
     web_signals,
 )
 from src.config_utils import get_config_value_or_none
@@ -1450,7 +1451,62 @@ def create_app(testing: bool = False) -> Flask:
             return jsonify({"queued": queued})
         return redirect(url_for("dashboard"))
 
+    @app.route("/settings", methods=["GET"])
+    def settings_page():
+        """What this container is configured to do, and where each value
+        came from. Read-only except for the few keys ``settings_view``
+        marks editable."""
+        return _render_settings()
+
+    @app.route("/settings", methods=["POST"])
+    def settings_update():
+        """Change one editable key in config.yaml."""
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+        key = (request.form.get("key") or "").strip()
+        setting = settings_view.SETTINGS_BY_KEY.get(key)
+        submitted = request.form.get("value", "")
+        if setting is not None and setting.kind == "bool" and "value" not in request.form:
+            # An unchecked checkbox submits nothing.
+            submitted = "off"
+        try:
+            value = settings_view.write_setting(_current_config_path(), key, submitted)
+        except settings_view.SettingError as e:
+            return _render_settings(error=str(e)), 400
+        except Exception as e:  # noqa: BLE001 - report, keep the page up
+            LOGGER.warning(f"Web UI: could not save {key}: {e!s}")
+            return _render_settings(error=f"Could not save {key}: {e!s}"), 500
+        LOGGER.info(f"Web UI: set {key} to {value}")
+        return redirect(url_for("settings_page", saved=key))
+
     return app
+
+
+def _render_settings(error: str | None = None):
+    """Render the Settings page from a fresh read of config.yaml."""
+    config = _load_current_config()
+    # Photos first: it's what most people come here to change.
+    groups: dict[str, list[dict[str, Any]]] = {name: [] for name in ("Photos", "iCloud Drive", "Notifications")}
+    for row in settings_view.build_rows(config):
+        groups.setdefault(row["group"], []).append(row)
+    saved = request.args.get("saved")
+    saved_setting = settings_view.SETTINGS_BY_KEY.get(saved or "")
+    # A change made under Advanced lands back there, open.
+    advanced_open = bool(error) or bool(saved_setting and saved_setting.key not in settings_view.COMMON)
+    return render_template(
+        "settings.html",
+        config_path=_current_config_path(),
+        config_loaded=config is not None,
+        groups=groups,
+        environment=settings_view.build_environment(),
+        error=error,
+        saved_label=f"{saved_setting.group} · {saved_setting.label}" if saved_setting else None,
+        advanced_open=advanced_open,
+        active_nav="settings",
+        version=os.environ.get("APP_VERSION", ""),
+        csrf_token=_get_csrf_token(),
+    )
 
 
 _SIGNER_PATH = os.path.join(os.path.dirname(__file__), "icloud_sign.py")

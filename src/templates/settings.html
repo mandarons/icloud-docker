@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}iCloud Docker · Settings{% endblock %}
+{% block extra_style %}
+<style>
+  .settings-group { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 2px 20px; margin-bottom: 20px; }
+  .group-title { font-size: 13px; font-weight: 500; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.04em; margin: 0 0 6px 20px; }
+  .setting { border-top: 1px solid var(--divider); }
+  .setting:first-child { border-top: 0; }
+  .setting > summary, .setting-line { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; min-height: 48px; list-style: none; font-size: 15px; }
+  .setting > summary { cursor: pointer; }
+  .setting > summary::-webkit-details-marker { display: none; }
+  .setting-label { min-width: 0; }
+  .setting-value { color: var(--text-secondary); text-align: right; min-width: 0; overflow-wrap: anywhere; }
+  .setting-value.unset { color: var(--text-tertiary); }
+  .setting-more { padding: 0 0 14px; font-size: 13px; color: var(--text-tertiary); }
+  .setting-more .mono { overflow-wrap: anywhere; }
+  .setting-more p { margin: 0 0 8px; }
+  .inline-form { display: flex; gap: 8px; align-items: center; margin: 0; }
+  .inline-form input[type=number] {
+    width: 120px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--divider);
+    font: inherit; font-size: 14px; background: var(--field); color: var(--text);
+  }
+  .switch { position: relative; display: inline-block; width: 42px; height: 26px; flex-shrink: 0; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch span { position: absolute; inset: 0; background: #d1d1d6; border-radius: 999px; transition: background 0.15s; cursor: pointer; }
+  .switch span::before { content: ""; position: absolute; width: 22px; height: 22px; left: 2px; top: 2px; background: #fff; border-radius: 50%; box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform 0.15s; }
+  .switch input:checked + span { background: var(--ok); }
+  .switch input:checked + span::before { transform: translateX(16px); }
+  .switch input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .advanced > summary { cursor: pointer; color: var(--text-secondary); font-size: 15px; margin: 8px 0 16px; }
+  .banner { padding: 12px 16px; border-radius: 10px; margin-bottom: 16px; font-size: 14px; }
+  .banner.ok { background: var(--success-bg); color: var(--success-fg); }
+  .banner.err { background: var(--err-bg); color: var(--err-fg); }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 32px); box-shadow: var(--shadow); z-index: 20; margin: 0; }
+  @media (max-width: 560px) { .settings-group { padding: 2px 16px; } .group-title { margin-left: 16px; } }
+</style>
+{% endblock %}
+{% block content %}
+{#- One row: label left, value right. A tap opens the key, where the value
+    came from, and the edit box. Switches flip in place. -#}
+{% macro setting_row(row) %}
+  {%- if row.editable and row.kind == 'bool' %}
+  <div class="setting"><div class="setting-line" title="{{ row.key }}">
+    <span class="setting-label">{{ row.label }}</span>
+    <form class="inline-form" action="/settings" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="key" value="{{ row.key }}">
+      <label class="switch"><input type="checkbox" name="value" value="on" aria-label="{{ row.label }}" {% if row.value %}checked{% endif %} data-label="{{ row.group }} · {{ row.label }}"><span></span></label>
+      <noscript><button type="submit" class="btn btn-small">Save</button></noscript>
+    </form>
+  </div></div>
+  {%- else %}
+  <details class="setting"><summary>
+    <span class="setting-label">{{ row.label }}</span>
+    <span class="setting-value{% if row.display in ('not set', 'None set') %} unset{% endif %}">{{ row.display }}</span>
+  </summary>
+  <div class="setting-more">
+    {% if row.key %}<p><span class="mono">{{ row.key }}</span> · {{ 'set in config.yaml' if row.source == 'config.yaml' else ('from the environment' if row.source == 'env' else 'default') }}</p>{% endif %}
+    {% if row.note %}<p>{{ row.note }}</p>{% endif %}
+    {% if row.editable and row.kind == 'int' %}
+    <form class="inline-form" action="/settings" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <input type="hidden" name="key" value="{{ row.key }}">
+      <input type="number" name="value" value="{{ row.value if row.value is not none else '' }}" aria-label="{{ row.label }}" required>
+      <button type="submit" class="btn btn-small">Save</button>
+    </form>
+    {% elif row.key %}<p>Change it in config.yaml.</p>{% endif %}
+  </div></details>
+  {%- endif %}
+{% endmacro %}
+<h1 class="page-title" style="margin-bottom: 20px;">Settings</h1>
+
+{% if error %}<div class="banner err">{{ error }}</div>{% endif %}
+{% if saved_label %}<div class="banner ok">Saved {{ saved_label }}. Applies from the next backup.</div>{% endif %}
+{% if not config_loaded %}<div class="banner err">config.yaml could not be read, so these are defaults.</div>{% endif %}
+
+{% for group, rows in groups.items() %}{% set common = rows | selectattr('common') | list %}{% if common %}
+<div class="group-title">{{ group }}</div>
+<section class="settings-group">{% for row in common %}{{ setting_row(row) }}{% endfor %}</section>
+{% endif %}{% endfor %}
+
+<details class="advanced"{% if advanced_open %} open{% endif %}>
+  <summary>Advanced</summary>
+  {% for group, rows in groups.items() %}{% set rest = rows | rejectattr('common') | list %}{% if rest %}
+  <div class="group-title">{{ group }}</div>
+  <section class="settings-group">{% for row in rest %}{{ setting_row(row) }}{% endfor %}</section>
+  {% endif %}{% endfor %}
+  <div class="group-title">Environment</div>
+  <section class="settings-group">
+    {% for row in environment %}
+    <details class="setting"><summary>
+      <span class="setting-label">{{ row.label }}</span>
+      <span class="setting-value{% if row.display == 'not set' %} unset{% endif %}">{{ row.display }}</span>
+    </summary><div class="setting-more"><p><span class="mono">{{ row.name }}</span> · {{ 'from the environment' if row.source == 'env' else 'default' }}</p></div></details>
+    {% endfor %}
+  </section>
+  <p class="page-sub mono" style="font-size: 12px;">{{ config_path }}</p>
+</details>
+<div class="banner toast" role="status" hidden></div>
+<script>
+  // A switch saves in place: no reload, and it flips back if the save fails.
+  document.querySelectorAll('.switch input').forEach(function (box) {
+    box.addEventListener('change', function () {
+      var form = box.form, toast = document.querySelector('.toast');
+      box.disabled = true;
+      fetch(form.action, { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
+        .then(function (r) {
+          if (!r.ok) throw new Error();
+          toast.className = 'banner ok toast';
+          toast.textContent = 'Saved ' + box.dataset.label + '. Applies from the next backup.';
+        })
+        .catch(function () {
+          box.checked = !box.checked;
+          toast.className = 'banner err toast';
+          toast.textContent = "Couldn't save " + box.dataset.label + '.';
+        })
+        .finally(function () {
+          box.disabled = false;
+          toast.hidden = false;
+          clearTimeout(toast.timer);
+          toast.timer = setTimeout(function () { toast.hidden = true; }, 4000);
+        });
+    });
+  });
+</script>
+{% endblock %}
