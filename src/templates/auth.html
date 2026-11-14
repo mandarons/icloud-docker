@@ -11,7 +11,7 @@
       <input type="text" name="username" value="{{ status.username }}" autocomplete="username"
         readonly tabindex="-1" aria-label="Apple ID" class="mono"
         style="width: 100%; padding: 10px 14px; margin-bottom: 12px; border: 1px solid var(--divider); border-radius: 8px;
-               font-size: 14px; background: #fafafa; color: var(--text-secondary);">
+               font-size: 14px; background: var(--field); color: var(--text-secondary);">
       {%- endif %}
 {% endmacro %}
 <h1 class="page-title">Authenticate</h1>
@@ -45,7 +45,7 @@
     <p style="margin: 0 0 6px; font-size: 13px; color: var(--text-secondary); font-weight: 500;">1 — copy, then paste into a terminal on that machine</p>
     <textarea id="signer-cmd" readonly style="position: absolute; left: -9999px; top: -9999px;">{{ signer_command_short or signer_command }}</textarea>
     {% if signer_command_short %}
-    <code class="mono" style="display: block; font-size: 12px; padding: 8px 10px; margin-bottom: 6px; background: #fafafa; border: 1px solid var(--divider); border-radius: 6px; overflow-wrap: anywhere;">uv run …/icloud-docker/{{ signer_source_ref }}/src/icloud_sign.py &lt;challenge&gt;</code>
+    <code class="mono" style="display: block; font-size: 12px; padding: 8px 10px; margin-bottom: 6px; background: var(--field); border: 1px solid var(--divider); border-radius: 6px; overflow-wrap: anywhere;">uv run …/icloud-docker/{{ signer_source_ref }}/src/icloud_sign.py &lt;challenge&gt;</code>
     <p style="margin: 0 0 8px; font-size: 12px; color: var(--text-tertiary);">
       Runs the signer from this release on GitHub —
       <a href="https://github.com/mandarons/icloud-docker/blob/{{ signer_source_ref }}/src/icloud_sign.py" target="_blank" rel="noopener">read it first</a>.
@@ -78,7 +78,7 @@
         autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false"
         placeholder="…or paste the signature here (⌘V), it submits by itself"
         style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
-               font-size: 15px; letter-spacing: 0.12em; background: #fafafa;">
+               font-size: 15px; letter-spacing: 0.12em; background: var(--field);">
       <button type="submit" class="status-cta secondary" style="display: block; width: 100%; margin-top: 12px; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
         Complete sign-in
       </button>
@@ -99,7 +99,7 @@
       <input type="password" name="password" autocomplete="current-password"{% if not status.password_stored %} required{% endif %}
         placeholder="{% if status.password_stored %}Apple ID password (blank: use the stored one){% else %}Apple ID password{% endif %}"
         style="width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--divider); border-radius: 8px;
-               font-size: 15px; background: #fafafa;">
+               font-size: 15px; background: var(--field);">
       <button type="submit" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
         Sign in with your security key
       </button>
@@ -120,7 +120,7 @@
         autocomplete="current-password"
         required
         style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
-               font-size: 15px; background: #fafafa;">
+               font-size: 15px; background: var(--field);">
       <button type="submit" class="status-cta" style="display: block; width: 100%; margin-top: 14px; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
         Re-authenticate
       </button>
@@ -142,7 +142,7 @@
           required
           style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
                  font-size: 22px; letter-spacing: 0.15em; font-family: 'SF Mono', ui-monospace, Menlo, monospace;
-                 text-align: center; background: #fafafa;">
+                 text-align: center; background: var(--field);">
       </div>
       <button type="submit" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
         Verify code
@@ -174,7 +174,7 @@
           required
           style="width: 100%; padding: 12px 14px; border: 1px solid var(--divider); border-radius: 8px;
                  font-size: 15px; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-                 background: #fafafa;">
+                 background: var(--field);">
       </div>
       <button type="submit" class="status-cta" style="display: block; width: 100%; padding: 11px 14px; font-size: 14px; border: none; cursor: pointer; margin-left: 0;">
         Continue
