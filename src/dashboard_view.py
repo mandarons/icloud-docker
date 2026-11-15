@@ -174,6 +174,58 @@ def _primary(status: dict) -> dict[str, Any]:
     }
 
 
+def _member(member: dict) -> dict[str, Any]:
+    name = member.get("name") or member["id"].capitalize()
+    backup = member.get("backup") or {}
+    status = backup.get("status") or "waiting"
+    report = backup.get("report") or {}
+    page = f"/household/{member['id']}"
+    action = None
+    detail = None
+    if not member.get("session_saved"):
+        tone, sentence = "idle", "Waiting for sign-in"
+        action = {"label": "Send link", "href": page}
+    elif status == "review":
+        tone, sentence = "warn", "Ready for review"
+        detail = f"{_count(report.get('download', 0))} to download"
+        if report.get("deletes") and not report.get("over_limit") and report.get("unclaimed"):
+            detail += f" · {_count(report['unclaimed'])} to delete"
+        detail += ". Nothing changes until you tap Start backup."
+        action = {"label": "Review", "href": page}
+    elif status == "checking":
+        tone, sentence = "busy", "Checking what's already in the folder"
+    elif status == "syncing":
+        tone, sentence = "busy", "Backing up now"
+    elif status == "ok":
+        tone = "ok"
+        sentence = f"Backed up {backup['last_sync_relative']}" if backup.get("last_sync_relative") else "Backed up"
+        new = backup.get("files_downloaded")
+        detail = backup.get("detail") or (f"{_count(new)} new" if new else None)
+    elif status == "needs_sign_in":
+        tone, sentence = "err", "Sign-in has run out"
+        detail = backup.get("detail")
+        action = {"label": "Send link", "href": page}
+    elif status in ("blocked", "error"):
+        tone, sentence = "err", ("Not backing up" if status == "blocked" else "The last backup failed")
+        detail = backup.get("detail")
+        action = {"label": "Open", "href": page}
+    else:
+        tone, sentence = "idle", "First backup starts soon"
+    return {
+        "kind": "member",
+        "id": member["id"],
+        "name": name,
+        "initial": name[:1].upper(),
+        "hue": _hue(member["id"]),
+        "username": member.get("username"),
+        "tone": tone,
+        "sentence": sentence,
+        "detail": detail,
+        "action": action,
+        "page": page,
+    }
+
+
 def refreshing(status: dict, everyone: list[dict]) -> bool:
     """Whether the page should keep itself current: something is running."""
     return any(p["tone"] == "busy" for p in everyone) or any(
@@ -182,26 +234,33 @@ def refreshing(status: dict, everyone: list[dict]) -> bool:
 
 
 def people(status: dict) -> list[dict[str, Any]]:
-    """Everyone this container backs up: today, the one Apple ID."""
-    return [_primary(status)]
+    """The main account, then each household member."""
+    return [_primary(status)] + [_member(m) for m in status.get("household") or []]
 
 
 def _plainly(person: dict) -> str:
-    """One person's state as a sentence that stands alone at the top.
-
-    The card already says the state; the headline says what to do.
-    """
-    action = (person.get("action") or {}).get("label")
-    trust = person.get("trust_days_remaining")
-    if action == "Sign in again":
-        return "Sign in again to restart backups"
-    if action in ("Sign in", "Set up"):
-        return "Sign in to start backing up"
-    if action == "Refresh trust":
-        if trust is not None and trust > 0:
-            return f"Refresh trust: it runs out in {trust} day{'' if trust == 1 else 's'}"
-        return "Refresh trust to keep backups running"
-    return person["sentence"]
+    """One person's state as a sentence that stands alone at the top."""
+    name, sentence = person["name"], person["sentence"]
+    if person["kind"] == "primary":
+        # The card already says the state; the headline says what to do.
+        action = (person.get("action") or {}).get("label")
+        trust = person.get("trust_days_remaining")
+        if action == "Sign in again":
+            return "Sign in again to restart backups"
+        if action in ("Sign in", "Set up"):
+            return "Sign in to start backing up"
+        if action == "Refresh trust":
+            if trust is not None and trust > 0:
+                return f"Refresh trust: it runs out in {trust} day{'' if trust == 1 else 's'}"
+            return "Refresh trust to keep backups running"
+        return sentence
+    return {
+        "Ready for review": f"{name}'s backup is ready for review",
+        "Waiting for sign-in": f"Waiting for {name} to sign in",
+        "Sign-in has run out": f"{name} needs to sign in again",
+        "Not backing up": f"{name}'s backup is not running",
+        "The last backup failed": f"{name}'s last backup failed",
+    }.get(sentence, f"{name}: {sentence[0].lower()}{sentence[1:]}")
 
 
 def headline(everyone: list[dict]) -> dict[str, str]:

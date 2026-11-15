@@ -30,7 +30,7 @@ import threading
 import time
 from typing import Any
 
-from flask import Flask, jsonify, redirect, render_template, request, url_for
+from flask import Flask, g, has_request_context, jsonify, redirect, render_template, request, url_for
 from werkzeug.serving import make_server
 
 from src import (
@@ -40,6 +40,7 @@ from src import (
     DEFAULT_COOKIE_DIRECTORY,
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
+    accounts,
     config_parser,
     dashboard_view,
     get_logger,
@@ -254,7 +255,12 @@ def _load_current_config() -> dict | None:
     if not os.path.isfile(path):
         return None
     try:
-        return read_config(config_path=path)
+        config = read_config(config_path=path)
+        if has_request_context():
+            # The header's "Account"/"Accounts" label, counted from the read
+            # this request already makes rather than a second one.
+            g.apple_ids = 1 + len(accounts.get_accounts(config))
+        return config
     except Exception as e:
         # Broad on purpose: ``/api/health`` exists for external monitors
         # and must be robust against any config-loading failure (YAML
@@ -486,6 +492,63 @@ def _build_status(config: dict | None) -> dict[str, Any]:
         "force_sync_pending": web_signals.pending_force_syncs(),
         "trust_expires_at": trust_expires_at,
         "trust_days_remaining": trust_days_remaining,
+        # Other Apple IDs in the household, and whether each has signed in.
+        # A directory listing per account; no network.
+        "household": [
+            {
+                "id": a.id,
+                "name": a.label,
+                "username": a.username,
+                "session_saved": accounts.session_saved(a.id),
+                "backup": _member_backup(a.id, config),
+            }
+            for a in accounts.get_accounts(config)
+        ],
+    }
+
+
+_MEMBER_LABELS = {
+    "needs_sign_in": "needs sign-in",
+    "checking": "checking the folder",
+    "review": "report ready",
+    "syncing": "backing up now",
+    "ok": "backed up",
+    "blocked": "not syncing",
+    "error": "last pass failed",
+}
+
+
+def _member_backup(account_id: str, config: dict | None = None) -> dict[str, Any]:
+    """A member's backup, from their own state file. Small reads, no network."""
+    with web_signals.as_account(account_id):
+        member = web_signals.get_member()
+        photos = web_signals.get_sync_state("photos")
+        drive = web_signals.get_sync_state("drive")
+    status = member.get("status") or "waiting"
+    if photos.get("running_since") or drive.get("running_since"):
+        status = "syncing"
+    completed = photos.get("completed_at")
+    drive_done = drive.get("completed_at")
+    account = accounts.get_account(config, account_id) if config else None
+    return {
+        "status": status,
+        "label": _MEMBER_LABELS.get(status, "waiting for the first pass"),
+        "detail": member.get("detail"),
+        "report": member.get("report") if isinstance(member.get("report"), dict) else None,
+        "approved": bool(member.get("approved")),
+        "last_sync_relative": web_signals.format_relative_time(completed) if completed else None,
+        "files_downloaded": photos.get("files_downloaded"),
+        "adopted": member.get("adopted"),
+        "shared_library": member.get("shared_library"),
+        "drive": {
+            # None when the config wasn't read: the switch is then not shown.
+            "on": accounts.drive_enabled(config, account) if account else None,
+            "available": bool(config and isinstance(config.get("drive"), dict)),
+            "running": bool(drive.get("running_since")),
+            "last_sync_relative": web_signals.format_relative_time(drive_done) if drive_done else None,
+            "files_downloaded": drive.get("files_downloaded"),
+            "files_skipped": drive.get("files_skipped"),
+        },
     }
 
 
@@ -622,6 +685,17 @@ def create_app(testing: bool = False) -> Flask:
     # terminating proxy. One hop is correct here — Cloudflare → backend.
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+    # Household members sign in on pages served here, in a browser at the
+    # dashboard; the pages lead back to it.
+    from src import member_signin
+
+    config = _load_current_config()
+    public = (config_parser.get_web_ui_public_url(config=config) or "") if config else ""
+    member_signin.configure_session(app, secure_cookie=public.startswith("https://"))
+    app.register_blueprint(member_signin.blueprint)
+    app.jinja_env.globals["server_name"] = config_parser.get_web_ui_server_name(config or {})
+    app.jinja_env.globals["home_link"] = True
+
     @app.after_request
     def _no_cache(response):
         """Defense against intermediaries (browser back/forward cache,
@@ -675,14 +749,18 @@ def create_app(testing: bool = False) -> Flask:
     def health():
         """Tiny endpoint for external monitors.
 
-        - 200 ``{"state": "ok"}`` when the config file is readable.
-        - 503 ``{"state": "config_missing"}`` when it isn't.
-
-        ``2fa_required`` is *not* a 503 — Apple sessions expire all the time
-        and the dashboard must stay reachable so the user can re-auth.
+        - 200 ``{"state": "ok"}`` when the config file is readable and the
+          sync loop can sign in.
+        - 503 ``{"state": "config_missing"}`` when the config isn't readable.
+        - 503 ``{"state": "needs_sign_in"}`` when the sync loop has stopped
+          because Apple no longer accepts its sign-in. A monitor should page
+          on this: nothing syncs until someone signs in again. The dashboard
+          itself stays up; only this answer changes.
         """
         if not os.path.isfile(_current_config_path()):
             return jsonify({"state": "config_missing"}), 503
+        if web_signals.get_auth_blocked().get("blocked"):
+            return jsonify({"state": "needs_sign_in"}), 503
         return jsonify({"state": "ok"})
 
     @app.route("/api/status")
@@ -1460,6 +1538,133 @@ def create_app(testing: bool = False) -> Flask:
             return jsonify({"queued": queued})
         return redirect(url_for("dashboard"))
 
+    @app.route("/household/<account_id>", methods=["GET"])
+    def household_member(account_id):
+        """One household member: their backup and their sign-in."""
+        config = _load_current_config()
+        account = accounts.get_account(config, account_id)
+        if account is None:
+            return redirect(url_for("dashboard"))
+        return render_template(
+            "household.html",
+            account=account,
+            session_saved=accounts.session_saved(account.id),
+            apple_id_error=request.args.get("apple_id_error") == "1",
+            backup=_member_backup(account.id, config),
+            shared_folder=accounts.shared_library_folder(config),
+            active_nav="dashboard",
+            version=os.environ.get("APP_VERSION", ""),
+            csrf_token=_get_csrf_token(),
+        )
+
+    @app.route("/household/<account_id>/forget", methods=["POST"])
+    def household_forget(account_id):
+        """Drop a member's saved sign-in and pinned Apple ID; they sign in again."""
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+        if accounts.get_account(_load_current_config(), account_id) is None:
+            return redirect(url_for("dashboard"))
+        accounts.forget(account_id)
+        LOGGER.info(f"Web UI: forgot the sign-in for account {account_id}")
+        return redirect(url_for("household_member", account_id=account_id))
+
+    @app.route("/household/<account_id>/sign-in", methods=["POST"])
+    def household_sign_in(account_id):
+        """Sign a member in on this device: the admin's own second Apple ID,
+        or someone sitting at the admin's computer."""
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+        if accounts.get_account(_load_current_config(), account_id) is None:
+            return redirect(url_for("dashboard"))
+        from src import member_signin
+
+        member_signin.start_session(account_id, own_page=True, back_to=url_for("household_member", account_id=account_id))
+        LOGGER.info(f"Web UI: signing in account {account_id} on this device")
+        return redirect(url_for("signin.page"))
+
+    @app.route("/household/<account_id>/apple-id", methods=["POST"])
+    def household_apple_id(account_id):
+        """Enter a member's Apple ID ahead of time, so their sign-in page only asks for the password."""
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+        config = _load_current_config()
+        account = accounts.get_account(config, account_id)
+        if account is None:
+            return redirect(url_for("dashboard"))
+        from src import member_signin
+
+        apple_id = member_signin.clean_apple_id(request.form.get("apple_id") or "")
+        if account.username or apple_id is None or member_signin.apple_id_taken(apple_id, account.id, config):
+            return redirect(url_for("household_member", account_id=account_id, apple_id_error=1))
+        accounts.pin_username(account.id, apple_id)
+        LOGGER.info(f"Web UI: entered the Apple ID for account {account_id}")
+        return redirect(url_for("household_member", account_id=account_id))
+
+    def _member_action(account_id, **fields):
+        """Record a dashboard decision on a member's backup and run it now."""
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+        if accounts.get_account(_load_current_config(), account_id) is None:
+            return redirect(url_for("dashboard"))
+        from src import member_sync
+
+        if fields:
+            with web_signals.as_account(account_id):
+                web_signals.record_member(**fields)
+        member_sync.wake()
+        return redirect(url_for("household_member", account_id=account_id))
+
+    @app.route("/household/<account_id>/drive", methods=["POST"])
+    def household_drive(account_id):
+        """Turn a member's Drive backup on or off from their household page."""
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+        if accounts.get_account(_load_current_config(), account_id) is None:
+            return redirect(url_for("dashboard"))
+        try:
+            settings_view.set_member_drive(_current_config_path(), account_id, request.form.get("enabled") == "1")
+        except settings_view.SettingError as e:  # pragma: no cover - the entry was just found
+            LOGGER.warning(f"Web UI: could not switch Drive for {account_id}: {e!s}")
+        from src import member_sync
+
+        member_sync.wake()
+        return redirect(url_for("household_member", account_id=account_id))
+
+    @app.route("/household/<account_id>/start", methods=["POST"])
+    def household_start(account_id):
+        """The report looked right: start the member's real backup."""
+        LOGGER.info(f"Web UI: started the backup for account {account_id}")
+        return _member_action(account_id, approved=True, approved_at=time.time())
+
+    @app.route("/household/<account_id>/recheck", methods=["POST"])
+    def household_recheck(account_id):
+        """Build the member's report again on the next pass."""
+        return _member_action(account_id, report=None)
+
+    @app.route("/household/<account_id>/sync", methods=["POST"])
+    def household_sync(account_id):
+        """Run the member passes now instead of at the next interval."""
+        return _member_action(account_id)
+
+    @app.route("/household/add", methods=["POST"])
+    def household_add():
+        """Add a member by name; they enter their own Apple ID from the link."""
+        rejection = _require_csrf()
+        if rejection is not None:
+            return rejection
+        account_id = (request.form.get("id") or "").strip().lower()
+        try:
+            settings_view.add_account(_current_config_path(), account_id)
+        except settings_view.SettingError as e:
+            return redirect(url_for("auth_form", household_error=str(e)))
+        LOGGER.info(f"Web UI: added household account {account_id}")
+        return redirect(url_for("household_member", account_id=account_id))
+
     @app.route("/settings", methods=["GET"])
     def settings_page():
         """What this container is configured to do, and where each value
@@ -1790,6 +1995,7 @@ def _render_auth(
         version=os.environ.get("APP_VERSION", ""),
         csrf_token=_get_csrf_token(),
         security_key_blob=security_key_blob,
+        household_error=request.args.get("household_error"),
         signer_command=_build_signer_command(security_key_blob) if security_key_blob else None,
         signer_source_ref=_signer_source_ref(),
         signer_command_short=(
