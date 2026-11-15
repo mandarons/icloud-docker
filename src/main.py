@@ -47,6 +47,12 @@ def run(dry_run: bool = False, check_files: int | None = None) -> None:
             host=config_parser.get_web_ui_host(config=config),
             port=config_parser.get_web_ui_port(config=config),
         )
+    if not dry_run:
+        # Household members (``accounts:``) back up on their own thread, so
+        # neither side's sign-in trouble or long first pass holds up the other.
+        from src import member_sync
+
+        member_sync.start_in_thread()
     sync.sync(dry_run=dry_run, check_files=check_files)
 
 

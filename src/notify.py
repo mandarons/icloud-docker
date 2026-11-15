@@ -1278,3 +1278,24 @@ def send_cycle_event(config, boundary: str, message: str, data: dict | None = No
     """
     ping_webhook(config, boundary)
     post_event_to_webhook(config, _CYCLE_EVENTS[boundary], message, data)
+
+
+def send_household(config, message: str, subject: str = "iCloud backup: household") -> bool:
+    """Tell the operator something about a household member's backup.
+
+    Rare by construction (a report ready to review, a sign-in Apple
+    stopped accepting), so no throttle: every configured channel gets it
+    once. Returns True if any channel took it.
+    """
+    sent = False
+    for attempt in (
+        lambda: _send_telegram_no_throttle(config, message, dry_run=False),
+        lambda: _send_discord_no_throttle(config, message, dry_run=False),
+        lambda: _send_pushover_no_throttle(config, message, dry_run=False),
+        lambda: _send_email_no_throttle(config, message, subject, dry_run=False),
+    ):
+        try:
+            sent = attempt() or sent
+        except Exception as e:  # noqa: BLE001 - one channel must not stop the rest
+            LOGGER.warning(f"Household notification failed on one channel: {e!s}")
+    return sent

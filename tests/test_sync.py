@@ -1407,6 +1407,45 @@ class TestWebSignalsSyncIntegration(unittest.TestCase):
         self.assertIn("disk full", joined)
 
 
+    @patch("src.sync.read_config")
+    @patch("requests.post", side_effect=tests.mocked_usage_post)
+    def test_drive_completion_is_recorded_before_photos_runs(self, _mock_post, mock_read_config):
+        """The dashboard's Drive card updates when Drive finishes, not after
+        a long Photos pass."""
+        from src import web_signals
+
+        cfg = deepcopy(self.config)
+        cfg["drive"]["sync_interval"] = -1
+        cfg["photos"]["sync_interval"] = -1
+        mock_read_config.return_value = cfg
+        api = Mock(requires_2fa=False, requires_2sa=False)
+        order = []
+
+        def fake_photos(*_args, **_kwargs):
+            order.append("photos ran")
+            return PhotoStats(photos_downloaded=2, photos_skipped=3)
+
+        with (
+            patch("src.sync._authenticate_and_get_api", return_value=api),
+            patch("src.sync._perform_drive_sync", return_value=DriveStats(files_downloaded=1, files_skipped=4)),
+            patch("src.sync._perform_photos_sync", side_effect=fake_photos),
+            patch.object(
+                web_signals,
+                "record_sync_completion",
+                side_effect=lambda **kw: order.append(f"{kw['service']} recorded"),
+            ),
+        ):
+            sync.sync()
+
+        self.assertEqual(order, ["drive recorded", "photos ran", "photos recorded"])
+
+    def test_nothing_is_recorded_for_a_service_that_did_not_run(self):
+        from src import web_signals
+
+        with patch.object(web_signals, "record_sync_completion") as mock_record:
+            sync._record_completion("drive", None)  # noqa: SLF001
+        mock_record.assert_not_called()
+
 class TestInterruptibleSleep(unittest.TestCase):
     """``_interruptible_sleep`` chunks long sleeps and polls the
     web-signal sentinels so the "Sync now" button feels responsive
