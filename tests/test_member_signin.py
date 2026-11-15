@@ -73,6 +73,10 @@ class TestAccounts(_ConfigDir):
         self.assertEqual([a.id for a in found], ["member"])
         self.assertEqual(len(logs.output), 5)
 
+    def test_a_mangled_main_account_still_lists_the_members(self):
+        config = {"app": {"credentials": "not a mapping"}, "accounts": [{"id": "member", "username": MEMBER}]}
+        self.assertEqual(accounts.get_accounts(config), [accounts.Account("member", MEMBER)])
+
     def test_accounts_must_be_a_list(self):
         with self.assertLogs(accounts.LOGGER, level="WARNING"):
             self.assertEqual(accounts.get_accounts({"accounts": {"id": "x"}}), [])
