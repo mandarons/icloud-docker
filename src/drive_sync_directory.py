@@ -6,8 +6,10 @@ orchestrating folder processing, file collection, and parallel downloads per SRP
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import os
 import unicodedata
 from typing import Any
+from urllib.parse import unquote
 
 from src import config_parser, configure_icloudpy_logging, get_logger, recycle_bin, sync_drive
 from src.drive_cleanup import remove_obsolete
@@ -64,6 +66,9 @@ def sync_directory(
     for i in items:
         item = drive[i]
 
+        if _shared_with_me(item):
+            _keep_what_is_here(item, destination_path, files)
+            continue
         if item.type in ("folder", "app_library"):
             _process_folder_item(
                 item,
@@ -100,6 +105,28 @@ def sync_directory(
         )
 
     return files
+
+
+def _shared_with_me(item: Any) -> bool:
+    """Whether someone else owns this item and shared it with this account.
+
+    iCloud lists such a folder in the recipient's Drive (``share: TO_ME``,
+    with the owner named), but downloading it through the recipient fails
+    with NOT_FOUND, and its owner's own backup is where it belongs. So it is
+    skipped. What an earlier sync already copied is kept, not cleaned up.
+    """
+    data = getattr(item, "data", None)
+    return isinstance(data, dict) and data.get("share") == "TO_ME"
+
+
+def _keep_what_is_here(item: Any, destination_path: str, files: set[str]) -> None:
+    """Skip a shared-with-me item, keeping any local copy out of cleanup."""
+    local = os.path.join(destination_path, unquote(item.name))
+    LOGGER.info(f"Skipping {local}: shared with this account by its owner, whose backup has it")
+    files.add(unicodedata.normalize("NFC", local))
+    for folder, dirs, names in os.walk(local):
+        for name in dirs + names:
+            files.add(unicodedata.normalize("NFC", os.path.join(folder, name)))
 
 
 def _process_folder_item(
