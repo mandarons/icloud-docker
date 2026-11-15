@@ -6,6 +6,7 @@ and parallel execution during photo synchronization.
 
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
+import contextlib
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
@@ -244,6 +245,28 @@ def generate_photo_path(photo, file_size: str, destination_path: str, folder_for
     return normalized_path
 
 
+def _adopted(photo, file_size: str, destination_path: str, folder_format: str | None, files) -> bool:
+    """True when another tool's copy of this version was found and tracked."""
+    from src.photo_adopt import ADOPTER, expected_path
+    from src.photo_file_utils import check_photo_exists
+
+    adopter = ADOPTER.get()
+    if adopter is None:
+        return False
+    if check_photo_exists(photo, file_size, expected_path(photo, file_size, destination_path, folder_format)):
+        return False
+    lock = files_lock if files is not None else contextlib.nullcontext()
+    with lock:
+        found = adopter.find(photo, file_size, destination_path, folder_format, claimed=files)
+        if found is None:
+            return False
+        if files is not None:
+            files.add(found)
+    adopter.adopted += 1
+    LOGGER.debug(f"Already backed up by {adopter.source}: {found}")
+    return True
+
+
 def collect_download_task(
     photo,
     file_size: str,
@@ -302,6 +325,13 @@ def collect_download_task(
             else:
                 LOGGER.warning(msg)
             return None
+
+    # A tree adopted from another tool (``photos.adopt``): if the photo is
+    # missing where this app would put it but is there under the old tool's
+    # name, track that file and stop. Checked before ``generate_photo_path``,
+    # which creates the dated folder and would leave an empty one behind.
+    if _adopted(photo, file_size, destination_path, folder_format, files):
+        return None
 
     # Generate photo path
     photo_path = generate_photo_path(photo, file_size, destination_path, folder_format)
