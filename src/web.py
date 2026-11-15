@@ -39,6 +39,7 @@ from src import (
     ENV_CONFIG_FILE_PATH_KEY,
     ENV_ICLOUD_PASSWORD_KEY,
     config_parser,
+    dashboard_view,
     get_logger,
     read_config,
     settings_view,
@@ -333,6 +334,7 @@ def _build_service(config: dict, service: str, marker_filename: str) -> dict[str
     if state:
         completed_at = state.get("completed_at")
         stats = {
+            "completed_at": completed_at,
             "last_sync_relative": (web_signals.format_relative_time(completed_at) if completed_at else None),
             "files_downloaded": state.get("files_downloaded"),
             "files_skipped": state.get("files_skipped"),
@@ -652,9 +654,14 @@ def create_app(testing: bool = False) -> Flask:
         status_payload = _build_status(config=config)
         log_path = _logger_filename(config=config)
         log_lines = _tail_log_file(path=log_path, lines=200)
+        everyone = dashboard_view.people(status_payload)
         return render_template(
             "dashboard.html",
             status=status_payload,
+            people=everyone,
+            headline=dashboard_view.headline(everyone),
+            refreshing=dashboard_view.refreshing(status_payload, everyone),
+            log_summary=dashboard_view.log_summary(log_lines),
             log_lines=log_lines,
             log_path=log_path,
             active_nav="dashboard",
@@ -1756,7 +1763,22 @@ def _render_auth(
             else None
         ),
         auth_method=_lookup_auth_method(status_payload),
+        trust_until=_month_day(status_payload.get("trust_expires_at")),
     )
+
+
+def _month_day(iso: str | None) -> str | None:
+    """``2027-02-02T…`` -> ``Feb 2`` (with the year when it isn't this one)."""
+    import datetime
+
+    if not iso:
+        return None
+    try:
+        when = datetime.datetime.fromisoformat(iso)
+    except ValueError:
+        return None
+    text = f"{when:%b} {when.day}"
+    return text if when.year == datetime.date.today().year else f"{text}, {when.year}"
 
 
 def start_in_thread(
