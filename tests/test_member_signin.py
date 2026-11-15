@@ -394,6 +394,14 @@ class TestSignInPages(_ConfigDir):
         with self.client.session_transaction() as s:
             self.assertTrue(s["done"])
 
+    def test_a_code_for_a_check_that_already_finished_lands_on_done(self):
+        csrf = self._open()
+        self.client.post("/sign-in/password", data={"csrf_token": csrf, "password": "pw"})
+        member_signin._PENDING["member"]["finished"] = True  # noqa: SLF001
+        response = self.client.post("/sign-in/code", data={"csrf_token": csrf, "code": "123456"})
+        self.assertEqual(response.headers["Location"], "/sign-in")
+        self.assertFalse(hasattr(FakeService.instances[0], "code"))
+
     def test_apple_error_codes_for_the_log(self):
         error = MagicMock()
         error.response.json.return_value = {"serviceErrors": [{"code": "-20101"}, "odd"]}
