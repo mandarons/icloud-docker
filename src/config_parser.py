@@ -8,6 +8,7 @@ and filesystem operations in filesystem_utils.py per SRP.
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
 import multiprocessing
+import zoneinfo
 from typing import Any
 
 from icloudpy.services.photos import PhotoAsset
@@ -394,6 +395,20 @@ def get_web_ui_public_url(config: dict) -> str | None:
     if value is None:
         return None
     return str(value).rstrip("/")
+
+
+def get_web_ui_server_name(config: dict) -> str:
+    """What a household member sees this server called ("Family backup").
+
+    Their pages carry this name, not the product's, so nobody mistakes
+    them for Apple's.
+    """
+    value = get_config_value_or_default(
+        config=config,
+        config_path=["app", "web_ui", "server_name"],
+        default=None,
+    )
+    return str(value).strip() if value and str(value).strip() else "Family backup"
 
 
 def get_trust_expiry_warn_days(config: dict) -> int:
@@ -876,6 +891,68 @@ def get_photos_folder_format(config: dict) -> str | None:
         log_config_found_info(f"Using format {fmt}.")
 
     return fmt
+
+
+def get_photos_all_folder(config: dict) -> str:
+    """Folder that holds a library's whole photo tree, under its destination.
+
+    ``all`` by default (``<library>/all/<folder_format>/...``). An empty
+    string puts the dated folders straight under the library's
+    destination, which is how a tree adopted from another tool is laid
+    out (``photos.adopt``).
+    """
+    value = get_config_value_or_none(config=config, config_path=["photos", "all_folder"])
+    if value is None:
+        return "all"
+    value = str(value).strip().strip("/")
+    if value in (".", ".."):
+        log_config_error(["photos", "all_folder"], "must be a folder name or empty; using 'all'.")
+        return "all"
+    return value
+
+
+def get_photos_folder_timezone(config: dict) -> str | None:
+    """The time zone dated folders are named in, or None for UTC.
+
+    ``photos.folder_timezone``: ``local`` is the container's own zone
+    (``TZ``), which is what icloudpd names its day folders in; an IANA
+    name (``America/Los_Angeles``) pins one. Unset keeps the dates as
+    Apple sends them, in UTC, so an existing tree never moves.
+    """
+    config_path = ["photos", "folder_timezone"]
+    value = get_config_value_or_none(config=config, config_path=config_path)
+    if value is None or value is False or str(value).strip() == "":
+        return None
+    value = str(value).strip()
+    if value.lower() == "local":
+        return "local"
+    try:
+        zoneinfo.ZoneInfo(value)
+    except (zoneinfo.ZoneInfoNotFoundError, ValueError):
+        log_config_error(config_path, f"{value!r} is not a time zone; using UTC.")
+        return None
+    return value
+
+
+_ADOPT_SOURCES = ("icloudpd",)
+
+
+def get_photos_adopt(config: dict) -> str | None:
+    """Another tool whose file names to recognise in place, or None.
+
+    ``icloudpd``: a photo missing at its expected path is looked for under
+    the names icloudpd gives (``name-<bytes>.ext``, ``name_HEVC.MOV``, any
+    case) in the expected day folder and the day either side. A match of
+    the right size counts as already backed up. Nothing is renamed.
+    """
+    value = get_config_value_or_none(config=config, config_path=["photos", "adopt"])
+    if value is None or value is False:
+        return None
+    value = str(value).strip().lower()
+    if value not in _ADOPT_SOURCES:
+        log_config_error(["photos", "adopt"], f"{value!r} is not one of {', '.join(_ADOPT_SOURCES)}; ignoring it.")
+        return None
+    return value
 
 
 def get_photos_request_timeout(config: dict) -> int:
