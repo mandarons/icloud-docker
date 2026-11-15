@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Sign in to the family backup</title>
+  <style>
+    :root { --bg: #f5f5f7; --surface: #fff; --text: #1d1d1f; --muted: #6e6e73; --divider: #e8e8ed; --accent: #1d1d1f; --on-accent: #fff; --link: #0066cc;
+            --ok-bg: #e8f5e9; --ok-fg: #1d6f2b; --err-bg: #fdecec; --err-fg: #b3261e; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #000; --surface: #1c1c1e; --text: #f5f5f7; --muted: #98989d; --divider: #38383a; --accent: #f5f5f7; --on-accent: #000; --link: #4da3ff;
+              --ok-bg: #0f2e14; --ok-fg: #7ee08a; --err-bg: #3a1212; --err-fg: #ff8a80; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+           font: 16px/1.5 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif; -webkit-font-smoothing: antialiased; }
+    main { max-width: 440px; margin: 0 auto; padding: 48px 16px; }
+    .card { background: var(--surface); border-radius: 16px; padding: 28px 24px; box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.05); }
+    h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
+    p { margin: 0 0 16px; color: var(--muted); }
+    input[type=password], input[type=text], input[type=email] { width: 100%; padding: 13px 14px; font: inherit; color: var(--text); background: var(--surface);
+           border: 1px solid var(--divider); border-radius: 10px; margin-bottom: 12px; }
+    input.who { background: var(--bg); color: var(--muted); }
+    input:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+    input.code { font-size: 24px; letter-spacing: 0.3em; text-align: center; font-variant-numeric: tabular-nums; }
+    button, a.btn { display: block; width: 100%; padding: 13px; font: inherit; font-weight: 500; color: var(--on-accent); background: var(--accent);
+             border: 0; border-radius: 10px; cursor: pointer; text-align: center; text-decoration: none; }
+    button.quiet { background: none; color: var(--muted); font-size: 14px; font-weight: 400; margin-top: 6px; }
+    .msg { border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 14px; }
+    .msg.err { background: var(--err-bg); color: var(--err-fg); }
+    .msg a { color: inherit; text-decoration: underline; }
+    .msg.ok { background: var(--ok-bg); color: var(--ok-fg); }
+    .fine { font-size: 13px; color: var(--muted); margin: 14px 0 0; }
+    /* The same header row as the dashboard, without its links: this
+       listener serves nothing but the sign-in pages. */
+    header { border-bottom: 1px solid var(--divider); background: var(--surface); }
+    header div { max-width: 440px; margin: 0 auto; padding: 0 16px; height: 48px; display: flex; align-items: center; gap: 8px;
+                 font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+    header a.home { color: inherit; text-decoration: none; }
+    header span { margin-left: auto; font-size: 13px; font-weight: 400; color: var(--muted); }
+    main { padding-top: 28px; }
+    ol { margin: 4px 0 18px; padding: 0; list-style: none; counter-reset: step; }
+    ol li { counter-increment: step; display: flex; gap: 12px; font-size: 14px; color: var(--muted); padding: 6px 0; }
+    ol li::before { content: counter(step); flex: 0 0 22px; height: 22px; border-radius: 50%; background: var(--bg); color: var(--text);
+                    font-size: 12px; font-weight: 600; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+    ol li strong { color: var(--text); font-weight: 500; }
+    .trust { font-size: 13px; color: var(--muted); margin: 18px 4px 0; text-align: center; }
+  </style>
+</head>
+<body>
+<header><div>{% if home_link %}<a class="home" href="{{ back_to }}">🏠 {{ server_name or "Family backup" }}</a>{% else %}🏠 {{ server_name or "Family backup" }}{% endif %}<span>Not Apple</span></div></header>
+<main>
+  <div class="card">
+  {% if state == 'invalid' %}
+    {% block invalid %}<h1>This sign-in has expired</h1>
+    <p>Start again from the dashboard. A sign-in page stops working after 30 minutes.</p>{% endblock %}
+  {% elif state == 'done' %}
+    <h1>You're signed in</h1>
+    {% block done %}
+    <p>{% if review_first %}Your backup starts once it's been checked.{% else %}Your backup starts in a few minutes.{% endif %} Your password wasn't saved.</p>
+    <a class="btn" href="{{ back_to or '/' }}">See your backup</a>
+    {% endblock %}
+  {% else %}
+    <h1>Sign in to the family backup</h1>
+    {% if state == 'code' %}
+      <p>Apple sent a 6-digit code to your iPhone, iPad or Mac. Tap Allow there, then enter the code.</p>
+    {% else %}
+      <p>A home server keeps a copy of your iCloud {{ what or "photos" }}.</p>
+      <ol>
+        <li><span>Your password goes to Apple, and isn't saved here.</span></li>
+        <li><span>Tap Allow on your iPhone, then enter the code.</span></li>
+        <li><span>Nothing in your iCloud is changed or deleted.</span></li>
+      </ol>
+    {% endif %}
+    {% if message %}<div class="msg {{ kind or 'err' }}">{{ message }}{% if refused %} Check your details at <a href="https://www.icloud.com" target="_blank" rel="noopener">icloud.com</a> or <a href="https://iforgot.apple.com" target="_blank" rel="noopener">reset your password</a>, then try again here.{% endif %}</div>{% endif %}
+    {% if state == 'code' %}
+      <form method="post" action="{{ url_for('signin.submit_code') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <input type="text" name="code" class="code" inputmode="numeric" pattern="[0-9 ]*" autocomplete="one-time-code" maxlength="7" required autofocus aria-label="6-digit code">
+        <button type="submit" data-busy="Checking…">Continue</button>
+      </form>
+      <form method="post" action="{{ url_for('signin.resend') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <button type="submit" class="quiet" data-busy="Sending…">Send a new code</button>
+      </form>
+    {% elif state == 'password' %}
+      <form method="post" action="{{ url_for('signin.submit_password') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        {% if ask_username %}
+        <input type="email" name="username" value="{{ username }}" autocomplete="username" required autofocus aria-label="Apple ID" placeholder="Apple ID (email)" autocapitalize="off" spellcheck="false">
+        {% elif apple_id %}
+        <input type="text" name="username" value="{{ apple_id }}" autocomplete="username" readonly tabindex="-1" aria-label="Apple ID" class="who">
+        {% endif %}
+        <input type="password" name="password" autocomplete="current-password" required {% if not ask_username %}autofocus {% endif %}aria-label="Apple ID password" placeholder="Apple ID password">
+        <button type="submit" data-busy="Signing in…">Sign in</button>
+      </form>
+      <p class="fine">{% block key_note %}Use a security key? Ask whoever runs the server.{% endblock %}</p>
+    {% endif %}
+  {% endif %}
+  </div>
+  {% if state in ('password', 'code') %}<p class="trust">{% block trust %}Not Apple. Only sign in if you trust whoever runs it.{% endblock %}</p>{% endif %}
+</main>
+<script>
+  // One submit per form: a second tap while Apple is checking only confused things.
+  document.querySelectorAll('form').forEach(function (f) {
+    f.addEventListener('submit', function () {
+      var b = f.querySelector('button[type=submit]');
+      if (b) { b.disabled = true; if (b.dataset.busy) b.textContent = b.dataset.busy; }
+    });
+  });
+</script>
+</body>
+</html>
