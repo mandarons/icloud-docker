@@ -27,6 +27,7 @@ The photos sync system (`src/sync_photos.py` + 6 helper modules) handles downloa
 | `photo_path_utils.py` | Path normalization, folder format handling |
 | `photo_file_utils.py` | File operations, metadata, 410 Gone retry |
 | `download_report.py` | Per-run record of photo transfers that could not be verified |
+| `served_size_ledger.py` | Persistent accepted-size exceptions for edited renditions |
 | `photo_cleanup_utils.py` | Obsolete file removal |
 | `hardlink_registry.py` | `HardlinkRegistry` class for deduplication |
 
@@ -76,7 +77,11 @@ Photos sync is purely a download system. It writes to the local filesystem at th
   Content-Length-mismatched body, an error status, or an encoded body — discards
   the partial and is recorded once per asset with its id, reason, and
   declared/received byte counts. One run summary reports how many photos could
-  not be verified. A path enters the tracked-file set only after its write (or
+  not be verified. The accepted served size is persisted per rendition in
+  `.served-photo-sizes.json` under the config directory; `check_photo_exists`
+  consults it, so the next sync skips the file instead of downloading it again.
+  A changed declared size or a different local length invalidates the
+  exception. A path enters the tracked-file set only after its write (or
   hardlink) succeeds, so obsolete cleanup cannot preserve a file that was never
   written
 - Photo renames (Live Photo self-heal, legacy migration) log what moved; a
