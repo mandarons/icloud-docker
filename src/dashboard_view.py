@@ -224,6 +224,9 @@ def headline(everyone: list[dict]) -> dict[str, str]:
     return {"tone": waiting["tone"], "title": _plainly(waiting)}
 
 
+_DEFAULT_NOTICE = " :: config_logging.py :: "
+
+
 def _problem(line: str) -> str | None:
     """What an app log line is about, without the file, id or numbers.
 
@@ -236,6 +239,7 @@ def _problem(line: str) -> str | None:
         return None
     message = re.sub(r"^\[[^\]]*\]\s*", "", parts[5].strip())
     message = re.split(r" - |: | /|\(", message, maxsplit=1)[0]
+    message = re.sub(r"SharedSync-[0-9A-Fa-f-]+", "the Shared Library", message)
     message = re.sub(r"\d[\d,.]*", "N", message).strip(" .")
     return message[:70] or None
 
@@ -249,6 +253,10 @@ def log_summary(lines: list[str]) -> dict[str, Any]:
     for line in lines or []:
         match = _LEVEL.search(line)
         if not match:
+            continue
+        if match.group(1) == "WARNING" and _DEFAULT_NOTICE in line:
+            # "x not found. Using default ...": every pass says it, and it
+            # is the config working as designed, not a problem.
             continue
         if match.group(1) == "WARNING":
             warnings += 1

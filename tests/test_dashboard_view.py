@@ -238,6 +238,16 @@ class TestLogSummary(unittest.TestCase):
         self.assertEqual(summary["last"], err)
         self.assertEqual(view.log_summary([err])["text"], "1 error recently")
 
+    def test_default_notices_are_not_problems(self):
+        notice = (
+            "2026-11-14 22:11:45,214 :: WARNING :: root :: config_logging.py :: 26 :: "
+            "photos > filters > albums not found. Downloading all albums ..."
+        )
+        config_error = "2026-11-14 22:11:45,214 :: ERROR :: root :: config_logging.py :: 30 :: username is missing"
+        self.assertEqual(view.log_summary([notice, notice])["text"], "Nothing unusual recently")
+        self.assertIsNone(view.log_summary([notice])["top"])
+        self.assertEqual(view.log_summary([notice, config_error])["text"], "1 error recently")
+
     def test_log_summary_says_what_the_errors_are_about(self):
         def line(level, logger, message):
             return f"2026-11-11 22:57:03,830 :: {level} :: {logger} :: x.py :: 89 :: {message}"
@@ -253,3 +263,5 @@ class TestLogSummary(unittest.TestCase):
         self.assertEqual(summary["top"], "Mostly: File not found in iCloud Drive (2)")
         self.assertEqual(view.log_summary(lines[3:])["top"], "Refusing to remove N of N files (1)")
         self.assertIsNone(view.log_summary(lines[:1])["top"])
+        zone = line("WARNING", "root", "Skipping obsolete-file cleanup for SharedSync-0A1B2C3D-4E5F-6789: indexing")
+        self.assertEqual(view.log_summary([zone])["top"], "Skipping obsolete-file cleanup for the Shared Library (1)")
