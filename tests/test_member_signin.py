@@ -6,7 +6,7 @@ import shutil
 import stat
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from flask import Flask
 from icloudpy import exceptions
@@ -381,6 +381,26 @@ class TestSignInPages(_ConfigDir):
         first = member_signin.session_key()
         self.assertEqual(stat.S_IMODE(os.stat(member_signin._secret_path()).st_mode), 0o600)  # noqa: SLF001
         self.assertEqual(member_signin.session_key(), first)
+
+    def test_a_code_after_the_sign_in_finished_lands_on_done(self):
+        csrf = self._open()
+        member_signin._FINISHED["member"] = member_signin.time.monotonic()  # noqa: SLF001
+        response = self.client.post("/sign-in/code", data={"csrf_token": csrf, "code": "123456"})
+        self.assertEqual(response.headers["Location"], "/sign-in")
+        with self.client.session_transaction() as s:
+            self.assertTrue(s["done"])
+
+    def test_apple_error_codes_for_the_log(self):
+        error = MagicMock()
+        error.response.json.return_value = {"serviceErrors": [{"code": "-20101"}, "odd"]}
+        self.assertEqual(member_signin._apple_error_codes(error), "(Apple codes: -20101)")  # noqa: SLF001
+        error.response.json.return_value = {}
+        self.assertEqual(member_signin._apple_error_codes(error), "")  # noqa: SLF001
+
+    def test_unknown_account_goes_back_to_the_dashboard(self):
+        for path in ("/household/nobody/sign-in", "/household/nobody/apple-id"):
+            with self.subTest(path=path):
+                self.assertEqual(_csrf_post(self.client, path).headers["Location"], "/")
 
 
 class TestSignInWithoutUsername(_ConfigDir):
