@@ -12,7 +12,9 @@ config every cycle, so a change applies from the next one.
 """
 
 import datetime
+import glob
 import os
+import re
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -530,6 +532,18 @@ def _load_document(config_path: str) -> tuple[YAML, Any]:
     return yaml, document
 
 
+_KEEP_BACKUPS = 5
+_BACKUP_STAMP = re.compile(r"\.bak-\d{8}-\d{6}(?:-\d{6})?$")
+
+
+def _prune_backups(config_path: str) -> None:
+    """Keep the newest ``_KEEP_BACKUPS`` backups this page wrote. A backup
+    someone made by hand has a different name and is never touched."""
+    backups = sorted(p for p in glob.glob(f"{glob.escape(config_path)}.bak-*") if _BACKUP_STAMP.search(p))
+    for old in backups[:-_KEEP_BACKUPS]:
+        os.unlink(old)
+
+
 def _save_document(config_path: str, yaml: YAML, document: Any) -> None:
     """Back up config.yaml, then replace it atomically with ``document``.
 
@@ -537,8 +551,9 @@ def _save_document(config_path: str, yaml: YAML, document: Any) -> None:
     the old one, so a write that would break the config never lands.
     """
     directory = os.path.dirname(os.path.abspath(config_path))
-    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    stamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S-%f")
     shutil.copy2(config_path, f"{config_path}.bak-{stamp}")
+    _prune_backups(config_path)
     fd, temp_path = tempfile.mkstemp(dir=directory, prefix=".config-", suffix=".yaml")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as f:
@@ -556,7 +571,7 @@ def write_setting(config_path: str, key: str, submitted: str) -> Any:
     """Set one editable key in config.yaml; return the value written.
 
     Keeps the file's comments and writes ``<config>.bak-<timestamp>``
-    first; see ``_save_document``.
+    first, keeping the newest five; see ``_save_document``.
     """
     setting = SETTINGS_BY_KEY.get(key)
     if setting is None or not setting.editable:

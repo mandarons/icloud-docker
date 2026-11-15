@@ -247,6 +247,11 @@ class TestLogSummary(unittest.TestCase):
         self.assertEqual(view.log_summary([notice, notice])["text"], "Nothing unusual recently")
         self.assertIsNone(view.log_summary([notice])["top"])
         self.assertEqual(view.log_summary([notice, config_error])["text"], "1 error recently")
+        misnested = (
+            "2026-11-14 22:11:45,214 :: WARNING :: root :: config_logging.py :: 26 :: "
+            "app > discord > webhook_url is not found; 'app > webhook_url' exists but must be nested"
+        )
+        self.assertEqual(view.log_summary([notice, misnested])["text"], "1 warning recently")
 
     def test_log_summary_says_what_the_errors_are_about(self):
         def line(level, logger, message):
