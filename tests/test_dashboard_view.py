@@ -1,7 +1,7 @@
 """Tests for what the dashboard says (``src.dashboard_view``).
 
-Each lifecycle stage of the account, the headline that sums it up, and
-the log line.
+Each lifecycle stage of the main account and of a household member, the
+headline that sums them up, and the log line.
 """
 
 import unittest
@@ -37,9 +37,19 @@ def _status(**over):
         "auth_blocked_reason": None,
         "trust_days_remaining": 84,
         "services": [_service()],
+        "household": [],
     }
     status.update(over)
     return status
+
+
+def _member(status=None, saved=True, **backup):
+    return {
+        "id": "alex",
+        "username": "j@example.com" if saved else None,
+        "session_saved": saved,
+        "backup": {"status": status, **backup},
+    }
 
 
 class TestWords(unittest.TestCase):
@@ -191,12 +201,85 @@ class TestMainAccount(unittest.TestCase):
         self.assertIsNone(self._me(trust_days_remaining=None)["action"])
 
 
+class TestMember(unittest.TestCase):
+    def _them(self, member):
+        return view.people(_status(household=[member]))[1]
+
+    def test_every_stage(self):
+        report = {
+            "download": 1247,
+            "unclaimed": 412,
+            "deletes": True,
+            "over_limit": False,
+        }
+        for member, tone, sentence, action in (
+            (_member(saved=False), "idle", "Waiting for sign-in", "Send link"),
+            (_member("review", report=report), "warn", "Ready for review", "Review"),
+            (
+                _member("checking"),
+                "busy",
+                "Checking what's already in the folder",
+                None,
+            ),
+            (_member("syncing"), "busy", "Backing up now", None),
+            (
+                _member("ok", last_sync_relative="2 h ago", files_downloaded=5),
+                "ok",
+                "Backed up 2 h ago",
+                None,
+            ),
+            (_member("ok"), "ok", "Backed up", None),
+            (
+                _member("needs_sign_in", detail="Apple wants the code."),
+                "err",
+                "Sign-in has run out",
+                "Send link",
+            ),
+            (_member("blocked", detail="x"), "err", "Not backing up", "Open"),
+            (_member("error", detail="x"), "err", "The last backup failed", "Open"),
+            (_member(None), "idle", "First backup starts soon", None),
+        ):
+            them = self._them(member)
+            self.assertEqual(
+                (them["tone"], them["sentence"], (them["action"] or {}).get("label")),
+                (tone, sentence, action),
+                member,
+            )
+            self.assertEqual((them["name"], them["page"]), ("Alex", "/household/alex"))
+
+    def test_review_detail(self):
+        report = {
+            "download": 1247,
+            "unclaimed": 412,
+            "deletes": True,
+            "over_limit": False,
+        }
+        self.assertTrue(
+            self._them(_member("review", report=report))["detail"].startswith("1,247 to download · 412 to delete."),
+        )
+        for kept in (
+            {**report, "deletes": False},
+            {**report, "over_limit": True},
+            {**report, "unclaimed": 0},
+        ):
+            self.assertNotIn("to delete", self._them(_member("review", report=kept))["detail"])
+        self.assertTrue(self._them(_member("review"))["detail"].startswith("0 to download."))
+
+    def test_ok_detail(self):
+        self.assertEqual(self._them(_member("ok", files_downloaded=5))["detail"], "5 new")
+        self.assertEqual(
+            self._them(_member("ok", files_downloaded=5, detail="Fine."))["detail"],
+            "Fine.",
+        )
+        self.assertIsNone(self._them(_member("ok"))["detail"])
+
+
 class TestHeadline(unittest.TestCase):
     def _title(self, **over):
         return view.headline(view.people(_status(**over)))["title"]
 
     def test_all_is_well(self):
-        self.assertEqual(self._title(), "Everything is backed up")
+        self.assertEqual(self._title(household=[_member("ok")]), "Everything is backed up")
 
     def test_what_to_do_about_the_main_account(self):
         self.assertEqual(self._title(auth_state="reauth_needed"), "Sign in again to restart backups")
@@ -206,8 +289,23 @@ class TestHeadline(unittest.TestCase):
         self.assertEqual(self._title(trust_days_remaining=1), "Refresh trust: it runs out in 1 day")
         self.assertEqual(self._title(trust_days_remaining=0), "Refresh trust to keep backups running")
 
+    def test_a_member_named(self):
+        for member, title in (
+            (_member("review"), "Alex's backup is ready for review"),
+            (_member("needs_sign_in"), "Alex needs to sign in again"),
+            (_member("blocked"), "Alex's backup is not running"),
+            (_member("error"), "Alex's last backup failed"),
+            (_member(saved=False), "Waiting for Alex to sign in"),
+            (_member(None), "Alex: first backup starts soon"),
+        ):
+            self.assertEqual(self._title(household=[member]), title)
+
+    def test_the_worst_comes_first(self):
+        title = self._title(trust_days_remaining=3, household=[_member("error")])
+        self.assertEqual(title, "Alex's last backup failed")
+
     def test_busy(self):
-        self.assertEqual(self._title(services=[_service(syncing_since_relative="1 min ago")]), "Backing up")
+        self.assertEqual(self._title(household=[_member("syncing")]), "Backing up")
 
     def test_waiting_on_the_main_account(self):
         self.assertEqual(self._title(services=[_service(stats=None)]), "Waiting for the first backup")
@@ -220,6 +318,8 @@ class TestHeadline(unittest.TestCase):
             auth_state="setup_needed",
             services=[_service(syncing_since_relative="1 min ago")],
         )
+        self.assertTrue(view.refreshing(status, view.people(status)))
+        status = _status(household=[_member("syncing")])
         self.assertTrue(view.refreshing(status, view.people(status)))
         status = _status()
         self.assertFalse(view.refreshing(status, view.people(status)))
