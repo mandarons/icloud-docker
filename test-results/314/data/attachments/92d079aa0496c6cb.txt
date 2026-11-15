@@ -1,0 +1,6 @@
+[38;5;226m2026-11-15 19:16:49,317 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > albums not found. Downloading all albums ...[0m
+[38;5;226m2026-11-15 19:16:49,318 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > file_sizes not found. Downloading original size photos ...[0m
+[38;5;226m2026-11-15 19:16:49,318 :: WARNING :: root :: config_logging.py :: 26 :: photos > filters > extensions not found. Downloading all extensions ...[0m
+[38;21m2026-11-15 19:16:49,318 :: DEBUG :: root :: config_logging.py :: 44 :: Removing obsolete files and folders ...[0m
+[38;5;39m2026-11-15 19:16:49,319 :: INFO :: root :: photo_cleanup_utils.py :: 85 :: Moving /tmp/tmpqnz9gtds/elsewhere/a.jpg to the recycle bin ...[0m
+[38;5;39m2026-11-15 19:16:49,319 :: INFO :: root :: photo_cleanup_utils.py :: 85 :: Moving /tmp/tmpqnz9gtds/photos/shared/b.jpg to the recycle bin ...[0m

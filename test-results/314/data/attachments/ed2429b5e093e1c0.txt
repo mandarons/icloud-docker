@@ -1,0 +1,1 @@
+[38;5;196m2026-11-15 19:16:48,943 :: ERROR :: root :: sync.py :: 638 :: Photos mount marker missing: /tmp/tmpgyn8n6yo/.mounted not found — refusing to sync. Create the marker file (`touch /tmp/tmpgyn8n6yo/.mounted`) after confirming the destination is correctly mounted, then the next sync cycle will proceed.[0m

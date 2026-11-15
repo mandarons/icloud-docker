@@ -1,0 +1,22 @@
+[38;21m2026-11-15 19:16:50,934 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /config/session_data/aicloudcom.session[0m
+[38;5;39m2026-11-15 19:16:50,935 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-15 19:16:50,935 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as a@icloud.com[0m
+[38;21m2026-11-15 19:16:50,957 :: DEBUG :: icloudpy.base.http :: base.py :: 76 :: POST https://idmsa.apple.com/appleauth/auth/signin/init {"a": "freuoTy5YjPfkuRb1UGGGCimDoQhYxqZAIAa4y+JkQNccG+a9VRZqL+DC4D6TfZ0XTp+uShGehCHqkR7mYwPO+ccC30hXHT2W2EUytanxohgd7KMALi2hDQgQy8Q+7ZjeENHKFxWAr9hDdfhJHLT9RhkJWbTzxfrdJ0esbhx3uVT/9eNqmcYx716kzvubPRk5UWsGO5HmWNxhWle/yBgA7LzKT96kTvkzrU9Rc0w1evfd5VyUMkfFaUztK9yMJYGy2Ah7//VMgg8uiFDt83jvxYqjCUiKT69ZL49dVoBBZvpPTDC2z9Xaw6MA6ZaSvvcjG+jXZi9cOICEnmrx8/UpA==", "accountName": "a@icloud.com", "protocols": ["s2k", "s2k_fo"]}[0m
+[38;21m2026-11-15 19:16:50,958 :: DEBUG :: urllib3.connectionpool :: connectionpool.py :: 1081 :: Starting new HTTPS connection (1): idmsa.apple.com:443[0m
+[38;21m2026-11-15 19:16:51,279 :: DEBUG :: urllib3.connectionpool :: connectionpool.py :: 550 :: https://idmsa.apple.com:443 "POST /appleauth/auth/signin/init HTTP/1.1" 200 None[0m
+[38;21m2026-11-15 19:16:51,281 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-11-15 19:16:51,281 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /config/session_data/aicloudcom[0m
+[38;21m2026-11-15 19:16:51,281 :: DEBUG :: icloudpy.base.http :: base.py :: 138 :: {'iteration': 1750, 'salt': 'ZHA6hSrPE+mM5tR/mpsrwg==', 'protocol': 's2k_fo', 'b': 'KYrOnvUc/NIZPh+xj1NJQ7NcRXmlW6MLJVIfDlDnJ0gk4vvb+Y+5H95uPqGJfvQ9qnZsFcXAWgiJusdQJeueatB/dNsKboNNTdVo6csH4vPhArQ2Ut/X75ydvDClrPjEE4ISDnBtw0am7uKmBpsPakK9Ankwv0Kn8TZJCZEhw/W+TojdwcQubbGpC6wrwbXGvgSeEUl7Z1rOWA77jPeyQCPL1tUlnF80mx4Y7dqIDo8hDYNVdTOtalUg0KASDeuc/tOLBZLop7eD0ONjbLA2C7cV6bJzewZB4/kmyqTycZeFDYTEfyQ6Gn2SbMMPWn27mdef2K+lF9KiiJhwdDKjtA==', 'c': 'i-5a-1c7193ae-e129-11f1-bd5c-79d756928aa2:MSA'}[0m
+[38;21m2026-11-15 19:16:51,285 :: DEBUG :: icloudpy.base.http :: base.py :: 76 :: POST https://idmsa.apple.com/appleauth/auth/signin/complete {"accountName": "a@icloud.com", "c": "i-5a-1c7193ae-e129-11f1-bd5c-79d756928aa2:MSA", "m1": "9Ej6e7DhrgWAKJaJWzccsvDSc/HahzvwZknLV5iHRhI=", "m2": "S7ICCgEwq/uWMumpOhSzIoHSIqMEcPk+zJJ6W2ytRg8=", "rememberMe": true, "trustTokens": []}[0m
+[38;21m2026-11-15 19:16:51,470 :: DEBUG :: urllib3.connectionpool :: connectionpool.py :: 550 :: https://idmsa.apple.com:443 "POST /appleauth/auth/signin/complete?isRememberMeEnabled=true HTTP/1.1" 403 None[0m
+[38;21m2026-11-15 19:16:51,471 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-11-15 19:16:51,472 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /config/session_data/aicloudcom[0m
+[38;21m2026-11-15 19:16:51,472 :: DEBUG :: icloudpy.base.http :: base.py :: 138 :: {'serviceErrors': [{'code': '-20209', 'message': 'This Apple Account has been\xa0locked\xa0for security reasons. Visit iForgot to reset your account (https://iforgot.apple.com).', 'suppressDismissal': False}]}[0m
+[38;21m2026-11-15 19:16:51,473 :: DEBUG :: icloudpy.base.http :: base.py :: 76 :: POST https://setup.icloud.com/setup/ws/1/accountLogin {"accountCountryCode": null, "dsWebAuthToken": null, "extended_login": true, "trustToken": ""}[0m
+[38;21m2026-11-15 19:16:51,474 :: DEBUG :: urllib3.connectionpool :: connectionpool.py :: 1081 :: Starting new HTTPS connection (1): setup.icloud.com:443[0m
+[38;21m2026-11-15 19:16:51,606 :: DEBUG :: urllib3.connectionpool :: connectionpool.py :: 550 :: https://setup.icloud.com:443 "POST /setup/ws/1/accountLogin HTTP/1.1" 400 50[0m
+[38;21m2026-11-15 19:16:51,606 :: DEBUG :: icloudpy.base :: base.py :: 95 :: Saved session data to file[0m
+[38;21m2026-11-15 19:16:51,607 :: DEBUG :: icloudpy.base :: base.py :: 99 :: Cookies saved to /config/session_data/aicloudcom[0m
+[38;21m2026-11-15 19:16:51,607 :: DEBUG :: icloudpy.base.http :: base.py :: 138 :: {'success': False, 'error': 'Missing apple_id field'}[0m
+[38;5;196m2026-11-15 19:16:51,607 :: ERROR :: icloudpy.base :: base.py :: 176 :: Missing apple_id field[0m
+[38;5;226m2026-11-15 19:16:51,607 :: WARNING :: root :: web.py :: 1655 :: Web UI: session failed to authenticate: ('Invalid authentication token.', ICloudPyAPIResponseException('Missing apple_id field'))[0m
