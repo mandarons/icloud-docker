@@ -15,7 +15,8 @@ from datetime import UTC
 from typing import Any
 from urllib.parse import urlencode
 
-from src import DEFAULT_REQUEST_TIMEOUT_SEC, get_logger
+from src import DEFAULT_REQUEST_TIMEOUT_SEC, get_logger, served_size_ledger
+from src.photo_path_utils import version_record_id
 
 LOGGER = get_logger()
 
@@ -322,6 +323,18 @@ def _refresh_photo_download_url(photo, timeout: int = DEFAULT_REQUEST_TIMEOUT_SE
         return False
 
 
+def _ledger_key(photo: Any, file_size: str) -> tuple[str, str] | None:
+    """The ledger key for this rendition, or None when the photo has no id.
+
+    Ledger bookkeeping must never fail a transfer that already verified: a
+    partial/mock photo object without ``id`` simply gets no exception entry.
+    """
+    try:
+        return version_record_id(photo, file_size), file_size
+    except (AttributeError, KeyError, TypeError):
+        return None
+
+
 def check_photo_exists(photo, file_size: str, local_path: str) -> bool:
     """Check if photo exists locally with correct size.
 
@@ -342,9 +355,22 @@ def check_photo_exists(photo, file_size: str, local_path: str) -> bool:
     if local_size == remote_size:
         LOGGER.debug(f"No changes detected. Skipping the file {local_path} ...")
         return True
-    else:
-        LOGGER.debug(f"Change detected: local_file_size is {local_size} and remote_file_size is {remote_size}.")
-        return False
+
+    # A complete response whose byte count differed from the declared size was
+    # kept by the download path. Recognise it here too, or every sync would
+    # treat the file as missing and download it again forever. The entry pins
+    # both sizes, so a changed declaration or a different file length does not
+    # inherit the exception.
+    key = _ledger_key(photo, file_size)
+    if key is not None and served_size_ledger.matches(*key, remote_size, local_size):
+        LOGGER.debug(
+            f"No changes detected. Skipping the file {local_path}: it matches the "
+            f"accepted {local_size}-byte transfer for a declared {remote_size} bytes.",
+        )
+        return True
+
+    LOGGER.debug(f"Change detected: local_file_size is {local_size} and remote_file_size is {remote_size}.")
+    return False
 
 
 def create_hardlink(source_path: str, destination_path: str) -> bool:
@@ -518,6 +544,9 @@ def download_photo_from_server(
                 # again on every sync; anything less complete stays a failure.
                 if _transfer_is_complete(download, written):
                     _finalize_download(photo, partial, destination_path)
+                    key = _ledger_key(photo, file_size)
+                    if key is not None:
+                        served_size_ledger.record(*key, expected, written)
                     LOGGER.warning(
                         f"Accepted {destination_path}: iCloud declares {expected} bytes, "
                         f"but the served response is a complete {written}-byte transfer.",
@@ -534,6 +563,11 @@ def download_photo_from_server(
                     )
                 return False
             _finalize_download(photo, partial, destination_path)
+            # The declared size matches again: drop any acceptance exception
+            # recorded for this rendition so it cannot outlive its cause.
+            key = _ledger_key(photo, file_size)
+            if key is not None:
+                served_size_ledger.forget(*key)
 
             return True
 

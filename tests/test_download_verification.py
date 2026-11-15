@@ -13,20 +13,28 @@ from io import BytesIO
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
-from src import download_report
+from src import download_report, served_size_ledger
 from src.download_report import (
     DownloadReport,
     get_download_report,
     log_download_summary,
     reset_download_report,
 )
-from src.photo_download_manager import DownloadTaskInfo, execute_download_task, execute_parallel_downloads
+from src.photo_download_manager import (
+    DownloadTaskInfo,
+    collect_download_task,
+    execute_download_task,
+    execute_parallel_downloads,
+)
 from src.photo_file_utils import (
     _asset_record_id,
     _content_length,
+    _ledger_key,
     _note_failure,
+    check_photo_exists,
     download_photo_from_server,
 )
+from src.photo_path_utils import set_default_filename_format
 
 
 class _Photo:
@@ -116,6 +124,65 @@ class TestMismatchedTransferPolicy(unittest.TestCase):
             self.assertTrue(download_photo_from_server(photo, "original", destination))
 
 
+class TestAcceptedSizeConvergence(unittest.TestCase):
+    """An accepted mismatch must be skipped on the next sync, not re-downloaded."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.base = self.tmp.name
+        self.ledger_path = os.path.join(self.base, "served-sizes.json")
+        served_size_ledger._entries_by_path.clear()  # noqa: SLF001 - test cache
+        self.ledger_patch = patch.object(served_size_ledger, "_path", return_value=self.ledger_path)
+        self.ledger_patch.start()
+        set_default_filename_format("metadata")
+        reset_download_report()
+
+    def tearDown(self):
+        self.ledger_patch.stop()
+        served_size_ledger._entries_by_path.clear()  # noqa: SLF001 - test cache
+        reset_download_report()
+        self.tmp.cleanup()
+
+    def _accept(self, photo) -> str:
+        destination = os.path.join(self.base, "IMG_0001__original__bWFzdGVyLTE=.JPEG")
+        with patch.object(
+            photo, "download",
+            return_value=_response(b"12345678", headers={"Content-Length": "8"}),
+        ):
+            self.assertTrue(download_photo_from_server(photo, "original", destination))
+        return destination
+
+    def test_accepted_mismatch_is_skipped_on_the_next_cycle(self):
+        photo = _Photo(b"12345678", declared=10)
+        destination = self._accept(photo)
+
+        self.assertTrue(check_photo_exists(photo, "original", destination))
+        files: set[str] = set()
+        task = collect_download_task(photo, "original", self.base, files, None, None)
+        self.assertIsNone(task, "the accepted file must not be queued again")
+        self.assertIn(destination, files)
+
+    def test_declared_size_change_forces_a_redownload(self):
+        photo = _Photo(b"12345678", declared=10)
+        self._accept(photo)
+        photo.versions["original"]["size"] = 11
+
+        files: set[str] = set()
+        task = collect_download_task(photo, "original", self.base, files, None, None)
+        self.assertIsNotNone(task, "a new declared size must invalidate the exception")
+
+    def test_matching_download_clears_the_exception(self):
+        served_size_ledger.record("master-1", "original", 10, 8)
+        photo = _Photo(b"1234567890", declared=10)
+        destination = os.path.join(self.base, "photo.jpeg")
+        with patch.object(
+            photo, "download",
+            return_value=_response(b"1234567890", headers={"Content-Length": "10"}),
+        ):
+            self.assertTrue(download_photo_from_server(photo, "original", destination))
+        self.assertFalse(served_size_ledger.matches("master-1", "original", 10, 8))
+
+
 class TestFailureDetails(unittest.TestCase):
     """The failure record carries the asset identity and byte counts."""
 
@@ -138,6 +205,9 @@ class TestFailureDetails(unittest.TestCase):
 
     def test_note_failure_without_a_record_is_a_no_op(self):
         _note_failure(None, _Photo(b"x"), "original", "/tmp/x", "size_mismatch", 1, 2)
+
+    def test_ledger_key_is_none_when_the_photo_has_no_id(self):
+        self.assertIsNone(_ledger_key(object(), "original"))
 
     def test_content_length_ignores_garbage(self):
         self.assertIsNone(_content_length(SimpleNamespace(headers={"Content-Length": "many"})))

@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   every sync. A transfer whose byte count differs from the size iCloud
   declares is kept when the response is complete (success status, not
   content-encoded, and its own `Content-Length` equals the bytes written),
-  because the declared size can be stale for an edited rendition. Any other
+  because the declared size can be stale for an edited rendition. The accepted
+  served size is remembered per rendition, so later syncs skip the file instead
+  of downloading it again. Any other
   mismatch is discarded and recorded once per asset with its id, reason and
   declared/received sizes, and the run ends with one summary line instead of
   retrying silently forever
