@@ -224,7 +224,10 @@ def headline(everyone: list[dict]) -> dict[str, str]:
     return {"tone": waiting["tone"], "title": _plainly(waiting)}
 
 
-_DEFAULT_NOTICE = " :: config_logging.py :: "
+# What the config says when a key is left out and its default applies. Every
+# pass logs these, and they are the config working as designed. Matched on the
+# message, so a real config warning from the same module still counts.
+_DEFAULT_NOTICE = re.compile(r"not found\. (?:Using default|Downloading|Not removing)|is missing\. Using default")
 
 
 def _problem(line: str) -> str | None:
@@ -254,9 +257,7 @@ def log_summary(lines: list[str]) -> dict[str, Any]:
         match = _LEVEL.search(line)
         if not match:
             continue
-        if match.group(1) == "WARNING" and _DEFAULT_NOTICE in line:
-            # "x not found. Using default ...": every pass says it, and it
-            # is the config working as designed, not a problem.
+        if match.group(1) == "WARNING" and _DEFAULT_NOTICE.search(line):
             continue
         if match.group(1) == "WARNING":
             warnings += 1

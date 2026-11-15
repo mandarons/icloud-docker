@@ -228,6 +228,18 @@ class TestWriteSetting(unittest.TestCase):
         with open(backups[0], encoding="utf-8") as f:
             self.assertEqual(f.read(), _CONFIG_WITH_COMMENTS)
 
+    def test_keeps_only_the_newest_backups(self):
+        own = self.path + ".bak-before-upgrade"
+        with open(own, "w", encoding="utf-8") as f:
+            f.write("mine")
+        for interval in range(901, 908):
+            settings_view.write_setting(self.path, "drive.sync_interval", str(interval))
+        backups = sorted(glob.glob(self.path + ".bak-2*"))
+        self.assertEqual(len(backups), 5)
+        self.assertTrue(os.path.exists(own))
+        with open(backups[-1], encoding="utf-8") as f:
+            self.assertIn("sync_interval: 906", f.read())
+
     def test_an_unchanged_value_writes_nothing(self):
         settings_view.write_setting(self.path, "drive.sync_interval", "300")
         self.assertEqual(glob.glob(self.path + ".bak-*"), [])
