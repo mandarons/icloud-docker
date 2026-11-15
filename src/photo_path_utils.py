@@ -16,14 +16,33 @@ file naming conventions for photo synchronization.
 ___author___ = "Mandar Patil <mandarons@pm.me>"
 
 import base64
+import contextvars
 import os
 import re
 import unicodedata
+import zoneinfo
 from urllib.parse import unquote
 
 from src import get_logger
 
 LOGGER = get_logger()
+
+# The zone dated folders are named in for the pass on this thread: None
+# (UTC, as Apple sends dates), "local" (the container's TZ) or an IANA
+# name. Set per pass by ``sync_photos.apply_naming_settings``; a context
+# variable rather than a module global so a member's pass and the main
+# account's can differ while both run.
+FOLDER_TZ: contextvars.ContextVar[str | None] = contextvars.ContextVar("photo_folder_tz", default=None)
+
+
+def folder_date(photo):
+    """The photo's created date in the zone its dated folder is named in."""
+    created = photo.created
+    zone = FOLDER_TZ.get()
+    if zone is None:
+        return created
+    return created.astimezone() if zone == "local" else created.astimezone(zoneinfo.ZoneInfo(zone))
+
 
 # The Live Photo paired-video file_size variants. These are QuickTime movies,
 # not images, even though the parent asset's filename ends in .HEIC/.JPG.
@@ -385,7 +404,7 @@ def resolve_folder_path(destination_path: str, folder_format: str | None, photo)
     """
     if folder_format is None:
         return destination_path
-    folder = photo.created.strftime(folder_format)
+    folder = folder_date(photo).strftime(folder_format)
     return os.path.join(destination_path, folder)
 
 

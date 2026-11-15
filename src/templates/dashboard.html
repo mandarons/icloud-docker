@@ -1,214 +1,208 @@
 {% extends "base.html" %}
-{% block title %}iCloud Docker · Status{% endblock %}
+{% block title %}iCloud Docker · {{ headline.title }}{% endblock %}
+{% block extra_style %}
+<style>
+  /* One rule everywhere: a tone is the state of a thing, and the same
+     colour means the same state wherever it appears -- the headline, a
+     person, a service, a library. */
+  .tone-ok   { --tone: var(--ok); }
+  .tone-busy { --tone: var(--accent); }
+  .tone-warn { --tone: var(--warn); }
+  .tone-err  { --tone: var(--err); }
+  .tone-idle { --tone: var(--text-tertiary); }
+
+  .hero { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; margin: 8px 0 24px; overflow-wrap: anywhere; }
+
+  /* A reading width: the status sits beside its name, not a screen away. */
+  .people { display: grid; gap: 16px; margin-bottom: 16px; }
+  .person { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px 22px; min-width: 0; }
+  .person-head { display: flex; align-items: center; gap: 0 14px; flex-wrap: wrap; }
+  /* Wide: the action sits beside the name, the reason runs below. Phone:
+     state, then why, then the button. */
+  .person-head .person-detail { order: 3; flex-basis: 100%; }
+  .act, .chev { order: 2; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 600; font-size: 17px; color: #fff; background: var(--avatar);
+  }
+  .person-id { flex: 1; min-width: 0; }
+  .person-name { font-size: 13px; color: var(--text-tertiary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .person-line { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 8px; }
+  .person-line .dot, .svc-when .dot, .lib .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--tone); flex-shrink: 0; transform: translateY(-1px);
+  }
+  .person-detail { color: var(--text-secondary); font-size: 14px; margin: 10px 0 0 54px; }
+  .act { flex-shrink: 0; }
+  .chev { color: var(--text-tertiary); font-size: 22px; line-height: 1; padding: 4px 2px 4px 8px; }
+  .chev:hover { color: var(--text); text-decoration: none; }
+  /* A member's whole row opens their page; its button stays on top. */
+  .person.member .person-head { position: relative; }
+  .row-link { position: absolute; inset: 0; border-radius: var(--radius); }
+  .person.member .person-head .act { position: relative; z-index: 1; }
+
+  .svc { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--divider); }
+  .svc-row { display: flex; align-items: center; gap: 10px; }
+  .svc-icon {
+    width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff;
+  }
+  .svc-icon.photos { background: linear-gradient(135deg,#ff6b6b 0%,#ffd166 100%); }
+  .svc-icon.drive  { background: linear-gradient(135deg,#5ac8fa 0%,#0071e3 100%); }
+  .svc-name { font-weight: 600; font-size: 15px; }
+  .svc-when { margin-left: auto; font-size: 13px; color: var(--text-secondary); display: flex; align-items: baseline; gap: 6px; text-align: right; }
+  .svc-facts { color: var(--text-tertiary); font-size: 13px; margin: 4px 0 0 38px; font-variant-numeric: tabular-nums; }
+  .libs { margin: 8px 0 0 38px; }
+  .lib { display: flex; align-items: baseline; gap: 8px; font-size: 14px; padding: 5px 0; flex-wrap: wrap; }
+  .lib + .lib { border-top: 1px solid var(--divider); }
+  .lib-label { flex: 1; min-width: 0; }
+  .lib-state { color: var(--text-tertiary); font-size: 13px; }
+  .lib-note { flex-basis: 100%; color: var(--text-tertiary); font-size: 12px; padding-left: 16px; }
+
+  details.more { margin: 10px 0 0 38px; }
+  details.more > summary, details.quiet > summary {
+    cursor: pointer; color: var(--text-tertiary); font-size: 13px; list-style: none; display: inline-flex; align-items: center; gap: 4px;
+  }
+  details > summary::-webkit-details-marker { display: none; }
+  details.more > summary::after, details.quiet > summary::after { content: "›"; transition: transform 0.15s; display: inline-block; }
+  details[open].more > summary::after, details[open].quiet > summary::after { transform: rotate(90deg); }
+  .more-body { margin-top: 10px; padding: 12px 14px; background: var(--inset); border-radius: 10px; }
+  .more-body .kv { grid-template-columns: 96px 1fr; font-size: 13px; }
+  .more-body form { margin-top: 12px; }
+
+  .wide { width: 100%; margin-top: 16px; }
+
+
+  .log { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px 22px; }
+  .log > summary { display: flex !important; flex-wrap: wrap; width: 100%; gap: 4px 12px; }
+  .log-top { flex-basis: 100%; font-size: 13px; color: var(--text-tertiary); overflow-wrap: anywhere; }
+  .log-count { margin-left: auto; }
+  .log-title { color: var(--text); font-weight: 600; font-size: 15px; }
+  .log-count { color: var(--text-tertiary); }
+  .log-count.has-err { color: var(--err-fg); }
+  .log-head { display: flex; justify-content: space-between; align-items: baseline; margin: 12px 0 8px; }
+  .log-head h2 { font-size: 13px; color: var(--text-tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin: 0; }
+
+  @media (max-width: 560px) {
+    .hero { font-size: 24px; margin: 4px 0 20px; }
+    .person { padding: 18px 16px; }
+    .svc-facts, .libs, details.more { margin-left: 0; }
+    .add, .log { padding: 14px 16px; }
+    .person-head .person-detail { order: 2; }
+    .act { order: 3; margin-top: 12px; }
+    /* Under the sentence, not beside it: a button beside a wrapping line
+       squeezes it to two words a row. */
+    .act { flex: 1 0 100%; padding-left: 54px; }
+    .act .btn { width: 100%; }
+    .act.calm { order: 1; flex: 0 0 auto; padding-left: 0; margin-top: 0; }
+    .act.calm .btn { width: auto; }
+  }
+</style>
+{% endblock %}
 {% block content %}
 
-<h1 class="page-title">Status</h1>
-<p class="page-sub mono">{{ status.config_path }}</p>
+<h1 class="hero">{{ headline.title }}</h1>
 
-{% set auth = status.auth_state | default('not_configured') %}
-{% if auth == 'ready' %}
-<div class="status-row">
-  <div class="status-dot {% if status.trust_days_remaining is not none and status.trust_days_remaining < 7 %}warn{% endif %}"></div>
-  <div class="status-text">
-    <strong>{{ status.username }}</strong> — signed in, sync loop authenticated
-    {% if not status.password_stored %}
-      <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
-        Running from the saved session — no password stored
-      </span>
-    {% else %}
-      <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
-        {% if status.stored_password_outdated %}Stored password looks out of date{% else %}Password stored in plain text{% if status.password_from_env %} (from ENV_ICLOUD_PASSWORD){% endif %}{% endif %}
-      </span>
-      {% if not status.password_from_env %}
-      <form action="/auth/forget-password" method="post" style="margin-top: 6px;">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <button type="submit" class="status-cta secondary"
-                title="Sync keeps running from the saved session.">
-          Remove stored password
-        </button>
-      </form>
-      {% endif %}
-    {% endif %}
-    {% if status.trust_days_remaining is not none %}
-      <br><span class="mono" style="font-size: 12px; color: var(--text-tertiary);">
-        Trusted session: {% if status.trust_days_remaining <= 0 %}expired — refresh now{% else %}{{ status.trust_days_remaining }} day{{ '' if status.trust_days_remaining == 1 else 's' }} remaining{% endif %}
-      </span>
-    {% endif %}
-  </div>
-  <div class="status-actions">
-    <form action="/auth/refresh-trust" method="post" style="display:contents">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-      <button type="submit" class="status-cta secondary"
-              title="Re-trigger Apple 2FA using the credential this container already has — no re-typing.">
-        Refresh trust
-      </button>
-    </form>
-    <a class="status-cta" href="/auth">Re-authenticate</a>
-  </div>
-</div>
-{% elif auth == 'reauth_needed' %}
-<div class="status-row">
-  <div class="status-dot err"></div>
-  <div class="status-text"><strong>{{ status.username }}</strong> — sync is stopped:
-    {%- if status.auth_blocked_reason == 'session_unusable' %} the saved session is no longer valid and no password is stored
-    {%- elif status.auth_blocked_reason == 'sign_in_failed' %} Apple refused the sign-in. This can be an outage; the loop keeps retrying
-    {%- else %} Apple is asking for a second factor
-    {%- endif %}</div>
-  <div class="status-actions">
-    <a class="status-cta" href="/auth">Re-authenticate →</a>
-  </div>
-</div>
-{% elif auth == 'setup_needed' %}
-<div class="status-row">
-  <div class="status-dot warn"></div>
-  <div class="status-text"><strong>{{ status.username }}</strong> — first-time 2FA not yet completed (sync loop is waiting)</div>
-  <div class="status-actions">
-    <a class="status-cta" href="/auth">Authenticate now →</a>
-  </div>
-</div>
-{% elif auth == 'not_configured' %}
-<div class="status-row">
-  <div class="status-dot warn"></div>
-  <div class="status-text">No <strong>app.credentials.username</strong> in config.yaml</div>
-  <div class="status-actions">
-    <a class="status-cta" href="/auth">Set up</a>
-  </div>
-</div>
-{% endif %}
-
-{% if status.services %}
-<div class="global-actions">
-  <form action="/api/sync" method="post" style="display:contents">
+{# Filled blue only when something needs you; a waiting state gets a
+   quiet button that stays beside the line. #}
+{% macro action_button(action, urgent) %}
+  {% set cls = 'btn btn-small btn-primary' if urgent else 'btn btn-small' %}
+  {% if action.post %}
+  <form action="{{ action.post }}" method="post" class="act{% if not urgent %} calm{% endif %}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <input type="hidden" name="service" value="all">
-    <button type="submit" class="btn btn-primary">Sync all now</button>
+    <button type="submit" class="{{ cls }}">{{ action.label }}</button>
   </form>
-  {% if status.force_sync_pending %}
-    <span style="font-size: 13px; color: var(--text-tertiary); align-self: center;">
-      &nbsp;Queued: <strong style="color: var(--text);">{{ status.force_sync_pending | join(', ') }}</strong>
-    </span>
+  {% else %}
+  <div class="act{% if not urgent %} calm{% endif %}"><a class="{{ cls }}" href="{{ action.href }}">{{ action.label }}</a></div>
   {% endif %}
-</div>
-{% endif %}
+{% endmacro %}
 
-<div class="grid">
-{% for service in status.services %}
-  <div class="card">
-    <div class="card-head">
-      <div class="card-icon {{ service.name | lower }}">{{ service.name[0] }}</div>
-      <div class="card-title-wrap">
-        <div class="card-title">{{ service.name }}</div>
-        <div class="card-subtitle">every {{ (service.sync_interval_s // 3600) }} h</div>
+<div class="people">
+{% for p in people %}
+  <article class="person {{ p.kind }} tone-{{ p.tone }}" style="--avatar: hsl({{ p.hue }}deg 52% 52%);">
+    <div class="person-head">
+      {% if p.kind == 'member' %}<a class="row-link" href="{{ p.page }}" aria-label="Open {{ p.name }}"></a>{% endif %}
+      <div class="avatar" aria-hidden="true">{{ p.initial }}</div>
+      <div class="person-id">
+        <div class="person-name" title="{{ p.username or p.name }}">{% if p.kind == 'primary' %}{{ p.name }}{% else %}{{ p.name }}{% if p.username %} · {{ p.username }}{% endif %}{% endif %}</div>
+        <div class="person-line"><span class="dot"></span><span>{{ p.sentence }}</span></div>
       </div>
-      {% if service.syncing_since_relative %}
-      <span class="pill success" style="margin-left: auto;">Syncing now · started {{ service.syncing_since_relative }}</span>
-      {% endif %}
+      {% if p.detail %}<p class="person-detail">{{ p.detail }}</p>{% endif %}
+      {% if p.action %}{{ action_button(p.action, p.tone in ('err', 'warn')) }}{% elif p.kind == 'member' %}<span class="chev" aria-hidden="true">›</span>{% endif %}
     </div>
-    <dl class="kv">
-      <dt>Destination</dt>
-      <dd class="mono">
-        {{ service.destination }}
-        <span class="path-hint">container-internal path — maps from your <code>volumes:</code> in docker-compose.yml</span>
-      </dd>
-      <dt>Interval</dt><dd>{{ service.sync_interval_s }} s</dd>
-      <dt>Mount marker</dt>
-      <dd>
-        {% if service.require_mount_marker %}
-          {% if service.marker_present %}
-            <span class="pill success">required · present</span>
-          {% else %}
-            <span class="pill err">required · missing</span>
-          {% endif %}
-        {% else %}
-          {% if service.marker_present %}
-            <span class="pill success">present (optional)</span>
-          {% else %}
-            <span class="pill warn">not required</span>
-          {% endif %}
-        {% endif %}
-        <div class="mono" style="color: var(--text-tertiary); margin-top: 4px; font-size: 12px;">{{ service.marker_path }}</div>
-      </dd>
-    </dl>
-    {% if service.libraries %}
-    <div class="section-label">Libraries</div>
-    {% for lib in service.libraries %}
-      <div class="lib-entry">
-        <div class="lib-row mono">
-          <span class="lib-name" title="{{ lib.name }}">{{ lib.name }}</span>
-          {% if lib.state == 'syncing' %}
-            <span class="lib-state syncing">Syncing now</span>
-          {% elif lib.state == 'failed' %}
-            <span class="lib-state failed" title="{{ lib.error }}">Failed</span>
-          {% elif lib.state == 'interrupted' %}
-            <span class="lib-state">Interrupted</span>
-          {% elif lib.completed_relative %}
-            <span class="lib-state">{{ lib.completed_relative }}</span>
-          {% endif %}
+
+    {% if p.kind == 'primary' %}
+      {% for s in p.services %}
+      <div class="svc tone-{{ s.tone }}">
+        <div class="svc-row">
+          <span class="svc-icon {{ s.name | lower }}" aria-hidden="true">{{ s.name[:1] }}</span>
+          <span class="svc-name">{{ s.name }}</span>
+          <span class="svc-when"><span class="dot"></span>{{ s.when }}</span>
         </div>
-        {% if lib.subdir %}<div class="lib-dest mono" title="{{ lib.subdir }}/">&rarr; {{ lib.subdir }}/</div>{% endif %}
-        {% if lib.indexing %}<div class="lib-dest">Apple is still indexing this library &middot; downloading, cleanup paused</div>{% endif %}
-        {% if lib.state in ('failed', 'interrupted') and lib.completed_relative %}
-        <div class="lib-dest">last completed {{ lib.completed_relative }}</div>
+        {% if s.facts %}<div class="svc-facts">{{ s.facts }}</div>{% endif %}
+        {% if s.all_indexing %}<div class="svc-facts">Apple is still indexing {{ 'both libraries' if s.libraries | length == 2 else 'this library' }} · downloading, cleanup paused</div>{% endif %}
+        {% if s.libraries %}
+        <div class="libs">
+          {% for lib in s.libraries %}
+          {% set lt = 'busy' if lib.state == 'syncing' else ('warn' if lib.state == 'failed' else ('idle' if lib.state == 'interrupted' else 'ok')) %}
+          <div class="lib tone-{{ lt }}">
+            <span class="dot"></span>
+            <span class="lib-label" title="{{ lib.name }}">{{ lib.label }}</span>
+            <span class="lib-state">{% if lib.state == 'syncing' %}Syncing now{% elif lib.state == 'failed' %}Failed{% elif lib.state == 'interrupted' %}Interrupted{% elif lib.completed_relative and lib.completed_relative not in s.when %}{{ lib.completed_relative }}{% endif %}</span>
+            {% if lib.indexing and not s.all_indexing %}<span class="lib-note">Apple is still indexing this library · downloading, cleanup paused</span>{% endif %}
+            {% if lib.state == 'failed' and lib.error %}<span class="lib-note">{{ lib.error }}</span>{% endif %}
+            {% if lib.state in ('failed', 'interrupted') and lib.completed_relative and lib.completed_relative not in s.when %}<span class="lib-note">last completed {{ lib.completed_relative }}</span>{% endif %}
+          </div>
+          {% endfor %}
+        </div>
         {% endif %}
+        <details class="more"{% if s.marker_missing %} open{% endif %}>
+          <summary>Details</summary>
+          <div class="more-body">
+            <dl class="kv">
+              <dt>Folder</dt>
+              <dd class="mono">{{ s.destination }}<span class="path-hint">inside the container; your <code>volumes:</code> in docker-compose.yml map it to the NAS</span></dd>
+              {% for lib in s.libraries %}{% if lib.subdir %}<dt>{{ lib.label }}</dt><dd class="mono" style="overflow-wrap: anywhere;">{{ lib.subdir }}/</dd>{% endif %}{% endfor %}
+              <dt>Schedule</dt><dd>{{ s.schedule }}</dd>
+              <dt>Mount marker</dt>
+              <dd>
+                {% if s.require_mount_marker %}{% if s.marker_present %}<span class="pill success">required · present</span>{% else %}<span class="pill err">required · missing</span>{% endif %}
+                {% else %}{% if s.marker_present %}<span class="pill success">present (optional)</span>{% else %}<span class="pill warn">not required</span>{% endif %}{% endif %}
+                <div class="mono" style="color: var(--text-tertiary); margin-top: 4px; font-size: 12px; overflow-wrap: anywhere;">{{ s.marker_path }}</div>
+              </dd>
+            </dl>
+            <form action="/api/sync" method="post">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+              <input type="hidden" name="service" value="{{ s.name | lower }}">
+              <button type="submit" class="btn btn-small"{% if s.force_sync_pending %} disabled{% endif %}>{% if s.force_sync_pending %}Queued ✓{% else %}Back up {{ s.name }} now{% endif %}</button>
+            </form>
+          </div>
+        </details>
       </div>
-    {% endfor %}
-    {% endif %}
+      {% endfor %}
 
-    {% if service.stats %}
-    <div class="stats">
-      {% if service.stats.last_sync_relative %}
-      <div class="stat">
-        <div class="stat-value">{{ service.stats.last_sync_relative }}</div>
-        <div class="stat-label">Last sync</div>
-      </div>
-      {% endif %}
-      {% if service.stats.files_downloaded is not none %}
-      <div class="stat">
-        <div class="stat-value">{{ service.stats.files_downloaded }}</div>
-        <div class="stat-label">New</div>
-      </div>
-      {% endif %}
-      {% if service.stats.files_skipped is not none %}
-      <div class="stat">
-        <div class="stat-value">{{ service.stats.files_skipped }}</div>
-        <div class="stat-label">Skipped</div>
-      </div>
-      {% endif %}
-      {% if service.stats.last_cycle_total is not none %}
-      <div class="stat">
-        <div class="stat-value">{{ "{:,}".format(service.stats.last_cycle_total) }}</div>
-        <div class="stat-label">Last cycle</div>
-      </div>
-      {% endif %}
-    </div>
-    {% endif %}
-
-    <div class="card-actions">
-      <form action="/api/sync" method="post" style="display:contents">
+      {% if p.services %}
+      <form action="/api/sync" method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-        <input type="hidden" name="service" value="{{ service.name | lower }}">
-        <button type="submit" class="btn btn-small btn-primary"
-                {% if service.force_sync_pending %}disabled{% endif %}>
-          {% if service.force_sync_pending %}Queued ✓{% else %}Sync now{% endif %}
-        </button>
+        <input type="hidden" name="service" value="all">
+        <button type="submit" class="btn wide"{% if status.force_sync_pending %} disabled{% endif %}>{% if status.force_sync_pending %}Queued: {{ status.force_sync_pending | join(', ') }}{% else %}Back up now{% endif %}</button>
       </form>
-    </div>
-  </div>
+      {% endif %}
+    {% endif %}
+  </article>
 {% endfor %}
 </div>
 
-<div class="logs-card">
-  <div class="logs-head">
-    <h2>Recent log</h2>
-    <a href="/api/logs" class="mono" style="font-size: 12px;">/api/logs</a>
-  </div>
+<details class="log quiet">
+  <summary><span class="log-title">Log</span><span class="log-count{% if log_summary.errors %} has-err{% endif %}">{{ log_summary.text }}</span>{% if log_summary.top %}<span class="log-top">{{ log_summary.top }}</span>{% endif %}</summary>
+  <div class="log-head"><h2>Recent log</h2><a href="/api/logs" class="mono" style="font-size: 12px;">/api/logs</a></div>
   {% if log_lines %}
     <pre class="logs">{% for line in log_lines %}{{ line }}
 {% endfor %}</pre>
   {% else %}
     <div class="logs-empty">No log file found at <span class="mono">{{ log_path or "(unset)" }}</span>.</div>
   {% endif %}
-</div>
+</details>
 
 <script>
   // Coming Back to the dashboard can show the page as it was when you left
@@ -217,11 +211,11 @@
     if (e.persisted) { location.reload(); }
   });
 </script>
-{% if status.services | selectattr('syncing_since_relative') | list %}
+{% if refreshing %}
 <script>
-  // Keep "Syncing now" and the log current while a pass runs. A hidden tab
-  // is skipped, not dropped: the interval keeps checking, and coming back to
-  // the tab reloads at once.
+  // Keep the page current while a pass runs. A hidden tab is skipped, not
+  // dropped: the interval keeps checking, and coming back to the tab
+  // reloads at once.
   setInterval(function () {
     if (!document.hidden) { location.reload(); }
   }, 30000);

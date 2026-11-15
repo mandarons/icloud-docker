@@ -363,7 +363,7 @@ class TestAuthForm(unittest.TestCase):
         client = web.create_app(testing=True).test_client()
         with patch.object(web, "_password_is_stored", return_value=False):
             body = client.get("/auth").data.decode("utf-8")
-        self.assertIn("never logged or saved", body)
+        self.assertIn("The password isn't saved.", body)
 
     def test_auth_renders_code_field_when_pending(self):
         with web._AUTH_LOCK:  # noqa: SLF001
@@ -769,6 +769,21 @@ class TestNoCacheHeaders(unittest.TestCase):
         self.assertIn("no-store", response.headers.get("Cache-Control", ""))
 
 
+class TestTrustDate(unittest.TestCase):
+    """The Account card's "Trusted until" date."""
+
+    def test_reads_as_a_month_and_day(self):
+        import datetime
+
+        this_year = datetime.date.today().year
+        self.assertEqual(web._month_day(f"{this_year}-02-02T10:00:00+00:00"), "Feb 2")  # noqa: SLF001
+        self.assertEqual(web._month_day(f"{this_year + 1}-02-02T10:00:00"), f"Feb 2, {this_year + 1}")  # noqa: SLF001
+
+    def test_missing_or_unreadable_shows_nothing(self):
+        for value in (None, "", "soon"):
+            self.assertIsNone(web._month_day(value))  # noqa: SLF001
+
+
 class TestHealth(unittest.TestCase):
     """``/api/health`` is the tiny endpoint external monitors (UptimeRobot)
     can hit. 200 when the configured config file is readable; 503 when it
@@ -779,6 +794,15 @@ class TestHealth(unittest.TestCase):
         response = client.get("/api/health")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), {"state": "ok"})
+
+    def test_health_says_when_apple_needs_a_new_sign_in(self):
+        client = web.create_app(testing=True).test_client()
+        with patch.object(web.web_signals, "get_auth_blocked", return_value={"blocked": True}):
+            response = client.get("/api/health")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.get_json(), {"state": "needs_sign_in"})
+        with patch.object(web.web_signals, "get_auth_blocked", return_value={"blocked": False}):
+            self.assertEqual(client.get("/api/health").status_code, 200)
 
     def test_health_returns_503_when_config_missing(self):
         import os
@@ -1703,7 +1727,7 @@ class TestTheDashboardWordsTheModeCorrectly(unittest.TestCase):
     """The pill is the only place most people ever read this, so it has to
     say what is actually true of the container in front of them."""
 
-    def _render(self, **status_overrides):
+    def _render(self, path="/", **status_overrides):
         status = {
             "config_loaded": True,
             "config_path": "/config/config.yaml",
@@ -1725,21 +1749,27 @@ class TestTheDashboardWordsTheModeCorrectly(unittest.TestCase):
             patch.object(web, "_build_status", return_value=status),
             patch.object(web, "_tail_log_file", return_value=[]),
         ):
-            return web.create_app(testing=True).test_client().get("/").data
+            return web.create_app(testing=True).test_client().get(path).data
 
     def test_ready_does_not_claim_a_populated_keyring(self):
         """"keyring populated" is simply false in session-only mode, and it
         is the wrong thing to reassure anyone with even when it is true --
         what matters is that the loop is signed in."""
-        body = self._render(password_stored=False)
+        body = self._render(path="/auth", password_stored=False)
         self.assertNotIn(b"keyring populated", body)
-        self.assertIn(b"signed in, sync loop authenticated", body)
-        self.assertIn(b"no password stored", body)
+        self.assertIn(b"Signed in", body)
+        self.assertIn(b"<dt>Password</dt><dd>Not stored</dd>", body)
+
+    def test_the_dashboard_leaves_sign_in_details_to_the_accounts_page(self):
+        body = self._render(password_stored=False).split(b"<main")[1]
+        self.assertNotIn(b"no password stored", body)
+        self.assertNotIn(b"Refresh trust", body)
+        self.assertNotIn(b"Sign in again", body)
 
     def test_ready_with_a_password_says_nothing_about_the_session(self):
-        body = self._render(password_stored=True)
-        self.assertIn(b"signed in, sync loop authenticated", body)
-        self.assertNotIn(b"no password stored", body)
+        body = self._render(path="/auth", password_stored=True)
+        self.assertIn(b"Signed in", body)
+        self.assertIn(b"<dt>Password</dt><dd>Stored</dd>", body)
 
     def test_a_stopped_sync_is_described_by_the_published_reason(self):
         cases = {
@@ -1769,7 +1799,7 @@ class TestTheDashboardSaysWhenAPasswordIsStored(unittest.TestCase):
         ):
             if not env:
                 os.environ.pop("ENV_ICLOUD_PASSWORD", None)
-            return web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
+            return web.create_app(testing=True).test_client().get("/auth").data.decode("utf-8")
 
     def test_a_stored_password_is_called_out(self):
         body = self._body(stored=True)
@@ -1930,8 +1960,8 @@ class TestAStoredPasswordIsNeverOverwritten(unittest.TestCase):
             patch("icloudpy.utils.get_password_from_keyring", return_value="old"),
         ):
             os.environ.pop("ENV_ICLOUD_PASSWORD", None)
-            body = web.create_app(testing=True).test_client().get("/").data.decode("utf-8")
-        self.assertIn("Stored password looks out of date", body)
+            body = web.create_app(testing=True).test_client().get("/auth").data.decode("utf-8")
+        self.assertIn("The stored password looks out of date", body)
         self.assertIn('action="/auth/forget-password"', body)
 
         api = MagicMock()

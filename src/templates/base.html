@@ -22,6 +22,39 @@
       --err-fg: #b3261e;
       --radius: 12px;
       --shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      /* State colours: one meaning each, everywhere. */
+      --ok: #34c759;
+      --warn: #ff9500;
+      --err: #ff3b30;
+      --inset: #f5f5f7;
+      --field: #fafafa;
+      --header-bg: rgba(255,255,255,0.86);
+      color-scheme: light dark;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --surface: #1c1c1e;
+        --text: #f5f5f7;
+        --text-secondary: #c7c7cc;
+        --text-tertiary: #8e8e93;
+        --divider: #38383a;
+        --accent: #0a84ff;
+        --accent-hover: #409cff;
+        --success-bg: rgba(48,209,88,0.16);
+        --success-fg: #30d158;
+        --warn-bg: rgba(255,159,10,0.16);
+        --warn-fg: #ffb340;
+        --err-bg: rgba(255,69,58,0.16);
+        --err-fg: #ff6961;
+        --shadow: none;
+        --ok: #30d158;
+        --warn: #ff9f0a;
+        --err: #ff453a;
+        --inset: #2c2c2e;
+        --field: #2c2c2e;
+        --header-bg: rgba(28,28,30,0.86);
+      }
     }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
@@ -34,17 +67,17 @@
     .mono { font-family: "SF Mono", ui-monospace, Menlo, Monaco, monospace; font-size: 13px; }
 
     .header {
-      background: rgba(255,255,255,0.86);
+      background: var(--header-bg);
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
       border-bottom: 1px solid var(--divider);
       position: sticky; top: 0; z-index: 10;
     }
     .header-inner {
-      max-width: 1024px; margin: 0 auto; padding: 0 24px;
+      max-width: 728px; margin: 0 auto; padding: 0 24px;
       display: flex; align-items: center; height: 48px; gap: 24px;
     }
-    .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); }
+    .brand { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; color: var(--text); white-space: nowrap; flex-shrink: 0; }
     .brand:hover { text-decoration: none; }
     .brand-version {
       display: inline-block; margin-left: 8px;
@@ -61,7 +94,7 @@
     .nav a:hover { background: rgba(0,0,0,0.04); color: var(--text); text-decoration: none; }
     .nav a.active { color: var(--accent); }
 
-    .container { max-width: 1024px; margin: 0 auto; padding: 32px 24px 48px; }
+    .container { max-width: 728px; margin: 0 auto; padding: 32px 24px 48px; }
 
     .page-title { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; margin: 0 0 8px; }
     .page-sub { color: var(--text-tertiary); font-size: 14px; margin: 0 0 28px; }
@@ -72,8 +105,8 @@
       flex-wrap: wrap;
     }
     .status-dot { width: 10px; height: 10px; border-radius: 50%; background: #34c759; box-shadow: 0 0 0 4px rgba(52,199,89,0.16); flex-shrink: 0; }
-    .status-dot.warn { background: #ff9500; box-shadow: 0 0 0 4px rgba(255,149,0,0.16); }
-    .status-dot.err  { background: #ff3b30; box-shadow: 0 0 0 4px rgba(255,59,48,0.16); }
+    .status-dot.warn { background: var(--warn); box-shadow: 0 0 0 4px rgba(255,149,0,0.16); }
+    .status-dot.err  { background: var(--err); box-shadow: 0 0 0 4px rgba(255,59,48,0.16); }
     .status-text { font-size: 15px; flex: 1 1 200px; min-width: 0; }
     .status-text strong { font-weight: 600; }
     .status-cta {
@@ -118,6 +151,11 @@
     @media (max-width: 560px) {
       .container { padding: 20px 16px 32px; }
       .header-inner { padding: 0 16px; gap: 12px; }
+      /* Brand, version and three links are wider than a phone; the
+         version is the one that can go (it stays on wider screens). */
+      .brand-version { display: none; }
+      .nav { gap: 0; }
+      .nav a { padding: 6px 8px; }
       .page-title { font-size: 26px; }
       /* Break only words that genuinely cannot fit (long Apple IDs,
          config paths, URLs). ``break-all`` split ordinary prose
@@ -132,6 +170,12 @@
       .kv dt { font-size: 12px; margin-top: 8px; }
       .kv dt:first-child { margin-top: 0; }
       .logs { font-size: 11px; max-height: 240px; }
+    }
+    /* Small phones: one line still, so the icon goes and the links tighten. */
+    @media (max-width: 380px) {
+      .header-inner { padding: 0 12px; gap: 6px; }
+      .brand-icon { display: none; }
+      .nav a { padding: 6px 6px; font-size: 14px; }
     }
 
     .card { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; }
@@ -160,7 +204,7 @@
     .stats {
       display: flex; gap: 16px; flex-wrap: wrap;
       padding: 12px 14px; margin: 12px 0 0;
-      background: #f5f5f7; border-radius: 8px;
+      background: var(--inset); border-radius: 8px;
     }
     .stat { display: flex; flex-direction: column; gap: 2px; }
     .stat-value { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
@@ -207,7 +251,7 @@
     .logs-head h2 { margin: 0; font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
     .logs-empty { color: var(--text-tertiary); font-size: 13px; padding: 12px; }
     .logs {
-      background: #f5f5f7; border-radius: 8px; padding: 14px 16px;
+      background: var(--inset); border-radius: 8px; padding: 14px 16px;
       font-family: "SF Mono", ui-monospace, Menlo, monospace; font-size: 12px; line-height: 1.6;
       color: var(--text-secondary); max-height: 360px; overflow-y: auto;
       border: 1px solid var(--divider);
@@ -215,15 +259,26 @@
     }
     .log-warn { color: var(--warn-fg); }
     .log-err  { color: var(--err-fg); }
+    /* Label left, value right: the settings-list row. */
+    .rows { margin: 14px 0 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .rows > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px solid var(--divider); }
+    .rows dt { color: var(--text-secondary); }
+    .rows dd { margin: 0; text-align: right; }
+    .rows .sub { display: block; font-size: 12px; color: var(--text-tertiary); }
+    .btn-pair { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-pair form { flex: 1; margin: 0; display: flex; }
+    .btn-pair .btn { flex: 1; white-space: nowrap; }
   </style>
+  {% block extra_style %}{% endblock %}
 </head>
 <body>
 <header class="header">
   <div class="header-inner">
-    <a href="/" class="brand">☁️ iCloud Docker{% if version %}<span class="brand-version">{{ version }}</span>{% endif %}</a>
+    <a href="/" class="brand"><span class="brand-icon">☁️ </span>iCloud Docker{% if version %}<span class="brand-version" title="{{ version }}">{{ version[:14] if version.startswith('custom-') else version }}</span>{% endif %}</a>
     <nav class="nav">
       <a href="/" class="{% if active_nav == 'dashboard' %}active{% endif %}">Dashboard</a>
-      <a href="/auth" class="{% if active_nav == 'auth' %}active{% endif %}">Auth</a>
+      <a href="/auth" class="{% if active_nav == 'auth' %}active{% endif %}">{{ 'Accounts' if (g.apple_ids or 1) > 1 else 'Account' }}</a>
+      <a href="/settings" class="{% if active_nav == 'settings' %}active{% endif %}">Settings</a>
     </nav>
   </div>
 </header>
