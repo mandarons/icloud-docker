@@ -762,6 +762,16 @@ class TestCeremonyCookieIsolation(unittest.TestCase):
             web._seed_device_trust(ceremony, "a@icloud.com")  # noqa: SLF001
         self.assertEqual(os.listdir(ceremony), [])
 
+    def test_a_session_without_a_trust_token_seeds_nothing(self):
+        saved, ceremony = tempfile.mkdtemp(), tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, saved, True)
+        self.addCleanup(shutil.rmtree, ceremony, True)
+        with open(os.path.join(saved, "aicloudcom.session"), "w") as fh:
+            json.dump({"client_id": "auth-1", "session_token": "dead"}, fh)
+        with patch.object(web, "DEFAULT_COOKIE_DIRECTORY", saved):
+            web._seed_device_trust(ceremony, "a@icloud.com")  # noqa: SLF001
+        self.assertEqual(os.listdir(ceremony), [])
+
     def test_still_trusted_signs_in_without_the_key(self):
         saved = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, saved, True)
