@@ -80,7 +80,10 @@ def get_accounts(config: dict | None) -> list[Account]:
     if not isinstance(raw, list):
         LOGGER.warning("accounts: must be a list; ignoring it")
         return []
-    main = (config_parser.get_username(config=config) or "").lower() if config else ""
+    if not raw:
+        # A single-account config never reads anything else here.
+        return []
+    main = (config_parser.get_username(config=config) or "").lower()
     accounts: list[Account] = []
     seen: set[str] = set()
     for index, entry in enumerate(raw):
