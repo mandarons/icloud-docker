@@ -14,9 +14,10 @@ the sign-in pages (``src.member_signin``) and resumed by the member sync
 
 What a member backs up (``member_config``): their personal photo library,
 into ``<photos destination>/<id>``, and their iCloud Drive, into a folder
-beside the main account's (``drive/Eric`` -> ``drive/<id>``), never inside
+beside the main account's (``drive/Main`` -> ``drive/<id>``), never inside
 it, where the main account's cleanup would delete what it does not
-recognise. Not the Shared Library: the primary already backs it up.
+recognise. A Shared Library only when the member owns it and nobody else
+backs it up (``member_sync``): each library is downloaded once.
 Obsolete-file cleanup is off unless the entry turns it on. Drive is on
 whenever the main account syncs Drive, unless the entry says
 ``drive: false`` (the member's own page has a switch). An entry may change
