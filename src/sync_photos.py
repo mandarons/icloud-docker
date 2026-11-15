@@ -374,29 +374,17 @@ def remove_obsolete(destination_path, files):
     return remove_obsolete_files(destination_path, files)
 
 
-def sync_photos(config, photos):
-    """Sync all photos.
+def apply_naming_settings(config) -> dict:
+    """Set the process-wide naming switches a photo pass reads; return the filters.
 
-    Main orchestration function that coordinates the entire photo sync process.
-    This function has been refactored to use the new modular architecture while
-    maintaining backward compatibility.
-
-    Args:
-        config: Configuration dictionary
-        photos: Photos object from iCloudPy
-
-    Returns:
-        Tuple of (total_successful, total_failed) download counts
+    Called at the start of every pass, and by read-only reports that must
+    name files exactly as a pass would.
     """
-    # A new report per run: failures are reported once per asset per pass.
-    reset_download_report()
-    # Parse configuration using centralized config parser
-    destination_path = config_parser.prepare_photos_destination(config=config)
-    library_destinations = config_parser.get_photos_library_destinations(config=config)
     # Apply the requested filename convention for this sync run. The module-level
     # default in photo_path_utils flows down through generate_photo_path -> all
     # downloads without requiring a per-call signature change.
-    from src.photo_path_utils import set_default_filename_format, set_file_format
+    from src.photo_path_utils import FOLDER_TZ, set_default_filename_format, set_file_format
+    FOLDER_TZ.set(config_parser.get_photos_folder_timezone(config=config))
     set_default_filename_format(config_parser.get_photos_filename_format(config=config))
     set_file_format(
         config_parser.get_photos_file_format(config=config),
@@ -432,6 +420,29 @@ def sync_photos(config, photos):
     set_fallback_to_original(
         bool(filters.get("fallback_to_original")) and "original" not in file_sizes,
     )
+    return filters
+
+
+def sync_photos(config, photos):
+    """Sync all photos.
+
+    Main orchestration function that coordinates the entire photo sync process.
+    This function has been refactored to use the new modular architecture while
+    maintaining backward compatibility.
+
+    Args:
+        config: Configuration dictionary
+        photos: Photos object from iCloudPy
+
+    Returns:
+        Tuple of (total_successful, total_failed) download counts
+    """
+    # A new report per run: failures are reported once per asset per pass.
+    reset_download_report()
+    # Parse configuration using centralized config parser
+    destination_path = config_parser.prepare_photos_destination(config=config)
+    library_destinations = config_parser.get_photos_library_destinations(config=config)
+    filters = apply_naming_settings(config)
     files = set()
     download_all = config_parser.get_photos_all_albums(config=config)
     use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)
@@ -1002,6 +1013,12 @@ def _sync_filtered_albums_in_library(
     return total_successful, total_failed
 
 
+def _all_photos_folder(destination_path: str, config) -> str:
+    """Where a library's whole tree goes: ``<dest>/all`` unless configured."""
+    folder = config_parser.get_photos_all_folder(config=config)
+    return os.path.join(destination_path, folder) if folder else destination_path
+
+
 def _sync_all_photos_in_library(
     photos,
     library,
@@ -1029,7 +1046,7 @@ def _sync_all_photos_in_library(
     """
     result = sync_album_photos(
         album=photos.libraries[library].all,
-        destination_path=os.path.join(destination_path, "all"),
+        destination_path=_all_photos_folder(destination_path, config),
         file_sizes=filters["file_sizes"],
         extensions=filters["extensions"],
         files=files,
