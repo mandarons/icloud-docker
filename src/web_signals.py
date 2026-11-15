@@ -21,12 +21,17 @@ they're persisted across container recreations.
 
 __author__ = "Mandar Patil (mandarons@pm.me)"
 
+import contextlib
+import contextvars
 import functools
 import json
 import os
 import threading
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 from src import get_logger
 
@@ -76,7 +81,28 @@ def _sentinel_path(service: str) -> str:
     return os.path.join(_config_dir(), f".force-sync-{service}")
 
 
+# The household member whose sync is running on this thread, or None for
+# the primary account. Set by ``src.member_sync`` around a member's pass,
+# and by the dashboard to read a member's card; every state read and write
+# below then goes to that member's own file, so a member's pass can never
+# paint the primary's card.
+ACCOUNT: contextvars.ContextVar[str | None] = contextvars.ContextVar("icloud_account", default=None)
+
+
+@contextlib.contextmanager
+def as_account(account_id: str | None) -> Iterator[None]:
+    """Route state reads and writes to one member's file for a block."""
+    token = ACCOUNT.set(account_id)
+    try:
+        yield
+    finally:
+        ACCOUNT.reset(token)
+
+
 def _state_path() -> str:
+    account_id = ACCOUNT.get()
+    if account_id:
+        return os.path.join(_config_dir(), "accounts", account_id, "state.json")
     return os.path.join(_config_dir(), ".last-sync-state.json")
 
 
@@ -480,3 +506,31 @@ def clear_stale_library_states() -> None:
     if changed:
         state[_LIBRARY_STATE_KEY] = libraries
         _save_state(state)
+
+
+_MEMBER_STATE_KEY = "_member"
+
+
+@_locked
+def record_member(**fields: Any) -> None:
+    """Merge fields into the current member's status (sign-in, report, approval).
+
+    A value of ``None`` removes the field. Only meaningful inside
+    ``as_account``; the primary has no member status.
+    """
+    state = _load_state()
+    member = state.get(_MEMBER_STATE_KEY)
+    member = dict(member) if isinstance(member, dict) else {}
+    for key, value in fields.items():
+        if value is None:
+            member.pop(key, None)
+        else:
+            member[key] = value
+    state[_MEMBER_STATE_KEY] = member
+    _save_state(state)
+
+
+def get_member() -> dict[str, Any]:
+    """The current member's status, or ``{}``."""
+    member = _load_state().get(_MEMBER_STATE_KEY)
+    return member if isinstance(member, dict) else {}

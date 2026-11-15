@@ -202,6 +202,38 @@ def _publish_running(service: str, running: bool) -> None:
         LOGGER.warning(f"Could not publish {service} sync state: {e!s}")
 
 
+def _record_completion(service: str, stats) -> None:
+    """Persist a finished pass's numbers for the web dashboard.
+
+    Best-effort: a failed write never affects the sync. ``stats`` is None
+    when the service did not run this cycle, and nothing is recorded.
+    """
+    if stats is None:
+        return
+    try:
+        from src import web_signals
+
+        if service == "drive":
+            web_signals.record_sync_completion(
+                service="drive",
+                files_downloaded=stats.files_downloaded,
+                files_skipped=stats.files_skipped,
+                files_removed=stats.files_removed,
+                errors=len(stats.errors),
+                duration_seconds=stats.duration_seconds,
+            )
+        else:
+            web_signals.record_sync_completion(
+                service="photos",
+                files_downloaded=stats.photos_downloaded,
+                files_skipped=stats.photos_skipped,
+                errors=len(stats.errors),
+                duration_seconds=stats.duration_seconds,
+            )
+    except Exception as e:
+        LOGGER.debug(f"web_signals: record_sync_completion raised: {e!s}")
+
+
 def _maybe_refresh_trust(config, api) -> None:
     """Re-trust the session before its token ages out.
 
@@ -1788,12 +1820,17 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         sync_state,
                         drive_sync_interval,
                     )
+                    # Recorded as each service finishes, not at the end of
+                    # the cycle: otherwise the dashboard's Drive card shows
+                    # the previous pass until a long Photos pass ends.
+                    _record_completion("drive", drive_stats)
                     photos_stats = _perform_photos_sync(
                         config,
                         api,
                         sync_state,
                         photos_sync_interval,
                     )
+                    _record_completion("photos", photos_stats)
 
                     # Populate summary with statistics
                     summary.drive_stats = drive_stats
@@ -1827,38 +1864,6 @@ def sync(dry_run: bool = False, check_files: int | None = None):
                         message=_cycle_end_message(has_errors, nothing_reason),
                         data=cycle_data,
                     )
-
-                    # Persist per-service last-sync state for the web
-                    # dashboard. Best-effort — if the JSON write fails
-                    # the sync itself is unaffected.
-                    try:
-                        from src import web_signals as _ws
-
-                        if drive_stats is not None:
-                            _ws.record_sync_completion(
-                                service="drive",
-                                files_downloaded=drive_stats.files_downloaded,
-                                files_skipped=drive_stats.files_skipped,
-                                files_removed=drive_stats.files_removed,
-                                errors=len(drive_stats.errors),
-                                duration_seconds=drive_stats.duration_seconds,
-                            )
-                        if photos_stats is not None:
-                            _ws.record_sync_completion(
-                                service="photos",
-                                files_downloaded=photos_stats.photos_downloaded,
-                                files_skipped=photos_stats.photos_skipped,
-                                errors=len(photos_stats.errors),
-                                duration_seconds=photos_stats.duration_seconds,
-                            )
-                    except (
-                        ImportError
-                    ):  # pragma: no cover — best-effort fallback for builds without web_signals
-                        pass
-                    except Exception as e:
-                        LOGGER.debug(
-                            f"web_signals: record_sync_completion raised: {e!s}",
-                        )
 
                     # Send usage statistics (anonymized summary data)
                     try:
