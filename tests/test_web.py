@@ -2049,3 +2049,110 @@ class TestRemovingAPasswordAlreadyGone(unittest.TestCase):
             response = _csrf_post(web.create_app(testing=True).test_client(), "/auth/forget-password")
         self.assertEqual(response.status_code, 200)
         delete.assert_not_called()
+
+
+class TestWebAuthRegionEndpoints(unittest.TestCase):
+    """Web UI authentication routes forward China-region endpoints when
+    ``app.region`` is ``china`` and omit them for ``global``."""
+
+    def setUp(self):
+        _reset_pending_auth()
+
+    def tearDown(self):
+        _reset_pending_auth()
+
+    def _client(self):
+        return web.create_app(testing=True).test_client()
+
+    def _config_for_region(self, region: str) -> dict:
+        return {
+            "app": {
+                "credentials": {"username": "user@test.com"},
+                "region": region,
+            },
+        }
+
+    def test_auth_password_passes_china_endpoints(self):
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = False
+        with (
+            patch.object(web, "_load_current_config", return_value=self._config_for_region("china")),
+            patch("icloudpy.ICloudPyService", return_value=fake_api) as service_cls,
+        ):
+            response = _csrf_post(self._client(), "/auth/password", data={"password": "secret"})
+
+        self.assertEqual(response.status_code, 302)
+        kwargs = service_cls.call_args.kwargs
+        self.assertEqual(kwargs["home_endpoint"], "https://www.icloud.com.cn")
+        self.assertEqual(kwargs["setup_endpoint"], "https://setup.icloud.com.cn/setup/ws/1")
+
+    def test_auth_password_global_omits_china_endpoints(self):
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = False
+        with (
+            patch.object(web, "_load_current_config", return_value=self._config_for_region("global")),
+            patch("icloudpy.ICloudPyService", return_value=fake_api) as service_cls,
+        ):
+            response = _csrf_post(self._client(), "/auth/password", data={"password": "secret"})
+
+        self.assertEqual(response.status_code, 302)
+        kwargs = service_cls.call_args.kwargs
+        self.assertNotIn("home_endpoint", kwargs)
+        self.assertNotIn("setup_endpoint", kwargs)
+
+    def test_security_key_start_passes_china_endpoints(self):
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = False
+        with (
+            patch.object(web, "_load_current_config", return_value=self._config_for_region("china")),
+            patch("icloudpy.ICloudPyService", return_value=fake_api) as service_cls,
+        ):
+            response = _csrf_post(self._client(), "/auth/security-key/start", data={"password": "secret"})
+
+        self.assertEqual(response.status_code, 302)
+        kwargs = service_cls.call_args.kwargs
+        self.assertEqual(kwargs["home_endpoint"], "https://www.icloud.com.cn")
+        self.assertEqual(kwargs["setup_endpoint"], "https://setup.icloud.com.cn/setup/ws/1")
+
+    def test_refresh_trust_with_password_passes_china_endpoints(self):
+        from unittest.mock import MagicMock
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = False
+        with (
+            patch.object(web, "_load_current_config", return_value=self._config_for_region("china")),
+            patch("icloudpy.utils.get_password_from_keyring", return_value="secret"),
+            patch("icloudpy.ICloudPyService", return_value=fake_api) as service_cls,
+        ):
+            response = _csrf_post(self._client(), "/auth/refresh-trust")
+
+        self.assertEqual(response.status_code, 302)
+        kwargs = service_cls.call_args.kwargs
+        self.assertEqual(kwargs["home_endpoint"], "https://www.icloud.com.cn")
+        self.assertEqual(kwargs["setup_endpoint"], "https://setup.icloud.com.cn/setup/ws/1")
+
+    def test_refresh_trust_session_only_passes_china_region(self):
+        from unittest.mock import MagicMock
+
+        from icloudpy import exceptions as icloudpy_exceptions
+
+        fake_api = MagicMock()
+        fake_api.requires_2fa = False
+        with (
+            patch.object(web, "_load_current_config", return_value=self._config_for_region("china")),
+            patch(
+                "icloudpy.utils.get_password_from_keyring",
+                side_effect=icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException(),
+            ),
+            patch("src.sync.get_api_instance", return_value=fake_api) as get_api,
+        ):
+            response = _csrf_post(self._client(), "/auth/refresh-trust")
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(get_api.call_args.kwargs["server_region"], "china")

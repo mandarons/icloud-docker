@@ -64,6 +64,9 @@ _AUTH_LOCK = threading.Lock()
 # written anywhere.
 _PENDING_AUTH_TTL_SECONDS = 600
 
+_CHINA_HOME_ENDPOINT = "https://www.icloud.com.cn"
+_CHINA_SETUP_ENDPOINT = "https://setup.icloud.com.cn/setup/ws/1"
+
 # Apple IDs whose last web sign-in used a password other than the stored
 # one, so the stored copy is probably out of date. The dashboard offers to
 # remove it; nothing removes it unasked. Each maps to a keyed fingerprint
@@ -754,13 +757,11 @@ def create_app(testing: bool = False) -> Flask:
             )
 
         try:
-            # Late import so /api/health still works if icloudpy is mid-upgrade.
-            import icloudpy
-
-            api = icloudpy.ICloudPyService(
-                apple_id=username,
+            api = _create_icloud_service(
+                username=username,
                 password=password,
                 cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+                config=config,
             )
         except Exception as e:
             LOGGER.exception("Web UI auth failed during ICloudPyService instantiation")
@@ -975,13 +976,12 @@ def create_app(testing: bool = False) -> Flask:
             )
 
         try:
-            import icloudpy
-
             ceremony_dir = _ceremony_cookie_dir()
-            api = icloudpy.ICloudPyService(
-                apple_id=username,
+            api = _create_icloud_service(
+                username=username,
                 password=password,
                 cookie_directory=ceremony_dir,
+                config=config,
             )
         except Exception as e:
             _discard_ceremony_dir(locals().get("ceremony_dir"))
@@ -1355,14 +1355,17 @@ def create_app(testing: bool = False) -> Flask:
                 # no-password exception below rather than a sign-in attempt.
                 from src import sync
 
-                api = sync.get_api_instance(username=username, password=None)
+                api = sync.get_api_instance(
+                    username=username,
+                    password=None,
+                    server_region=config_parser.get_region(config=config) if config else "global",
+                )
             else:
-                import icloudpy
-
-                api = icloudpy.ICloudPyService(
-                    apple_id=username,
+                api = _create_icloud_service(
+                    username=username,
                     password=password,
                     cookie_directory=DEFAULT_COOKIE_DIRECTORY,
+                    config=config,
                 )
         except icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException:
             LOGGER.info("Web UI refresh-trust: no password and the saved session is not usable")
@@ -1628,6 +1631,39 @@ def _stored_password(username: str) -> str | None:
         return icloudpy_utils.get_password_from_keyring(username) or None
     except icloudpy_exceptions.ICloudPyNoStoredPasswordAvailableException:
         return None
+
+
+def _create_icloud_service(
+    username: str,
+    password: str,
+    cookie_directory: str,
+    config: dict[str, Any] | None,
+) -> Any:
+    """Instantiate ``icloudpy.ICloudPyService`` with region-specific endpoints.
+
+    Mirrors ``sync.get_api_instance`` so China-region accounts hit
+    ``icloud.com.cn`` instead of ``icloud.com`` (which fails with
+    ``KeyError: 'webservices'``). Kept separate from ``get_api_instance``
+    because interactive Web UI auth intentionally leaves request timeouts
+    unbounded and does not need ``photos_require_finished_index``.
+    """
+    # Late import so /api/health still works if icloudpy is mid-upgrade.
+    import icloudpy
+
+    region = config_parser.get_region(config=config) if config else "global"
+    if region == "china":
+        return icloudpy.ICloudPyService(
+            apple_id=username,
+            password=password,
+            cookie_directory=cookie_directory,
+            home_endpoint=_CHINA_HOME_ENDPOINT,
+            setup_endpoint=_CHINA_SETUP_ENDPOINT,
+        )
+    return icloudpy.ICloudPyService(
+        apple_id=username,
+        password=password,
+        cookie_directory=cookie_directory,
+    )
 
 
 def _session_authenticates(username: str, *, session_only: bool = False) -> bool:
