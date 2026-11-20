@@ -1,0 +1,4 @@
+INFO     root:config_logging.py:35 Using configured max_threads: 1.
+INFO     root:photo_download_manager.py:486 Starting parallel photo downloads with 1 threads for 1 photos...
+DEBUG    root:photo_download_manager.py:409 [Thread] Starting processing of /photos/one.jpeg
+INFO     root:photo_download_manager.py:512 Photo processing complete: 1 successful, 0 failed

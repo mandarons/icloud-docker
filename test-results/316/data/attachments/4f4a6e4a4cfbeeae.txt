@@ -1,0 +1,338 @@
+[38;21m2026-11-20 06:40:39,335 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,335 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,335 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,335 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,336 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,336 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,340 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,340 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;5;39m2026-11-20 06:40:39,341 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2026-11-20 06:40:39,341 :: INFO :: root :: config_logging.py :: 35 :: Syncing drive every 1 seconds.[0m
+[38;5;39m2026-11-20 06:40:39,341 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every 2 seconds.[0m
+[38;5;39m2026-11-20 06:40:39,341 :: INFO :: root :: config_logging.py :: 35 :: Syncing photos every 2 seconds.[0m
+[38;21m2026-11-20 06:40:39,341 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,341 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,341 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,341 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,341 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,341 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,346 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,346 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,347 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,347 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,347 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,347 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,347 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,347 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,348 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;5;39m2026-11-20 06:40:39,348 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;21m2026-11-20 06:40:39,348 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-11-20 06:40:39,348 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-11-20 06:40:39,348 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,348 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,348 :: INFO :: root :: sync.py :: 797 :: Syncing photos...[0m
+[38;5;39m2026-11-20 06:40:39,348 :: INFO :: root :: sync.py :: 797 :: Syncing photos...[0m
+[38;5;39m2026-11-20 06:40:39,349 :: INFO :: root :: sync.py :: 803 :: Photos synced[0m
+[38;5;39m2026-11-20 06:40:39,349 :: INFO :: root :: sync.py :: 803 :: Photos synced[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 114 :: Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 442 :: New installation detected, registering...[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 289 :: Installing new instance[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 233 :: Posting new installation to: None[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: c1126bc7-aa89-4a57-b853-2763cc70d643[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 239 :: Successfully registered new installation: c1126bc7-aa89-4a57-b853-2763cc70d643[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: c1126bc7-aa89-4a57-b853-2763cc70d643[0m
+[38;21m2026-11-20 06:40:39,350 :: DEBUG :: root :: usage.py :: 295 :: Installation completed with ID: c1126bc7-aa89-4a57-b853-2763cc70d643[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: root :: usage.py :: 446 :: Installation registration completed[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: root :: usage.py :: 446 :: Installation registration completed[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: root :: notify.py :: 898 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: root :: notify.py :: 898 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;5;39m2026-11-20 06:40:39,351 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,351 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,351 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,351 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,351 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,356 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,356 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,356 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,356 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,357 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,357 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,357 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,357 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,357 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;5;39m2026-11-20 06:40:39,357 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;21m2026-11-20 06:40:39,358 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,358 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,358 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,358 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,358 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,358 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,358 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,358 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 407 :: Sending first heartbeat[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 407 :: Sending first heartbeat[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: None[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 313 :: Posting heartbeat to: None[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 317 :: Heartbeat sent successfully[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 317 :: Heartbeat sent successfully[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 410 :: First heartbeat sent successfully[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 410 :: First heartbeat sent successfully[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 144 :: Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 456 :: Heartbeat completed successfully[0m
+[38;21m2026-11-20 06:40:39,359 :: DEBUG :: root :: usage.py :: 456 :: Heartbeat completed successfully[0m
+[38;5;39m2026-11-20 06:40:39,359 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,359 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;21m2026-11-20 06:40:39,360 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,360 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,360 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,360 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,360 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,360 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,364 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,364 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,365 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,365 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,365 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,365 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,365 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,365 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,366 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;5;39m2026-11-20 06:40:39,366 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;21m2026-11-20 06:40:39,366 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-11-20 06:40:39,366 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-11-20 06:40:39,366 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,366 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,366 :: INFO :: root :: sync.py :: 797 :: Syncing photos...[0m
+[38;5;39m2026-11-20 06:40:39,366 :: INFO :: root :: sync.py :: 797 :: Syncing photos...[0m
+[38;5;39m2026-11-20 06:40:39,367 :: INFO :: root :: sync.py :: 803 :: Photos synced[0m
+[38;5;39m2026-11-20 06:40:39,367 :: INFO :: root :: sync.py :: 803 :: Photos synced[0m
+[38;21m2026-11-20 06:40:39,368 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,368 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,368 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,368 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,368 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,368 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,368 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,368 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.010009[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.010009[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: notify.py :: 898 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: root :: notify.py :: 898 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;5;39m2026-11-20 06:40:39,369 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,369 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,369 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,369 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,369 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,374 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,374 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,375 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,375 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,375 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,375 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,375 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,375 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,376 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;5;39m2026-11-20 06:40:39,376 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.017772[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.017772[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,376 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,377 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,377 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2026-11-20 06:40:39,377 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,377 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;21m2026-11-20 06:40:39,377 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,377 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,377 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,377 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,377 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,377 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,381 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,381 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,382 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,382 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,382 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,382 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,382 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,382 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,383 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;5;39m2026-11-20 06:40:39,383 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;21m2026-11-20 06:40:39,383 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-11-20 06:40:39,383 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-11-20 06:40:39,383 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,383 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,383 :: INFO :: root :: sync.py :: 797 :: Syncing photos...[0m
+[38;5;39m2026-11-20 06:40:39,383 :: INFO :: root :: sync.py :: 797 :: Syncing photos...[0m
+[38;5;39m2026-11-20 06:40:39,384 :: INFO :: root :: sync.py :: 803 :: Photos synced[0m
+[38;5;39m2026-11-20 06:40:39,384 :: INFO :: root :: sync.py :: 803 :: Photos synced[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,385 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.026890[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.026890[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: root :: notify.py :: 898 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: root :: notify.py :: 898 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;5;39m2026-11-20 06:40:39,386 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,386 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,386 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,386 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,386 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,391 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,391 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,391 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,391 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,392 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,392 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,392 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,392 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,392 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;5;39m2026-11-20 06:40:39,392 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.034635[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.034635[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,393 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2026-11-20 06:40:39,393 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,393 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;21m2026-11-20 06:40:39,394 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,394 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,394 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,394 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,394 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,394 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,398 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,398 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,399 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,399 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,399 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,399 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,399 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,399 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,400 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;5;39m2026-11-20 06:40:39,400 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;21m2026-11-20 06:40:39,401 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-11-20 06:40:39,401 :: DEBUG :: root :: config_logging.py :: 44 :: Checking photos destination ...[0m
+[38;21m2026-11-20 06:40:39,401 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,401 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,401 :: INFO :: root :: sync.py :: 797 :: Syncing photos...[0m
+[38;5;39m2026-11-20 06:40:39,401 :: INFO :: root :: sync.py :: 797 :: Syncing photos...[0m
+[38;5;39m2026-11-20 06:40:39,402 :: INFO :: root :: sync.py :: 803 :: Photos synced[0m
+[38;5;39m2026-11-20 06:40:39,402 :: INFO :: root :: sync.py :: 803 :: Photos synced[0m
+[38;21m2026-11-20 06:40:39,538 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,538 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.180406[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.180406[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: notify.py :: 898 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;21m2026-11-20 06:40:39,539 :: DEBUG :: root :: notify.py :: 898 :: Sync summary notification skipped (not enabled or no activity)[0m
+[38;5;39m2026-11-20 06:40:39,539 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,539 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;21m2026-11-20 06:40:39,540 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:39,540 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloud_test_config_hf8zg1_b/session_data/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:39,540 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:39,540 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:39,540 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,540 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:39,544 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,544 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:39,545 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,545 :: DEBUG :: root :: config_logging.py :: 44 :: Checking drive destination ...[0m
+[38;21m2026-11-20 06:40:39,546 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,546 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;5;39m2026-11-20 06:40:39,546 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,546 :: INFO :: root :: sync.py :: 703 :: Syncing drive...[0m
+[38;5;39m2026-11-20 06:40:39,546 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;5;39m2026-11-20 06:40:39,546 :: INFO :: root :: sync.py :: 709 :: Drive synced[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 436 :: Usage tracking alive check started[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: config_logging.py :: 44 :: Checking root destination ...[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 43 :: Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 105 :: Loaded and validated usage cache from: /home/runner/work/icloud-docker/icloud-docker/tests/temp/.data[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 452 :: Installation already registered, checking heartbeat[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.188679[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 388 :: Time since last heartbeat: 0:00:00.188679[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 400 :: Heartbeat throttled (same UTC day)[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;21m2026-11-20 06:40:39,547 :: DEBUG :: root :: usage.py :: 459 :: No heartbeat required or heartbeat failed[0m
+[38;5;39m2026-11-20 06:40:39,547 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,547 :: INFO :: root :: sync.py :: 1622 :: Resyncing at Fri Nov 20 06:40:40 2026 ...[0m

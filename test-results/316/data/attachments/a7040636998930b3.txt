@@ -1,0 +1,14 @@
+[38;21m2026-11-20 06:40:38,995 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;21m2026-11-20 06:40:38,995 :: DEBUG :: icloudpy.base :: base.py :: 284 :: Using session file /tmp/icloudpy/runner/quentintarantinohotmailfr.session[0m
+[38;5;39m2026-11-20 06:40:38,995 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;5;39m2026-11-20 06:40:38,995 :: INFO :: icloudpy.base :: base.py :: 291 :: Session file does not exist[0m
+[38;21m2026-11-20 06:40:38,995 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:38,995 :: DEBUG :: icloudpy.base :: base.py :: 356 :: Authenticating as quentintarantino@hotmail.fr[0m
+[38;21m2026-11-20 06:40:38,999 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;21m2026-11-20 06:40:38,999 :: DEBUG :: icloudpy.base :: base.py :: 460 :: Authentication completed successfully[0m
+[38;5;196m2026-11-20 06:40:39,003 :: ERROR :: root :: sync.py :: 1213 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-11-20 06:40:39,003 :: ERROR :: root :: sync.py :: 1213 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-11-20 06:40:39,004 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-20 06:40:39,004 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-20 06:40:39,004 :: INFO :: root :: sync.py :: 1566 :: Retrying login at Fri Nov 20 06:50:39 2026 ...[0m
+[38;5;39m2026-11-20 06:40:39,004 :: INFO :: root :: sync.py :: 1566 :: Retrying login at Fri Nov 20 06:50:39 2026 ...[0m

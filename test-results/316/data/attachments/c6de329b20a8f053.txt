@@ -1,0 +1,8 @@
+[38;5;196m2026-11-20 06:40:45,083 :: ERROR :: root :: sync.py :: 1213 :: Error: 2FA is required. Please log in.[0m
+[38;5;196m2026-11-20 06:40:45,083 :: ERROR :: root :: sync.py :: 1213 :: Error: 2FA is required. Please log in.[0m
+[38;5;39m2026-11-20 06:40:45,084 :: INFO :: root :: sync.py :: 1189 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-11-20 06:40:45,084 :: INFO :: root :: sync.py :: 1189 :: Requested a 2FA push notification to your trusted devices.[0m
+[38;5;39m2026-11-20 06:40:45,085 :: INFO :: root :: sync.py :: 1566 :: Retrying login at Fri Nov 20 06:41:45 2026 ...[0m
+[38;5;39m2026-11-20 06:40:45,085 :: INFO :: root :: sync.py :: 1566 :: Retrying login at Fri Nov 20 06:41:45 2026 ...[0m
+[38;5;226m2026-11-20 06:40:45,085 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-11-20 06:40:45,085 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m

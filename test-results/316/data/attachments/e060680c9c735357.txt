@@ -1,0 +1,9 @@
+[38;5;226m2026-11-20 06:40:37,957 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+u[38;5;226m2026-11-20 06:40:37,958 :: WARNING :: root :: config_logging.py :: 26 :: app > credentials > retry_login_interval not found. Using default 600 seconds ...[0m
+uuu[38;5;226m2026-11-20 06:40:37,958 :: WARNING :: root :: config_logging.py :: 26 :: app > root root destination is missing. Using default root destination: ./icloud[0m
+uuuuuuuu[38;5;226m2026-11-20 06:40:37,959 :: WARNING :: root :: config_logging.py :: 26 :: drive > destination destination is missing. Using default drive destination: drive.[0m
+u[38;5;226m2026-11-20 06:40:37,959 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+u[38;5;226m2026-11-20 06:40:37,959 :: WARNING :: root :: config_logging.py :: 26 :: drive > remove_obsolete remove_obsolete is not found. Not removing the obsolete files and folders.[0m
+uuuu[38;5;226m2026-11-20 06:40:37,959 :: WARNING :: root :: config_logging.py :: 26 :: photos > destination destination is missing. Using default photos destination: photos > destination[0m
+u[38;5;226m2026-11-20 06:40:37,959 :: WARNING :: root :: config_logging.py :: 26 :: photos > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+uuuuuuuuuuuuuuuuuuu

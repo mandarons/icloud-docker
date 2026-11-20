@@ -1,0 +1,4 @@
+[38;5;39m2026-11-20 06:40:34,063 :: INFO :: root :: photo_file_utils.py :: 512 :: Downloading /tmp/tmpynx_2rzi/IMG_0001__original__bWFzdGVyLTE=.JPEG ...[0m
+[38;5;226m2026-11-20 06:40:34,064 :: WARNING :: root :: photo_file_utils.py :: 550 :: Accepted /tmp/tmpynx_2rzi/IMG_0001__original__bWFzdGVyLTE=.JPEG: iCloud declares 10 bytes, but the served response is a complete 8-byte transfer.[0m
+[38;21m2026-11-20 06:40:34,064 :: DEBUG :: root :: photo_file_utils.py :: 366 :: No changes detected. Skipping the file /tmp/tmpynx_2rzi/IMG_0001__original__bWFzdGVyLTE=.JPEG: it matches the accepted 8-byte transfer for a declared 10 bytes.[0m
+[38;21m2026-11-20 06:40:34,064 :: DEBUG :: root :: photo_file_utils.py :: 366 :: No changes detected. Skipping the file /tmp/tmpynx_2rzi/IMG_0001__original__bWFzdGVyLTE=.JPEG: it matches the accepted 8-byte transfer for a declared 10 bytes.[0m
