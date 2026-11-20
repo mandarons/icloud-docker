@@ -1,0 +1,16 @@
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:114 Usage cache file not found, creating: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:144 Atomically saved usage cache to: /home/runner/work/icloud-docker/icloud-docker/icloud/.data
+DEBUG    root:usage.py:289 Installing new instance
+DEBUG    root:usage.py:233 Posting new installation to: None
+DEBUG    root:usage.py:239 Successfully registered new installation: 8b84dda6-8554-4755-b0d5-574b265be1bd
+DEBUG    root:usage.py:295 Installation completed with ID: 8b84dda6-8554-4755-b0d5-574b265be1bd
+DEBUG    root:usage.py:287 Upgrading existing installation: 8b84dda6-8554-4755-b0d5-574b265be1bd
+DEBUG    root:usage.py:233 Posting new installation to: None
+DEBUG    root:usage.py:239 Successfully registered new installation: fdea5e6b-eea9-43bd-bc79-a14b7263ab1b
+DEBUG    root:usage.py:295 Installation completed with ID: fdea5e6b-eea9-43bd-bc79-a14b7263ab1b
+DEBUG    root:config_logging.py:44 Checking root destination ...
+DEBUG    root:usage.py:43 Initialized usage cache at: /home/runner/work/icloud-docker/icloud-docker/icloud/.data

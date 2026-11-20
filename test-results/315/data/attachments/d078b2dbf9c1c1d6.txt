@@ -1,0 +1,3 @@
+INFO     root:photo_file_utils.py:512 Downloading /tmp/tmpq_4qfleo/IMG_0001__original__bWFzdGVyLTE=.JPEG ...
+WARNING  root:photo_file_utils.py:550 Accepted /tmp/tmpq_4qfleo/IMG_0001__original__bWFzdGVyLTE=.JPEG: iCloud declares 10 bytes, but the served response is a complete 8-byte transfer.
+DEBUG    root:photo_file_utils.py:372 Change detected: local_file_size is 8 and remote_file_size is 11.
