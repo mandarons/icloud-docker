@@ -46,6 +46,14 @@ DEFAULT_CONFIG_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__
 # sandboxes).
 _CONFIG_DIR = os.environ.get("ICLOUD_DOCKER_CONFIG_DIR", "/config")
 DEFAULT_COOKIE_DIRECTORY = os.path.join(_CONFIG_DIR, "session_data")
+# Apple's China-region endpoints. A China Apple ID must sign in against these
+# or every request fails with ``KeyError: 'webservices'``. They live here, in
+# one place, because both the sync loop (``src/sync.py``) and the Web UI
+# (``src/web.py``) authenticate the same account: if only one of them were
+# updated when Apple moves an endpoint, sign-in would succeed while sync
+# failed, or the reverse.
+CHINA_HOME_ENDPOINT = "https://www.icloud.com.cn"
+CHINA_SETUP_ENDPOINT = "https://setup.icloud.com.cn/setup/ws/1"
 
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 

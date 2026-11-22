@@ -11,6 +11,8 @@ import requests
 from icloudpy import ICloudPyService, exceptions, utils
 
 from src import (
+    CHINA_HOME_ENDPOINT,
+    CHINA_SETUP_ENDPOINT,
     DEFAULT_CONFIG_FILE_PATH,
     DEFAULT_RETRY_LOGIN_INTERVAL_SEC,
     ENV_CONFIG_FILE_PATH_KEY,
@@ -429,23 +431,18 @@ def get_api_instance(
     # Apple can report a photo library as still indexing for weeks while
     # listing it in full. Open it anyway: sync_photos downloads what it lists
     # and keeps it out of obsolete-file cleanup until the index finishes.
-    api = (
-        service_class(
-            apple_id=username,
-            password=password,
-            cookie_directory=cookie_directory,
-            home_endpoint="https://www.icloud.com.cn",
-            setup_endpoint="https://setup.icloud.com.cn/setup/ws/1",
-            photos_require_finished_index=False,
-        )
-        if server_region == "china"
-        else service_class(
-            apple_id=username,
-            password=password,
-            cookie_directory=cookie_directory,
-            photos_require_finished_index=False,
-        )
-    )
+    # State the shared arguments once and add the China endpoints only for
+    # China accounts, so the two branches cannot drift apart.
+    api_kwargs = {
+        "apple_id": username,
+        "password": password,
+        "cookie_directory": cookie_directory,
+        "photos_require_finished_index": False,
+    }
+    if server_region == "china":
+        api_kwargs["home_endpoint"] = CHINA_HOME_ENDPOINT
+        api_kwargs["setup_endpoint"] = CHINA_SETUP_ENDPOINT
+    api = service_class(**api_kwargs)
     # icloudpy's CloudKit listing calls pass no timeout and ``requests``
     # has no default, so a dropped connection hangs the sync forever.
     # Bound the shared session for enumeration and transfers. Sign-in has

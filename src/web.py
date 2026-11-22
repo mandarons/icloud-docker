@@ -34,6 +34,8 @@ from flask import Flask, jsonify, redirect, render_template, request, url_for
 from werkzeug.serving import make_server
 
 from src import (
+    CHINA_HOME_ENDPOINT,
+    CHINA_SETUP_ENDPOINT,
     DEFAULT_CONFIG_FILE_PATH,
     DEFAULT_COOKIE_DIRECTORY,
     ENV_CONFIG_FILE_PATH_KEY,
@@ -63,9 +65,6 @@ _AUTH_LOCK = threading.Lock()
 # mid-flow. 10 min is generous for typing a code. The password is never
 # written anywhere.
 _PENDING_AUTH_TTL_SECONDS = 600
-
-_CHINA_HOME_ENDPOINT = "https://www.icloud.com.cn"
-_CHINA_SETUP_ENDPOINT = "https://setup.icloud.com.cn/setup/ws/1"
 
 # Apple IDs whose last web sign-in used a password other than the stored
 # one, so the stored copy is probably out of date. The dashboard offers to
@@ -1656,8 +1655,8 @@ def _create_icloud_service(
             apple_id=username,
             password=password,
             cookie_directory=cookie_directory,
-            home_endpoint=_CHINA_HOME_ENDPOINT,
-            setup_endpoint=_CHINA_SETUP_ENDPOINT,
+            home_endpoint=CHINA_HOME_ENDPOINT,
+            setup_endpoint=CHINA_SETUP_ENDPOINT,
         )
     return icloudpy.ICloudPyService(
         apple_id=username,
