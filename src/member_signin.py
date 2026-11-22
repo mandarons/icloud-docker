@@ -22,7 +22,7 @@ from typing import Any
 
 from flask import Blueprint, Flask, redirect, render_template, request, session, url_for
 
-from src import accounts, config_parser, get_logger
+from src import CHINA_HOME_ENDPOINT, CHINA_SETUP_ENDPOINT, accounts, config_parser, get_logger
 
 LOGGER = get_logger()
 
@@ -42,7 +42,6 @@ _PENDING: dict[str, dict[str, Any]] = {}
 _FINISHED: dict[str, float] = {}
 _FINISHED_SECONDS = 60
 _FAILURES: dict[str, list[float]] = {}
-
 
 
 def _secret_path() -> str:
@@ -241,6 +240,13 @@ def apple_id_taken(apple_id: str, account_id: str, config) -> bool:
     )
 
 
+def _endpoints(account, config) -> dict:
+    """China-region accounts sign in at icloud.com.cn, as the main account does."""
+    if config and config_parser.get_region(config=accounts.member_config(config, account)) == "china":
+        return {"home_endpoint": CHINA_HOME_ENDPOINT, "setup_endpoint": CHINA_SETUP_ENDPOINT}
+    return {}
+
+
 def clean_apple_id(raw: str) -> str | None:
     """The Apple ID with stray spaces dropped, or None when it isn't an email."""
     typed = _clean_apple_id(raw)
@@ -261,7 +267,8 @@ def submit_password():
             status=429,
             refused=True,
         )
-    username, error = _entered_username(account, _load_config())
+    config = _load_config()
+    username, error = _entered_username(account, config)
     password = request.form.get("password", "")
     if error or not password:
         if error:
@@ -280,7 +287,12 @@ def submit_password():
     shutil.rmtree(directory, ignore_errors=True)
     os.makedirs(directory, mode=0o700)
     try:
-        api = ICloudPyService(apple_id=username, password=password, cookie_directory=directory)
+        api = ICloudPyService(
+            apple_id=username,
+            password=password,
+            cookie_directory=directory,
+            **_endpoints(account, config),
+        )
     except exceptions.ICloudPyFailedLoginException as e:
         shutil.rmtree(directory, ignore_errors=True)
         _record_failure(account.id)

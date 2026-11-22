@@ -12,7 +12,7 @@ from flask import Flask
 from icloudpy import exceptions
 
 import tests  # noqa: F401 - sets ENV_CONFIG_FILE_PATH via tests/__init__
-from src import accounts, member_signin, web
+from src import CHINA_HOME_ENDPOINT, CHINA_SETUP_ENDPOINT, accounts, member_signin, web
 from tests.test_web import _csrf_post
 
 MAIN = "main@example.com"
@@ -126,7 +126,7 @@ class FakeService:
     raise_on_init: Exception | None = None
     accept_code = True
 
-    def __init__(self, apple_id, password, cookie_directory):
+    def __init__(self, apple_id, password, cookie_directory, **endpoints):
         # icloudpy writes its session files before Apple has said yes.
         with open(os.path.join(cookie_directory, "member.session"), "w", encoding="utf-8") as f:
             f.write("{}")
@@ -137,6 +137,7 @@ class FakeService:
             password,
             cookie_directory,
         )
+        self.endpoints = endpoints
         self.pushed = self.trusted = False
         FakeService.instances.append(self)
 
@@ -165,6 +166,22 @@ class TestSignInPages(_ConfigDir):
             patcher.start()
             self.addCleanup(patcher.stop)
         self.client = web.create_app(testing=True).test_client()
+
+    def test_china_region_signs_in_at_icloud_com_cn(self):
+        config = _config()
+        config["app"]["region"] = "china"
+        with patch.object(web, "_load_current_config", lambda: config):
+            csrf = self._open()
+            self.client.post("/sign-in/password", data={"csrf_token": csrf, "password": "pw"})
+        self.assertEqual(
+            FakeService.instances[0].endpoints,
+            {"home_endpoint": CHINA_HOME_ENDPOINT, "setup_endpoint": CHINA_SETUP_ENDPOINT},
+        )
+
+    def test_global_region_uses_the_default_endpoints(self):
+        csrf = self._open()
+        self.client.post("/sign-in/password", data={"csrf_token": csrf, "password": "pw"})
+        self.assertEqual(FakeService.instances[0].endpoints, {})
 
     def _open(self):
         response = _csrf_post(self.client, "/household/member/sign-in")
