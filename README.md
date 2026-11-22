@@ -346,12 +346,16 @@ The output reports per-library counts of: `would_skip` (already up-to-date), `si
 
 An optional embedded dashboard that shows sync status and lets you complete
 2FA re-authentication from a browser — useful on a headless box where
-`docker exec` isn't convenient. The dashboard tracks state per library —
-"Syncing now", a relative last-sync time, or "Failed" with the last
-completion underneath — and lists only the libraries this container
-actually syncs. When the sync loop is failing it reports that (with a link
-to the auth page) instead of a healthy account. Disabled by default;
-enable with:
+`docker exec` isn't convenient. The dashboard leads with one headline and one
+row for the account: a sentence for its state, and at most one action — **Sign
+in**, **Sign in again** or **Refresh trust** — when something needs it.
+Per-library state ("Syncing now", a relative last-sync time, or "Failed" with
+the last completion) sits underneath, and a pass that is still running says
+"Syncing now · started 5 min ago" instead of showing only the previous
+completion. `/auth` is an Account card (signed in or not, trusted until when,
+whether a password is stored), `/settings` lists every setting and where its
+value came from, and both follow the system's light or dark appearance.
+Disabled by default; enable with:
 
 ```yaml
 app:
@@ -371,6 +375,21 @@ app:
 | `app.trust_expiry_warn_days` | `7` | Warn this many days before Apple's ~90-day trust cookie expires, so re-auth can be scheduled rather than discovered mid-sync. |
 | `app.trust_refresh_days` | `14` | Proactively re-mint the trust token when it has this many days left, so restarts keep resuming without a second factor. Must exceed `trust_expiry_warn_days`; `0` disables. |
 
+### Changing settings from the browser
+
+`/settings` shows every setting with its value and where that value came from —
+`config.yaml`, a default, or the environment — and reports secrets as set or
+not, never showing them. **Seven can be edited there:** `drive.sync_interval`,
+`photos.sync_interval`, `photos.use_hardlinks`, and the four
+`app.notifications.sync_summary` options. Everything else is display-only.
+
+A save keeps your comments (the file is parsed and rewritten with ruamel),
+copies it to `config.yaml.bak-<timestamp>` first, writes a temp file, re-reads
+that file with the app's own reader, and only then replaces the original — so a
+value the app could not load never lands. Only the newest **five** backups the
+page made are kept; a backup you made by hand has a different name and is left
+alone.
+
 ### Security model — read before exposing it
 
 The UI **has no authentication of its own** and accepts your Apple ID
@@ -387,6 +406,11 @@ password at `POST /auth/password`. The trust boundary is the network, so:
 State-changing endpoints require a CSRF cookie plus a matching token, so
 scripted callers must load a page first to obtain the cookie and echo the
 token back in an `X-CSRF-Token` header.
+
+Settings writes fall under the same boundary: anyone who can reach the UI can
+change the seven editable keys (sync intervals, photo hardlinking, notification
+summaries). Credentials, passwords and sync destinations are not editable from
+the page.
 
 ### Sign in with a security key
 
