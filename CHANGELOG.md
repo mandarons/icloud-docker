@@ -7,8 +7,133 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The web UI has a Settings page (`/settings`) that lists the common settings
+  with a label on the left and the value on the right, the rest under
+  Advanced, and says where each value came from — `config.yaml`, a default, or
+  the environment. Secrets are reported as set or not, never shown. Switches
+  save in place and editable values post with CSRF. Seven settings can be
+  changed there (both `sync_interval`s, `photos.use_hardlinks`, and the four
+  `app.notifications.sync_summary` keys); a write keeps the file's comments
+  through a ruamel round trip, copies it to `config.yaml.bak-<stamp>` first,
+  replaces it atomically, and refuses a result the app could not read
+  ([#599](https://github.com/mandarons/icloud-docker/pull/599))
+- The web UI's Auth page is now an Account card: signed in or not, trusted
+  until when, whether a password is stored, and **Sign in again** — with the
+  sign-in form opening in place
+  ([#599](https://github.com/mandarons/icloud-docker/pull/599))
+- The web UI follows the system's light or dark appearance, keeps its header on
+  one line on phones, and puts pages in one centred column on wide screens
+  ([#599](https://github.com/mandarons/icloud-docker/pull/599))
+- The dashboard shows a pass that is still running. A Drive or Photos pass can
+  take an hour and its record is only written when it completes, so the card
+  used to say "N d ago" while the pass was busy catching up; it now says
+  "Syncing now · started 5 min ago", and the page reloads itself every 30
+  seconds while the tab is visible
+  ([#589](https://github.com/mandarons/icloud-docker/pull/589))
+- Signing in from the web UI works better with password managers and security
+  keys: every password form carries the Apple ID in a read-only
+  `autocomplete="username"` field, pasting a security-key signature submits
+  it, and where the browser allows reading the clipboard (https or localhost)
+  a **Paste & complete sign-in** button does both in one click
+  ([#589](https://github.com/mandarons/icloud-docker/pull/589))
+- The header logo links back to the dashboard
+  ([#589](https://github.com/mandarons/icloud-docker/pull/589))
+
+### Changed
+
+- The dashboard leads with one headline and one row for the account: a
+  sentence for its state, an optional detail, and at most one action —
+  **Sign in**, **Sign in again** or **Refresh trust** — shown only when
+  something needs it. The log summary counts recent errors and names the most
+  common one
+  ([#599](https://github.com/mandarons/icloud-docker/pull/599))
+- The Drive card's **New** count compares a listing of the disk before the pass
+  with one after it. It used to count the set `sync_drive` returns, which also
+  holds every folder and NFC-normalised name, so thousands of files read as
+  "new" on every pass while only a handful had downloaded
+  ([#590](https://github.com/mandarons/icloud-docker/pull/590))
+- Development tooling moved on: ruff 0.17.5, pytest 9.2.0 and opencode 2.3.0.
+  These are CI and developer tools; nothing installed in the image changes
+  ([#581](https://github.com/mandarons/icloud-docker/pull/581),
+  [#597](https://github.com/mandarons/icloud-docker/pull/597),
+  [#601](https://github.com/mandarons/icloud-docker/pull/601),
+  [#602](https://github.com/mandarons/icloud-docker/pull/602))
+
 ### Fixed
 
+- A duplicated photo, or one an editor such as Snapseed saved as a new photo,
+  shares `photo.id` with its original, so every copy's edit resolved to one
+  filename: they overwrote each other, the hardlink registry could link one
+  copy's edit as another's, and the survivor was downloaded again on every
+  sync. Versions are now named and keyed by the record their bytes come from,
+  so each copy keeps its own edit; an edit already on disk under the old name
+  is moved when its size says it is this copy's, rather than downloaded again
+  ([#579](https://github.com/mandarons/icloud-docker/issues/579),
+  [#590](https://github.com/mandarons/icloud-docker/pull/590))
+- Each asset is queued once per album pass, including when it reappears after a
+  chunk of the listing has drained. A failed download is not retried inside the
+  same pass; the next pass retries it
+  ([#584](https://github.com/mandarons/icloud-docker/issues/584),
+  [#591](https://github.com/mandarons/icloud-docker/pull/591))
+- A photo record Apple returns without `recordName` no longer aborts the whole
+  album: the per-photo error handler built its own log line from `photo.id`,
+  which raised `KeyError` and escaped the album loop
+  ([#591](https://github.com/mandarons/icloud-docker/pull/591))
+- Every `original` version is named on its master record's ID by rule rather
+  than because Apple happens to carry originals there, so no original can be
+  renamed by a future change in which record carries it
+  ([#590](https://github.com/mandarons/icloud-docker/pull/590))
+- Obsolete-file cleanup leaves a file it cannot remove, logs it with its path
+  and carries on. A file locked by another program, or not writable by the
+  container's user, used to end the whole photo or Drive pass
+  ([#595](https://github.com/mandarons/icloud-docker/pull/595))
+- A failed move into the recycle bin no longer leaves a stray copy that every
+  later sync adds to again, and a Drive folder that cannot be removed is
+  reported once instead of being walked item by item
+  ([#595](https://github.com/mandarons/icloud-docker/pull/595))
+- Obsolete cleanup preserves the Drive mount marker at the configured root,
+  including through the recycle-bin path; other obsolete files and nested
+  namesakes are still removed
+  ([#586](https://github.com/mandarons/icloud-docker/issues/586),
+  [#587](https://github.com/mandarons/icloud-docker/pull/587))
+- CloudKit listing requests now carry the default request timeout (30 s). They
+  passed none and `requests` has no default, so a half-open connection after a
+  network drop blocked the sync loop on a socket read forever with no log
+  output; a caller-supplied timeout still wins
+  ([#585](https://github.com/mandarons/icloud-docker/issues/585),
+  [#588](https://github.com/mandarons/icloud-docker/pull/588))
+- That default is applied to `send`, not `request`, so icloudpy's per-request
+  log line stays attributed to the calling service instead of
+  `requests.sessions.http`
+  ([#588](https://github.com/mandarons/icloud-docker/pull/588))
+- Web UI state-file writes take a re-entrant lock across load, change and save,
+  and each save writes a temp file named by process and thread. Two writers
+  could lose an update, and the shared temp name let one truncate the other's
+  file, publishing torn JSON that the next load read as empty
+  ([#589](https://github.com/mandarons/icloud-docker/pull/589))
+- The dashboard keeps itself current after a hidden tab or a Back navigation.
+  The refresh was a one-shot timer, so a tab that was hidden when it fired
+  never refreshed again
+  ([#589](https://github.com/mandarons/icloud-docker/pull/589))
+- A successful web sign-in no longer lands on a page saying the sync is
+  stopped: waking the loop now clears its blocked flag too
+  ([#589](https://github.com/mandarons/icloud-docker/pull/589))
+- The dashboard's log summary stops counting config defaults ("not found.
+  Using default …", said on every pass) as problems, so a real misconfiguration
+  is not crowded out of "Mostly" — a config error still counts, and a Shared
+  Library zone reads as "the Shared Library" instead of a mangled ID
+  ([#599](https://github.com/mandarons/icloud-docker/pull/599))
+- Settings backups are stamped to the microsecond and only the newest five the
+  page wrote are kept; a backup made by hand has a different name and is never
+  touched ([#599](https://github.com/mandarons/icloud-docker/pull/599))
+- Web UI authentication honours `app.region: china`. Its handlers built their
+  own `ICloudPyService` without the region's endpoints, so a China-region Apple
+  ID signed in against the global hosts and failed with
+  `KeyError: 'webservices'`; both web sign-in paths and the sync loop now share
+  one endpoint pair
+  ([#603](https://github.com/mandarons/icloud-docker/pull/603))
 - `file_sizes: full` no longer re-downloads a fixed set of edited photos on
   every sync. A transfer whose byte count differs from the size iCloud
   declares is kept when the response is complete (success status, not
