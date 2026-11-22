@@ -1,0 +1,4 @@
+INFO     root:photo_file_utils.py:512 Downloading /tmp/tmp6iwmddes/IMG_0001__original__bWFzdGVyLTE=.JPEG ...
+WARNING  root:photo_file_utils.py:550 Accepted /tmp/tmp6iwmddes/IMG_0001__original__bWFzdGVyLTE=.JPEG: iCloud declares 10 bytes, but the served response is a complete 8-byte transfer.
+DEBUG    root:photo_file_utils.py:366 No changes detected. Skipping the file /tmp/tmp6iwmddes/IMG_0001__original__bWFzdGVyLTE=.JPEG: it matches the accepted 8-byte transfer for a declared 10 bytes.
+DEBUG    root:photo_file_utils.py:366 No changes detected. Skipping the file /tmp/tmp6iwmddes/IMG_0001__original__bWFzdGVyLTE=.JPEG: it matches the accepted 8-byte transfer for a declared 10 bytes.

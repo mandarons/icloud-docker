@@ -1,0 +1,5 @@
+[38;21m2026-11-22 15:43:25,341 :: DEBUG :: root :: photo_download_manager.py :: 409 :: [Thread] Starting processing of /photos/one.jpeg[0m
+[38;5;39m2026-11-22 15:43:25,341 :: INFO :: root :: photo_file_utils.py :: 512 :: Downloading /photos/one.jpeg ...[0m
+[38;5;226m2026-11-22 15:43:25,341 :: WARNING :: root :: photo_file_utils.py :: 586 :: Download URL expired (410) for /photos/one.jpeg. Refreshing URL and retrying (attempt 1/2)...[0m
+[38;5;196m2026-11-22 15:43:25,341 :: ERROR :: root :: photo_file_utils.py :: 605 :: Failed to download /photos/one.jpeg after 1 retries: Gone (410)[0m
+[38;5;196m2026-11-22 15:43:25,342 :: ERROR :: root :: download_report.py :: 44 :: Could not verify photo /photos/one.jpeg (asset asset-1, original): gone_410 - declared 10 bytes, received None bytes. Will retry on the next sync.[0m

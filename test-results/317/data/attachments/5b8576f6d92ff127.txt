@@ -1,0 +1,28 @@
+ERROR    root:web.py:766 Web UI auth failed during ICloudPyService instantiation
+Traceback (most recent call last):
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 759, in auth_password
+    api = _create_icloud_service(
+        username=username,
+    ...<2 lines>...
+        config=config,
+    )
+  File "/home/runner/work/icloud-docker/icloud-docker/src/web.py", line 1661, in _create_icloud_service
+    return icloudpy.ICloudPyService(
+           ~~~~~~~~~~~~~~~~~~~~~~~~^
+        apple_id=username,
+        ^^^^^^^^^^^^^^^^^^
+        password=password,
+        ^^^^^^^^^^^^^^^^^^
+        cookie_directory=cookie_directory,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/unittest/mock.py", line 1176, in __call__
+    return self._mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/unittest/mock.py", line 1180, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.14.10/x64/lib/python3.14/unittest/mock.py", line 1241, in _execute_mock_call
+    raise effect
+RuntimeError: Apple said no
