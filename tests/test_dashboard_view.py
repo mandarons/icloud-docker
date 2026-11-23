@@ -213,7 +213,7 @@ class TestMember(unittest.TestCase):
             "over_limit": False,
         }
         for member, tone, sentence, action in (
-            (_member(saved=False), "idle", "Waiting for sign-in", "Send link"),
+            (_member(saved=False), "idle", "Not signed in yet", "Send link"),
             (_member("review", report=report), "warn", "Ready for review", "Review"),
             (
                 _member("checking"),

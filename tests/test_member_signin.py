@@ -513,7 +513,7 @@ class TestDashboard(_ConfigDir):
     def test_dashboard_lists_members(self):
         with patch.object(web, "_build_service", return_value={}):
             html = self.client.get("/").get_data(as_text=True)
-        self.assertIn("Waiting for sign-in", html)
+        self.assertIn("Not signed in yet", html)
         self.assertIn('href="/household/member"', html)
 
     def test_unknown_member_goes_home(self):

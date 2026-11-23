@@ -183,7 +183,7 @@ def _member(member: dict) -> dict[str, Any]:
     action = None
     detail = None
     if not member.get("session_saved"):
-        tone, sentence = "idle", "Waiting for sign-in"
+        tone, sentence = "idle", "Not signed in yet"
         action = {"label": "Send link", "href": page}
     elif status == "review":
         tone, sentence = "warn", "Ready for review"
@@ -256,7 +256,7 @@ def _plainly(person: dict) -> str:
         return sentence
     return {
         "Ready for review": f"{name}'s backup is ready for review",
-        "Waiting for sign-in": f"Waiting for {name} to sign in",
+        "Not signed in yet": f"Waiting for {name} to sign in",
         "Sign-in has run out": f"{name} needs to sign in again",
         "Not backing up": f"{name}'s backup is not running",
         "The last backup failed": f"{name}'s last backup failed",
