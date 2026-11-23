@@ -1,6 +1,6 @@
 """Signing a household member's Apple ID in, from a browser at the dashboard.
 
-The operator opens the member's page and taps Sign in here (or hands the
+The operator opens the member's page and taps Sign in (or hands the
 member their laptop): the member types their password and the code from
 their phone, and the account's session is saved in its own folder
 (``src.accounts.cookie_directory``). The password is not saved anywhere.

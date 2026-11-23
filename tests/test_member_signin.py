@@ -425,9 +425,7 @@ class TestSignInPages(_ConfigDir):
         self.assertEqual(member_signin._apple_error_codes(error), "")  # noqa: SLF001
 
     def test_unknown_account_goes_back_to_the_dashboard(self):
-        for path in ("/household/nobody/sign-in", "/household/nobody/apple-id"):
-            with self.subTest(path=path):
-                self.assertEqual(_csrf_post(self.client, path).headers["Location"], "/")
+        self.assertEqual(_csrf_post(self.client, "/household/nobody/sign-in").headers["Location"], "/")
 
 
 class TestSignInWithoutUsername(_ConfigDir):
@@ -534,29 +532,6 @@ class TestDashboard(_ConfigDir):
         with self.client.session_transaction() as s:
             s["done"] = True
         self.assertIn('href="/household/member"', self.client.get("/sign-in").get_data(as_text=True))
-
-    def test_admin_can_enter_the_apple_id_ahead_of_time(self):
-        no_id = {
-            "app": {"credentials": {"username": MAIN}},
-            "accounts": [{"id": "member"}, {"id": "other", "username": "taken@example.com"}],
-        }
-        with patch.object(web, "_load_current_config", lambda: no_id):
-            self.assertIn(
-                'action="/household/member/apple-id"',
-                self.client.get("/household/member").get_data(as_text=True),
-            )
-            for bad in ("not-an-email", MAIN.upper(), "taken@example.com"):
-                with self.subTest(bad=bad):
-                    response = _csrf_post(self.client, "/household/member/apple-id", data={"apple_id": bad})
-                    self.assertIn("apple_id_error=1", response.headers["Location"])
-                    self.assertIsNone(accounts.pinned_username("member"))
-            self.assertEqual(self.client.post("/household/member/apple-id", data={"apple_id": MEMBER}).status_code, 403)
-            response = _csrf_post(self.client, "/household/member/apple-id", data={"apple_id": f" {MEMBER.upper()} "})
-            self.assertNotIn("apple_id_error", response.headers["Location"])
-            self.assertEqual(accounts.pinned_username("member"), MEMBER)
-            html = self.client.get("/household/member").get_data(as_text=True)
-            self.assertNotIn('action="/household/member/apple-id"', html)
-            self.assertIn(MEMBER, html)
 
     def test_accounts_page_shows_add_form_and_errors(self):
         with patch.object(web, "_build_service", return_value={}):

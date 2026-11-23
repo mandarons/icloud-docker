@@ -1547,7 +1547,6 @@ def create_app(testing: bool = False) -> Flask:
             "household.html",
             account=account,
             session_saved=accounts.session_saved(account.id),
-            apple_id_error=request.args.get("apple_id_error") == "1",
             backup=_member_backup(account.id, config),
             shared_folder=accounts.shared_library_folder(config),
             active_nav="dashboard",
@@ -1581,25 +1580,6 @@ def create_app(testing: bool = False) -> Flask:
         member_signin.start_session(account_id, back_to=url_for("household_member", account_id=account_id))
         LOGGER.info(f"Web UI: signing in account {account_id} on this device")
         return redirect(url_for("signin.page"))
-
-    @app.route("/household/<account_id>/apple-id", methods=["POST"])
-    def household_apple_id(account_id):
-        """Enter a member's Apple ID ahead of time, so their sign-in page only asks for the password."""
-        rejection = _require_csrf()
-        if rejection is not None:
-            return rejection
-        config = _load_current_config()
-        account = accounts.get_account(config, account_id)
-        if account is None:
-            return redirect(url_for("dashboard"))
-        from src import member_signin
-
-        apple_id = member_signin.clean_apple_id(request.form.get("apple_id") or "")
-        if account.username or apple_id is None or member_signin.apple_id_taken(apple_id, account.id, config):
-            return redirect(url_for("household_member", account_id=account_id, apple_id_error=1))
-        accounts.pin_username(account.id, apple_id)
-        LOGGER.info(f"Web UI: entered the Apple ID for account {account_id}")
-        return redirect(url_for("household_member", account_id=account_id))
 
     def _member_action(account_id, **fields):
         """Record a dashboard decision on a member's backup and run it now."""

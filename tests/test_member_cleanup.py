@@ -224,7 +224,7 @@ class TestHouseholdPage(_Dirs):
     def test_says_when_the_member_owns_a_shared_library(self):
         config = _config(self.root, {"id": "member", "username": MEMBER})
         page = self._page(config, shared_library="Shared/SharedSync-B")
-        self.assertIn("Their Shared Library too, once.", page)
+        self.assertIn("Their Shared Library too.", page)
         self.assertIn("Shared/SharedSync-B", page)
 
     def test_report_says_what_will_be_deleted(self):

@@ -4,7 +4,7 @@
 <h1 class="page-title">{{ account.label }}</h1>
 <p class="page-sub">{{ account.username or "No Apple ID yet" }} · {% if session_saved %}signed in{% else %}not signed in{% endif %}</p>
 
-<p style="font-size: 14px; color: var(--text-secondary); margin: 0 0 16px;">Photos{% if backup.drive.on %} and iCloud Drive{% endif %}. {% if backup.shared_library %}<span title="In {{ backup.shared_library }}, beside the main account's.">Their Shared Library too, once.</span>{% elif shared_folder %}<span title="In {{ shared_folder }}, so it isn't copied twice.">Shared Library is in the main backup.</span>{% else %}Shared Library isn't backed up.{% endif %}</p>
+<p style="font-size: 14px; color: var(--text-secondary); margin: 0 0 16px;">Photos{% if backup.drive.on %} and iCloud Drive{% endif %}. {% if backup.shared_library %}<span title="In {{ backup.shared_library }}, beside the main account's.">Their Shared Library too.</span>{% elif shared_folder %}<span title="In {{ shared_folder }}, so it isn't copied twice.">Shared Library is in the main backup.</span>{% else %}Shared Library isn't backed up.{% endif %}</p>
 
 {% if backup.drive.available %}
 <form action="/household/{{ account.id }}/drive" method="post" class="card" style="max-width: 640px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; padding: 16px 20px;">
@@ -51,17 +51,9 @@
 <div class="card" style="max-width: 640px;">
   {% if session_saved %}<p style="margin: 0;"><strong>Sign-in</strong></p>
   <dl class="rows"><div><dt>Apple ID</dt><dd style="overflow-wrap: anywhere;">{{ account.username }}</dd></div></dl>
-  {% elif not account.username %}
-  <form action="/household/{{ account.id }}/apple-id" method="post" style="display: flex; gap: 8px; margin-bottom: 12px;">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-    <input type="email" name="apple_id" required placeholder="Apple ID (optional)" aria-label="Their Apple ID" autocapitalize="off" spellcheck="false"
-      style="flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--divider); border-radius: 8px; font: inherit; font-size: 14px; background: var(--field); color: var(--text);">
-    <button type="submit" class="btn btn-small" style="flex: 0 0 auto;">Save</button>
-  </form>
-  {% if apple_id_error %}<p style="font-size: 13px; color: var(--err-fg); margin: -4px 0 12px;">Not an email, or already backed up here.</p>{% endif %}
   {% endif %}
   <div class="btn-pair"{% if not session_saved %} style="margin-top: 0;"{% endif %}>
-    <form action="/household/{{ account.id }}/sign-in" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn {{ 'btn-primary' if not session_saved }}">{{ 'Sign in again' if session_saved else 'Sign in here' }}</button></form>
+    <form action="/household/{{ account.id }}/sign-in" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn {{ 'btn-primary' if not session_saved }}">{{ 'Sign in again' if session_saved else 'Sign in' }}</button></form>
     {% if session_saved or account.username %}
     <form action="/household/{{ account.id }}/forget" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn" title="Drops the saved sign-in and the Apple ID; backed-up photos stay.">Forget sign-in</button></form>
     {% endif %}
