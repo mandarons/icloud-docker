@@ -318,6 +318,38 @@ photos:
 
 **_Note: On every sync, this client iterates all the files. Depending on number of files in your iCloud (drive + photos), syncing can take longer._**
 
+## Household: more than one Apple ID
+
+One container can back up several people's iCloud. List everyone besides the main account under `accounts:`:
+
+```yaml
+accounts:
+  - id: alex                     # folder name and page address
+  - id: sam
+    username: sam@example.com    # optional; otherwise the first sign-in sets it
+```
+
+Each person then has a row on the dashboard and a page of their own. Sign them in from that page with their Apple ID password and the 6-digit code from their device; it happens in your browser, like the main account's sign-in, and the password isn't saved. Apple IDs that sign in with a security key aren't supported for members yet.
+
+- **Photos** go to `<photos destination>/<id>` (for example `photos/alex`), and **iCloud Drive** to a folder beside the main account's (`drive/alex`), never inside it. Drive is on whenever the main account syncs Drive; turn it off on the person's page or with `drive: false`.
+- **The first backup waits for you.** A first pass compares iCloud with what's already in the folder and reports what it would download. Nothing is written until you tap Start backup.
+- **Shared Libraries download once.** A Shared Library is backed up by the account that owns it, into a folder beside the main account's.
+- **Cleanup is off for members** unless their entry turns it on, and a folder that another account's cleanup already covers is refused.
+- **Each person syncs on their own**, so one person waiting for a code doesn't hold up anyone else.
+
+An entry can change a few photo and Drive settings for that person:
+
+```yaml
+accounts:
+  - id: alex
+    photos:
+      folder_format: "%Y/%m/%d"
+      remove_obsolete: true      # follow deletions in iCloud
+      adopt: icloudpd            # keep an existing icloudpd folder in place
+    drive:
+      remove_obsolete: true
+```
+
 ## Dry Run and File Checking
 
 Before running a full sync (especially for the first time or after migrating from another tool), you can use `--dry-run` to verify that everything is configured correctly without downloading any files:
