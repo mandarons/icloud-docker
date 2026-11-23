@@ -91,10 +91,10 @@ def _interval(config: dict | None) -> int:
 
 
 # Status changes the operator should hear about, because only they can act:
-# the report waits for "Start backup", a lost sign-in waits for a new link.
+# the report waits for "Start backup", a lost sign-in waits for a new one.
 _ANNOUNCE = {
     "review": "{id}'s backup check is done: {download} photos to download. Review it and start the backup: {url}",
-    "needs_sign_in": "{id}'s iCloud sign-in has run out. Send them a new link: {url}",
+    "needs_sign_in": "{id}'s iCloud sign-in has run out. Sign them in again: {url}",
 }
 
 
@@ -149,7 +149,7 @@ def _resume(account: accounts.Account, member: dict):
         LOGGER.info("Member sync: the saved session is no longer accepted; waiting for a new sign-in")
         _status(
             "needs_sign_in",
-            "Apple no longer accepts the saved sign-in. Send a new link.",
+            "Apple no longer accepts the saved sign-in. Sign in again.",
         )
         return None
     except Exception as e:  # noqa: BLE001 - an outage; try again next cycle
@@ -157,7 +157,7 @@ def _resume(account: accounts.Account, member: dict):
         _status("error", f"Couldn't reach iCloud: {e!s}")
         return None
     if getattr(api, "requires_2fa", False):
-        _status("needs_sign_in", "Apple wants the 6-digit code again. Send a new link.")
+        _status("needs_sign_in", "Apple wants the 6-digit code again. Sign in again.")
         return None
     return api
 

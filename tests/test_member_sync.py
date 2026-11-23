@@ -488,7 +488,7 @@ class TestAnnouncements(_Dirs):
         self.assertEqual(len(messages), 2)
         self.assertIn("1,234 photos", messages[0])
         self.assertIn("https://home.example.com/household/member", messages[0])
-        self.assertIn("new link", messages[1])
+        self.assertIn("Sign them in again", messages[1])
 
     def test_without_public_url_or_config(self):
         with (

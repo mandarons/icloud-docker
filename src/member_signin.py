@@ -166,21 +166,14 @@ def _headers(response):
     return response
 
 
-def start_session(account_id: str, *, own_page: bool = False, back_to: str = "/") -> None:
-    """Start this browser's sign-in for an account.
-
-    ``own_page`` means whoever is here may see the Apple ID in full (the
-    operator at the dashboard, or a member on their own page); ``back_to``
-    is where the done page leads.
-    """
+def start_session(account_id: str, *, back_to: str = "/") -> None:
+    """Start this browser's sign-in for an account; ``back_to`` is where the done page leads."""
     session.clear()
     session.permanent = False
     session["account"] = account_id
     session["expires"] = time.time() + _SESSION_SECONDS
     session["csrf"] = secrets.token_urlsafe(24)
-    if own_page:
-        session["own_page"] = True
-        session["back_to"] = back_to
+    session["back_to"] = back_to
 
 
 @blueprint.route("/sign-in", methods=["GET"])

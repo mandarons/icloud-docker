@@ -1578,7 +1578,7 @@ def create_app(testing: bool = False) -> Flask:
             return redirect(url_for("dashboard"))
         from src import member_signin
 
-        member_signin.start_session(account_id, own_page=True, back_to=url_for("household_member", account_id=account_id))
+        member_signin.start_session(account_id, back_to=url_for("household_member", account_id=account_id))
         LOGGER.info(f"Web UI: signing in account {account_id} on this device")
         return redirect(url_for("signin.page"))
 
