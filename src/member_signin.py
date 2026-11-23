@@ -133,7 +133,6 @@ def _with_drive(account) -> bool:
 
 
 def _page(account, *, state, message=None, kind=None, status=200, refused=False, username=""):
-    own_page = bool(session.get("own_page"))
     return (
         render_template(
             "signin.html",
@@ -143,7 +142,8 @@ def _page(account, *, state, message=None, kind=None, status=200, refused=False,
             message=message,
             kind=kind,
             review_first=state == "done" and _review_first(account),
-            own_page=own_page,
+            name=account.label if account else None,
+            active_nav="dashboard",
             back_to=session.get("back_to") or "/",
             refused=refused,
             what="photos and iCloud Drive files" if _with_drive(account) else "photos",

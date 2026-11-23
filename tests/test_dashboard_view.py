@@ -213,7 +213,7 @@ class TestMember(unittest.TestCase):
             "over_limit": False,
         }
         for member, tone, sentence, action in (
-            (_member(saved=False), "idle", "Not signed in yet", "Send link"),
+            (_member(saved=False), "idle", "Not signed in yet", "Sign in"),
             (_member("review", report=report), "warn", "Ready for review", "Review"),
             (
                 _member("checking"),
@@ -233,7 +233,7 @@ class TestMember(unittest.TestCase):
                 _member("needs_sign_in", detail="Apple wants the code."),
                 "err",
                 "Sign-in has run out",
-                "Send link",
+                "Sign in",
             ),
             (_member("blocked", detail="x"), "err", "Not backing up", "Open"),
             (_member("error", detail="x"), "err", "The last backup failed", "Open"),

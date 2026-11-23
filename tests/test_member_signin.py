@@ -210,7 +210,7 @@ class TestSignInPages(_ConfigDir):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(api.code, "123456")
         self.assertTrue(api.trusted)
-        self.assertIn("You're signed in", self.client.get("/sign-in").get_data(as_text=True))
+        self.assertIn(" is signed in", self.client.get("/sign-in").get_data(as_text=True))
         self.assertNotIn("member", member_signin._PENDING)  # noqa: SLF001
         self.assertTrue(accounts.session_saved("member"))
         self.assertFalse(os.path.exists(member_signin._staging("member")))  # noqa: SLF001
@@ -219,7 +219,7 @@ class TestSignInPages(_ConfigDir):
         FakeService.requires_2fa = False
         csrf = self._open()
         self.client.post("/sign-in/password", data={"csrf_token": csrf, "password": "pw"})
-        self.assertIn("You're signed in", self.client.get("/sign-in").get_data(as_text=True))
+        self.assertIn(" is signed in", self.client.get("/sign-in").get_data(as_text=True))
 
     def test_post_needs_the_session_csrf(self):
         self._open()
@@ -313,7 +313,7 @@ class TestSignInPages(_ConfigDir):
         late.join(5)
         self.assertEqual(checks, ["123456"])
         self.assertEqual(second["response"].status_code, 302)
-        self.assertIn("You're signed in", self.client.get("/sign-in").get_data(as_text=True))
+        self.assertIn(" is signed in", self.client.get("/sign-in").get_data(as_text=True))
         self.assertTrue(accounts.session_saved("member"))
 
     def test_send_a_new_code(self):
@@ -372,7 +372,7 @@ class TestSignInPages(_ConfigDir):
         self.client.post("/sign-in/password", data={"csrf_token": csrf, "password": "pw"})
         with patch.object(FakeService, "trust_session", side_effect=RuntimeError("x")):
             self.client.post("/sign-in/code", data={"csrf_token": csrf, "code": "123456"})
-        self.assertIn("You're signed in", self.client.get("/sign-in").get_data(as_text=True))
+        self.assertIn(" is signed in", self.client.get("/sign-in").get_data(as_text=True))
 
     def test_session_expires(self):
         self._open()
@@ -387,9 +387,7 @@ class TestSignInPages(_ConfigDir):
         self._open()
         html = self.client.get("/sign-in").get_data(as_text=True)
         self.assertIn(f'value="{MEMBER}" autocomplete="username" readonly', html)
-        self.assertIn('<a class="home" href="/household/member">', html)
-        self.assertIn("trust whoever runs it", html)
-        self.assertNotIn("/settings", html)
+        self.assertIn("Sign in Member", html)
 
     def test_headers(self):
         self._open()
@@ -618,7 +616,7 @@ class TestAddPerson(_ConfigDir):
 
 
 class TestTheSignInPageSaysWhatItIs(unittest.TestCase):
-    """The page a member opens says whose it is, what happens, and when to trust it."""
+    """The sign-in page is part of the dashboard: it names the person and what happens."""
 
     def _render(self, state, review_first=False):
         from flask import render_template
@@ -633,21 +631,23 @@ class TestTheSignInPageSaysWhatItIs(unittest.TestCase):
                 kind=None,
                 review_first=review_first,
                 csrf_token="x",
+                name="Sam",
             )
 
     def test_before_signing_in(self):
         for state in ("password", "code"):
             html = self._render(state)
-            self.assertIn("Not Apple", html)
-            self.assertIn("Not Apple. Only sign in", html)
-            self.assertIn("trust whoever runs it", html)
-        self.assertIn("Nothing in your iCloud is changed or deleted", self._render("password"))
+            self.assertIn("Sign in Sam", html)
+            self.assertIn('href="/settings"', html)  # the dashboard's own header
+            self.assertNotIn("Not Apple", html)
+        self.assertIn("isn't saved here", self._render("password"))
+        self.assertIn("security key", self._render("password"))
 
     def test_after_signing_in(self):
-        self.assertNotIn("not Apple", self._render("done"))
-        self.assertIn("starts once it's been checked", self._render("done", review_first=True))
+        self.assertIn("Sam is signed in", self._render("done"))
+        self.assertIn("once you've checked the report", self._render("done", review_first=True))
         self.assertIn("starts in a few minutes", self._render("done"))
-        self.assertNotIn("not Apple", self._render("invalid"))
+        self.assertIn("has expired", self._render("invalid"))
 
     def test_names_drive_when_it_is_on(self):
         member = accounts.Account("member", "m@example.com")
@@ -667,7 +667,7 @@ class TestTheSignInPageSaysWhatItIs(unittest.TestCase):
                 what="photos and iCloud Drive files",
                 csrf_token="x",
             )
-        self.assertIn("copy of your iCloud photos and iCloud Drive files", html)
+        self.assertIn("their iCloud photos and iCloud Drive files", html)
 
     def test_whether_a_review_comes_first(self):
         member = accounts.Account("member", "m@example.com")

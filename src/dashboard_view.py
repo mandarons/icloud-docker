@@ -184,7 +184,7 @@ def _member(member: dict) -> dict[str, Any]:
     detail = None
     if not member.get("session_saved"):
         tone, sentence = "idle", "Not signed in yet"
-        action = {"label": "Send link", "href": page}
+        action = {"label": "Sign in", "href": page}
     elif status == "review":
         tone, sentence = "warn", "Ready for review"
         detail = f"{_count(report.get('download', 0))} to download"
@@ -204,7 +204,7 @@ def _member(member: dict) -> dict[str, Any]:
     elif status == "needs_sign_in":
         tone, sentence = "err", "Sign-in has run out"
         detail = backup.get("detail")
-        action = {"label": "Send link", "href": page}
+        action = {"label": "Sign in", "href": page}
     elif status in ("blocked", "error"):
         tone, sentence = "err", ("Not backing up" if status == "blocked" else "The last backup failed")
         detail = backup.get("detail")

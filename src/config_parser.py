@@ -397,20 +397,6 @@ def get_web_ui_public_url(config: dict) -> str | None:
     return str(value).rstrip("/")
 
 
-def get_web_ui_server_name(config: dict) -> str:
-    """What a household member sees this server called ("Family backup").
-
-    Their pages carry this name, not the product's, so nobody mistakes
-    them for Apple's.
-    """
-    value = get_config_value_or_default(
-        config=config,
-        config_path=["app", "web_ui", "server_name"],
-        default=None,
-    )
-    return str(value).strip() if value and str(value).strip() else "Family backup"
-
-
 def get_trust_expiry_warn_days(config: dict) -> int:
     """Warn this many days before Apple's trust cookie expires.
 

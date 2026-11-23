@@ -693,8 +693,6 @@ def create_app(testing: bool = False) -> Flask:
     public = (config_parser.get_web_ui_public_url(config=config) or "") if config else ""
     member_signin.configure_session(app, secure_cookie=public.startswith("https://"))
     app.register_blueprint(member_signin.blueprint)
-    app.jinja_env.globals["server_name"] = config_parser.get_web_ui_server_name(config or {})
-    app.jinja_env.globals["home_link"] = True
 
     @app.after_request
     def _no_cache(response):
@@ -1653,7 +1651,7 @@ def create_app(testing: bool = False) -> Flask:
 
     @app.route("/household/add", methods=["POST"])
     def household_add():
-        """Add a member by name; they enter their own Apple ID from the link."""
+        """Add a member by name; they sign in from their page."""
         rejection = _require_csrf()
         if rejection is not None:
             return rejection
