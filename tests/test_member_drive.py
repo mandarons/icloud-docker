@@ -84,8 +84,14 @@ class TestMemberDrive(_Dirs):
         # The main account's Drive at the volume root: no folder beside it.
         rooted = _with_drive(self.root, destination="drive")
         self.assertIn(
-            "inside the main account's",
+            "fills the whole drive folder",
             accounts.drive_conflict(rooted, accounts.member_config(rooted, ME)),
+        )
+        # An entry pointing inside the main account's folder.
+        inside = _with_drive(self.root, {"id": "member", "username": MEMBER, "drive": {"destination": "drive/Main/x"}})
+        self.assertIn(
+            "inside the main account's",
+            accounts.drive_conflict(inside, accounts.member_config(inside, ME)),
         )
 
 
@@ -184,7 +190,7 @@ class TestMemberDrivePass(_Dirs):
             member_sync.run_member(config, ME, [])
         member, problem = real_pass.call_args.args[2], real_pass.call_args.args[4]
         self.assertNotIn("drive", member)
-        self.assertIn("inside the main account's", problem)
+        self.assertIn("fills the whole drive folder", problem)
 
     def test_the_pass_runs_drive_after_photos(self):
         api = MagicMock()

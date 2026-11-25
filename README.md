@@ -332,10 +332,30 @@ accounts:
 Each person then has a row on the dashboard and a page of their own. Sign them in from that page with their Apple ID password and the 6-digit code from their device; it happens in your browser, like the main account's sign-in, and the password isn't saved. Apple IDs that sign in with a security key aren't supported for members yet.
 
 - **Photos** go to `<photos destination>/<id>` (for example `photos/alex`), and **iCloud Drive** to a folder beside the main account's (`drive/alex`), never inside it. Drive is on whenever the main account syncs Drive; turn it off on the person's page or with `drive: false`.
-- **The first backup waits for you.** A first pass compares iCloud with what's already in the folder and reports what it would download. Nothing is written until you tap Start backup.
+- **The first backup waits for you.** A first pass compares iCloud with what's already in the folder and reports what it would download. Nothing is written until you start the backup.
 - **Shared Libraries download once.** A Shared Library is backed up by the account that owns it, into a folder beside the main account's.
 - **Cleanup is off for members** unless their entry turns it on, and a folder that another account's cleanup already covers is refused.
 - **Each person syncs on their own**, so one person waiting for a code doesn't hold up anyone else.
+
+**Everyone gets a folder of their own.** People sit side by side inside `photos/` and `drive/`, the main account included, so no one's cleanup can reach anyone else's files:
+
+```
+photos/me  photos/alex  photos/shared
+drive/me   drive/alex
+```
+
+If the main account's photos are still directly in `photos/` (the default), move them into a folder first. With the container stopped, move everything in `photos/` except `.mounted` into `photos/me`, then map the libraries and start it again. Your own photos keep their paths inside the new folder, so they aren't downloaded again; a Shared Library is downloaded once more, into its own folder:
+
+```yaml
+photos:
+  library_destinations:
+    PrimarySync: me
+    SharedLibrary: shared
+drive:
+  destination: drive/me          # same for Drive: move drive/* into drive/me first
+```
+
+Until then, the people's rows say what's missing instead of backing up.
 
 An entry can change a few photo and Drive settings for that person:
 

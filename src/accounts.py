@@ -394,6 +394,8 @@ def drive_conflict(config: dict, member: dict, other_drives: list[str] = ()) -> 
         return None
     main_drive = drive_folder(config)
     if main_drive is not None and _nested(drive, main_drive):
+        if not os.path.dirname(_primary_drive_destination(config)):
+            return "Drive is off: the main account's Drive fills the whole drive folder. Give it a folder of its own first (README, Household)."
         return "Drive is off: its folder would sit inside the main account's. Set drive.destination on its entry."
     for other in other_drives:
         if _nested(drive, other):
@@ -417,7 +419,10 @@ def folder_conflict(
     base = _clean(_photos_base(config))
     if folder == base:
         return "its folder is the whole photos destination"
-    for root in cleanup_roots(config):
+    roots = cleanup_roots(config)
+    if base in roots:
+        return "the main account's photos fill the whole photos folder. Give them a folder of their own first (README, Household)"
+    for root in roots:
         if _nested(folder, root):
             return f"its folder overlaps the main account's {os.path.relpath(root, base)}"
     for other in others:

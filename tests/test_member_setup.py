@@ -95,7 +95,7 @@ class TestFolderSafety(_Dirs):
     def test_main_without_library_folders_cleans_everything(self):
         config = _config(self.root, photos={"destination": "photos"})
         self.assertEqual(accounts.cleanup_roots(config), [os.path.join(self.root, "photos")])
-        self.assertIn("overlaps", accounts.folder_conflict(config, self._member(config)))
+        self.assertIn("fill the whole photos folder", accounts.folder_conflict(config, self._member(config)))
         config["photos"] = None
         self.assertEqual(accounts.cleanup_roots(config), [os.path.join(self.root, "photos")])
 
