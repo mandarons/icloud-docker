@@ -53,6 +53,22 @@ class TestReport(_Dirs):
         config = _config(self.root, entry)
         return accounts.member_config(config, accounts.Account("member", MEMBER))
 
+    def test_the_check_records_how_far_it_got(self):
+        seen = []
+
+        def build(_photos, _member, progress):
+            progress(250, 1000)
+            with web_signals.as_account("member"):
+                seen.append({k: web_signals.get_member().get(k) for k in ("status", "checked", "total")})
+            return {"assets": 1000}
+
+        with web_signals.as_account("member"), patch.object(member_report, "build", build):
+            member_sync._report(_fake_api([]), self._member())  # noqa: SLF001
+            member = web_signals.get_member()
+        self.assertEqual(seen, [{"status": "checking", "checked": 250, "total": 1000}])
+        self.assertEqual(member["status"], "review")
+        self.assertNotIn("checked", member)
+
     def test_classifies_every_file(self):
         base = os.path.join(self.root, "photos", "Member")
         day = os.path.join(base, "2024", "05", "03")

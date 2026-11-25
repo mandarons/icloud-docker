@@ -169,6 +169,26 @@ class TestDeletesFollowICloud(_Dirs):
         # Filed in local days: no UTC-day folder was made beside the old one.
         self.assertEqual(os.listdir(os.path.join(self.base, "2024", "05")), ["02"])
 
+    def test_the_walk_says_how_far_it_got(self):
+        self._tree()
+        heard = []
+        with patch.object(member_report, "PROGRESS_EVERY", 2):
+            _in_zone(None, member_report.build, self._photos(), self._member(), lambda *a: heard.append(a))
+        self.assertEqual(heard, [(2, 3)])
+
+    def test_progress_without_a_count_from_apple(self):
+        class Uncounted(_Album):
+            def __len__(self):
+                raise RuntimeError
+
+        self._tree()
+        photos = self._photos()
+        photos.libraries["PrimarySync"].all = Uncounted(photos.libraries["PrimarySync"].all)
+        heard = []
+        with patch.object(member_report, "PROGRESS_EVERY", 1):
+            _in_zone(None, member_report.build, photos, self._member(), lambda *a: heard.append(a))
+        self.assertEqual(heard, [(1, None), (2, None), (3, None)])
+
     def test_over_the_limit_deletes_nothing(self):
         self._tree()
         report = self._first_pass(self._member(obsolete_delete_limit_percent=10))

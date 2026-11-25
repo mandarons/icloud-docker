@@ -518,6 +518,37 @@ _MEMBER_LABELS = {
 }
 
 
+def _time_left(seconds: float) -> str:
+    minutes = round(seconds / 60)
+    if minutes < 1:
+        return "less than a minute left"
+    if minutes < 90:
+        return f"about {minutes} min left"
+    return f"about {round(minutes / 60)} h left"
+
+
+def _member_progress(status: str, member: dict, photos: dict, drive: dict) -> str | None:
+    """How far a long check or backup has got, and whether stopping it is safe.
+
+    From fields the passes already write; nothing is listed or fetched.
+    """
+    if status == "checking":
+        checked, total = member.get("checked"), member.get("total")
+        parts = []
+        if isinstance(checked, int) and checked > 0:
+            parts.append(f"{checked:,} of {total:,} photos checked" if isinstance(total, int) else f"{checked:,} photos checked")
+            elapsed = time.time() - float(member.get("status_at") or time.time())
+            if isinstance(total, int) and total > checked and elapsed >= 60:
+                parts.append(_time_left((total - checked) * elapsed / checked))
+        line = " · ".join(parts)
+        return (line + ". " if line else "") + "Nothing changes while it checks, so stopping is safe."
+    if status == "syncing":
+        since = photos.get("running_since") or drive.get("running_since")
+        started = f"Started {web_signals.format_relative_time(since).replace('Just now', 'just now')}. " if since else ""
+        return started + "Stopping is safe: the next backup picks up where this one left off."
+    return None
+
+
 def _member_backup(account_id: str, config: dict | None = None) -> dict[str, Any]:
     """A member's backup, from their own state file. Small reads, no network."""
     with web_signals.as_account(account_id):
@@ -534,6 +565,7 @@ def _member_backup(account_id: str, config: dict | None = None) -> dict[str, Any
         "status": status,
         "label": _MEMBER_LABELS.get(status, "waiting for the first pass"),
         "detail": member.get("detail"),
+        "progress": _member_progress(status, member, photos, drive),
         "report": member.get("report") if isinstance(member.get("report"), dict) else None,
         "approved": bool(member.get("approved")),
         "last_sync_relative": web_signals.format_relative_time(completed) if completed else None,

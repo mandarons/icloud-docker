@@ -47,6 +47,7 @@
   {% else %}
   <p style="margin: 0;"><strong>{{ backup.label|capitalize }}</strong>{% if backup.status == 'ok' and backup.last_sync_relative %} {{ backup.last_sync_relative }}{% endif %}</p>
   {% if backup.detail %}<p style="font-size: 14px; color: var(--text-secondary); margin: 6px 0 0;">{{ backup.detail }}</p>{% endif %}
+  {% if backup.progress %}<p style="font-size: 14px; color: var(--text-secondary); margin: 6px 0 0;">{{ backup.progress }}</p>{% endif %}
   {% if backup.status == 'ok' and (backup.files_downloaded is not none or backup.adopted) %}<dl class="rows">
     {% if backup.files_downloaded is not none %}<div><dt>New last time</dt><dd>{{ "{:,}".format(backup.files_downloaded) }} files</dd></div>{% endif %}
     {% if backup.adopted %}<div><dt>Kept under older names</dt><dd>{{ "{:,}".format(backup.adopted) }} files</dd></div>{% endif %}

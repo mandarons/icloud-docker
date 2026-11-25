@@ -194,8 +194,10 @@ def _member(member: dict) -> dict[str, Any]:
         action = {"label": "Review and start", "href": page}
     elif status == "checking":
         tone, sentence = "busy", "Checking what's already in the folder"
+        detail = backup.get("progress")
     elif status == "syncing":
         tone, sentence = "busy", "Backing up now"
+        detail = backup.get("progress")
     elif status == "ok":
         tone = "ok"
         sentence = f"Backed up {backup['last_sync_relative']}" if backup.get("last_sync_relative") else "Backed up"

@@ -1,6 +1,7 @@
 """Tests for the household member's card and backup controls on the dashboard."""
 
 import os
+import time
 from unittest.mock import patch
 
 import tests  # noqa: F401 - sets ENV_CONFIG_FILE_PATH via tests/__init__
@@ -41,6 +42,32 @@ class TestDashboard(_Dirs):
         self.assertEqual(web._member_backup("member")["status"], "syncing")  # noqa: SLF001
         self._set(report="junk")
         self.assertIsNone(web._member_backup("member")["report"])  # noqa: SLF001
+
+    def test_progress_while_checking_and_backing_up(self):
+        def progress():
+            return web._member_backup("member")["progress"]  # noqa: SLF001
+
+        self.assertIsNone(progress())
+        self._set(status="syncing")
+        self.assertEqual(progress(), "Stopping is safe: the next backup picks up where this one left off.")
+        self._set(status="checking", checked=0, status_at=time.time())
+        self.assertEqual(progress(), "Nothing changes while it checks, so stopping is safe.")
+        self._set(checked=1200, total=8412)
+        self.assertTrue(progress().startswith("1,200 of 8,412 photos checked. Nothing"))
+        self._set(status_at=time.time() - 120)
+        self.assertTrue(progress().startswith("1,200 of 8,412 photos checked · about 12 min left. "))
+        self._set(total=None)
+        self.assertTrue(progress().startswith("1,200 photos checked. "))
+        self.assertIn("1,200 photos checked", self._dashboard())
+        with web_signals.as_account("member"):
+            web_signals.record_service_running("photos", running=True)
+        self.assertTrue(progress().startswith("Started just now. Stopping is safe"))
+        self.assertIn("Started just now", self.client.get("/household/member").get_data(as_text=True))
+
+    def test_time_left(self):
+        self.assertEqual(web._time_left(20), "less than a minute left")  # noqa: SLF001
+        self.assertEqual(web._time_left(600), "about 10 min left")  # noqa: SLF001
+        self.assertEqual(web._time_left(7200), "about 2 h left")  # noqa: SLF001
 
     def test_report_and_start(self):
         report = {

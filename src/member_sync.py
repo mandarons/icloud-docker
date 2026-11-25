@@ -177,9 +177,13 @@ def _mount_ok(member: dict) -> bool:
 def _report(api, member: dict) -> None:
     from src import member_report
 
-    _status("checking", "Comparing iCloud with the photos already in the folder.")
-    report = member_report.build(api.photos, member)
-    _status("review", None, report=report)
+    _status("checking", "Comparing iCloud with the photos already in the folder.", checked=0, total=None)
+
+    def progress(checked: int, total: int | None) -> None:
+        web_signals.record_member(checked=checked, total=total)
+
+    report = member_report.build(api.photos, member, progress)
+    _status("review", None, report=report, checked=None, total=None)
 
 
 def _drive_mounted(config: dict, member: dict) -> bool:

@@ -70,10 +70,24 @@ def _unclaimed(root: str, claimed: set[str], marker: str) -> tuple[int, int, lis
     return count, present, samples
 
 
-def build(photos, member: dict) -> dict[str, Any]:
+PROGRESS_EVERY = 250
+
+
+def _total(library) -> int | None:
+    """How many photos the library holds (one small request), or None."""
+    try:
+        return len(library)
+    except Exception as e:  # noqa: BLE001 - progress without a total is still progress
+        LOGGER.debug(f"Member report: no photo count: {e!s}")
+        return None
+
+
+def build(photos, member: dict, progress=None) -> dict[str, Any]:
     """Walk the member's personal library once and classify every file.
 
     ``photos`` is the member's ``api.photos``. Returns a JSON-ready dict.
+    ``progress(checked, total)`` hears how far the walk got, every
+    ``PROGRESS_EVERY`` photos; ``total`` is None when Apple won't say.
     """
     from src.sync_photos import apply_naming_settings
 
@@ -90,8 +104,12 @@ def build(photos, member: dict) -> dict[str, Any]:
     assets = 0
     stopped = None
     try:
-        for photo in photos.libraries["PrimarySync"].all:
+        library = photos.libraries["PrimarySync"].all
+        total = _total(library) if progress else None
+        for photo in library:
             assets += 1
+            if progress and assets % PROGRESS_EVERY == 0:
+                progress(assets, total)
             for file_size in file_sizes:
                 if not _size_present(photo, file_size, photo.versions):
                     continue
