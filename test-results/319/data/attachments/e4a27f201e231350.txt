@@ -1,0 +1,4 @@
+[38;5;39m2026-11-25 18:49:32,611 :: INFO :: root :: photo_file_utils.py :: 512 :: Downloading /tmp/tmp206ccc17/x.jpg ...[0m
+[38;5;39m2026-11-25 18:49:32,611 :: INFO :: root :: photo_file_utils.py :: 512 :: Downloading /tmp/tmp206ccc17/x.jpg ...[0m
+[38;5;196m2026-11-25 18:49:32,612 :: ERROR :: root :: photo_file_utils.py :: 560 :: Incomplete download of /tmp/tmp206ccc17/x.jpg: got 0 of 1 bytes. Will retry on the next sync.[0m
+[38;5;196m2026-11-25 18:49:32,612 :: ERROR :: root :: photo_file_utils.py :: 560 :: Incomplete download of /tmp/tmp206ccc17/x.jpg: got 0 of 1 bytes. Will retry on the next sync.[0m

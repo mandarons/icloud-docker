@@ -1,0 +1,2 @@
+INFO     root:photo_download_manager.py:363 Filename collision for IMG_0001.HEIC (id=ABC123); using suffix path /tmp/tmpop8uzowa/IMG_0001__original__X.HEIC to preserve both photos.
+DEBUG    root:photo_download_manager.py:409 [Thread] Starting processing of /tmp/tmpop8uzowa/IMG_0001__original__X.HEIC

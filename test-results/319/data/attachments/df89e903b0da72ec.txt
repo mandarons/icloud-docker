@@ -1,0 +1,18 @@
+[38;5;226m2026-11-25 18:49:28,313 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;226m2026-11-25 18:49:28,313 :: WARNING :: root :: config_logging.py :: 26 :: drive > sync_interval is not found. Using default sync_interval: 1800 seconds ...[0m
+[38;5;196m2026-11-25 18:49:28,313 :: ERROR :: root :: sync.py :: 1521 :: [0m
+[38;5;196m2026-11-25 18:49:28,313 :: ERROR :: root :: sync.py :: 1521 :: [0m
+[38;5;39m2026-11-25 18:49:28,314 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-25 18:49:28,314 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-25 18:49:28,314 :: INFO :: root :: sync.py :: 1563 :: Retrying login at Wed Nov 25 18:59:28 2026 ...[0m
+[38;5;39m2026-11-25 18:49:28,314 :: INFO :: root :: sync.py :: 1563 :: Retrying login at Wed Nov 25 18:59:28 2026 ...[0m
+[38;5;226m2026-11-25 18:49:28,314 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-11-25 18:49:28,314 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;196m2026-11-25 18:49:28,314 :: ERROR :: root :: sync.py :: 1521 :: [0m
+[38;5;196m2026-11-25 18:49:28,314 :: ERROR :: root :: sync.py :: 1521 :: [0m
+[38;5;39m2026-11-25 18:49:28,315 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-25 18:49:28,315 :: INFO :: root :: config_logging.py :: 35 :: Retrying login every 600 seconds.[0m
+[38;5;39m2026-11-25 18:49:28,315 :: INFO :: root :: sync.py :: 1563 :: Retrying login at Wed Nov 25 18:59:28 2026 ...[0m
+[38;5;39m2026-11-25 18:49:28,315 :: INFO :: root :: sync.py :: 1563 :: Retrying login at Wed Nov 25 18:59:28 2026 ...[0m
+[38;5;226m2026-11-25 18:49:28,315 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
+[38;5;226m2026-11-25 18:49:28,315 :: WARNING :: root :: config_logging.py :: 26 :: app > region not found. Using default value - global ...[0m
