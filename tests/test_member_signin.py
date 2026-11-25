@@ -515,12 +515,13 @@ class TestDashboard(_ConfigDir):
     def test_member_page_offers_the_next_one_to_sign_in(self):
         two = {"app": {"credentials": {"username": MAIN}}, "accounts": [{"id": "member", "username": MEMBER}, {"id": "other", "username": "o@example.com"}]}
         with patch.object(web, "_load_current_config", lambda: two), patch.object(accounts, "session_saved", lambda i: i == "member"):
-            html = self.client.get("/household/member").get_data(as_text=True)
+            self.assertNotIn('action="/household/other/sign-in"', self.client.get("/household/member").get_data(as_text=True))
+            html = self.client.get("/household/member?signed_in=1").get_data(as_text=True)
             self.assertIn('action="/household/other/sign-in"', html)
             self.assertIn("Sign in as Other", html)
             self.assertNotIn('action="/household/member/sign-in" method="post" class="card"', html)
         with patch.object(web, "_load_current_config", lambda: two), patch.object(accounts, "session_saved", lambda i: True):
-            self.assertNotIn('action="/household/other/sign-in"', self.client.get("/household/member").get_data(as_text=True))
+            self.assertNotIn('action="/household/other/sign-in"', self.client.get("/household/member?signed_in=1").get_data(as_text=True))
 
     def test_unknown_member_goes_home(self):
         self.assertEqual(self.client.get("/household/nobody").status_code, 302)
@@ -542,7 +543,7 @@ class TestDashboard(_ConfigDir):
         self.assertIn(f'value="{MEMBER}" autocomplete="username" readonly', html)
         with self.client.session_transaction() as s:
             s["done"] = True
-        self.assertIn('href="/household/member"', self.client.get("/sign-in").get_data(as_text=True))
+        self.assertIn('href="/household/member?signed_in=1"', self.client.get("/sign-in").get_data(as_text=True))
 
     def test_accounts_page_shows_add_form_and_errors(self):
         with patch.object(web, "_build_service", return_value={}):

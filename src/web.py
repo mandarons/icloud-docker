@@ -1579,10 +1579,13 @@ def create_app(testing: bool = False) -> Flask:
             "household.html",
             account=account,
             session_saved=accounts.session_saved(account.id),
+            # Straight after a sign-in, offer the next person who still needs one.
             next_up=next(
                 (a for a in accounts.get_accounts(config) if a.id != account.id and not accounts.session_saved(a.id)),
                 None,
-            ),
+            )
+            if request.args.get("signed_in")
+            else None,
             backup=_member_backup(account.id, config),
             shared_folder=accounts.shared_library_folder(config),
             active_nav="dashboard",

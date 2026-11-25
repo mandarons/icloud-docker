@@ -28,7 +28,7 @@
 {% elif state == 'done' %}
 <h1 class="page-title">{{ name or "They" }} {{ "is" if name else "are" }} signed in</h1>
 <p class="page-sub">{% if review_first %}Their backup starts once you've checked the report.{% else %}Their backup starts in a few minutes.{% endif %} The password wasn't saved.</p>
-<a class="btn btn-primary" href="{{ back_to or '/' }}">See the backup</a>
+<a class="btn btn-primary" href="{{ (back_to ~ '?signed_in=1') if back_to else '/' }}">See the backup</a>
 
 {% else %}
 <h1 class="page-title">Sign in{% if name %} as {{ name }}{% endif %}</h1>

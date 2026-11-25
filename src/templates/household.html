@@ -52,7 +52,7 @@
     {% if backup.files_downloaded is not none %}<div><dt>New last time</dt><dd>{{ "{:,}".format(backup.files_downloaded) }} files</dd></div>{% endif %}
     {% if backup.adopted %}<div><dt>Kept under older names</dt><dd>{{ "{:,}".format(backup.adopted) }} files</dd></div>{% endif %}
   </dl>{% endif %}
-  <form action="/household/{{ account.id }}/sync" method="post" style="margin-top: 14px;"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-small">Back up now</button></form>
+  {% if backup.status not in ('checking', 'syncing') %}<form action="/household/{{ account.id }}/sync" method="post" style="margin-top: 14px;"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-small">Back up now</button></form>{% endif %}
   {% endif %}
 </div>
 {% endif %}

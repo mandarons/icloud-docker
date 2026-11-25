@@ -59,6 +59,7 @@ class TestDashboard(_Dirs):
         self._set(total=None)
         self.assertTrue(progress().startswith("1,200 photos checked. "))
         self.assertIn("1,200 photos checked", self._dashboard())
+        self.assertNotIn("Back up now", self.client.get("/household/member").get_data(as_text=True))
         with web_signals.as_account("member"):
             web_signals.record_service_running("photos", running=True)
         self.assertTrue(progress().startswith("Started just now. Stopping is safe"))
