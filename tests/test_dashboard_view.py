@@ -145,8 +145,9 @@ class TestMainAccount(unittest.TestCase):
         me = self._me(auth_state=None, username=None)
         self.assertEqual(
             (me["tone"], me["sentence"], me["action"]["label"]),
-            ("err", "No Apple ID set up yet", "Set up"),
+            ("warn", "No Apple ID yet", "Add Apple ID"),
         )
+        self.assertEqual(self._me(auth_state=None, username=None)["services"], [])
         self.assertEqual((me["name"], me["initial"]), ("Main account", "?"))
 
     def test_first_sign_in(self):
@@ -284,7 +285,7 @@ class TestHeadline(unittest.TestCase):
     def test_what_to_do_about_the_main_account(self):
         self.assertEqual(self._title(auth_state="reauth_needed"), "Sign in again to restart backups")
         self.assertEqual(self._title(auth_state="setup_needed"), "Sign in to start backing up")
-        self.assertEqual(self._title(auth_state=None), "Sign in to start backing up")
+        self.assertEqual(self._title(auth_state=None), "Add your Apple ID to start backing up")
         self.assertEqual(self._title(trust_days_remaining=3), "Refresh trust: it runs out in 3 days")
         self.assertEqual(self._title(trust_days_remaining=1), "Refresh trust: it runs out in 1 day")
         self.assertEqual(self._title(trust_days_remaining=0), "Refresh trust to keep backups running")
@@ -295,7 +296,7 @@ class TestHeadline(unittest.TestCase):
             (_member("needs_sign_in"), "Alex needs to sign in again"),
             (_member("blocked"), "Alex's backup is not running"),
             (_member("error"), "Alex's last backup failed"),
-            (_member(saved=False), "Waiting for Alex to sign in"),
+            (_member(saved=False), "Alex isn't signed in yet"),
             (_member(None), "Alex: first backup starts soon"),
         ):
             self.assertEqual(self._title(household=[member]), title)

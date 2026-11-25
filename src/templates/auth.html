@@ -68,6 +68,12 @@
     {% endif %}
   </div>
   {% endif %}
+  {% if auth == 'not_configured' %}
+  <p class="acct-note">Add your Apple ID to <span class="mono">config.yaml</span> and restart the container, then sign in here:</p>
+  <pre class="mono" style="margin: 0; padding: 10px 14px; border-radius: 8px; background: var(--field); font-size: 13px; overflow-x: auto;">app:
+  credentials:
+    username: you@example.com</pre>
+  {% else %}
   <div class="flow" id="flow"{% if not flow_open %} hidden{% endif %}>
     <p class="flow-step">
       {% if security_key_blob %}Sign Apple's challenge with your security key.
@@ -216,6 +222,7 @@
     </form>
   {% endif %}
   </div>
+  {% endif %}
 </section>
 
 {% for m in status.household %}
@@ -229,7 +236,8 @@
 </a>
 {% endfor %}
 
-<details class="card acct add"{% if household_error %} open{% endif %}>
+{% if auth != 'not_configured' %}
+<details class="card acct add"{% if household_error or not status.household %} open{% endif %}>
   <summary>Add someone</summary>
   <p class="acct-note">Back up another family member's iCloud. Add a short name, then sign them in from their page.</p>
   {% if household_error %}<p class="acct-note warn">{{ household_error }}</p>{% endif %}
@@ -239,6 +247,7 @@
     <button type="submit" class="btn btn-small">Add</button>
   </form>
 </details>
+{% endif %}
 
 {% if security_key_blob %}
 <script>

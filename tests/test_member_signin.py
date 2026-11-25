@@ -553,6 +553,26 @@ class TestDashboard(_ConfigDir):
         self.assertIn("Nope", html)
         self.assertNotIn('action="/household/add"', dashboard)
 
+    def test_account_page_before_anything_is_set_up(self):
+        with (
+            patch.object(web, "_build_service", return_value={}),
+            patch.object(web, "_detect_auth_state", return_value="not_configured"),
+        ):
+            html = self.client.get("/auth").get_data(as_text=True)
+        self.assertIn("username: you@example.com", html)
+        self.assertNotIn('id="flow"', html)
+        self.assertNotIn('action="/household/add"', html)
+
+    def test_add_someone_is_open_until_someone_is_added(self):
+        nobody = {"app": {"credentials": {"username": MAIN}}}
+        with (
+            patch.object(web, "_build_service", return_value={}),
+            patch.object(web, "_detect_auth_state", return_value="ready"),
+        ):
+            self.assertNotIn('class="card acct add" open', self.client.get("/auth").get_data(as_text=True))
+            with patch.object(web, "_load_current_config", lambda: nobody):
+                self.assertIn('class="card acct add" open', self.client.get("/auth").get_data(as_text=True))
+
     def test_a_members_whole_row_opens_their_page(self):
         with patch.object(web, "_build_service", return_value={}):
             html = self.client.get("/").get_data(as_text=True)

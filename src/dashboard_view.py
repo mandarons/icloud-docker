@@ -119,8 +119,10 @@ def _primary(status: dict) -> dict[str, Any]:
     action = None
     detail = None
     if auth == "not_configured":
-        tone, sentence = "err", "No Apple ID set up yet"
-        action = {"label": "Set up", "href": "/auth"}
+        # Nothing can run yet, so the card is one sentence and one button.
+        tone, sentence = "warn", "No Apple ID yet"
+        action = {"label": "Add Apple ID", "href": "/auth"}
+        services = []
     elif auth == "setup_needed":
         tone, sentence = "warn", "Waiting for the first sign-in"
         action = {"label": "Sign in", "href": "/auth"}
@@ -249,7 +251,9 @@ def _plainly(person: dict) -> str:
         trust = person.get("trust_days_remaining")
         if action == "Sign in again":
             return "Sign in again to restart backups"
-        if action in ("Sign in", "Set up"):
+        if action == "Add Apple ID":
+            return "Add your Apple ID to start backing up"
+        if action == "Sign in":
             return "Sign in to start backing up"
         if action == "Refresh trust":
             if trust is not None and trust > 0:
@@ -258,7 +262,7 @@ def _plainly(person: dict) -> str:
         return sentence
     return {
         "Ready for review": f"{name}'s backup is ready for review",
-        "Not signed in yet": f"Waiting for {name} to sign in",
+        "Not signed in yet": f"{name} isn't signed in yet",
         "Sign-in has run out": f"{name} needs to sign in again",
         "Not backing up": f"{name}'s backup is not running",
         "The last backup failed": f"{name}'s last backup failed",
