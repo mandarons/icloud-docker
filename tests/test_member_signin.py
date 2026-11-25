@@ -387,7 +387,7 @@ class TestSignInPages(_ConfigDir):
         self._open()
         html = self.client.get("/sign-in").get_data(as_text=True)
         self.assertIn(f'value="{MEMBER}" autocomplete="username" readonly', html)
-        self.assertIn("Sign in Member", html)
+        self.assertIn("Sign in as Member", html)
 
     def test_headers(self):
         self._open()
@@ -512,6 +512,16 @@ class TestDashboard(_ConfigDir):
         self.assertIn("Not signed in yet", html)
         self.assertIn('href="/household/member"', html)
 
+    def test_member_page_offers_the_next_one_to_sign_in(self):
+        two = {"app": {"credentials": {"username": MAIN}}, "accounts": [{"id": "member", "username": MEMBER}, {"id": "other", "username": "o@example.com"}]}
+        with patch.object(web, "_load_current_config", lambda: two), patch.object(accounts, "session_saved", lambda i: i == "member"):
+            html = self.client.get("/household/member").get_data(as_text=True)
+            self.assertIn('action="/household/other/sign-in"', html)
+            self.assertIn("Sign in as Other", html)
+            self.assertNotIn('action="/household/member/sign-in" method="post" class="card"', html)
+        with patch.object(web, "_load_current_config", lambda: two), patch.object(accounts, "session_saved", lambda i: True):
+            self.assertNotIn('action="/household/other/sign-in"', self.client.get("/household/member").get_data(as_text=True))
+
     def test_unknown_member_goes_home(self):
         self.assertEqual(self.client.get("/household/nobody").status_code, 302)
 
@@ -608,13 +618,16 @@ class TestTheSignInPageSaysWhatItIs(unittest.TestCase):
                 review_first=review_first,
                 csrf_token="x",
                 name="Sam",
+                focused=True,
+                back_to="/household/sam",
             )
 
     def test_before_signing_in(self):
         for state in ("password", "code"):
             html = self._render(state)
-            self.assertIn("Sign in Sam", html)
-            self.assertIn('href="/settings"', html)  # the dashboard's own header
+            self.assertIn("Sign in as Sam", html)
+            self.assertNotIn('href="/settings"', html)  # no way into the rest of the console
+            self.assertIn('<a href="/household/sam">Cancel</a>', html)
             self.assertNotIn("Not Apple", html)
         self.assertIn("isn't saved here", self._render("password"))
         self.assertIn("security key", self._render("password"))

@@ -274,12 +274,12 @@
 <body>
 <header class="header">
   <div class="header-inner">
-    <a href="/" class="brand"><span class="brand-icon">☁️ </span>iCloud Docker{% if version %}<span class="brand-version" title="{{ version }}">{{ version[:14] if version.startswith('custom-') else version }}</span>{% endif %}</a>
-    <nav class="nav">
+    {% if focused %}<span class="brand">{% else %}<a href="/" class="brand">{% endif %}<span class="brand-icon">☁️ </span>iCloud Docker{% if version %}<span class="brand-version" title="{{ version }}">{{ version[:14] if version.startswith('custom-') else version }}</span>{% endif %}{% if focused %}</span>{% else %}</a>{% endif %}
+    {% if not focused %}<nav class="nav">
       <a href="/" class="{% if active_nav == 'dashboard' %}active{% endif %}">Dashboard</a>
       <a href="/auth" class="{% if active_nav == 'auth' %}active{% endif %}">{{ 'Accounts' if (g.apple_ids or 1) > 1 else 'Account' }}</a>
       <a href="/settings" class="{% if active_nav == 'settings' %}active{% endif %}">Settings</a>
-    </nav>
+    </nav>{% endif %}
   </div>
 </header>
 <main class="container">

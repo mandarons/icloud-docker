@@ -16,6 +16,14 @@
 </form>
 {% endif %}
 
+{% if session_saved and next_up %}
+<form action="/household/{{ next_up.id }}/sign-in" method="post" class="card" style="max-width: 640px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; padding: 16px 20px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div style="flex: 1; min-width: 0;">{{ next_up.label }} isn't signed in yet.</div>
+  <button type="submit" class="btn btn-small btn-primary" style="flex: 0 0 auto;">Sign in as {{ next_up.label }}</button>
+</form>
+{% endif %}
+
 {% if session_saved %}
 <div class="card" style="max-width: 640px; margin-bottom: 20px;">
   {% set r = backup.report %}
@@ -53,7 +61,7 @@
   <dl class="rows"><div><dt>Apple ID</dt><dd style="overflow-wrap: anywhere;">{{ account.username }}</dd></div></dl>
   {% endif %}
   <div class="btn-pair"{% if not session_saved %} style="margin-top: 0;"{% endif %}>
-    <form action="/household/{{ account.id }}/sign-in" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn {{ 'btn-primary' if not session_saved }}">{{ 'Sign in again' if session_saved else 'Sign in' }}</button></form>
+    <form action="/household/{{ account.id }}/sign-in" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn {{ 'btn-primary' if not session_saved }}">{{ 'Sign in again' if session_saved else 'Sign in as ' ~ account.label }}</button></form>
     {% if session_saved or account.username %}
     <form action="/household/{{ account.id }}/forget" method="post" onsubmit="return confirm(this.dataset.ask)" data-ask="Forget {{ account.label }}'s sign-in? Their backup stops until they sign in again. Photos and files already backed up stay."><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn">Forget sign-in</button></form>
     {% endif %}

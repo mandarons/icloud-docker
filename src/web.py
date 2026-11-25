@@ -1547,6 +1547,10 @@ def create_app(testing: bool = False) -> Flask:
             "household.html",
             account=account,
             session_saved=accounts.session_saved(account.id),
+            next_up=next(
+                (a for a in accounts.get_accounts(config) if a.id != account.id and not accounts.session_saved(a.id)),
+                None,
+            ),
             backup=_member_backup(account.id, config),
             shared_folder=accounts.shared_library_folder(config),
             active_nav="dashboard",

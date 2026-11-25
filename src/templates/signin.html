@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}iCloud Docker · Sign in {{ name or "" }}{% endblock %}
+{% block title %}iCloud Docker · Sign in{% if name %} as {{ name }}{% endif %}{% endblock %}
 {% block extra_style %}
 <style>
   .signin { max-width: 440px; }
@@ -16,6 +16,8 @@
   .signin .msg.ok { background: var(--field); color: var(--text-secondary); }
   .signin .msg a { color: inherit; text-decoration: underline; }
   .signin .fine { font-size: 13px; color: var(--text-tertiary); margin: 14px 0 0; }
+  .signin-out { max-width: 440px; margin-top: 16px; font-size: 14px; }
+  .signin-out a { color: var(--text-secondary); }
 </style>
 {% endblock %}
 {% block content %}
@@ -27,8 +29,9 @@
 <h1 class="page-title">{{ name or "They" }} {{ "is" if name else "are" }} signed in</h1>
 <p class="page-sub">{% if review_first %}Their backup starts once you've checked the report.{% else %}Their backup starts in a few minutes.{% endif %} The password wasn't saved.</p>
 <a class="btn btn-primary" href="{{ back_to or '/' }}">See the backup</a>
+
 {% else %}
-<h1 class="page-title">Sign in {{ name or "" }}</h1>
+<h1 class="page-title">Sign in{% if name %} as {{ name }}{% endif %}</h1>
 <p class="page-sub">Backs up their iCloud {{ what or "photos" }}.</p>
 <div class="card signin">
   {% if state == 'code' %}
@@ -61,6 +64,7 @@
   <p class="fine">Apple IDs that sign in with a security key aren't supported here yet.</p>
   {% endif %}
 </div>
+<p class="signin-out"><a href="{{ back_to or '/' }}">Cancel</a></p>
 {% endif %}
 <script>
   // One submit per form: a second tap while Apple is checking only confused things.
