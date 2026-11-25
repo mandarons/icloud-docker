@@ -226,3 +226,4 @@ class TestHouseholdDriveSwitch(_Web):
         page = self.client.get("/household/member").get_data(as_text=True)
         self.assertIn("iCloud Drive", page)
         self.assertIn("Turn off", page)
+        self.assertIn("Files already backed up stay here.", page)

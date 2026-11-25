@@ -214,7 +214,7 @@ class TestMember(unittest.TestCase):
         }
         for member, tone, sentence, action in (
             (_member(saved=False), "idle", "Not signed in yet", "Sign in"),
-            (_member("review", report=report), "warn", "Ready for review", "Review"),
+            (_member("review", report=report), "warn", "Ready for review", "Review and start"),
             (
                 _member("checking"),
                 "busy",
@@ -255,7 +255,7 @@ class TestMember(unittest.TestCase):
             "over_limit": False,
         }
         self.assertTrue(
-            self._them(_member("review", report=report))["detail"].startswith("1,247 to download · 412 to delete."),
+            self._them(_member("review", report=report))["detail"].startswith("1,247 files to download · 412 to delete."),
         )
         for kept in (
             {**report, "deletes": False},
@@ -263,10 +263,10 @@ class TestMember(unittest.TestCase):
             {**report, "unclaimed": 0},
         ):
             self.assertNotIn("to delete", self._them(_member("review", report=kept))["detail"])
-        self.assertTrue(self._them(_member("review"))["detail"].startswith("0 to download."))
+        self.assertTrue(self._them(_member("review"))["detail"].startswith("0 files to download."))
 
     def test_ok_detail(self):
-        self.assertEqual(self._them(_member("ok", files_downloaded=5))["detail"], "5 new")
+        self.assertEqual(self._them(_member("ok", files_downloaded=5))["detail"], "5 new files")
         self.assertEqual(
             self._them(_member("ok", files_downloaded=5, detail="Fine."))["detail"],
             "Fine.",

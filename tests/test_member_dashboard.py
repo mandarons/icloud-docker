@@ -57,8 +57,8 @@ class TestDashboard(_Dirs):
         self._set(status="review", report=report)
         dashboard = self._dashboard()
         self.assertIn("Ready for review", dashboard)
-        self.assertIn("3 to download", dashboard)
-        self.assertIn(">Review<", dashboard)
+        self.assertIn("3 files to download", dashboard)
+        self.assertIn(">Review and start<", dashboard)
         page = self.client.get("/household/member").get_data(as_text=True)
         for text in (
             "Check stopped early",
@@ -99,8 +99,8 @@ class TestDashboard(_Dirs):
         with web_signals.as_account("member"):
             web_signals.record_sync_completion("photos", files_downloaded=1234)
         page = self.client.get("/household/member").get_data(as_text=True)
-        self.assertIn("<dt>New last time</dt><dd>1,234</dd>", page)
-        self.assertIn("<dt>Kept under older names</dt><dd>12</dd>", page)
+        self.assertIn("<dt>New last time</dt><dd>1,234 files</dd>", page)
+        self.assertIn("<dt>Kept under older names</dt><dd>12 files</dd>", page)
         self.assertIn("All good.", page)
         dashboard = self._dashboard()
         self.assertIn("Backed up", dashboard)

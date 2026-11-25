@@ -187,11 +187,11 @@ def _member(member: dict) -> dict[str, Any]:
         action = {"label": "Sign in", "href": page}
     elif status == "review":
         tone, sentence = "warn", "Ready for review"
-        detail = f"{_count(report.get('download', 0))} to download"
+        detail = f"{_count(report.get('download', 0))} files to download"
         if report.get("deletes") and not report.get("over_limit") and report.get("unclaimed"):
             detail += f" · {_count(report['unclaimed'])} to delete"
-        detail += ". Nothing changes until you tap Start backup."
-        action = {"label": "Review", "href": page}
+        detail += ". Nothing changes until you start the backup."
+        action = {"label": "Review and start", "href": page}
     elif status == "checking":
         tone, sentence = "busy", "Checking what's already in the folder"
     elif status == "syncing":
@@ -200,7 +200,7 @@ def _member(member: dict) -> dict[str, Any]:
         tone = "ok"
         sentence = f"Backed up {backup['last_sync_relative']}" if backup.get("last_sync_relative") else "Backed up"
         new = backup.get("files_downloaded")
-        detail = backup.get("detail") or (f"{_count(new)} new" if new else None)
+        detail = backup.get("detail") or (f"{_count(new)} new files" if new else None)
     elif status == "needs_sign_in":
         tone, sentence = "err", "Sign-in has run out"
         detail = backup.get("detail")

@@ -517,6 +517,7 @@ class TestDashboard(_ConfigDir):
 
     def test_forget(self):
         accounts.pin_username("member", MEMBER)
+        self.assertIn("Photos and files already backed up stay.", self.client.get("/household/member").get_data(as_text=True))
         response = _csrf_post(self.client, "/household/member/forget")
         self.assertTrue(response.headers["Location"].endswith("/household/member"))
         self.assertIsNone(accounts.pinned_username("member"))
