@@ -65,6 +65,7 @@ class TestDefaults(unittest.TestCase):
         "photos.all_albums": config_parser.get_photos_all_albums,
         "photos.use_hardlinks": config_parser.get_photos_use_hardlinks,
         "photos.folder_format": config_parser.get_photos_folder_format,
+        "photos.folder_format_in_albums": config_parser.get_photos_folder_format_in_albums,
         "photos.filename_format": config_parser.get_photos_filename_format,
         "photos.file_format": config_parser.get_photos_file_format,
         "photos.variant_separator": config_parser.get_photos_variant_separator,

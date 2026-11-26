@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `photos.folder_format_in_albums` (default `true`) scopes `folder_format` to
+  album folders. Set it to `false` with `all_albums: true` to keep the
+  `%Y/%m` structure in `All Photos` while writing each album's photos
+  directly into its album folder; the `all` folder keeps the format too, and
+  subalbums follow their album. The key is a scope switch, not a second
+  format: `folder_format` remains the only value that decides directory names
+  ([#607](https://github.com/mandarons/icloud-docker/pull/607))
+
 ## [2.4.0] 2026-11-22
 
 ### Added

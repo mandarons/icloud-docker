@@ -31,6 +31,7 @@ The config system is a pure data layer — it does NOT perform sync operations, 
 | `get_drive_flatten_packages(config)` | Keep packages as single files instead of extracting (default false) |
 | `get_photos_filename_format(config)` | `metadata` (legacy) or `simple` plain names (default `metadata`) |
 | `get_photos_file_format(config)` / `get_photos_variant_separator(config)` | Single `${photo.*}` template for all versions + variant separator |
+| `get_photos_folder_format_in_albums(config)` | Whether `folder_format` applies inside album folders (default true; `All Photos` and `all` always keep it) |
 | `get_photos_preserve_originals_as_bak(config)` | Write originals of edited photos as `*.original.bak` (default false) |
 | `get_photos_fallback_to_original(config)` | Download `original` when a requested version is absent (default false); `live_video_*` never falls back |
 | `get_web_ui_enabled(config)` | Check if web UI is enabled |

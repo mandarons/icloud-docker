@@ -258,6 +258,7 @@ photos:
   all_albums: false # Optional, default false. If true preserve album structure. If same photo is in multiple albums creates duplicates on filesystem
   use_hardlinks: false # Optional, default false. If true and all_albums is true, create hard links for duplicate photos instead of separate copies. Saves storage space.
   folder_format: "%Y/%m" # optional, if set put photos in subfolders according to format. Format cheatsheet - https://strftime.org
+  # folder_format_in_albums: true # optional, default true. If false, album folders are written flat (no folder_format inside them); All Photos and "all" keep the format. Only applies when folder_format is set.
   # enumeration_chunk_size: 1000 # Optional, default 1000. Photos buffered per streaming chunk. Lower = lower peak memory on huge libraries, slightly more per-chunk overhead.
   # Optional: refuse to sync if a marker file is missing in the destination.
   # require_mount_marker: false
