@@ -259,18 +259,27 @@
     }
     .log-warn { color: var(--warn-fg); }
     .log-err  { color: var(--err-fg); }
+    /* Label left, value right: the settings-list row. */
+    .rows { margin: 14px 0 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+    .rows > div { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 8px 0; border-top: 1px solid var(--divider); }
+    .rows dt { color: var(--text-secondary); }
+    .rows dd { margin: 0; text-align: right; }
+    .rows .sub { display: block; font-size: 12px; color: var(--text-tertiary); }
+    .btn-pair { display: flex; gap: 8px; margin-top: 16px; }
+    .btn-pair form { flex: 1; margin: 0; display: flex; }
+    .btn-pair .btn { flex: 1; white-space: nowrap; }
   </style>
   {% block extra_style %}{% endblock %}
 </head>
 <body>
 <header class="header">
   <div class="header-inner">
-    <a href="/" class="brand"><span class="brand-icon">☁️ </span>iCloud Docker{% if version %}<span class="brand-version">{{ version }}</span>{% endif %}</a>
-    <nav class="nav">
+    {% if focused %}<span class="brand">{% else %}<a href="/" class="brand">{% endif %}<span class="brand-icon">☁️ </span>iCloud Docker{% if version %}<span class="brand-version" title="{{ version }}">{{ version[:14] if version.startswith('custom-') else version }}</span>{% endif %}{% if focused %}</span>{% else %}</a>{% endif %}
+    {% if not focused %}<nav class="nav">
       <a href="/" class="{% if active_nav == 'dashboard' %}active{% endif %}">Dashboard</a>
-      <a href="/auth" class="{% if active_nav == 'auth' %}active{% endif %}">Account</a>
+      <a href="/auth" class="{% if active_nav == 'auth' %}active{% endif %}">{{ 'Accounts' if (g.apple_ids or 1) > 1 else 'Account' }}</a>
       <a href="/settings" class="{% if active_nav == 'settings' %}active{% endif %}">Settings</a>
-    </nav>
+    </nav>{% endif %}
   </div>
 </header>
 <main class="container">

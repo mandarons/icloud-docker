@@ -3,13 +3,20 @@
 {% block extra_style %}
 <style>
   .acct { margin-bottom: 14px; position: relative; display: block; color: inherit; }
+  a.acct:hover { text-decoration: none; }
   .acct-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
   .acct-name { font-weight: 600; font-size: 16px; flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+  .acct-id { display: block; font-weight: 400; font-size: 13px; color: var(--text-tertiary); }
   .acct-state { font-size: 14px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
   .acct-state .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
   .acct-state.tone-warn .dot { background: var(--warn); }
   .acct-state.tone-err .dot { background: var(--err); }
+  .acct.member { padding-right: 44px; }
+  .acct .chev { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: var(--text-tertiary); font-size: 22px; }
   .acct-note { font-size: 13px; margin: 8px 0 0; }
+  .acct.add summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+  .acct.add form { display: flex; gap: 8px; margin-top: 12px; }
+  .acct.add input[type=text] { flex: 1; min-width: 0; padding: 8px 10px; border: 1px solid var(--divider); border-radius: 8px; font: inherit; font-size: 14px; background: var(--surface); color: var(--text); }
   .acct-note.warn { color: var(--warn-fg); }
   .acct-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
   .acct-actions form { margin: 0; }
@@ -33,7 +40,7 @@
       {%- endif %}
 {% endmacro %}
 {% set flow_open = security_key_blob or pending or auth != 'ready' or message_kind in ('err', 'warn') %}
-<h1 class="page-title">Account</h1>
+<h1 class="page-title">{{ 'Accounts' if status.household else 'Account' }}</h1>
 
 {% if message %}
 <div class="status-row">
@@ -61,6 +68,12 @@
     {% endif %}
   </div>
   {% endif %}
+  {% if auth == 'not_configured' %}
+  <p class="acct-note">Add your Apple ID to <span class="mono">config.yaml</span> and restart the container, then sign in here:</p>
+  <pre class="mono" style="margin: 0; padding: 10px 14px; border-radius: 8px; background: var(--field); font-size: 13px; overflow-x: auto;">app:
+  credentials:
+    username: you@example.com</pre>
+  {% else %}
   <div class="flow" id="flow"{% if not flow_open %} hidden{% endif %}>
     <p class="flow-step">
       {% if security_key_blob %}Sign Apple's challenge with your security key.
@@ -209,7 +222,32 @@
     </form>
   {% endif %}
   </div>
+  {% endif %}
 </section>
+
+{% for m in status.household %}
+<a class="card acct member" href="/household/{{ m.id }}">
+  <div class="acct-head">
+    <div class="acct-name">{{ m.name }}<span class="acct-id">{{ m.username or "No Apple ID yet" }}</span></div>
+    {% set needs = not m.session_saved or (m.backup and m.backup.status == 'needs_sign_in') %}
+    <div class="acct-state tone-{{ 'warn' if needs else 'ok' }}"><span class="dot"></span>{% if not m.session_saved %}Not signed in yet{% elif needs %}Needs sign-in{% else %}Signed in{% endif %}</div>
+  </div>
+  <span class="chev" aria-hidden="true">›</span>
+</a>
+{% endfor %}
+
+{% if auth != 'not_configured' %}
+<details class="card acct add"{% if household_error or not status.household %} open{% endif %}>
+  <summary>Add someone</summary>
+  <p class="acct-note">Back up another family member's iCloud. Add a short name, then sign them in from their page.</p>
+  {% if household_error %}<p class="acct-note warn">{{ household_error }}</p>{% endif %}
+  <form action="/household/add" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="text" name="id" placeholder="name, e.g. alex" required pattern="[a-z0-9][a-z0-9_-]{0,31}" aria-label="Short name">
+    <button type="submit" class="btn btn-small">Add</button>
+  </form>
+</details>
+{% endif %}
 
 {% if security_key_blob %}
 <script>

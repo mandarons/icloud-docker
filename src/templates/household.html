@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}iCloud Docker · {{ account.label }}{% endblock %}
+{% block content %}
+<h1 class="page-title">{{ account.label }}</h1>
+<p class="page-sub">{{ account.username or "No Apple ID yet" }} · {% if session_saved %}signed in{% else %}not signed in{% endif %}</p>
+
+<p style="font-size: 14px; color: var(--text-secondary); margin: 0 0 16px;">Photos{% if backup.drive.on %} and iCloud Drive{% endif %}. {% if backup.shared_library %}<span title="In {{ backup.shared_library }}, beside the main account's.">Their Shared Library too.</span>{% elif shared_folder %}<span title="In {{ shared_folder }}, so it isn't copied twice.">Shared Library is in the main backup.</span>{% else %}Shared Library isn't backed up.{% endif %}</p>
+
+{% if backup.drive.available %}
+<form action="/household/{{ account.id }}/drive" method="post"{% if backup.drive.on %} onsubmit="return confirm(this.dataset.ask)" data-ask="Stop backing up {{ account.label }}'s iCloud Drive? Files already backed up stay here."{% endif %} class="card" style="max-width: 640px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; padding: 16px 20px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <input type="hidden" name="enabled" value="{{ '0' if backup.drive.on else '1' }}">
+  <div style="flex: 1; min-width: 0;"><strong>iCloud Drive</strong>
+    <div style="font-size: 13px; color: var(--text-tertiary);">{% if not backup.drive.on %}Off{% elif backup.drive.running %}Backing up now{% elif backup.drive.last_sync_relative %}Backed up {{ backup.drive.last_sync_relative }}{% if backup.drive.files_downloaded %} · {{ "{:,}".format(backup.drive.files_downloaded) }} new{% endif %}{% else %}On · starts with the next backup{% endif %}</div></div>
+  <button type="submit" class="btn btn-small">{{ 'Turn off' if backup.drive.on else 'Turn on' }}</button>
+</form>
+{% endif %}
+
+{% if session_saved and next_up %}
+<form action="/household/{{ next_up.id }}/sign-in" method="post" class="card" style="max-width: 640px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px; padding: 16px 20px;">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <div style="flex: 1; min-width: 0;">{{ next_up.label }} isn't signed in yet.</div>
+  <button type="submit" class="btn btn-small btn-primary" style="flex: 0 0 auto;">Sign in as {{ next_up.label }}</button>
+</form>
+{% endif %}
+
+{% if session_saved %}
+<div class="card" style="max-width: 640px; margin-bottom: 20px;">
+  {% set r = backup.report %}
+  {% if r and not backup.approved %}
+  <p style="margin: 0;"><strong>{{ 'Ready to start' if not r.stopped else 'Check stopped early' }}</strong></p>
+  <dl class="rows">
+    <div><dt>In iCloud</dt><dd>{{ "{:,}".format(r.assets) }} photos</dd></div>
+    <div><dt>Already here</dt><dd>{{ "{:,}".format(r.on_disk + r.old_name) }} files{% if r.old_name %}<span class="sub">{{ "{:,}".format(r.old_name) }} under older names</span>{% endif %}</dd></div>
+    <div><dt><strong>To download</strong></dt><dd><strong>{{ "{:,}".format(r.download) }} files</strong></dd></div>
+  </dl>
+  {% if r.unclaimed %}<p style="font-size: 13px; margin: 10px 0 0; color: {{ 'var(--warn-fg)' if r.deletes and not r.over_limit else 'var(--text-tertiary)' }};">{{ "{:,}".format(r.unclaimed) }} files here aren't in iCloud. {% if r.deletes and not r.over_limit %}Start backup deletes them, and later deletes in iCloud follow.{% elif r.deletes %}Too many to delete (over {{ r.limit }}%), so they're kept.{% else %}They're kept.{% endif %}</p>{% endif %}
+  {% if r.stopped %}<p style="font-size: 13px; color: var(--err-fg); margin: 10px 0 0;">Stopped early ({{ r.stopped }}), so these numbers are partial.</p>{% endif %}
+  {% if r.download_by_year or r.samples %}<details style="font-size: 13px; margin-top: 10px; color: var(--text-secondary);"><summary style="cursor: pointer;">Details</summary>
+    {% if r.download_by_year %}<dl class="rows" style="font-size: 13px;">{% for year, n in r.download_by_year.items() %}<div><dt>To download, {{ year }}</dt><dd>{{ "{:,}".format(n) }}</dd></div>{% endfor %}</dl>{% endif %}
+    {% for kind, paths in r.samples.items() %}{% if paths %}<div class="mono" style="margin-top: 8px; overflow-wrap: anywhere;">{{ {'old_name': 'Older names', 'download': 'To download', 'unclaimed': 'Not in iCloud'}.get(kind, kind) }}: {{ paths|join(', ') }}</div>{% endif %}{% endfor %}
+  </details>{% endif %}
+  <div class="btn-pair">
+    <form action="/household/{{ account.id }}/start" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-primary">Start backup</button></form>
+    <form action="/household/{{ account.id }}/recheck" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn">Check again</button></form>
+  </div>
+  {% else %}
+  <p style="margin: 0;"><strong>{{ backup.label|capitalize }}</strong>{% if backup.status == 'ok' and backup.last_sync_relative %} {{ backup.last_sync_relative }}{% endif %}</p>
+  {% if backup.detail %}<p style="font-size: 14px; color: var(--text-secondary); margin: 6px 0 0;">{{ backup.detail }}</p>{% endif %}
+  {% if backup.progress %}<p style="font-size: 14px; color: var(--text-secondary); margin: 6px 0 0;">{{ backup.progress }}</p>{% endif %}
+  {% if backup.status == 'ok' and (backup.files_downloaded is not none or backup.adopted) %}<dl class="rows">
+    {% if backup.files_downloaded is not none %}<div><dt>New last time</dt><dd>{{ "{:,}".format(backup.files_downloaded) }} files</dd></div>{% endif %}
+    {% if backup.adopted %}<div><dt>Kept under older names</dt><dd>{{ "{:,}".format(backup.adopted) }} files</dd></div>{% endif %}
+  </dl>{% endif %}
+  {% if backup.status not in ('checking', 'syncing') %}<form action="/household/{{ account.id }}/sync" method="post" style="margin-top: 14px;"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn btn-small">Back up now</button></form>{% endif %}
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="card" style="max-width: 640px;">
+  {% if session_saved %}<p style="margin: 0;"><strong>Sign-in</strong></p>
+  <dl class="rows"><div><dt>Apple ID</dt><dd style="overflow-wrap: anywhere;">{{ account.username }}</dd></div></dl>
+  {% endif %}
+  <div class="btn-pair"{% if not session_saved %} style="margin-top: 0;"{% endif %}>
+    <form action="/household/{{ account.id }}/sign-in" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn {{ 'btn-primary' if not session_saved }}">{{ 'Sign in again' if session_saved else 'Sign in as ' ~ account.label }}</button></form>
+    {% if session_saved or account.username %}
+    <form action="/household/{{ account.id }}/forget" method="post" onsubmit="return confirm(this.dataset.ask)" data-ask="Forget {{ account.label }}'s sign-in? Their backup stops until they sign in again. Photos and files already backed up stay."><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button type="submit" class="btn">Forget sign-in</button></form>
+    {% endif %}
+  </div>
+  <p style="font-size: 13px; color: var(--text-tertiary); margin: 12px 0 0;">The password goes to Apple and isn't saved here.</p>
+</div>
+{% endblock %}

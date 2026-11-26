@@ -20,7 +20,7 @@
   /* Wide: the action sits beside the name, the reason runs below. Phone:
      state, then why, then the button. */
   .person-head .person-detail { order: 3; flex-basis: 100%; }
-  .act { order: 2; }
+  .act, .chev { order: 2; }
   .avatar {
     width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
@@ -34,6 +34,12 @@
   }
   .person-detail { color: var(--text-secondary); font-size: 14px; margin: 10px 0 0 54px; }
   .act { flex-shrink: 0; }
+  .chev { color: var(--text-tertiary); font-size: 22px; line-height: 1; padding: 4px 2px 4px 8px; }
+  .chev:hover { color: var(--text); text-decoration: none; }
+  /* A member's whole row opens their page; its button stays on top. */
+  .person.member .person-head { position: relative; }
+  .row-link { position: absolute; inset: 0; border-radius: var(--radius); }
+  .person.member .person-head .act { position: relative; z-index: 1; }
 
   .svc { margin: 18px 0 0; padding-top: 16px; border-top: 1px solid var(--divider); }
   .svc-row { display: flex; align-items: center; gap: 10px; }
@@ -85,11 +91,13 @@
     .person-head .person-detail { order: 2; }
     .act { order: 3; margin-top: 12px; }
     /* Under the sentence, not beside it: a button beside a wrapping line
-       squeezes it to two words a row. */
-    .act { flex: 1 0 100%; padding-left: 54px; }
-    .act .btn { width: 100%; }
+       squeezes it to two words a row. Card-wide, like Back up now. */
+    .act { flex: 1 0 100%; }
+    .act .btn { width: 100%; font-size: 14px; padding: 0 16px; height: 40px; }
     .act.calm { order: 1; flex: 0 0 auto; padding-left: 0; margin-top: 0; }
     .act.calm .btn { width: auto; }
+    /* Beside the name, before the detail line wraps under it. */
+    .chev { order: 1; }
   }
 </style>
 {% endblock %}
@@ -115,13 +123,14 @@
 {% for p in people %}
   <article class="person {{ p.kind }} tone-{{ p.tone }}" style="--avatar: hsl({{ p.hue }}deg 52% 52%);">
     <div class="person-head">
+      {% if p.kind == 'member' %}<a class="row-link" href="{{ p.page }}" aria-label="Open {{ p.name }}"></a>{% endif %}
       <div class="avatar" aria-hidden="true">{{ p.initial }}</div>
       <div class="person-id">
-        <div class="person-name" title="{{ p.username or p.name }}">{{ p.name }}</div>
+        <div class="person-name" title="{{ p.username or p.name }}">{% if p.kind == 'primary' %}{{ p.name }}{% else %}{{ p.name }}{% if p.username %} · {{ p.username }}{% endif %}{% endif %}</div>
         <div class="person-line"><span class="dot"></span><span>{{ p.sentence }}</span></div>
       </div>
       {% if p.detail %}<p class="person-detail">{{ p.detail }}</p>{% endif %}
-      {% if p.action %}{{ action_button(p.action, p.tone in ('err', 'warn')) }}{% endif %}
+      {% if p.action %}{{ action_button(p.action, p.tone in ('err', 'warn')) }}{% elif p.kind == 'member' %}<span class="chev" aria-hidden="true">›</span>{% endif %}
     </div>
 
     {% if p.kind == 'primary' %}

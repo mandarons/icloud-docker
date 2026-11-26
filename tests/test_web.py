@@ -795,6 +795,15 @@ class TestHealth(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.get_json(), {"state": "ok"})
 
+    def test_health_says_when_apple_needs_a_new_sign_in(self):
+        client = web.create_app(testing=True).test_client()
+        with patch.object(web.web_signals, "get_auth_blocked", return_value={"blocked": True}):
+            response = client.get("/api/health")
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(response.get_json(), {"state": "needs_sign_in"})
+        with patch.object(web.web_signals, "get_auth_blocked", return_value={"blocked": False}):
+            self.assertEqual(client.get("/api/health").status_code, 200)
+
     def test_health_returns_503_when_config_missing(self):
         import os
 

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}iCloud Docker · Sign in{% if name %} as {{ name }}{% endif %}{% endblock %}
+{% block extra_style %}
+<style>
+  .signin { max-width: 440px; }
+  .signin p { color: var(--text-secondary); font-size: 14px; margin: 0 0 16px; }
+  .signin input[type=password], .signin input[type=text], .signin input[type=email] {
+    width: 100%; padding: 12px 14px; margin-bottom: 12px; border: 1px solid var(--divider); border-radius: 8px;
+    font: inherit; font-size: 15px; background: var(--field); color: var(--text);
+  }
+  .signin input.who { color: var(--text-secondary); font-size: 14px; }
+  .signin input.code { font-size: 24px; letter-spacing: 0.3em; text-align: center; font-variant-numeric: tabular-nums; }
+  .signin .btn { width: 100%; }
+  .signin .btn.quiet { border: 0; background: none; color: var(--text-secondary); margin-top: 6px; }
+  .signin .msg { border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; font-size: 14px; background: var(--err-bg); color: var(--err-fg); }
+  .signin .msg.ok { background: var(--field); color: var(--text-secondary); }
+  .signin .msg a { color: inherit; text-decoration: underline; }
+  .signin .fine { font-size: 13px; color: var(--text-tertiary); margin: 14px 0 0; }
+  .signin-out { max-width: 440px; margin-top: 16px; font-size: 14px; }
+  .signin-out a { color: var(--text-secondary); }
+</style>
+{% endblock %}
+{% block content %}
+{% if state == 'invalid' %}
+<h1 class="page-title">This sign-in has expired</h1>
+<p class="page-sub">Start again from the person's page. A sign-in stops working after 30 minutes.</p>
+<a class="btn" href="/">Back to the dashboard</a>
+{% elif state == 'done' %}
+<h1 class="page-title">{{ name or "They" }} {{ "is" if name else "are" }} signed in</h1>
+<p class="page-sub">{% if review_first %}Their backup starts once you've checked the report.{% else %}Their backup starts in a few minutes.{% endif %} The password wasn't saved.</p>
+<a class="btn btn-primary" href="{{ (back_to ~ '?signed_in=1') if back_to else '/' }}">See the backup</a>
+
+{% else %}
+<h1 class="page-title">Sign in{% if name %} as {{ name }}{% endif %}</h1>
+<p class="page-sub">Backs up their iCloud {{ what or "photos" }}.</p>
+<div class="card signin">
+  {% if state == 'code' %}
+  <p>Apple sent a 6-digit code to their iPhone, iPad or Mac. Tap Allow there, then enter the code.</p>
+  {% else %}
+  <p>The password goes to Apple and isn't saved here. Nothing in their iCloud is changed.</p>
+  {% endif %}
+  {% if message %}<div class="msg {{ kind or 'err' }}">{{ message }}{% if refused %} Check the details at <a href="https://www.icloud.com" target="_blank" rel="noopener">icloud.com</a> or <a href="https://iforgot.apple.com" target="_blank" rel="noopener">reset the password</a>, then try again.{% endif %}</div>{% endif %}
+  {% if state == 'code' %}
+  <form method="post" action="{{ url_for('signin.submit_code') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="text" name="code" class="code" inputmode="numeric" pattern="[0-9 ]*" autocomplete="one-time-code" maxlength="7" required autofocus aria-label="6-digit code">
+    <button type="submit" class="btn btn-primary" data-busy="Checking…">Continue</button>
+  </form>
+  <form method="post" action="{{ url_for('signin.resend') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <button type="submit" class="btn quiet" data-busy="Sending…">Send a new code</button>
+  </form>
+  {% elif state == 'password' %}
+  <form method="post" action="{{ url_for('signin.submit_password') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% if ask_username %}
+    <input type="email" name="username" value="{{ username }}" autocomplete="username" required autofocus aria-label="Apple ID" placeholder="Apple ID (email)" autocapitalize="off" spellcheck="false">
+    {% elif apple_id %}
+    <input type="text" name="username" value="{{ apple_id }}" autocomplete="username" readonly tabindex="-1" aria-label="Apple ID" class="who">
+    {% endif %}
+    <input type="password" name="password" autocomplete="current-password" required {% if not ask_username %}autofocus {% endif %}aria-label="Apple ID password" placeholder="Apple ID password">
+    <button type="submit" class="btn btn-primary" data-busy="Signing in…">Sign in</button>
+  </form>
+  <p class="fine">Apple IDs that sign in with a security key aren't supported here yet.</p>
+  {% endif %}
+</div>
+<p class="signin-out"><a href="{{ back_to or '/' }}">Cancel</a></p>
+{% endif %}
+<script>
+  // One submit per form: a second tap while Apple is checking only confused things.
+  document.querySelectorAll('form').forEach(function (f) {
+    f.addEventListener('submit', function () {
+      var b = f.querySelector('button[type=submit]');
+      if (b) { b.disabled = true; if (b.dataset.busy) b.textContent = b.dataset.busy; }
+    });
+  });
+</script>
+{% endblock %}

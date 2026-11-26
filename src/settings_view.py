@@ -596,3 +596,49 @@ def write_setting(config_path: str, key: str, submitted: str) -> Any:
     node[setting.path[-1]] = value
     _save_document(config_path, yaml, document)
     return value
+
+
+_ACCOUNT_ID = re.compile(r"^[a-z0-9][a-z0-9_-]{0,31}$")
+
+
+def add_account(config_path: str, account_id: str) -> None:
+    """Append ``- id: <account_id>`` to ``accounts:`` in config.yaml."""
+    if not _ACCOUNT_ID.match(account_id or ""):
+        msg = "Use a short name: lowercase letters, digits, - or _"
+        raise SettingError(msg)
+    yaml, document = _load_document(config_path)
+    entries = document.get("accounts")
+    if entries is None:
+        document["accounts"] = []
+        entries = document["accounts"]
+    if not isinstance(entries, list):
+        msg = "accounts: in config.yaml is not a list"
+        raise SettingError(msg)
+    if any(isinstance(e, dict) and e.get("id") == account_id for e in entries):
+        msg = f"{account_id} is already in the household"
+        raise SettingError(msg)
+    entries.append({"id": account_id})
+    _save_document(config_path, yaml, document)
+
+
+def set_member_drive(config_path: str, account_id: str, enabled: bool) -> None:
+    """Turn a household member's Drive backup on or off in config.yaml.
+
+    Keeps any other Drive settings on the entry. Files already copied stay
+    where they are either way.
+    """
+    yaml, document = _load_document(config_path)
+    entries = document.get("accounts")
+    entry = next(
+        (e for e in entries or [] if isinstance(e, dict) and e.get("id") == account_id),
+        None,
+    )
+    if entry is None:
+        msg = f"{account_id} is not in the household"
+        raise SettingError(msg)
+    drive = entry.get("drive")
+    if isinstance(drive, dict):
+        drive["enabled"] = bool(enabled)
+    else:
+        entry["drive"] = {"enabled": bool(enabled)}
+    _save_document(config_path, yaml, document)
