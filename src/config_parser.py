@@ -878,6 +878,43 @@ def get_photos_folder_format(config: dict) -> str | None:
     return fmt
 
 
+def get_photos_folder_format_in_albums(config: dict) -> bool:
+    """Whether ``photos.folder_format`` applies inside album directories.
+
+    Default: **True** -- the historical behaviour, where a configured
+    ``folder_format`` creates its date subdirectories in the ``all``
+    folder, the ``All Photos`` folder, and every album folder alike.
+
+    Set ``false`` to write each album's photos directly into the album
+    directory while ``All Photos`` and ``all`` keep the configured
+    structure. This is the common request when ``all_albums: true`` is
+    used to browse per-album folders: the album is already a grouping,
+    so a second date split inside it mostly produces near-empty
+    directories.
+
+    The key is a scope switch, not a second format: ``folder_format``
+    remains the only value that decides the directory names, so the two
+    cannot disagree. Album subalbums inherit the album's setting, and
+    ``All Photos`` is exempt by name because it is the whole-library
+    view rather than a user-created album.
+
+    Args:
+        config: Configuration dictionary
+
+    Returns:
+        True if album folders honour ``folder_format`` (default), False
+        to write album photos flat.
+    """
+    config_path = ["photos", "folder_format_in_albums"]
+    return bool(
+        get_config_value_or_default(
+            config=config,
+            config_path=config_path,
+            default=True,
+        ),
+    )
+
+
 def get_photos_request_timeout(config: dict) -> int:
     """Return the HTTP read timeout for photo downloads, in seconds.
 

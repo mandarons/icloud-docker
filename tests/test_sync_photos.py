@@ -137,6 +137,73 @@ class TestSyncPhotos(unittest.TestCase):
     @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
     @patch("icloudpy.ICloudPyService")
     @patch("src.read_config")
+    def test_sync_photos_folder_format_in_albums_false(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+    ):
+        """Album folders stay flat while All Photos keeps the format."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"]["all_albums"] = True
+        config["photos"]["filters"]["albums"] = None
+        config["photos"]["folder_format"] = "%Y/%m"
+        config["photos"]["folder_format_in_albums"] = False
+        mock_read_config.return_value = config
+
+        result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+
+        self.assertIsInstance(result, tuple)
+        all_photos_path = os.path.join(self.destination_path, "All Photos")
+        album_2_path = os.path.join(self.destination_path, "album 2")
+        subalbum_path = os.path.join(album_2_path, "album-1-1")
+        # All Photos is the whole-library view, not a user album.
+        self.assertTrue(os.path.isdir(os.path.join(all_photos_path, "2020", "08")))
+        # User albums are written flat, and subalbums inherit the choice.
+        self.assertFalse(os.path.isdir(os.path.join(album_2_path, "2020")))
+        self.assertTrue(
+            any(os.path.isfile(os.path.join(album_2_path, name)) for name in os.listdir(album_2_path)),
+        )
+        self.assertFalse(os.path.isdir(os.path.join(subalbum_path, "2020")))
+        self.assertTrue(
+            any(os.path.isfile(os.path.join(subalbum_path, name)) for name in os.listdir(subalbum_path)),
+        )
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
+    def test_sync_photos_folder_format_in_albums_without_folder_format(
+        self,
+        mock_read_config,
+        mock_service,
+        mock_get_username,
+        mock_get_password,
+    ):
+        """The switch is inert, and says so, when folder_format is unset."""
+        mock_service = self.service
+        config = self.config.copy()
+        config["photos"]["destination"] = self.destination_path
+        config["photos"].pop("folder_format", None)
+        config["photos"]["folder_format_in_albums"] = False
+        mock_read_config.return_value = config
+
+        with self.assertLogs() as captured:
+            result = sync_photos.sync_photos(config=config, photos=mock_service.photos)
+
+        self.assertIsInstance(result, tuple)
+        self.assertIn(
+            "album folders are already flat",
+            "\n".join(record.getMessage() for record in captured.records),
+        )
+
+    @patch(target="keyring.get_password", return_value=data.VALID_PASSWORD)
+    @patch(target="src.config_parser.get_username", return_value=data.AUTHENTICATED_USER)
+    @patch("icloudpy.ICloudPyService")
+    @patch("src.read_config")
     def test_sync_photos_missing_photo_download(
         self,
         mock_read_config,

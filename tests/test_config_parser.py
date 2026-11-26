@@ -534,6 +534,24 @@ class TestConfigParser(unittest.TestCase):
         config["photos"]["folder_format"] = "%Y/%m"
         self.assertEqual(config_parser.get_photos_folder_format(config=config), "%Y/%m")
 
+    def test_get_photos_folder_format_in_albums_default_true(self):
+        """Album folders honour folder_format unless opted out."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["photos"].pop("folder_format_in_albums", None)
+        self.assertTrue(config_parser.get_photos_folder_format_in_albums(config=config))
+
+    def test_get_photos_folder_format_in_albums_false(self):
+        """The scope switch can be turned off."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["photos"]["folder_format_in_albums"] = False
+        self.assertFalse(config_parser.get_photos_folder_format_in_albums(config=config))
+
+    def test_get_photos_folder_format_in_albums_true(self):
+        """An explicit true is still true."""
+        config = read_config(config_path=tests.CONFIG_PATH)
+        config["photos"]["folder_format_in_albums"] = True
+        self.assertTrue(config_parser.get_photos_folder_format_in_albums(config=config))
+
     def test_get_photos_filters_libraries_empty(self):
         """Photos > library is missing in config."""
         config = read_config(config_path=tests.CONFIG_PATH)

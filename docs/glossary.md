@@ -28,6 +28,7 @@ Domain terminology, acronyms, and project-specific vocabulary.
 | **NFC/NFD** | Unicode normalization forms. NFC for storage, NFD for macOS/Windows file comparison. |
 | **Atomic download** | Downloading to temp path, then moving to final location. Prevents partial files. |
 | **folder_format** | strftime pattern for date-based photo organization (e.g., `"%Y/%m"`). |
+| **folder_format_in_albums** | Scope switch for `folder_format`: when false, album folders are flat; `All Photos` and `all` keep the format. Default true. |
 | **enumeration_chunk_size** | Photos buffered per streaming chunk. Bounds peak memory on large libraries. |
 | **all_albums** | Config flag to preserve album structure. When true, photos organized by album. |
 | **remove_obsolete** | Config flag to delete local files not present on server. |

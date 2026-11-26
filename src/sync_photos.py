@@ -437,6 +437,13 @@ def sync_photos(config, photos):
     use_hardlinks = config_parser.get_photos_use_hardlinks(config=config)
     libraries = filters["libraries"] if filters["libraries"] is not None else photos.libraries
     folder_format = config_parser.get_photos_folder_format(config=config)
+    # The scope switch is inert without a format to apply; say so instead of
+    # leaving the user to wonder why their new key changed nothing.
+    if folder_format is None and not config_parser.get_photos_folder_format_in_albums(config=config):
+        LOGGER.info(
+            "photos.folder_format_in_albums is false, but photos.folder_format "
+            "is not set; album folders are already flat.",
+        )
 
     # Initialize hard link registry using new modular approach
     hardlink_registry = create_hardlink_registry(use_hardlinks)
@@ -767,6 +774,24 @@ def _sync_all_photos_first_for_hardlinks(
     return 0, 0
 
 
+def _folder_format_for_album(album_title: str, folder_format: str | None, config) -> str | None:
+    """Folder format to use inside one album directory.
+
+    ``photos.folder_format_in_albums`` only scopes ``folder_format``; it
+    never supplies a format of its own. When it is false, user albums are
+    written flat, while ``All Photos`` keeps the configured structure --
+    it is the whole-library view, not an album the user created, so
+    flattening it would collapse months of the entire library into one
+    directory. Subalbums receive their parent album's value through
+    ``sync_album_photos`` and so inherit the same choice.
+    """
+    if album_title == "All Photos":
+        return folder_format
+    if config_parser.get_photos_folder_format_in_albums(config=config):
+        return folder_format
+    return None
+
+
 def _sync_albums_by_configuration(
     photos,
     libraries,
@@ -900,7 +925,7 @@ def _sync_all_albums_except_filtered(
             file_sizes=filters["file_sizes"],
             extensions=filters["extensions"],
             files=files,
-            folder_format=folder_format,
+            folder_format=_folder_format_for_album(album, folder_format, config),
             hardlink_registry=hardlink_registry,
             config=config,
         )
@@ -944,7 +969,7 @@ def _sync_filtered_albums(
             file_sizes=filters["file_sizes"],
             extensions=filters["extensions"],
             files=files,
-            folder_format=folder_format,
+            folder_format=_folder_format_for_album(album, folder_format, config),
             hardlink_registry=hardlink_registry,
             config=config,
         )
@@ -989,7 +1014,7 @@ def _sync_filtered_albums_in_library(
                 file_sizes=filters["file_sizes"],
                 extensions=filters["extensions"],
                 files=files,
-                folder_format=folder_format,
+                folder_format=_folder_format_for_album(album, folder_format, config),
                 hardlink_registry=hardlink_registry,
                 config=config,
             )
