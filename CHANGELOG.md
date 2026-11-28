@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   privileges, so every file and directory the sync writes inherits the mask. The default stays
   `022`; an invalid value falls back to `022` with a warning. This restores behaviour lost in
   v1.20.0, when the PUID/PGID revert removed the umask call along with the rest of the block
-  ([#608](https://github.com/mandarons/icloud-docker/issues/608))
+  ([#608](https://github.com/mandarons/icloud-docker/issues/608),
+  [#609](https://github.com/mandarons/icloud-docker/pull/609))
 
 ## [2.4.0] 2026-11-22
 
