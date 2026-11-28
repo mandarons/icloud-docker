@@ -27,6 +27,8 @@ The container system (`Dockerfile`, `docker-entrypoint.sh`, `init.sh`) manages t
 ## User Management
 
 - Creates `abc` user with configurable `PUID`/`PGID` (default 911:911)
+- Applies `UMASK` (default `022`) before creating directories or dropping privileges; invalid values
+  fall back to `022` with a warning
 - Uses `su-exec` for setuid execution (no S6 overlay)
 - Uses `shadow` package for user management
 
@@ -39,7 +41,7 @@ The container system (`Dockerfile`, `docker-entrypoint.sh`, `init.sh`) manages t
 
 ## Entrypoint Sequence
 
-1. `docker-entrypoint.sh` — sets UID/GID, creates user, migrates keyring
+1. `docker-entrypoint.sh` — applies `UMASK`, sets UID/GID, creates user, migrates keyring
 2. `su-exec abc /app/init.sh` — drops privileges
 3. `python src/main.py` — starts application
 

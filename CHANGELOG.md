@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- `UMASK` is honoured again. The entrypoint applies it before creating directories or dropping
+  privileges, so every file and directory the sync writes inherits the mask. The default stays
+  `022`; an invalid value falls back to `022` with a warning. This restores behaviour lost in
+  v1.20.0, when the PUID/PGID revert removed the umask call along with the rest of the block
+  ([#608](https://github.com/mandarons/icloud-docker/issues/608))
+
 ## [2.4.0] 2026-11-22
 
 ### Added

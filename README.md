@@ -1055,6 +1055,7 @@ To set up multiple iCloud accounts, repeat these steps for each UGREEN user and 
 | `ICLOUD_DOCKER_CONFIG_DIR` | `/config` | Overrides the base config directory. Session data and keyring are stored relative to this path. The usage cache (`.data`) lives under the root destination (`app.root`). |
 | `PUID` | *(unset)* | User ID for file ownership. |
 | `PGID` | *(unset)* | Group ID for file ownership. |
+| `UMASK` | `022` | File-creation mask applied before the app starts. Set `002` to let the group write: files are created `664` and directories `775`. Invalid values fall back to `022`. |
 
 ## Usage Policy
 
