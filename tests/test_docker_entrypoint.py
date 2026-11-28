@@ -141,5 +141,91 @@ class TestConfigSubdirsBelongToAbc(unittest.TestCase):
         self.assertFalse(self.lines[chowned].startswith((" ", "\t")))
 
 
+class TestUmask(unittest.TestCase):
+    """`UMASK` must reach the process, not just the container environment.
+
+    Issue #608: the variable was present in the environment but the entrypoint
+    never applied it, so files were created 0644/0755 instead of 0664/0775.
+    The function under test is extracted from the real script, so the test
+    cannot drift from the implementation.
+    """
+
+    def setUp(self):
+        self.entrypoint_path = os.path.join(
+            os.path.dirname(os.path.dirname(__file__)), "docker-entrypoint.sh",
+        )
+        with open(self.entrypoint_path, encoding="utf-8") as fh:
+            self.script = fh.read()
+        self.tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmpdir)
+
+    def _function(self):
+        """Return the `apply_umask` definition exactly as shipped."""
+        start = self.script.index("apply_umask() {")
+        end = self.script.index("\n}\n", start) + len("\n}\n")
+        return self.script[start:end]
+
+    def _run(self, umask=None):
+        """Run the shipped function, then report umask and created modes."""
+        env = dict(os.environ)
+        env.pop("UMASK", None)
+        if umask is not None:
+            env["UMASK"] = umask
+        env["UMASK_TEST_DIR"] = self.tmpdir
+        snippet = (
+            self._function()
+            + "\napply_umask\numask\n"
+            + 'touch "$UMASK_TEST_DIR/file" && mkdir -p "$UMASK_TEST_DIR/dir"\n'
+        )
+        return subprocess.run(
+            ["sh", "-c", snippet], capture_output=True, text=True, env=env,
+        )
+
+    def _modes(self):
+        file_mode = os.stat(os.path.join(self.tmpdir, "file")).st_mode & 0o777
+        dir_mode = os.stat(os.path.join(self.tmpdir, "dir")).st_mode & 0o777
+        return file_mode, dir_mode
+
+    def test_umask_002_is_applied(self):
+        """The reported case: group-writable files and directories."""
+        result = self._run("002")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(int(result.stdout.strip(), 8), 0o002)
+        self.assertEqual(self._modes(), (0o664, 0o775))
+
+    def test_default_is_022(self):
+        """An unset variable keeps the previous image default."""
+        result = self._run()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(int(result.stdout.strip(), 8), 0o022)
+        self.assertEqual(self._modes(), (0o644, 0o755))
+
+    def test_four_digit_value_is_accepted(self):
+        """`0022` is a common compose spelling and must not warn."""
+        result = self._run("0022")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(int(result.stdout.strip(), 8), 0o022)
+        self.assertNotIn("Invalid UMASK", result.stdout)
+
+    def test_invalid_value_warns_and_falls_back(self):
+        """A bad value must not fail the container start."""
+        for value in ("abc", "999", "0o22"):
+            with self.subTest(value=value):
+                result = self._run(value)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn(f"Invalid UMASK '{value}'", result.stdout)
+                self.assertEqual(int(result.stdout.strip().splitlines()[-1], 8), 0o022)
+
+    def test_applied_before_directories_are_created_and_privileges_dropped(self):
+        """Created directories and the app process must inherit the mask."""
+        applied = self.script.index("\napply_umask\n")
+        first_mkdir = self.script.index("mkdir -p")
+        handed_over = self.script.index("exec su-exec abc")
+        self.assertLess(applied, first_mkdir)
+        self.assertLess(applied, handed_over)
+
+
 if __name__ == "__main__":
     unittest.main()

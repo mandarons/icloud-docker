@@ -5,6 +5,23 @@
 PUID=${PUID:-911}
 PGID=${PGID:-911}
 
+# Apply UMASK (default 022) before creating anything or dropping privileges.
+# umask is a per-process setting that survives exec, so the app and every file
+# it writes inherit it. Values are validated because an invalid mask would
+# otherwise fail silently and leave the container on the image default.
+apply_umask() {
+    UMASK=${UMASK:-022}
+    case "$UMASK" in
+        [0-7]|[0-7][0-7]|[0-7][0-7][0-7]|[0-7][0-7][0-7][0-7]) ;;
+        *)
+            echo "Invalid UMASK '$UMASK' (expected up to four octal digits, e.g. 002); using 022"
+            UMASK=022
+            ;;
+    esac
+    umask "$UMASK"
+}
+apply_umask
+
 # Update user and group IDs
 echo "Setting up user 'abc' with UID: $PUID, GID: $PGID"
 groupmod -o -g "$PGID" abc
@@ -19,6 +36,7 @@ https://www.buymeacoffee.com/mandarons
 
 User UID:    $(id -u abc)
 User GID:    $(id -g abc)
+Umask:       $(umask)
 ===================================================="
 
 # Display build version if available
